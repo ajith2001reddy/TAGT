@@ -23,7 +23,7 @@ export default function Login() {
                 window.location.href = "/resident";
             }
         } catch (err) {
-            alert("Login failed");
+            alert("Invalid email or password");
         }
     };
 
