@@ -3,7 +3,7 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import ResidentDashboard from "./pages/ResidentDashboard";
 import ProtectedRoute from "./ProtectedRoute";
-
+import NewLogin from "./pages/NewLogin";
 function App() {
     return (
         <BrowserRouter>
@@ -18,6 +18,7 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="/login" element={<NewLogin />} />
 
                 <Route
                     path="/resident"
