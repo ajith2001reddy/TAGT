@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+const API = process.env.REACT_APP_API_URL || "https://tagt.onrender.com";
+
 export default function ResidentDashboard() {
     const [payments, setPayments] = useState([]);
     const [message, setMessage] = useState("");
@@ -9,18 +11,25 @@ export default function ResidentDashboard() {
     useEffect(() => {
         if (residentId) {
             axios
-                .get(`http://localhost:5000/api/resident/payments/${residentId}`)
-                .then((res) => setPayments(res.data));
+                .get(`${API}/api/resident/payments/${residentId}`)
+                .then((res) => setPayments(res.data))
+                .catch((err) => console.error(err));
         }
     }, [residentId]);
 
     const raiseRequest = async () => {
-        await axios.post("http://localhost:5000/api/resident/request", {
-            residentId,
-            message
-        });
-        alert("Request submitted");
-        setMessage("");
+        try {
+            await axios.post(`${API}/api/resident/request`, {
+                residentId,
+                message
+            });
+
+            alert("Request submitted");
+            setMessage("");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to submit request");
+        }
     };
 
     return (
