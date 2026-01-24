@@ -28,4 +28,4 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
     console.log(`TAGT Backend running on port ${PORT}`);
 });
-module.exports = router;
+
