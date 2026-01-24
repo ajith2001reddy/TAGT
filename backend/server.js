@@ -1,26 +1,28 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// DB
 connectDB();
 
-const app = express();
+// ✅ CORS — FIXED
 app.use(cors({
-    origin: [
-        "https://tagt-if9f-or155ifph-ajith2001reddys-projects.vercel.app"
-    ],
-    credentials: true
+    origin: "*"
 }));
 
-app.use(express.json());
+// Middleware
 app.use(express.json());
 
+// Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/resident", require("./routes/resident"));
 
-
-app.listen(5000, () => {
-    console.log("TAGT Backend running on port 5000");
+// Server
+app.listen(PORT, () => {
+    console.log(`TAGT Backend running on port ${PORT}`);
 });
