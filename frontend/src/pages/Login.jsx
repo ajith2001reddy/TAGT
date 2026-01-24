@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API = process.env.REACT_APP_API_URL;
+const API = process.env.REACT_APP_API_URL || "https://tagt.onrender.com";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -17,12 +17,11 @@ export default function Login() {
             localStorage.setItem("token", res.data.token);
             localStorage.setItem("role", res.data.role);
 
-            if (res.data.role === "admin") {
-                window.location.href = "/admin";
-            } else {
-                window.location.href = "/resident";
-            }
+            window.location.href =
+                res.data.role === "admin" ? "/admin" : "/resident";
+
         } catch (err) {
+            console.error(err.response?.data || err.message);
             alert("Invalid email or password");
         }
     };
