@@ -6,7 +6,14 @@ const connectDB = require("./config/db");
 connectDB();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: [
+        "https://tagt-if9f-or155ifph-ajith2001reddys-projects.vercel.app"
+    ],
+    credentials: true
+}));
+
+app.use(express.json());
 app.use(express.json());
 
 app.use("/api/auth", require("./routes/auth"));
