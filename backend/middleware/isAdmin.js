@@ -1,6 +1,7 @@
 module.exports = (req, res, next) => {
-    if (req.user.role !== "admin") {
-        return res.status(403).json("Admins only");
+    // req.user is set by auth middleware
+    if (!req.user || req.user.role !== "admin") {
+        return res.status(401).json("Admin access required");
     }
     next();
 };
