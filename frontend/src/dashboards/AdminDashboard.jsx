@@ -1,18 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-const api = axios.create({
-    baseURL: API,
-});
-
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
-
-/*const API = process.env.REACT_APP_API_URL;*/
+import api from "./api";
 
 export default function AdminDashboard() {
     const [view, setView] = useState("requests");
@@ -31,49 +18,68 @@ export default function AdminDashboard() {
     }, [view]);
 
     const fetchRequests = async () => {
-        const res = await api.get(`${API}/api/admin/requests`);
-        setRequests(res.data);
+        try {
+            const res = await api.get("/api/admin/requests");
+            setRequests(res.data);
+        } catch (err) {
+            alert("Failed to load complaints");
+            console.error(err);
+        }
     };
 
     const fetchResidents = async () => {
-        const res = await api.get(`${API}/api/resident`);
-        setResidents(res.data);
+        try {
+            const res = await api.get("/api/resident");
+            setResidents(res.data);
+        } catch (err) {
+            alert("Failed to load residents");
+            console.error(err);
+        }
     };
 
     const closeRequest = async (id) => {
-        await api.post(`${API}/api/admin/requests/close/${id}`);
-        fetchRequests();
+        try {
+            await api.post(`/api/admin/requests/close/${id}`);
+            fetchRequests();
+        } catch (err) {
+            alert("Failed to close request");
+        }
     };
 
     const addResident = async () => {
-        await api.post(`${API}/api/admin/add-resident`, {
-            name,
-            email,
-            password,
-            roomNumber,
-            monthlyRent
-        });
+        try {
+            await api.post("/api/admin/add-resident", {
+                name,
+                email,
+                password,
+                roomNumber,
+                monthlyRent,
+            });
 
-        alert("Resident added successfully");
+            alert("Resident added successfully");
 
-        setName("");
-        setEmail("");
-        setPassword("");
-        setRoomNumber("");
-        setMonthlyRent("");
-        setView("residents");
+            setName("");
+            setEmail("");
+            setPassword("");
+            setRoomNumber("");
+            setMonthlyRent("");
+            setView("residents");
+        } catch (err) {
+            alert("Failed to add resident");
+            console.error(err);
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem("token");
+        window.location.href = "/";
     };
 
     return (
         <div style={{ padding: 40 }}>
             <h1>TAGT - Admin Dashboard</h1>
 
-            <button onClick={() => {
-                localStorage.clear();
-                window.location.href = "/";
-            }}>
-                Logout
-            </button>
+            <button onClick={logout}>Logout</button>
 
             <div style={{ marginTop: 20 }}>
                 <button onClick={() => setView("requests")}>Complaints</button>{" "}
@@ -85,7 +91,7 @@ export default function AdminDashboard() {
                 <>
                     <h2>Complaints</h2>
                     <ul>
-                        {requests.map(r => (
+                        {requests.map((r) => (
                             <li key={r._id}>
                                 {r.message} — {r.status}
                                 {r.status === "OPEN" && (
@@ -103,7 +109,7 @@ export default function AdminDashboard() {
                 <>
                     <h2>Residents</h2>
                     <ul>
-                        {residents.map(r => (
+                        {residents.map((r) => (
                             <li key={r._id}>
                                 {r.name} — Room {r.roomNumber}
                             </li>
@@ -115,11 +121,37 @@ export default function AdminDashboard() {
             {view === "addResident" && (
                 <>
                     <h2>Add Resident</h2>
-                    <input placeholder="Name" onChange={e => setName(e.target.value)} /><br />
-                    <input placeholder="Email" onChange={e => setEmail(e.target.value)} /><br />
-                    <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} /><br />
-                    <input placeholder="Room Number" onChange={e => setRoomNumber(e.target.value)} /><br />
-                    <input placeholder="Monthly Rent" onChange={e => setMonthlyRent(e.target.value)} /><br />
+                    <input
+                        placeholder="Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
+                    <br />
+                    <input
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <br />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <br />
+                    <input
+                        placeholder="Room Number"
+                        value={roomNumber}
+                        onChange={(e) => setRoomNumber(e.target.value)}
+                    />
+                    <br />
+                    <input
+                        placeholder="Monthly Rent"
+                        value={monthlyRent}
+                        onChange={(e) => setMonthlyRent(e.target.value)}
+                    />
+                    <br />
                     <button onClick={addResident}>Create</button>
                 </>
             )}
