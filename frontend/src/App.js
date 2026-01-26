@@ -1,14 +1,16 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
-import ResidentDashboard from "./pages/ResidentDashboard";
-import ProtectedRoute from "./auth/ProtectedRoute";
 import NewLogin from "./pages/NewLogin";
+import AdminDashboard from "./dashboards/AdminDashboard";
+import ResidentDashboard from "./dashboards/ResidentDashboard";
+import ProtectedRoute from "./auth/ProtectedRoute";
+
 function App() {
     return (
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Login />} />
+                <Route path="/login" element={<NewLogin />} />
 
                 <Route
                     path="/admin"
@@ -18,7 +20,6 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
-                <Route path="/login" element={<NewLogin />} />
 
                 <Route
                     path="/resident"
