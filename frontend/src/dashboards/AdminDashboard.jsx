@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+const api = axios.create({
+    baseURL: API,
+});
 
-const API = process.env.REACT_APP_API_URL;
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+/*const API = process.env.REACT_APP_API_URL;*/
 
 export default function AdminDashboard() {
     const [view, setView] = useState("requests");
@@ -20,12 +31,12 @@ export default function AdminDashboard() {
     }, [view]);
 
     const fetchRequests = async () => {
-        const res = await axios.get(`${API}/api/admin/requests`);
+        const res = await api.get(`${API}/api/admin/requests`);
         setRequests(res.data);
     };
 
     const fetchResidents = async () => {
-        const res = await axios.get(`${API}/api/resident`);
+        const res = await api.get(`${API}/api/resident`);
         setResidents(res.data);
     };
 
