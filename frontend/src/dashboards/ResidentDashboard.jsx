@@ -1,35 +1,33 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-const api = axios.create({
-    baseURL: API,
-});
+import api from "./api";
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
 export default function ResidentDashboard() {
     const [payments, setPayments] = useState([]);
     const [message, setMessage] = useState("");
+
     const residentId = localStorage.getItem("residentId");
 
     useEffect(() => {
-        if (residentId) {
-            api
-                .get(`${API}/api/resident/payments/${residentId}`)
-                .then((res) => setPayments(res.data))
-                .catch((err) => console.error(err));
-        }
+        if (!residentId) return;
+
+        const fetchPayments = async () => {
+            try {
+                const res = await api.get(`/api/resident/payments/${residentId}`);
+                setPayments(res.data);
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load payments");
+            }
+        };
+
+        fetchPayments();
     }, [residentId]);
 
     const raiseRequest = async () => {
         try {
-            await api.post(`${API}/api/resident/request`, {
+            await api.post("/api/resident/request", {
                 residentId,
-                message
+                message,
             });
 
             alert("Request submitted");
@@ -40,18 +38,16 @@ export default function ResidentDashboard() {
         }
     };
 
+    const logout = () => {
+        localStorage.clear();
+        window.location.href = "/";
+    };
+
     return (
         <div style={{ padding: 40 }}>
             <h1>TAGT - Resident Dashboard</h1>
 
-            <button
-                onClick={() => {
-                    localStorage.clear();
-                    window.location.href = "/";
-                }}
-            >
-                Logout
-            </button>
+            <button onClick={logout}>Logout</button>
 
             <h2>My Payments</h2>
             <ul>
