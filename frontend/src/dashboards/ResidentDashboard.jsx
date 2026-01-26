@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+const api = axios.create({
+    baseURL: API,
+});
 
-const API = process.env.REACT_APP_API_URL || "https://tagt.onrender.com";
-
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
 export default function ResidentDashboard() {
     const [payments, setPayments] = useState([]);
     const [message, setMessage] = useState("");
@@ -10,7 +18,7 @@ export default function ResidentDashboard() {
 
     useEffect(() => {
         if (residentId) {
-            axios
+            api
                 .get(`${API}/api/resident/payments/${residentId}`)
                 .then((res) => setPayments(res.data))
                 .catch((err) => console.error(err));
