@@ -2,6 +2,7 @@ const express = require("express");
 const Resident = require("../models/Resident");
 const Payment = require("../models/Payment");
 const Request = require("../models/Request");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -50,5 +51,13 @@ router.get("/request/:id", async (req, res) => {
     const requests = await Request.find({ residentId: req.params.id });
     res.json(requests);
 });
+router.post("/request", auth, async (req, res) => {
+    const request = await Request.create({
+        residentId: req.user.id,
+        message: req.body.message
+    });
+    res.status(201).json(request);
+});
+
 
 module.exports = router;
