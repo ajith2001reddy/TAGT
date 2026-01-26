@@ -11,35 +11,30 @@ router.post("/register", async (req, res) => {
     const { email, password, role } = req.body;
 
     try {
-        // Check if user exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json("User already exists");
         }
 
-        // ✅ HASH PASSWORD
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user
         const user = await User.create({
             email,
             password: hashedPassword,
             role
         });
 
-        // Optional resident profile
         if (role === "resident") {
             await Resident.create({ userId: user._id });
         }
 
         res.status(201).json("User registered successfully");
-
     } catch (err) {
         console.error(err);
         res.status(500).json("Server error");
     }
 });
+
 /* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -50,7 +45,6 @@ router.post("/login", async (req, res) => {
             return res.status(401).json("Invalid credentials");
         }
 
-        // ✅ bcrypt comparison (CORRECT)
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json("Invalid credentials");
@@ -73,10 +67,10 @@ router.post("/login", async (req, res) => {
             role: user.role,
             residentId
         });
-
     } catch (err) {
         console.error(err);
         res.status(500).json("Server error");
     }
 });
+
 module.exports = router;
