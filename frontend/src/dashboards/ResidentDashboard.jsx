@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import api from "./api";
+import api from "../api/axios";
+
 
 export default function ResidentDashboard() {
     const [payments, setPayments] = useState([]);
