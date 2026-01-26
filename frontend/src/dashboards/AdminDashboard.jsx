@@ -19,7 +19,7 @@ export default function AdminDashboard() {
 
     const fetchRequests = async () => {
         try {
-            const res = await api.get("/api/admin/requests");
+            const res = await api.get("/api/auth/requests");
             setRequests(res.data);
         } catch (err) {
             alert("Failed to load complaints");
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
 
     const closeRequest = async (id) => {
         try {
-            await api.post(`/api/admin/requests/close/${id}`);
+            await api.post(`/api/auth/requests/close/${id}`);
             fetchRequests();
         } catch (err) {
             alert("Failed to close request");
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
 
     const addResident = async () => {
         try {
-            await api.post("/api/admin/add-resident", {
+            await api.post("/api/auth/add-resident", {
                 name,
                 email,
                 password,
