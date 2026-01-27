@@ -35,5 +35,21 @@ router.put("/requests/:id/status", auth, isAdmin, async (req, res, next) => {
         next(err);
     }
 });
+router.get("/stats", auth, isAdmin, async (req, res, next) => {
+    try {
+        const totalResidents = await Resident.countDocuments();
+        const pendingRequests = await Request.countDocuments({ status: "pending" });
+        const unpaidPayments = await Payment.countDocuments({ status: "unpaid" });
+
+        res.json({
+            totalResidents,
+            pendingRequests,
+            unpaidPayments
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
 
 module.exports = router;

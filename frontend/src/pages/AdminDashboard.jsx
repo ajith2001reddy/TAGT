@@ -133,22 +133,18 @@ export default function AdminDashboard() {
                 {/* STATS */}
                 {loading ? (
                     <Loader />
-                ) : (
+                ) : stats ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <StatCard
-                            title="Total Residents"
-                            value={stats.totalResidents}
-                        />
-                        <StatCard
-                            title="Pending Requests"
-                            value={stats.pendingRequests}
-                        />
-                        <StatCard
-                            title="Unpaid Payments"
-                            value={stats.unpaidPayments}
-                        />
+                        <StatCard title="Total Residents" value={stats.totalResidents} />
+                        <StatCard title="Pending Requests" value={stats.pendingRequests} />
+                        <StatCard title="Unpaid Payments" value={stats.unpaidPayments} />
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-xl shadow p-6 text-center text-red-500">
+                        Failed to load dashboard statistics
                     </div>
                 )}
+
                 <div className="mt-6">
                     <button
                         onClick={() => (window.location.href = "/admin/residents")}

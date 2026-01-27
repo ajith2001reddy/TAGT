@@ -4,6 +4,9 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
+const adminRoutes = require("./routes/admin");
+
+app.use("/api/admin", adminRoutes);
 
 const app = express();
 const PORT = process.env.PORT || 5000;

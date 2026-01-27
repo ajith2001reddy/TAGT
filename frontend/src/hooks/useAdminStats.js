@@ -21,5 +21,12 @@ export default function useAdminStats() {
         fetchStats();
     }, []);
 
-    return { stats, loading };
+    return {
+        stats: stats || {
+            totalResidents: 0,
+            pendingRequests: 0,
+            unpaidPayments: 0
+        },
+        loading
+    };
 }
