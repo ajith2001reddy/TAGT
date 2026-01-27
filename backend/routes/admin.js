@@ -62,7 +62,7 @@ router.get("/stats", auth, isAdmin, async (req, res) => {
 ============================ */
 router.get("/residents", auth, isAdmin, async (req, res) => {
     try {
-        const residents = await Resident.find().populate("userId", "email name");
+        const residents = await Resident.find().populate("userId", ["email", "name"]);
         res.json(residents);
     } catch (err) {
         res.status(500).json("Failed to fetch residents");
