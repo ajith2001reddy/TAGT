@@ -48,7 +48,7 @@ router.put("/requests/:id/status", auth, isAdmin, async (req, res) => {
 ============================ */
 router.get("/stats", auth, isAdmin, async (req, res) => {
     try {
-        const totalResidents = await User.countDocuments({ role: "resident" });
+        const totalResidents = await Resident.countDocuments();
         const pendingRequests = await Request.countDocuments({ status: "pending" });
 
         res.json({ totalResidents, pendingRequests });
