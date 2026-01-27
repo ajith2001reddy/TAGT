@@ -1,4 +1,13 @@
 import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
+
+/**
+ * DashboardLayout
+ * - Used by both Admin and Resident dashboards
+ * - Keeps existing Navbar
+ * - Uses Sidebar component (Phase 1 improvement)
+ * - Role-based navigation preserved
+ */
 
 export default function DashboardLayout({ children }) {
     const role = localStorage.getItem("role");
@@ -33,7 +42,7 @@ export default function DashboardLayout({ children }) {
                                 </a>
 
                                 <a
-                                    href="/admin"
+                                    href="/admin/residents"
                                     className="block px-3 py-2 rounded hover:bg-gray-200"
                                 >
                                     Residents
@@ -54,9 +63,7 @@ export default function DashboardLayout({ children }) {
                 </aside>
 
                 {/* Main content */}
-                <main className="flex-1 p-6">
-                    {children}
-                </main>
+                <main className="flex-1 p-6">{children}</main>
             </div>
         </div>
     );
