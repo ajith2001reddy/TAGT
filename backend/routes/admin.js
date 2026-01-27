@@ -50,6 +50,17 @@ router.get("/stats", auth, isAdmin, async (req, res) => {
         res.status(500).json({ message: "Failed to load admin stats" });
     }
 });
+/* ===== GET ALL RESIDENTS ===== */
+router.get("/residents", auth, isAdmin, async (req, res, next) => {
+    try {
+        const residents = await User.find({ role: "resident" })
+            .select("-password");
+        res.json(residents);
+    } catch (err) {
+        next(err);
+    }
+});
+
 
 
 module.exports = router;
