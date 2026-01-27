@@ -10,8 +10,8 @@ connectDB();
 
 app.use(cors({ origin: "*" }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// ✅ ONLY AUTH ROUTE
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/resident", require("./routes/resident"));
