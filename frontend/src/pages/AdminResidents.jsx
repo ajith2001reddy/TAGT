@@ -16,7 +16,7 @@ export default function AdminResidents() {
     /* =========================
        FETCH RESIDENTS
     ========================= */
-    cconst fetchResidents = useCallback(async () => {
+    const fetchResidents = useCallback(async () => {
         try {
             const res = await axios.get("/admin/residents", {
                 headers: { Authorization: `Bearer ${token}` }

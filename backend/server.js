@@ -23,11 +23,12 @@ connectDB();
 /* ================= SECURITY ================= */
 app.use(helmet());
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100
-});
-app.use(limiter);
+app.use(
+    rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 100
+    })
+);
 
 /* ================= MIDDLEWARE ================= */
 app.use(express.json());
@@ -44,15 +45,14 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/resident", residentRoutes);
 
 /* ================= STATIC FRONTEND ================= */
-/**
- * IMPORTANT:
- * This allows manifest.json, favicon, static assets
- * WITHOUT authentication
- */
 app.use(express.static(path.join(__dirname, "frontend/build")));
 
-/* ================= REACT ROUTER FALLBACK ================= */
-app.get("*", (req, res) => {
+/* ================= REACT FALLBACK (EXPRESS 5 FIX) ================= */
+/**
+ * IMPORTANT:
+ * Express 5 does NOT allow app.get("*")
+ */
+app.get("/*", (req, res) => {
     res.sendFile(
         path.join(__dirname, "frontend/build", "index.html")
     );
