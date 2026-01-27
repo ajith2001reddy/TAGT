@@ -16,12 +16,19 @@ export default function AdminResidents() {
     /* =========================
        FETCH RESIDENTS
     ========================= */
-    const fetchResidents = useCallback(async () => {
-        const res = await axios.get("/admin/residents", {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        setResidents(res.data);
+    cconst fetchResidents = useCallback(async () => {
+        try {
+            const res = await axios.get("/admin/residents", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setResidents(Array.isArray(res.data) ? res.data : []);
+        } catch (err) {
+            console.error(err);
+            setResidents([]); // prevent crash
+        }
     }, [token]);
+
 
     /* =========================
        ADD RESIDENT
@@ -88,7 +95,7 @@ export default function AdminResidents() {
                 </thead>
 
                 <tbody>
-                    {residents.map(r => (
+                    {Array.isArray(residents) && residents.map(r => (
                         <tr key={r._id} className="border-b text-center">
                             <td>{r.userId?.name}</td>
                             <td>{r.userId?.email}</td>
