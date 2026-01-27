@@ -6,11 +6,34 @@ import Loader from "../components/Loader";
 import RequestTable from "../components/RequestTable";
 import useAdminStats from "../hooks/useAdminStats";
 import { getRequests } from "../services/adminService";
+import RequestsChart from "../components/RequestsChart";
+
 
 export default function AdminDashboard() {
     const { stats, loading } = useAdminStats();
     const [requests, setRequests] = useState([]);
     const [reqLoading, setReqLoading] = useState(true);
+    const chartData = [
+        {
+            status: "pending",
+            count: requests.filter((r) => r.status === "pending").length
+        },
+        {
+            status: "in-progress",
+            count: requests.filter((r) => r.status === "in-progress").length
+        },
+        {
+            status: "resolved",
+            count: requests.filter((r) => r.status === "resolved").length
+        }
+    ];
+    {
+        !reqLoading && requests.length > 0 && (
+            <RequestsChart data={chartData} />
+        )
+    }
+
+
 
     const fetchRequests = async () => {
         setReqLoading(true);
