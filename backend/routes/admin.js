@@ -21,15 +21,7 @@ const addResidentSchema = Joi.object({
 });
 const validate = require("../middleware/validate");
 
-router.post(
-    "/add-resident",
-    auth,
-    isAdmin,
-    validate(addResidentSchema),
-    async (req, res, next) => {
-        // existing code stays the same
-    }
-);
+
 
 
 /* ================= GET ALL REQUESTS ================= */
@@ -41,6 +33,19 @@ router.get("/requests", auth, isAdmin, async (req, res, next) => {
         next(err);
     }
 });
+/* ================= GET ALL RESIDENTS ================= */
+router.get("/residents", auth, isAdmin, async (req, res, next) => {
+    try {
+        const residents = await Resident.find()
+            .populate("userId", "email role")
+            .sort({ createdAt: -1 });
+
+        res.json(residents);
+    } catch (err) {
+        next(err);
+    }
+});
+
 
 /* ================= UPDATE REQUEST STATUS ================= */
 router.put("/requests/:id/status", auth, isAdmin, async (req, res, next) => {

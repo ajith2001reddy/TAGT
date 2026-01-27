@@ -6,6 +6,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ResidentDashboard from "./pages/ResidentDashboard";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
+import AdminResidents from "./pages/AdminResidents";
+
 
 function AnimatedRoutes() {
     const location = useLocation();
@@ -23,6 +25,15 @@ function AnimatedRoutes() {
                         </ProtectedRoute>
                     }
                 />
+                <Route
+                    path="/admin/residents"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <AdminResidents />
+                        </ProtectedRoute>
+                    }
+                />
+
 
                 <Route
                     path="/resident"

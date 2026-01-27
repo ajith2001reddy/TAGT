@@ -41,6 +41,7 @@ app.use("/api/resident", require("./routes/resident"));
 
 // Error handler
 app.use(require("./middleware/errorHandler"));
+app.use("/api/admin", require("./routes/admin"));
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);

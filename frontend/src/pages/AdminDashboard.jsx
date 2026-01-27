@@ -149,6 +149,14 @@ export default function AdminDashboard() {
                         />
                     </div>
                 )}
+                <div className="mt-6">
+                    <button
+                        onClick={() => (window.location.href = "/admin/residents")}
+                        className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                        Manage Residents
+                    </button>
+                </div>
 
                 {/* FILTERS */}
                 <div className="bg-white rounded-xl shadow p-4 mt-8 flex flex-col md:flex-row gap-4">
