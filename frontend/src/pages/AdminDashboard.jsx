@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -21,18 +21,25 @@ export default function AdminDashboard() {
     const [search, setSearch] = useState("");
     const [sortOrder, setSortOrder] = useState("newest");
 
-    const fetchRequests = async () => {
-        setReqLoading(true);
-        const data = await getRequests();
-        setRequests(data);
-        setReqLoading(false);
-    };
+    /* ================= FETCH REQUESTS ================= */
+    const fetchRequests = useCallback(async () => {
+        try {
+            setReqLoading(true);
+            const data = await getRequests();
+            setRequests(Array.isArray(data) ? data : []);
+        } catch (err) {
+            toast.error("Failed to load requests");
+            setRequests([]);
+        } finally {
+            setReqLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         fetchRequests();
-    }, []);
+    }, [fetchRequests]);
 
-    // ---- FILTER + SORT ----
+    /* ================= FILTER + SORT ================= */
     const filteredRequests = requests
         .filter((r) =>
             statusFilter === "all" ? true : r.status === statusFilter
@@ -46,7 +53,7 @@ export default function AdminDashboard() {
                 : new Date(a.createdAt) - new Date(b.createdAt)
         );
 
-    // ---- CHART DATA ----
+    /* ================= CHART DATA ================= */
     const chartData = [
         {
             status: "pending",
@@ -62,7 +69,7 @@ export default function AdminDashboard() {
         }
     ];
 
-    // ---- EXPORT CSV ----
+    /* ================= EXPORT CSV ================= */
     const exportCSV = () => {
         if (filteredRequests.length === 0) {
             toast.error("No data to export");
@@ -89,7 +96,7 @@ export default function AdminDashboard() {
         toast.success("CSV exported");
     };
 
-    // ---- BULK RESOLVE ----
+    /* ================= BULK RESOLVE ================= */
     const bulkResolve = async () => {
         const toResolve = filteredRequests.filter(
             (r) => r.status !== "resolved"
@@ -100,11 +107,7 @@ export default function AdminDashboard() {
             return;
         }
 
-        if (
-            !window.confirm(
-                `Resolve ${toResolve.length} request(s)?`
-            )
-        ) {
+        if (!window.confirm(`Resolve ${toResolve.length} request(s)?`)) {
             return;
         }
 
@@ -130,14 +133,19 @@ export default function AdminDashboard() {
                     Admin Dashboard
                 </h2>
 
-                {/* STATS */}
+                {/* ================= STATS ================= */}
                 {loading ? (
                     <Loader />
                 ) : stats ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <StatCard title="Total Residents" value={stats.totalResidents} />
-                        <StatCard title="Pending Requests" value={stats.pendingRequests} />
-                        <StatCard title="Unpaid Payments" value={stats.unpaidPayments} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <StatCard
+                            title="Total Residents"
+                            value={stats.totalResidents}
+                        />
+                        <StatCard
+                            title="Pending Requests"
+                            value={stats.pendingRequests}
+                        />
                     </div>
                 ) : (
                     <div className="bg-white rounded-xl shadow p-6 text-center text-red-500">
@@ -145,6 +153,7 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
+                {/* ================= MANAGE RESIDENTS ================= */}
                 <div className="mt-6">
                     <button
                         onClick={() => (window.location.href = "/admin/residents")}
@@ -154,7 +163,7 @@ export default function AdminDashboard() {
                     </button>
                 </div>
 
-                {/* FILTERS */}
+                {/* ================= FILTERS ================= */}
                 <div className="bg-white rounded-xl shadow p-4 mt-8 flex flex-col md:flex-row gap-4">
                     <input
                         type="text"
@@ -185,7 +194,7 @@ export default function AdminDashboard() {
                     </select>
                 </div>
 
-                {/* ACTION BAR */}
+                {/* ================= ACTION BAR ================= */}
                 <div className="flex flex-wrap gap-3 mt-4">
                     <button
                         onClick={exportCSV}
@@ -207,7 +216,7 @@ export default function AdminDashboard() {
                     </button>
                 </div>
 
-                {/* REQUESTS */}
+                {/* ================= REQUESTS ================= */}
                 <h3 className="text-xl font-semibold mt-8 mb-4">
                     Maintenance Requests
                 </h3>
@@ -225,7 +234,7 @@ export default function AdminDashboard() {
                     />
                 )}
 
-                {/* CHART */}
+                {/* ================= CHART ================= */}
                 {!reqLoading && requests.length > 0 && (
                     <RequestsChart data={chartData} />
                 )}
