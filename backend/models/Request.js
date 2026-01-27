@@ -4,6 +4,7 @@ const RequestSchema = new mongoose.Schema(
     {
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
             required: true
         },
         message: {
