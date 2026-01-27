@@ -1,51 +1,52 @@
 ﻿require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+
 const connectDB = require("./config/db");
+
+const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
+const residentRoutes = require("./routes/resident");
+const errorHandler = require("./middleware/errorHandler");
 
-app.use("/api/admin", adminRoutes);
-
+/* ================= APP INIT ================= */
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// DB
+/* ================= DB ================= */
 connectDB();
 
-// Security middleware
+/* ================= SECURITY ================= */
 app.use(helmet());
 
-// Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000,
     max: 100,
     message: "Too many requests, please try again later"
 });
-
 app.use(limiter);
 
-// Body parser
+/* ================= MIDDLEWARE ================= */
 app.use(express.json());
-
-// CORS (production-safe)
 app.use(
     cors({
-        origin: "*", // later restrict to frontend domain
+        origin: "*", // tighten later
         credentials: true
     })
 );
 
-// Routes
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/admin", require("./routes/admin"));
-app.use("/api/resident", require("./routes/resident"));
+/* ================= ROUTES ================= */
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/resident", residentRoutes);
 
-// Error handler
-app.use(require("./middleware/errorHandler"));
-app.use("/api/admin", require("./routes/admin"));
+/* ================= ERROR HANDLER ================= */
+app.use(errorHandler);
 
+/* ================= START ================= */
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
