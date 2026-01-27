@@ -1,11 +1,8 @@
-import User from "../models/User.js";
-import bcrypt from "bcryptjs";
+const User = require("../models/User");
+const bcrypt = require("bcryptjs");
 
-/**
- * GET all residents
- * GET /api/admin/residents
- */
-export const getAllResidents = async (req, res) => {
+/* GET ALL RESIDENTS */
+exports.getAllResidents = async (req, res) => {
     try {
         const residents = await User.find({ role: "resident" })
             .select("-password")
@@ -17,11 +14,8 @@ export const getAllResidents = async (req, res) => {
     }
 };
 
-/**
- * ADD new resident
- * POST /api/admin/residents
- */
-export const addResident = async (req, res) => {
+/* ADD RESIDENT */
+exports.addResident = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 

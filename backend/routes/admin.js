@@ -2,6 +2,7 @@
 const auth = require("../middleware/auth");
 const isAdmin = require("../middleware/isAdmin");
 const Request = require("../models/Request");
+const User = require("../models/User");
 
 const router = express.Router();
 
@@ -35,19 +36,18 @@ router.put("/requests/:id/status", auth, isAdmin, async (req, res, next) => {
         next(err);
     }
 });
-router.get("/stats", auth, isAdmin, async (req, res, next) => {
+router.get("/stats", auth, isAdmin, async (req, res) => {
     try {
-        const totalResidents = await Resident.countDocuments();
+        const totalResidents = await User.countDocuments({ role: "resident" });
         const pendingRequests = await Request.countDocuments({ status: "pending" });
-        const unpaidPayments = await Payment.countDocuments({ status: "unpaid" });
 
         res.json({
             totalResidents,
-            pendingRequests,
-            unpaidPayments
+            pendingRequests
         });
     } catch (err) {
-        next(err);
+        console.error("Admin stats error:", err);
+        res.status(500).json({ message: "Failed to load admin stats" });
     }
 });
 
