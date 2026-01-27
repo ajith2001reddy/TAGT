@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 /**
  * PHASE 2 UPGRADE NOTES
  * - Legacy status update STILL WORKS
  * - Phase 1 workflow update STILL WORKS (admin note)
- * - NEW: Close & Archive with Final Resolution (required)
+ * - Phase 2 Close & Archive with Final Resolution
  */
 
 export default function AdminRequests() {
@@ -20,23 +20,15 @@ export default function AdminRequests() {
     const [archiveTarget, setArchiveTarget] = useState(null);
     const [finalResolution, setFinalResolution] = useState("");
 
-    const token = localStorage.getItem("token");
-
     /* ================= FETCH REQUESTS ================= */
     const fetchRequests = async () => {
-        const res = await axios.get("/admin/requests", {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get("/admin/requests");
         setRequests(res.data);
     };
 
     /* ================= LEGACY STATUS UPDATE ================= */
     const updateStatus = async (id, status) => {
-        await axios.put(
-            `/admin/requests/${id}/status`,
-            { status },
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.put(`/admin/requests/${id}/status`, { status });
         fetchRequests();
     };
 
@@ -47,13 +39,12 @@ export default function AdminRequests() {
             return;
         }
 
-        await axios.put(
+        await api.put(
             `/admin/requests/${selectedRequest._id}/workflow-status`,
             {
                 workflowStatus,
                 note: adminNote
-            },
-            { headers: { Authorization: `Bearer ${token}` } }
+            }
         );
 
         setSelectedRequest(null);
@@ -69,10 +60,9 @@ export default function AdminRequests() {
             return;
         }
 
-        await axios.post(
+        await api.post(
             `/admin/requests/${archiveTarget._id}/archive`,
-            { finalResolution },
-            { headers: { Authorization: `Bearer ${token}` } }
+            { finalResolution }
         );
 
         setArchiveTarget(null);
@@ -109,31 +99,19 @@ export default function AdminRequests() {
                             <td>{req.message}</td>
                             <td>{req.residentId?.email}</td>
 
-                            {/* Prefer workflowStatus if present */}
                             <td className="capitalize">
                                 {req.workflowStatus || req.status}
                             </td>
 
                             <td className="space-x-2">
-                                {/* ===== LEGACY BUTTONS ===== */}
+                                {/* ===== LEGACY FLOW (VALID ENUMS) ===== */}
                                 {req.status === "pending" && (
                                     <button
                                         className="bg-blue-500 text-white px-3 py-1 rounded"
                                         onClick={() =>
-                                            updateStatus(req._id, "approved")
-                                        }
-                                    >
-                                        Approve
-                                    </button>
-                                )}
-
-                                {req.status === "approved" && (
-                                    <button
-                                        className="bg-yellow-500 text-white px-3 py-1 rounded"
-                                        onClick={() =>
                                             updateStatus(
                                                 req._id,
-                                                "in_progress"
+                                                "in-progress"
                                             )
                                         }
                                     >
@@ -155,18 +133,22 @@ export default function AdminRequests() {
                                     </button>
                                 )}
 
-                                {/* ===== PHASE 1: WORKFLOW ===== */}
+                                {/* ===== PHASE 1 ===== */}
                                 <button
                                     className="bg-gray-800 text-white px-3 py-1 rounded"
-                                    onClick={() => setSelectedRequest(req)}
+                                    onClick={() =>
+                                        setSelectedRequest(req)
+                                    }
                                 >
                                     Update (Pro)
                                 </button>
 
-                                {/* ===== PHASE 2: CLOSE & ARCHIVE ===== */}
+                                {/* ===== PHASE 2 ===== */}
                                 <button
                                     className="bg-red-600 text-white px-3 py-1 rounded"
-                                    onClick={() => setArchiveTarget(req)}
+                                    onClick={() =>
+                                        setArchiveTarget(req)
+                                    }
                                 >
                                     Close & Archive
                                 </button>
@@ -176,7 +158,7 @@ export default function AdminRequests() {
                 </tbody>
             </table>
 
-            {/* ================= WORKFLOW MODAL (PHASE 1) ================= */}
+            {/* ================= WORKFLOW MODAL ================= */}
             {selectedRequest && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                     <div className="bg-white p-6 rounded w-96">
@@ -208,7 +190,9 @@ export default function AdminRequests() {
 
                         <div className="flex justify-end gap-2">
                             <button
-                                onClick={() => setSelectedRequest(null)}
+                                onClick={() =>
+                                    setSelectedRequest(null)
+                                }
                             >
                                 Cancel
                             </button>
@@ -223,7 +207,7 @@ export default function AdminRequests() {
                 </div>
             )}
 
-            {/* ================= ARCHIVE MODAL (PHASE 2) ================= */}
+            {/* ================= ARCHIVE MODAL ================= */}
             {archiveTarget && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                     <div className="bg-white p-6 rounded w-96">
@@ -247,7 +231,9 @@ export default function AdminRequests() {
 
                         <div className="flex justify-end gap-2">
                             <button
-                                onClick={() => setArchiveTarget(null)}
+                                onClick={() =>
+                                    setArchiveTarget(null)
+                                }
                             >
                                 Cancel
                             </button>
