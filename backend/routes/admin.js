@@ -1,42 +1,90 @@
 ﻿const express = require("express");
 const bcrypt = require("bcryptjs");
-
 const auth = require("../middleware/auth");
 const isAdmin = require("../middleware/isAdmin");
 
-const Room = require("../models/Room");
-const Request = require("../models/Request");
 const User = require("../models/User");
 const Resident = require("../models/Resident");
+const Request = require("../models/Request");
 const Payment = require("../models/Payment");
 const ActivityLog = require("../models/ActivityLog");
 
 const router = express.Router();
+const Joi = require("joi");
 
-/* ================= DASHBOARD STATS ================= */
-router.get("/stats", auth, isAdmin, async (req, res) => {
+const addResidentSchema = Joi.object({
+    name: Joi.string().min(2).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+    roomNumber: Joi.string().required(),
+    monthlyRent: Joi.number().min(0).required()
+});
+const validate = require("../middleware/validate");
+
+router.post(
+    "/add-resident",
+    auth,
+    isAdmin,
+    validate(addResidentSchema),
+    async (req, res, next) => {
+        // existing code stays the same
+    }
+);
+
+
+/* ================= GET ALL REQUESTS ================= */
+router.get("/requests", auth, isAdmin, async (req, res, next) => {
     try {
-        const residents = await Resident.countDocuments();
-        const pendingRequests = await Request.countDocuments({ status: "pending" });
-        const unpaidPayments = await Payment.countDocuments({ status: "unpaid" });
+        const requests = await Request.find().sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (err) {
+        next(err);
+    }
+});
 
-        res.json({ residents, pendingRequests, unpaidPayments });
-    } catch {
-        res.status(500).json("Server error");
+/* ================= UPDATE REQUEST STATUS ================= */
+router.put("/requests/:id/status", auth, isAdmin, async (req, res, next) => {
+    try {
+        const { status } = req.body;
+
+        const request = await Request.findById(req.params.id);
+        if (!request) return res.status(404).json("Request not found");
+
+        request.status = status;
+        request.statusHistory.push({ status });
+        await request.save();
+
+        await ActivityLog.create({
+            action: `Updated request status to ${status}`,
+            performedBy: req.user.id,
+            role: req.user.role,
+            ipAddress: req.ip,
+            route: req.originalUrl
+        });
+
+        res.json("Request updated successfully");
+    } catch (err) {
+        next(err);
     }
 });
 
 /* ================= ADD RESIDENT ================= */
-router.post("/add-resident", auth, isAdmin, async (req, res) => {
+router.post("/add-resident", auth, isAdmin, async (req, res, next) => {
     try {
         const { name, email, password, roomNumber, monthlyRent } = req.body;
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        if (!email || !password || !name) {
+            return res.status(400).json("Missing required fields");
+        }
+
+        const existing = await User.findOne({ email });
+        if (existing) return res.status(400).json("User already exists");
+
+        const hashed = await bcrypt.hash(password, 10);
 
         const user = await User.create({
-            name,
             email,
-            password: hashedPassword,
+            password: hashed,
             role: "resident"
         });
 
@@ -50,59 +98,42 @@ router.post("/add-resident", auth, isAdmin, async (req, res) => {
         await Payment.create({
             residentId: resident._id,
             month: "January",
-            amount: monthlyRent,
-            status: "unpaid"
+            amount: monthlyRent
         });
 
         await ActivityLog.create({
             action: "Added resident",
             performedBy: req.user.id,
-            role: req.user.role
+            role: req.user.role,
+            ipAddress: req.ip,
+            route: req.originalUrl
         });
 
         res.status(201).json("Resident added successfully");
     } catch (err) {
-        console.error(err);
-        res.status(500).json("Server error");
+        next(err);
     }
 });
 
-/* ================= ROOMS ================= */
-router.get("/rooms", auth, isAdmin, async (req, res) => {
-    const rooms = await Room.find();
-    res.json(rooms);
-});
+/* ================= ADMIN DASHBOARD STATS ================= */
+router.get("/stats", auth, isAdmin, async (req, res, next) => {
+    try {
+        const totalResidents = await Resident.countDocuments();
+        const pendingRequests = await Request.countDocuments({
+            status: "pending"
+        });
+        const unpaidPayments = await Payment.countDocuments({
+            status: "unpaid"
+        });
 
-router.post("/rooms", auth, isAdmin, async (req, res) => {
-    const room = await Room.create(req.body);
-
-    await ActivityLog.create({
-        action: "Added room",
-        performedBy: req.user.id,
-        role: req.user.role
-    });
-
-    res.status(201).json(room);
-});
-
-/* ================= REQUESTS ================= */
-router.get("/requests", auth, isAdmin, async (req, res) => {
-    const requests = await Request.find();
-    res.json(requests);
-});
-
-router.put("/requests/:id/status", auth, isAdmin, async (req, res) => {
-    const { status } = req.body;
-
-    await Request.findByIdAndUpdate(req.params.id, { status });
-
-    await ActivityLog.create({
-        action: `Updated request status to ${status}`,
-        performedBy: req.user.id,
-        role: req.user.role
-    });
-
-    res.json("Request status updated");
+        res.json({
+            totalResidents,
+            pendingRequests,
+            unpaidPayments
+        });
+    } catch (err) {
+        next(err);
+    }
 });
 
 module.exports = router;
