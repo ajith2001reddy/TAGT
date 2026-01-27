@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 export default function AdminResidents() {
@@ -13,24 +13,41 @@ export default function AdminResidents() {
 
     const token = localStorage.getItem("token");
 
-    const fetchResidents = async () => {
+    /* =========================
+       FETCH RESIDENTS
+    ========================= */
+    const fetchResidents = useCallback(async () => {
         const res = await axios.get("/admin/residents", {
             headers: { Authorization: `Bearer ${token}` }
         });
         setResidents(res.data);
-    };
+    }, [token]);
 
+    /* =========================
+       ADD RESIDENT
+    ========================= */
     const addResident = async () => {
         await axios.post("/admin/residents", form, {
             headers: { Authorization: `Bearer ${token}` }
         });
-        setForm({ name: "", email: "", password: "", room: "", rent: "" });
+
+        setForm({
+            name: "",
+            email: "",
+            password: "",
+            room: "",
+            rent: ""
+        });
+
         fetchResidents();
     };
 
+    /* =========================
+       ON LOAD
+    ========================= */
     useEffect(() => {
         fetchResidents();
-    }, []);
+    }, [fetchResidents]);
 
     return (
         <div className="bg-white p-6 rounded-xl shadow">
@@ -44,7 +61,9 @@ export default function AdminResidents() {
                         placeholder={field}
                         type={field === "password" ? "password" : "text"}
                         value={form[field]}
-                        onChange={e => setForm({ ...form, [field]: e.target.value })}
+                        onChange={e =>
+                            setForm({ ...form, [field]: e.target.value })
+                        }
                         className="border p-2 rounded"
                     />
                 ))}
