@@ -10,6 +10,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const residentRoutes = require("./routes/resident");
+const paymentsRoutes = require("./routes/payments"); // ✅ FIX
 const errorHandler = require("./middleware/errorHandler");
 
 
