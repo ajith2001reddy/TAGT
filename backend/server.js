@@ -11,7 +11,7 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const residentRoutes = require("./routes/resident");
 const errorHandler = require("./middleware/errorHandler");
-const adminRoutes = require("./routes/adminRoutes");
+
 
 /* ================= APP INIT ================= */
 const app = express();
