@@ -4,7 +4,6 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const path = require("path");
 
 const connectDB = require("./config/db");
 
@@ -34,28 +33,18 @@ app.use(
 app.use(express.json());
 app.use(
     cors({
-        origin: "*",
-        credentials: true
+        origin: "*"
     })
 );
 
-/* ================= API ROUTES ================= */
+/* ================= API ROUTES ONLY ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/resident", residentRoutes);
 
-/* ================= STATIC FRONTEND ================= */
-app.use(express.static(path.join(__dirname, "frontend/build")));
-
-/* ================= REACT FALLBACK (EXPRESS 5 FIX) ================= */
-/**
- * IMPORTANT:
- * Express 5 does NOT allow app.get("*")
- */
-app.get("/*", (req, res) => {
-    res.sendFile(
-        path.join(__dirname, "frontend/build", "index.html")
-    );
+/* ================= HEALTH CHECK ================= */
+app.get("/api/health", (req, res) => {
+    res.json({ status: "OK" });
 });
 
 /* ================= ERROR HANDLER ================= */
@@ -63,5 +52,5 @@ app.use(errorHandler);
 
 /* ================= START ================= */
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Backend API running on port ${PORT}`);
 });

@@ -1,12 +1,14 @@
 import axios from "axios";
 
-const API = "https://tagt.onrender.com";
-
+/**
+ * MUST include /api
+ * Backend routes start with /api/*
+ */
 const api = axios.create({
-    baseURL: API,
+    baseURL: "https://tagt.onrender.com/api",
     headers: {
-        "Content-Type": "application/json",
-    },
+        "Content-Type": "application/json"
+    }
 });
 
 api.interceptors.request.use(
