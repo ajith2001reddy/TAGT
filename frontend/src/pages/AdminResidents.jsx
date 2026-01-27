@@ -1,24 +1,31 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-
-import DashboardLayout from "../layouts/DashboardLayout";
-import Loader from "../components/Loader";
-import { getResidents } from "../services/adminService";
+import axios from "axios";
 
 export default function AdminResidents() {
     const [residents, setResidents] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        password: "",
+        room: "",
+        rent: ""
+    });
+
+    const token = localStorage.getItem("token");
 
     const fetchResidents = async () => {
-        try {
-            setLoading(true);
-            const data = await getResidents();
-            setResidents(data);
-        } catch (err) {
-            toast.error("Failed to load residents");
-        } finally {
-            setLoading(false);
-        }
+        const res = await axios.get("/admin/residents", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        setResidents(res.data);
+    };
+
+    const addResident = async () => {
+        await axios.post("/admin/residents", form, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        setForm({ name: "", email: "", password: "", room: "", rent: "" });
+        fetchResidents();
     };
 
     useEffect(() => {
@@ -26,41 +33,52 @@ export default function AdminResidents() {
     }, []);
 
     return (
-        <DashboardLayout>
-            <h2 className="text-2xl font-bold mb-6">Residents</h2>
+        <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="text-xl font-bold mb-4">Residents</h2>
 
-            {loading ? (
-                <Loader />
-            ) : residents.length === 0 ? (
-                <p className="text-gray-500">No residents found</p>
-            ) : (
-                <div className="bg-white rounded-xl shadow overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="p-3">Name</th>
-                                <th className="p-3">Email</th>
-                                <th className="p-3">Room</th>
-                                <th className="p-3">Rent</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {residents.map((r) => (
-                                <tr key={r._id} className="border-t">
-                                    <td className="p-3">{r.name}</td>
-                                    <td className="p-3">
-                                        {r.userId?.email}
-                                    </td>
-                                    <td className="p-3">{r.roomNumber}</td>
-                                    <td className="p-3">
-                                        ${r.monthlyRent}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </DashboardLayout>
+            {/* ADD RESIDENT FORM */}
+            <div className="grid grid-cols-5 gap-2 mb-6">
+                {["name", "email", "password", "room", "rent"].map(field => (
+                    <input
+                        key={field}
+                        placeholder={field}
+                        type={field === "password" ? "password" : "text"}
+                        value={form[field]}
+                        onChange={e => setForm({ ...form, [field]: e.target.value })}
+                        className="border p-2 rounded"
+                    />
+                ))}
+
+                <button
+                    onClick={addResident}
+                    className="bg-blue-600 text-white px-4 py-2 rounded col-span-5"
+                >
+                    Add Resident
+                </button>
+            </div>
+
+            {/* RESIDENT TABLE */}
+            <table className="w-full border">
+                <thead>
+                    <tr className="border-b">
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Room</th>
+                        <th>Rent</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {residents.map(r => (
+                        <tr key={r._id} className="border-b text-center">
+                            <td>{r.userId?.name}</td>
+                            <td>{r.userId?.email}</td>
+                            <td>{r.room}</td>
+                            <td>${r.rent}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 }
