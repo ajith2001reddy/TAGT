@@ -5,7 +5,7 @@ import axios from "axios";
  * Backend routes start with /api/*
  */
 const api = axios.create({
-    baseURL: "https://tagt.onrender.com",
+    baseURL: "https://tagt.onrender.com/api",
     headers: {
         "Content-Type": "application/json"
     }

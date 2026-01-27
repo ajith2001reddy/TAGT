@@ -12,6 +12,7 @@ const adminRoutes = require("./routes/admin");
 const residentRoutes = require("./routes/resident");
 const errorHandler = require("./middleware/errorHandler");
 
+
 /* ================= APP INIT ================= */
 const app = express();
 const PORT = process.env.PORT || 5000;
