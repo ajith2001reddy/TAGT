@@ -6,21 +6,23 @@ const Resident = require("../models/Resident");
 
 const router = express.Router();
 
-/* ================= REGISTER ================= */
+/* REGISTER */
 router.post("/register", async (req, res) => {
-    const { email, password, role } = req.body;
-
     try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json("User already exists");
+        const { email, password, role } = req.body || {};
+
+        if (!email || !password || !role) {
+            return res.status(400).json("All fields required");
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const existing = await User.findOne({ email });
+        if (existing) return res.status(400).json("User exists");
+
+        const hashed = await bcrypt.hash(password, 10);
 
         const user = await User.create({
             email,
-            password: hashedPassword,
+            password: hashed,
             role
         });
 
@@ -28,37 +30,27 @@ router.post("/register", async (req, res) => {
             await Resident.create({ userId: user._id });
         }
 
-        res.status(201).json("User registered successfully");
+        res.status(201).json("Registered successfully");
     } catch (err) {
         console.error(err);
         res.status(500).json("Server error");
     }
 });
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 router.post("/login", async (req, res) => {
-    const { email, password } = req.body || {};
-
     try {
-        const user = await User.findOne({ email });
+        const { email, password } = req.body || {};
+
         if (!email || !password) {
-            return res.status(400).json("Email and password are required");
+            return res.status(400).json("Email & password required");
         }
 
-        if (!user) {
-            return res.status(401).json("Invalid credentials");
-        }
+        const user = await User.findOne({ email });
+        if (!user) return res.status(401).json("Invalid credentials");
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json("Invalid credentials");
-        }
-
-        let residentId = null;
-        if (user.role === "resident") {
-            const resident = await Resident.findOne({ userId: user._id });
-            if (resident) residentId = resident._id;
-        }
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return res.status(401).json("Invalid credentials");
 
         const token = jwt.sign(
             { id: user._id, role: user.role },
@@ -66,11 +58,7 @@ router.post("/login", async (req, res) => {
             { expiresIn: "1d" }
         );
 
-        res.json({
-            token,
-            role: user.role,
-            residentId
-        });
+        res.json({ token, role: user.role });
     } catch (err) {
         console.error(err);
         res.status(500).json("Server error");
