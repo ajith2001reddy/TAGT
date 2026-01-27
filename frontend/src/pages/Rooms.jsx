@@ -1,0 +1,274 @@
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+
+import DashboardLayout from "../layouts/DashboardLayout";
+import api from "../api/axios";
+
+/**
+ * Rooms
+ * Phase 4 – Room & Bed Management (Admin)
+ *
+ * - Add rooms
+ * - View total / occupied / available beds
+ * - Update occupancy
+ * - Delete empty rooms
+ */
+
+export default function Rooms() {
+    const [rooms, setRooms] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    /* ===== ADD ROOM FORM ===== */
+    const [form, setForm] = useState({
+        roomNumber: "",
+        totalBeds: "",
+        note: ""
+    });
+
+    /* ===== OCCUPANCY MODAL ===== */
+    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [occupiedBeds, setOccupiedBeds] = useState("");
+
+    /* ================= FETCH ROOMS ================= */
+    const fetchRooms = async () => {
+        try {
+            setLoading(true);
+            const res = await api.get("/rooms");
+            setRooms(Array.isArray(res.data) ? res.data : []);
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to load rooms");
+            setRooms([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRooms();
+    }, []);
+
+    /* ================= ADD ROOM ================= */
+    const addRoom = async () => {
+        if (!form.roomNumber || !form.totalBeds) {
+            toast.error("Room number and total beds are required");
+            return;
+        }
+
+        try {
+            await api.post("/rooms", {
+                roomNumber: form.roomNumber,
+                totalBeds: Number(form.totalBeds),
+                note: form.note
+            });
+
+            toast.success("Room added");
+            setForm({ roomNumber: "", totalBeds: "", note: "" });
+            fetchRooms();
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to add room");
+        }
+    };
+
+    /* ================= UPDATE OCCUPANCY ================= */
+    const updateOccupancy = async () => {
+        if (occupiedBeds === "" || occupiedBeds < 0) {
+            toast.error("Enter a valid occupied beds value");
+            return;
+        }
+
+        try {
+            await api.put(
+                `/rooms/${selectedRoom._id}/occupancy`,
+                { occupiedBeds: Number(occupiedBeds) }
+            );
+
+            toast.success("Occupancy updated");
+            setSelectedRoom(null);
+            setOccupiedBeds("");
+            fetchRooms();
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to update occupancy");
+        }
+    };
+
+    /* ================= DELETE ROOM ================= */
+    const deleteRoom = async (room) => {
+        if (
+            !window.confirm(
+                `Delete room ${room.roomNumber}? This cannot be undone.`
+            )
+        )
+            return;
+
+        try {
+            await api.delete(`/rooms/${room._id}`);
+            toast.success("Room deleted");
+            fetchRooms();
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to delete room");
+        }
+    };
+
+    return (
+        <DashboardLayout>
+            <div className="bg-white p-6 rounded-xl shadow">
+                <h2 className="text-xl font-bold mb-6">
+                    Rooms & Bed Management
+                </h2>
+
+                {/* ================= ADD ROOM ================= */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+                    <input
+                        placeholder="Room Number"
+                        className="border p-2 rounded"
+                        value={form.roomNumber}
+                        onChange={(e) =>
+                            setForm({
+                                ...form,
+                                roomNumber: e.target.value
+                            })
+                        }
+                    />
+
+                    <input
+                        type="number"
+                        placeholder="Total Beds"
+                        className="border p-2 rounded"
+                        value={form.totalBeds}
+                        onChange={(e) =>
+                            setForm({
+                                ...form,
+                                totalBeds: e.target.value
+                            })
+                        }
+                    />
+
+                    <input
+                        placeholder="Note (optional)"
+                        className="border p-2 rounded"
+                        value={form.note}
+                        onChange={(e) =>
+                            setForm({
+                                ...form,
+                                note: e.target.value
+                            })
+                        }
+                    />
+
+                    <button
+                        onClick={addRoom}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                        Add Room
+                    </button>
+                </div>
+
+                {/* ================= ROOMS TABLE ================= */}
+                {loading ? (
+                    <p className="text-center text-gray-500">Loading...</p>
+                ) : rooms.length === 0 ? (
+                    <p className="text-center text-gray-500">
+                        No rooms added yet.
+                    </p>
+                ) : (
+                    <table className="w-full border">
+                        <thead>
+                            <tr className="border-b">
+                                <th className="p-2">Room</th>
+                                <th className="p-2">Total Beds</th>
+                                <th className="p-2">Occupied</th>
+                                <th className="p-2">Available</th>
+                                <th className="p-2">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {rooms.map((r) => (
+                                <tr
+                                    key={r._id}
+                                    className="border-b text-center"
+                                >
+                                    <td className="p-2">
+                                        {r.roomNumber}
+                                    </td>
+                                    <td className="p-2">
+                                        {r.totalBeds}
+                                    </td>
+                                    <td className="p-2">
+                                        {r.occupiedBeds}
+                                    </td>
+                                    <td className="p-2 font-semibold">
+                                        {r.availableBeds}
+                                    </td>
+                                    <td className="p-2 space-x-2">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedRoom(r);
+                                                setOccupiedBeds(
+                                                    r.occupiedBeds
+                                                );
+                                            }}
+                                            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                                        >
+                                            Update
+                                        </button>
+
+                                        <button
+                                            onClick={() =>
+                                                deleteRoom(r)
+                                            }
+                                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
+            {/* ================= OCCUPANCY MODAL ================= */}
+            {selectedRoom && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded w-96">
+                        <h3 className="font-bold mb-3">
+                            Update Occupancy – Room{" "}
+                            {selectedRoom.roomNumber}
+                        </h3>
+
+                        <input
+                            type="number"
+                            className="w-full border p-2 mb-4"
+                            value={occupiedBeds}
+                            onChange={(e) =>
+                                setOccupiedBeds(e.target.value)
+                            }
+                        />
+
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() =>
+                                    setSelectedRoom(null)
+                                }
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={updateOccupancy}
+                                className="bg-blue-600 text-white px-4 py-2 rounded"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </DashboardLayout>
+    );
+}

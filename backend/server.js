@@ -12,6 +12,7 @@ const adminRoutes = require("./routes/admin");
 const residentRoutes = require("./routes/resident");
 const paymentsRoutes = require("./routes/payments"); // ✅ FIX
 const errorHandler = require("./middleware/errorHandler");
+const roomsRoutes = require("./routes/rooms");
 
 
 /* ================= APP INIT ================= */
@@ -44,6 +45,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/resident", residentRoutes);
 app.use("/api/payments", paymentsRoutes);
+app.use("/api/rooms", roomsRoutes);
 
 /* ================= HEALTH CHECK ================= */
 app.get("/api/health", (req, res) => {
