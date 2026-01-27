@@ -31,12 +31,23 @@ export default function RequestTable({ requests, refresh }) {
                 </thead>
 
                 <tbody>
+                    {requests.length === 0 && (
+                        <tr>
+                            <td
+                                colSpan="3"
+                                className="p-6 text-center text-gray-500"
+                            >
+                                No requests found.
+                            </td>
+                        </tr>
+                    )}
+
                     {requests.map((req) => (
                         <motion.tr
                             key={req._id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="border-t"
+                            className="border-t hover:bg-gray-50 transition"
                         >
                             <td className="p-4">{req.message}</td>
 
@@ -48,34 +59,38 @@ export default function RequestTable({ requests, refresh }) {
                                 </span>
                             </td>
 
-                            <td className="p-4 space-x-2">
-                                {req.status !== "resolved" && (
-                                    <>
-                                        <button
-                                            onClick={() =>
-                                                changeStatus(
-                                                    req._id,
-                                                    "in-progress"
-                                                )
-                                            }
-                                            className="text-sm text-blue-600 hover:underline"
-                                        >
-                                            In Progress
-                                        </button>
+                            <td className="p-4 space-x-3">
+                                <button
+                                    aria-label="Mark as in progress"
+                                    disabled={
+                                        req.status === "in-progress" ||
+                                        req.status === "resolved"
+                                    }
+                                    onClick={() =>
+                                        changeStatus(req._id, "in-progress")
+                                    }
+                                    className={`text-sm ${req.status === "in-progress" ||
+                                            req.status === "resolved"
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "text-blue-600 hover:underline"
+                                        }`}
+                                >
+                                    In Progress
+                                </button>
 
-                                        <button
-                                            onClick={() =>
-                                                changeStatus(
-                                                    req._id,
-                                                    "resolved"
-                                                )
-                                            }
-                                            className="text-sm text-green-600 hover:underline"
-                                        >
-                                            Resolve
-                                        </button>
-                                    </>
-                                )}
+                                <button
+                                    aria-label="Mark as resolved"
+                                    disabled={req.status === "resolved"}
+                                    onClick={() =>
+                                        changeStatus(req._id, "resolved")
+                                    }
+                                    className={`text-sm ${req.status === "resolved"
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "text-green-600 hover:underline"
+                                        }`}
+                                >
+                                    Resolve
+                                </button>
                             </td>
                         </motion.tr>
                     ))}
