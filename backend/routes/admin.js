@@ -3,6 +3,7 @@ const auth = require("../middleware/auth");
 const isAdmin = require("../middleware/isAdmin");
 const Request = require("../models/Request");
 const User = require("../models/User");
+const Resident = require("../models/Resident");
 
 const router = express.Router();
 
@@ -53,14 +54,13 @@ router.get("/stats", auth, isAdmin, async (req, res) => {
 /* ===== GET ALL RESIDENTS ===== */
 router.get("/residents", auth, isAdmin, async (req, res, next) => {
     try {
-        const residents = await User.find({ role: "resident" })
-            .select("-password");
+        const residents = await Resident.find()
+            .populate("userId", "email");
         res.json(residents);
     } catch (err) {
         next(err);
     }
 });
-
 
 
 module.exports = router;
