@@ -15,12 +15,14 @@ const PaymentSchema = new mongoose.Schema(
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true // Critical for "get my payments" queries
         },
 
         // Used for rent (e.g. "2026-01")
         month: {
-            type: String
+            type: String,
+            index: true // For monthly rent reports
         },
 
         amount: {
@@ -31,41 +33,54 @@ const PaymentSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ["paid", "unpaid"],
-            default: "unpaid"
+            default: "unpaid",
+            index: true // Critical for filtering paid vs unpaid
         },
 
         /* ================= PHASE 3 ADDITIONS ================= */
 
-        // What this charge is for (rent, damage, maintenance, etc.)
         description: {
             type: String,
             default: "Charge"
         },
 
-        // How this bill was created
         type: {
             type: String,
             enum: ["rent", "manual", "maintenance"],
-            default: "manual"
+            default: "manual",
+            index: true // For filtering by payment type
         },
 
-        // Admin who created the bill
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
         },
 
-        // When admin marked it paid
         paidAt: {
-            type: Date
+            type: Date,
+            index: true // For revenue reports by date
         },
 
-        // Optional admin note
         adminNote: {
             type: String
         }
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    }
 );
+
+/* ================= PERFORMANCE INDEXES ================= */
+
+// Critical for resident dashboard: "my unpaid bills"
+PaymentSchema.index({ residentId: 1, status: 1 });
+
+// For admin revenue queries: "show me all paid payments sorted by date"
+PaymentSchema.index({ status: 1, paidAt: -1 });
+
+// For monthly rent reports: "show me January rent payments"
+PaymentSchema.index({ month: 1, status: 1 });
 
 module.exports = mongoose.model("Payment", PaymentSchema);

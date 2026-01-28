@@ -7,7 +7,8 @@ const RequestSchema = new mongoose.Schema(
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true // Speeds up "find my requests" queries
         },
 
         message: {
@@ -19,7 +20,8 @@ const RequestSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ["pending", "in-progress", "resolved"],
-            default: "pending"
+            default: "pending",
+            index: true // Speeds up dashboard counts and filtering
         },
 
         statusHistory: [
@@ -34,12 +36,6 @@ const RequestSchema = new mongoose.Schema(
 
         /* ================= PHASE 1 ADDITIONS (SAFE) ================= */
 
-        /**
-         * Admin notes for professional request handling
-         * - Does NOT affect existing flows
-         * - Empty for old records
-         * - Used only by admin features
-         */
         adminNotes: [
             {
                 note: {
@@ -60,17 +56,29 @@ const RequestSchema = new mongoose.Schema(
             }
         ],
 
-        /**
-         * New workflow status (OPTIONAL)
-         * This allows future migration without breaking old logic
-         */
         workflowStatus: {
             type: String,
             enum: ["Received", "In-Progress", "On Hold", "Done"],
-            default: "Received"
+            default: "Received",
+            index: true // Speeds up workflow filtering
         }
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    }
 );
+
+/* ================= PERFORMANCE INDEXES ================= */
+
+// Compound index for common query: "find active requests for this resident"
+RequestSchema.index({ residentId: 1, status: 1 });
+
+// Compound index for admin dashboard: "pending requests sorted by date"
+RequestSchema.index({ status: 1, createdAt: -1 });
+
+// Compound index for workflow queries
+RequestSchema.index({ workflowStatus: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Request", RequestSchema);

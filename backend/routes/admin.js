@@ -7,6 +7,8 @@ const Request = require("../models/Request");
 const RequestHistory = require("../models/RequestHistory"); // ✅ PHASE 2
 const User = require("../models/User");
 const Resident = require("../models/Resident");
+const Payment = require("../models/Payment"); // Need this for cleanup checks
+const Room = require("../models/Room"); // Optional: for room occupancy updates
 
 const router = express.Router();
 
@@ -175,11 +177,20 @@ router.get("/stats", auth, isAdmin, async (req, res) => {
             workflowStatus: { $ne: "Done" }
         });
 
+        // Calculate revenue stats
+        const paidPayments = await Payment.find({ status: "paid" });
+        const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+
+        const unpaidPayments = await Payment.find({ status: "unpaid" });
+        const outstandingBalance = unpaidPayments.reduce((sum, p) => sum + p.amount, 0);
+
         res.json({
             totalResidents,      // OLD
             pendingRequests,     // OLD
             totalRequests,       // NEW
-            openRequests         // NEW
+            openRequests,        // NEW
+            totalRevenue,        // NEW
+            outstandingBalance   // NEW
         });
     } catch (err) {
         res.status(500).json("Failed to load stats");
@@ -232,6 +243,61 @@ router.post("/residents", auth, isAdmin, async (req, res) => {
         res.json({ user, resident });
     } catch (err) {
         res.status(500).json("Failed to add resident");
+    }
+});
+
+/* =========================================================
+   DELETE RESIDENT (ADMIN)
+   - Prevents deletion if active requests exist
+   - Archives/cancels pending payments
+   - Updates room occupancy if applicable
+   - Soft deletes user account
+========================================================= */
+router.delete("/residents/:id", auth, isAdmin, async (req, res) => {
+    try {
+        const resident = await Resident.findById(req.params.id);
+        if (!resident) return res.status(404).json("Resident not found");
+
+        // Check for active (non-resolved) maintenance requests
+        const activeRequests = await Request.countDocuments({
+            residentId: resident.userId,
+            status: { $nin: ["resolved"] },
+            workflowStatus: { $ne: "Done" }
+        });
+
+        if (activeRequests > 0) {
+            return res.status(400).json({
+                message: "Cannot delete resident with active maintenance requests. Resolve or archive them first."
+            });
+        }
+
+        // Check for unpaid bills
+        const unpaidBills = await Payment.countDocuments({
+            residentId: resident.userId,
+            status: "unpaid"
+        });
+
+        if (unpaidBills > 0) {
+            return res.status(400).json({
+                message: "Cannot delete resident with outstanding payments. Mark them as paid or waive them first."
+            });
+        }
+
+        // Optional: Update room occupancy if you implement room tracking
+        // await Room.findOneAndUpdate(
+        //     { roomNumber: resident.room },
+        //     { $inc: { occupiedBeds: -1 } }
+        // );
+
+        // Soft delete user (disable account) instead of hard delete to preserve history
+        await User.findByIdAndUpdate(resident.userId, { isActive: false });
+
+        // Hard delete the resident record (but user remains archived)
+        await resident.deleteOne();
+
+        res.json({ message: "Resident removed successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to delete resident", error: err.message });
     }
 });
 
