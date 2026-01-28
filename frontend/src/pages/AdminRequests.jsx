@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import DashboardLayout from "../layouts/DashboardLayout";
 
 /**
- * AdminRequests – Phase 4 FIX
- * - Correct action visibility
- * - Proper button spacing
- * - Read-only resolved requests
+ * AdminRequests – FINAL FIX
+ * - Wrapped in DashboardLayout (SPA-safe)
+ * - Buttons explicitly non-submit
+ * - No browser navigation side effects
  */
 
 export default function AdminRequests() {
@@ -72,102 +73,106 @@ export default function AdminRequests() {
     }, []);
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow">
-            <h2 className="text-xl font-bold mb-4">
-                Maintenance Requests
-            </h2>
+        <DashboardLayout>
+            <div className="bg-white p-6 rounded-xl shadow">
+                <h2 className="text-xl font-bold mb-4">
+                    Maintenance Requests
+                </h2>
 
-            <table className="w-full border">
-                <thead>
-                    <tr className="border-b">
-                        <th>Message</th>
-                        <th>Resident</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
+                <table className="w-full border">
+                    <thead>
+                        <tr className="border-b">
+                            <th>Message</th>
+                            <th>Resident</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
 
-                <tbody>
-                    {requests.map((req) => {
-                        const displayStatus =
-                            req.workflowStatus || req.status;
+                    <tbody>
+                        {requests.map((req) => {
+                            const displayStatus =
+                                req.workflowStatus || req.status;
 
-                        const isResolved =
-                            displayStatus === "resolved" ||
-                            displayStatus === "Done";
+                            const isResolved =
+                                displayStatus === "resolved" ||
+                                displayStatus === "Done";
 
-                        return (
-                            <tr
-                                key={req._id}
-                                className="border-b text-center"
-                            >
-                                <td>{req.message}</td>
-                                <td>{req.residentId?.email}</td>
+                            return (
+                                <tr
+                                    key={req._id}
+                                    className="border-b text-center"
+                                >
+                                    <td>{req.message}</td>
+                                    <td>{req.residentId?.email}</td>
 
-                                <td className="capitalize font-medium">
-                                    {displayStatus}
-                                </td>
+                                    <td className="capitalize font-medium">
+                                        {displayStatus}
+                                    </td>
 
-                                <td>
-                                    {isResolved ? (
-                                        <span className="text-green-600 font-semibold">
-                                            Closed
-                                        </span>
-                                    ) : (
-                                        <div className="flex gap-2 justify-center">
-                                            {req.status === "pending" && (
+                                    <td>
+                                        {isResolved ? (
+                                            <span className="text-green-600 font-semibold">
+                                                Closed
+                                            </span>
+                                        ) : (
+                                            <div className="flex gap-2 justify-center">
+                                                {req.status === "pending" && (
+                                                    <button
+                                                        type="button"
+                                                        className="bg-blue-500 text-white px-3 py-1 rounded"
+                                                        onClick={() =>
+                                                            updateStatus(
+                                                                req._id,
+                                                                "in-progress"
+                                                            )
+                                                        }
+                                                    >
+                                                        In Progress
+                                                    </button>
+                                                )}
+
                                                 <button
-                                                    className="bg-blue-500 text-white px-3 py-1 rounded"
+                                                    type="button"
+                                                    className="bg-green-600 text-white px-3 py-1 rounded"
                                                     onClick={() =>
                                                         updateStatus(
                                                             req._id,
-                                                            "in-progress"
+                                                            "resolved"
                                                         )
                                                     }
                                                 >
-                                                    In Progress
+                                                    Resolve
                                                 </button>
-                                            )}
 
-                                            <button
-                                                className="bg-green-600 text-white px-3 py-1 rounded"
-                                                onClick={() =>
-                                                    updateStatus(
-                                                        req._id,
-                                                        "resolved"
-                                                    )
-                                                }
-                                            >
-                                                Resolve
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    className="bg-gray-800 text-white px-3 py-1 rounded"
+                                                    onClick={() =>
+                                                        setSelectedRequest(req)
+                                                    }
+                                                >
+                                                    Update (Pro)
+                                                </button>
 
-                                            <button
-                                                className="bg-gray-800 text-white px-3 py-1 rounded"
-                                                onClick={() =>
-                                                    setSelectedRequest(
-                                                        req
-                                                    )
-                                                }
-                                            >
-                                                Update (Pro)
-                                            </button>
-
-                                            <button
-                                                className="bg-red-600 text-white px-3 py-1 rounded"
-                                                onClick={() =>
-                                                    setArchiveTarget(req)
-                                                }
-                                            >
-                                                Close & Archive
-                                            </button>
-                                        </div>
-                                    )}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                                                <button
+                                                    type="button"
+                                                    className="bg-red-600 text-white px-3 py-1 rounded"
+                                                    onClick={() =>
+                                                        setArchiveTarget(req)
+                                                    }
+                                                >
+                                                    Close & Archive
+                                                </button>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
 
             {/* ================= WORKFLOW MODAL ================= */}
             {selectedRequest && (
@@ -179,6 +184,7 @@ export default function AdminRequests() {
 
                         <select
                             className="w-full border p-2 mb-3"
+                            value={workflowStatus}
                             onChange={(e) =>
                                 setWorkflowStatus(e.target.value)
                             }
@@ -201,6 +207,7 @@ export default function AdminRequests() {
 
                         <div className="flex justify-end gap-2">
                             <button
+                                type="button"
                                 onClick={() =>
                                     setSelectedRequest(null)
                                 }
@@ -208,6 +215,7 @@ export default function AdminRequests() {
                                 Cancel
                             </button>
                             <button
+                                type="button"
                                 onClick={updateWorkflowStatus}
                                 className="bg-blue-600 text-white px-4 py-2 rounded"
                             >
@@ -237,6 +245,7 @@ export default function AdminRequests() {
 
                         <div className="flex justify-end gap-2">
                             <button
+                                type="button"
                                 onClick={() =>
                                     setArchiveTarget(null)
                                 }
@@ -244,6 +253,7 @@ export default function AdminRequests() {
                                 Cancel
                             </button>
                             <button
+                                type="button"
                                 onClick={archiveRequest}
                                 className="bg-red-600 text-white px-4 py-2 rounded"
                             >
@@ -253,6 +263,6 @@ export default function AdminRequests() {
                     </div>
                 </div>
             )}
-        </div>
+        </DashboardLayout>
     );
 }

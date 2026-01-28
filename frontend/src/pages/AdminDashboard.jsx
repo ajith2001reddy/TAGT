@@ -1,5 +1,6 @@
 ﻿import { motion } from "framer-motion";
 import { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -12,10 +13,11 @@ import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
 /**
- * AdminDashboard – Phase 4 FINAL
- * - Active requests preview
- * - Full requests chart restored
- * - Clean separation of concerns
+ * ADMIN DASHBOARD (SaaS GRADE)
+ * - Clear visual hierarchy
+ * - Metric-first layout
+ * - Clean request preview
+ * - Financial confidence UI
  */
 
 export default function AdminDashboard() {
@@ -72,22 +74,22 @@ export default function AdminDashboard() {
         fetchPayments();
     }, [fetchRequests]);
 
-    /* ================= REQUESTS CHART (ALL DATA) ================= */
+    /* ================= REQUEST STATUS METRICS ================= */
     const chartData = [
         {
-            status: "pending",
+            status: "Pending",
             count: allRequests.filter(
                 (r) => r.status === "pending"
             ).length
         },
         {
-            status: "in-progress",
+            status: "In Progress",
             count: allRequests.filter(
                 (r) => r.status === "in-progress"
             ).length
         },
         {
-            status: "resolved",
+            status: "Resolved",
             count: allRequests.filter(
                 (r) => r.status === "resolved"
             ).length
@@ -103,122 +105,109 @@ export default function AdminDashboard() {
         .filter((p) => p.status === "unpaid")
         .reduce((sum, p) => sum + p.amount, 0);
 
-    /* ================= MONTHLY REVENUE ================= */
-    const monthlyRevenue = payments
-        .filter((p) => p.status === "paid")
-        .reduce((acc, p) => {
-            const month = new Date(p.createdAt).toLocaleString(
-                "default",
-                { month: "short", year: "numeric" }
-            );
-            acc[month] = (acc[month] || 0) + p.amount;
-            return acc;
-        }, {});
-
-    const revenueChartData = Object.entries(monthlyRevenue).map(
-        ([month, amount]) => ({ month, amount })
-    );
-
     return (
         <DashboardLayout>
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
+                className="space-y-10"
             >
-                <h2 className="text-2xl font-bold mb-6 text-gray-800">
-                    Admin Dashboard
-                </h2>
+                {/* ================= HEADER ================= */}
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                        Admin Dashboard
+                    </h1>
+                    <p className="text-gray-500 mt-1">
+                        Overview of operations, requests, and revenue
+                    </p>
+                </div>
 
-                {/* ================= STATS ================= */}
+                {/* ================= METRICS ================= */}
                 {loading || revenueLoading ? (
                     <Loader />
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <StatCard
                             title="Total Residents"
                             value={stats.totalResidents}
+                            subtitle="Currently active"
+                            accent="blue"
                         />
+
                         <StatCard
                             title="Pending Requests"
                             value={stats.pendingRequests}
+                            subtitle="Needs attention"
+                            accent="yellow"
                         />
+
                         <StatCard
                             title="Total Revenue"
                             value={`$${totalRevenue}`}
+                            subtitle="Collected"
+                            accent="green"
                         />
+
                         <StatCard
                             title="Outstanding Balance"
                             value={`$${outstandingBalance}`}
+                            subtitle="Yet to be paid"
+                            accent="red"
                         />
                     </div>
                 )}
 
-                {/* ================= REVENUE SUMMARY ================= */}
-                {revenueChartData.length > 0 && (
-                    <div className="bg-white rounded-xl shadow p-6 mt-8">
-                        <h3 className="text-lg font-semibold mb-4">
-                            Monthly Revenue
-                        </h3>
-
-                        <div className="space-y-2">
-                            {revenueChartData.map((r) => (
-                                <div
-                                    key={r.month}
-                                    className="flex justify-between border-b pb-1"
-                                >
-                                    <span>{r.month}</span>
-                                    <span className="font-semibold">
-                                        ${r.amount}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
+                {/* ================= REQUESTS OVERVIEW ================= */}
+                {!reqLoading && chartData.some((d) => d.count > 0) && (
+                    <div className="bg-white rounded-2xl border p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                            Requests Overview
+                        </h2>
+                        <RequestsChart data={chartData} />
                     </div>
                 )}
 
-                {/* ================= ACTIVE REQUESTS PREVIEW ================= */}
-                <h3 className="text-xl font-semibold mt-8 mb-4">
-                    Active Maintenance Requests
-                </h3>
+                {/* ================= ACTIVE REQUESTS ================= */}
+                <div className="bg-white rounded-2xl border p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900">
+                            Active Maintenance Requests
+                        </h2>
 
-                {reqLoading ? (
-                    <Loader />
-                ) : activeRequests.length === 0 ? (
-                    <div className="bg-white rounded-xl shadow p-6 text-center text-gray-500">
-                        No active requests 🎉
+                        {/* ✅ SPA SAFE LINK */}
+                        <Link
+                            to="/admin/requests"
+                            className="text-sm text-blue-600 hover:underline"
+                        >
+                            View all
+                        </Link>
                     </div>
-                ) : (
-                    <div className="bg-white rounded-xl shadow p-4">
-                        <ul className="space-y-3">
+
+                    {reqLoading ? (
+                        <Loader />
+                    ) : activeRequests.length === 0 ? (
+                        <p className="text-gray-500 text-center py-6">
+                            No active requests 🎉
+                        </p>
+                    ) : (
+                        <ul className="divide-y">
                             {activeRequests.map((r) => (
                                 <li
                                     key={r._id}
-                                    className="flex justify-between items-center border-b pb-2"
+                                    className="py-3 flex items-center justify-between"
                                 >
-                                    <span>{r.message}</span>
-                                    <span className="text-sm capitalize font-medium text-blue-600">
+                                    <p className="text-gray-800">
+                                        {r.message}
+                                    </p>
+                                    <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-50 text-blue-600 capitalize">
                                         {r.status}
                                     </span>
                                 </li>
                             ))}
                         </ul>
-
-                        <div className="text-right mt-4">
-                            <a
-                                href="/admin/requests"
-                                className="text-blue-600 hover:underline"
-                            >
-                                View all requests →
-                            </a>
-                        </div>
-                    </div>
-                )}
-
-                {/* ================= REQUESTS CHART ================= */}
-                {!reqLoading && chartData.some((d) => d.count > 0) && (
-                    <RequestsChart data={chartData} />
-                )}
+                    )}
+                </div>
             </motion.div>
         </DashboardLayout>
     );

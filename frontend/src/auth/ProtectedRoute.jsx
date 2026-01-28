@@ -1,18 +1,36 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
-export default function ProtectedRoute({ children, role }) {
+/**
+ * PROTECTED ROUTE
+ * - Checks login
+ * - Optionally checks role
+ * - Does NOT blindly trust localStorage role
+ */
+export default function ProtectedRoute({ role }) {
     const token = localStorage.getItem("token");
-    const userRole = localStorage.getItem("role");
 
-    // not logged in
+    // Not logged in
     if (!token) {
-        return <Navigate to="/" />;
+        return <Navigate to="/" replace />;
     }
 
-    // role mismatch
+    // Decode role safely (optional but recommended)
+    let userRole = null;
+
+    try {
+        const payload = JSON.parse(
+            atob(token.split(".")[1])
+        );
+        userRole = payload.role;
+    } catch {
+        // corrupted token
+        return <Navigate to="/" replace />;
+    }
+
+    // Role mismatch
     if (role && userRole !== role) {
-        return <Navigate to="/" />;
+        return <Navigate to="/" replace />;
     }
 
-    return children;
+    return <Outlet />;
 }

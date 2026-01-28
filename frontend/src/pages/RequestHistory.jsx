@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
-import axios from "axios";
+import api from "../api/axios";
 
 /**
- * RequestHistory
- * - Displays archived maintenance requests
- * - Read-only audit view
+ * REQUEST HISTORY (PROFESSIONAL AUDIT VIEW)
+ * - Clean, read-only timeline
+ * - Searchable
+ * - Trust & compliance friendly
  */
 
 export default function RequestHistory() {
@@ -13,18 +14,11 @@ export default function RequestHistory() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
 
-    const token = localStorage.getItem("token");
-
     /* ================= FETCH HISTORY ================= */
     const fetchHistory = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await axios.get("/admin/requests/history", {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-
+            const res = await api.get("/admin/requests/history");
             setHistory(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error("Failed to load request history", err);
@@ -32,89 +26,117 @@ export default function RequestHistory() {
         } finally {
             setLoading(false);
         }
-    }, [token]);
+    }, []);
 
     useEffect(() => {
         fetchHistory();
     }, [fetchHistory]);
 
     /* ================= FILTER ================= */
-    const filteredHistory = history.filter((h) =>
-        h.originalMessage
+    const filteredHistory = history.filter((item) =>
+        item.originalMessage
             ?.toLowerCase()
             .includes(search.toLowerCase())
     );
 
     return (
         <DashboardLayout>
-            <h2 className="text-2xl font-bold mb-6">
-                Request History
-            </h2>
-
-            {/* SEARCH */}
-            <div className="bg-white p-4 rounded shadow mb-6">
-                <input
-                    type="text"
-                    placeholder="Search by request message..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="border rounded px-3 py-2 w-full"
-                />
-            </div>
-
-            {/* CONTENT */}
-            {loading ? (
-                <div className="text-center py-10 text-gray-500">
-                    Loading history...
+            <div className="space-y-8">
+                {/* ================= HEADER ================= */}
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                        Request History
+                    </h1>
+                    <p className="text-gray-500 mt-1">
+                        Archived maintenance requests (read-only)
+                    </p>
                 </div>
-            ) : filteredHistory.length === 0 ? (
-                <div className="bg-white p-6 rounded shadow text-center text-gray-500">
-                    No archived requests found.
+
+                {/* ================= SEARCH ================= */}
+                <div className="bg-white rounded-2xl border p-4">
+                    <input
+                        type="text"
+                        placeholder="Search by request message…"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
                 </div>
-            ) : (
-                <div className="space-y-4">
-                    {filteredHistory.map((item) => (
-                        <div
-                            key={item._id}
-                            className="bg-white p-5 rounded-xl shadow"
-                        >
-                            <div className="flex justify-between mb-2">
-                                <p className="font-semibold">
-                                    {item.originalMessage}
-                                </p>
-                                <span className="text-sm text-gray-500">
-                                    {new Date(
-                                        item.resolvedAt
-                                    ).toLocaleString()}
-                                </span>
-                            </div>
 
-                            <p className="text-sm text-gray-600 mb-2">
-                                <strong>Final Resolution:</strong>{" "}
-                                {item.finalResolution}
-                            </p>
+                {/* ================= CONTENT ================= */}
+                {loading ? (
+                    <div className="bg-white rounded-2xl border p-8 text-center text-gray-500">
+                        Loading request history…
+                    </div>
+                ) : filteredHistory.length === 0 ? (
+                    <div className="bg-white rounded-2xl border p-8 text-center text-gray-500">
+                        No archived requests found.
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {filteredHistory.map((item) => (
+                            <div
+                                key={item._id}
+                                className="bg-white rounded-2xl border p-6"
+                            >
+                                {/* HEADER */}
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <p className="font-semibold text-gray-900">
+                                            {item.originalMessage}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Resolved on{" "}
+                                            {new Date(
+                                                item.resolvedAt
+                                            ).toLocaleString()}
+                                        </p>
+                                    </div>
 
-                            {item.timeline?.length > 0 && (
-                                <div className="mt-3">
-                                    <p className="text-sm font-semibold mb-1">
-                                        Admin Notes
-                                    </p>
-                                    <ul className="text-sm text-gray-600 space-y-1">
-                                        {item.timeline.map(
-                                            (t, index) => (
-                                                <li key={index}>
-                                                    • [{t.status}]{" "}
-                                                    {t.note}
-                                                </li>
-                                            )
-                                        )}
-                                    </ul>
+                                    <span className="px-2.5 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">
+                                        Closed
+                                    </span>
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
+
+                                {/* FINAL RESOLUTION */}
+                                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 mb-3">
+                                    <strong>Final Resolution</strong>
+                                    <p className="mt-1">
+                                        {item.finalResolution}
+                                    </p>
+                                </div>
+
+                                {/* ADMIN TIMELINE */}
+                                {item.timeline?.length > 0 && (
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-800 mb-2">
+                                            Admin Notes Timeline
+                                        </p>
+
+                                        <ul className="space-y-2 text-sm text-gray-600">
+                                            {item.timeline.map(
+                                                (t, index) => (
+                                                    <li
+                                                        key={index}
+                                                        className="flex gap-2"
+                                                    >
+                                                        <span className="text-blue-600 font-semibold">
+                                                            [{t.status}]
+                                                        </span>
+                                                        <span>
+                                                            {t.note}
+                                                        </span>
+                                                    </li>
+                                                )
+                                            )}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </DashboardLayout>
     );
 }

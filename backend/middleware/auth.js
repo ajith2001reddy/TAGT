@@ -1,19 +1,46 @@
 ﻿const jwt = require("jsonwebtoken");
 
+/**
+ * AUTH MIDDLEWARE
+ * - Verifies JWT token
+ * - Attaches user info to req.user
+ * - Used for ALL protected routes
+ */
 module.exports = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "No token provided" });
-    }
-
-    const token = authHeader.split(" ")[1];
-
     try {
+        const authHeader = req.headers.authorization;
+
+        // Check header
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({
+                success: false,
+                message: "Authorization token missing"
+            });
+        }
+
+        // Extract token
+        const token = authHeader.split(" ")[1];
+
+        // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // { id, role }
+
+        /**
+         * decoded should contain:
+         * {
+         *   id: user._id,
+         *   role: "admin" | "resident"
+         * }
+         */
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
+
         next();
-    } catch {
-        res.status(401).json({ message: "Invalid token" });
+    } catch (err) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid or expired token"
+        });
     }
 };
