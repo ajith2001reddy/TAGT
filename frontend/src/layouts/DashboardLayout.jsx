@@ -1,16 +1,21 @@
 import Navbar from "../components/Navbar";
-import Sidebar from "../components/Sidebar";
+import { NavLink } from "react-router-dom";
 
 /**
- * DashboardLayout
- * - Used by both Admin and Resident dashboards
- * - Keeps existing Navbar
- * - Uses Sidebar component (Phase 1 improvement)
- * - Role-based navigation preserved
+ * DashboardLayout – Phase 4 FINAL
+ * - Single source of truth for sidebar
+ * - Role-based navigation
+ * - Active link highlighting
  */
 
 export default function DashboardLayout({ children }) {
     const role = localStorage.getItem("role");
+
+    const linkClass = ({ isActive }) =>
+        `block px-3 py-2 rounded transition ${isActive
+            ? "bg-blue-600 text-white"
+            : "hover:bg-gray-200 text-gray-800"
+        }`;
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -22,42 +27,72 @@ export default function DashboardLayout({ children }) {
                 <aside className="w-64 bg-white shadow-md min-h-screen p-4">
                     <h2 className="text-xl font-bold mb-6">TAGT</h2>
 
-                    <nav className="space-y-3">
-                        {/* Common */}
-                        <a
-                            href={role === "admin" ? "/admin" : "/resident"}
-                            className="block px-3 py-2 rounded hover:bg-gray-200"
+                    <nav className="space-y-2">
+                        {/* ================= COMMON ================= */}
+                        <NavLink
+                            to={role === "admin" ? "/admin" : "/resident"}
+                            className={linkClass}
                         >
                             Dashboard
-                        </a>
+                        </NavLink>
 
-                        {/* Admin only */}
+                        {/* ================= ADMIN ================= */}
                         {role === "admin" && (
                             <>
-                                <a
-                                    href="/admin"
-                                    className="block px-3 py-2 rounded hover:bg-gray-200"
+                                <NavLink
+                                    to="/admin/requests"
+                                    className={linkClass}
                                 >
                                     Requests
-                                </a>
+                                </NavLink>
 
-                                <a
-                                    href="/admin/residents"
-                                    className="block px-3 py-2 rounded hover:bg-gray-200"
+                                <NavLink
+                                    to="/admin/history"
+                                    className={linkClass}
+                                >
+                                    History
+                                </NavLink>
+
+                                <NavLink
+                                    to="/admin/residents"
+                                    className={linkClass}
                                 >
                                     Residents
-                                </a>
+                                </NavLink>
+
+                                <NavLink
+                                    to="/admin/rooms"
+                                    className={linkClass}
+                                >
+                                    Rooms
+                                </NavLink>
+
+                                <NavLink
+                                    to="/payments"
+                                    className={linkClass}
+                                >
+                                    Payments
+                                </NavLink>
                             </>
                         )}
 
-                        {/* Resident only */}
+                        {/* ================= RESIDENT ================= */}
                         {role === "resident" && (
-                            <a
-                                href="/resident"
-                                className="block px-3 py-2 rounded hover:bg-gray-200"
-                            >
-                                My Requests
-                            </a>
+                            <>
+                                <NavLink
+                                    to="/resident"
+                                    className={linkClass}
+                                >
+                                    My Requests
+                                </NavLink>
+
+                                <NavLink
+                                    to="/resident/payments"
+                                    className={linkClass}
+                                >
+                                    My Payments
+                                </NavLink>
+                            </>
                         )}
                     </nav>
                 </aside>

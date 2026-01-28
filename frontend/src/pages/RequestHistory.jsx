@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import axios from "axios";
 
 /**
  * RequestHistory
- * Phase 2 Feature
- * - Displays archived (closed) maintenance requests
- * - Read-only (audit purpose)
- * - Safe: does not affect active requests
+ * - Displays archived maintenance requests
+ * - Read-only audit view
  */
 
 export default function RequestHistory() {
@@ -18,7 +16,7 @@ export default function RequestHistory() {
     const token = localStorage.getItem("token");
 
     /* ================= FETCH HISTORY ================= */
-    const fetchHistory = async () => {
+    const fetchHistory = useCallback(async () => {
         try {
             setLoading(true);
             const res = await axios.get("/admin/requests/history", {
@@ -26,18 +24,19 @@ export default function RequestHistory() {
                     Authorization: `Bearer ${token}`
                 }
             });
+
             setHistory(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
-            console.error("Failed to load request history");
+            console.error("Failed to load request history", err);
             setHistory([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
     useEffect(() => {
         fetchHistory();
-    }, []);
+    }, [fetchHistory]);
 
     /* ================= FILTER ================= */
     const filteredHistory = history.filter((h) =>
@@ -52,7 +51,7 @@ export default function RequestHistory() {
                 Request History
             </h2>
 
-            {/* ================= SEARCH ================= */}
+            {/* SEARCH */}
             <div className="bg-white p-4 rounded shadow mb-6">
                 <input
                     type="text"
@@ -63,7 +62,7 @@ export default function RequestHistory() {
                 />
             </div>
 
-            {/* ================= CONTENT ================= */}
+            {/* CONTENT */}
             {loading ? (
                 <div className="text-center py-10 text-gray-500">
                     Loading history...
@@ -95,10 +94,10 @@ export default function RequestHistory() {
                                 {item.finalResolution}
                             </p>
 
-                            {item.timeline && item.timeline.length > 0 && (
+                            {item.timeline?.length > 0 && (
                                 <div className="mt-3">
                                     <p className="text-sm font-semibold mb-1">
-                                        Admin Notes Timeline
+                                        Admin Notes
                                     </p>
                                     <ul className="text-sm text-gray-600 space-y-1">
                                         {item.timeline.map(

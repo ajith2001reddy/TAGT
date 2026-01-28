@@ -2,28 +2,28 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 
 /**
- * PHASE 2 UPGRADE NOTES
- * - Legacy status update STILL WORKS
- * - Phase 1 workflow update STILL WORKS (admin note)
- * - Phase 2 Close & Archive with Final Resolution
+ * AdminRequests – Phase 4 FIX
+ * - Correct action visibility
+ * - Proper button spacing
+ * - Read-only resolved requests
  */
 
 export default function AdminRequests() {
     const [requests, setRequests] = useState([]);
 
-    // Phase 1 (workflow)
+    // Phase 1
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [workflowStatus, setWorkflowStatus] = useState("");
     const [adminNote, setAdminNote] = useState("");
 
-    // Phase 2 (archive)
+    // Phase 2
     const [archiveTarget, setArchiveTarget] = useState(null);
     const [finalResolution, setFinalResolution] = useState("");
 
     /* ================= FETCH REQUESTS ================= */
     const fetchRequests = async () => {
         const res = await api.get("/admin/requests");
-        setRequests(res.data);
+        setRequests(Array.isArray(res.data) ? res.data : []);
     };
 
     /* ================= LEGACY STATUS UPDATE ================= */
@@ -41,10 +41,7 @@ export default function AdminRequests() {
 
         await api.put(
             `/admin/requests/${selectedRequest._id}/workflow-status`,
-            {
-                workflowStatus,
-                note: adminNote
-            }
+            { workflowStatus, note: adminNote }
         );
 
         setSelectedRequest(null);
@@ -53,7 +50,7 @@ export default function AdminRequests() {
         fetchRequests();
     };
 
-    /* ================= PHASE 2 CLOSE & ARCHIVE ================= */
+    /* ================= PHASE 2 ARCHIVE ================= */
     const archiveRequest = async () => {
         if (!finalResolution.trim()) {
             alert("Final resolution is required");
@@ -91,70 +88,84 @@ export default function AdminRequests() {
                 </thead>
 
                 <tbody>
-                    {requests.map((req) => (
-                        <tr
-                            key={req._id}
-                            className="border-b text-center"
-                        >
-                            <td>{req.message}</td>
-                            <td>{req.residentId?.email}</td>
+                    {requests.map((req) => {
+                        const displayStatus =
+                            req.workflowStatus || req.status;
 
-                            <td className="capitalize">
-                                {req.workflowStatus || req.status}
-                            </td>
+                        const isResolved =
+                            displayStatus === "resolved" ||
+                            displayStatus === "Done";
 
-                            <td className="space-x-2">
-                                {/* ===== LEGACY FLOW (VALID ENUMS) ===== */}
-                                {req.status === "pending" && (
-                                    <button
-                                        className="bg-blue-500 text-white px-3 py-1 rounded"
-                                        onClick={() =>
-                                            updateStatus(
-                                                req._id,
-                                                "in-progress"
-                                            )
-                                        }
-                                    >
-                                        In Progress
-                                    </button>
-                                )}
+                        return (
+                            <tr
+                                key={req._id}
+                                className="border-b text-center"
+                            >
+                                <td>{req.message}</td>
+                                <td>{req.residentId?.email}</td>
 
-                                {req.status !== "resolved" && (
-                                    <button
-                                        className="bg-green-600 text-white px-3 py-1 rounded"
-                                        onClick={() =>
-                                            updateStatus(
-                                                req._id,
-                                                "resolved"
-                                            )
-                                        }
-                                    >
-                                        Resolve
-                                    </button>
-                                )}
+                                <td className="capitalize font-medium">
+                                    {displayStatus}
+                                </td>
 
-                                {/* ===== PHASE 1 ===== */}
-                                <button
-                                    className="bg-gray-800 text-white px-3 py-1 rounded"
-                                    onClick={() =>
-                                        setSelectedRequest(req)
-                                    }
-                                >
-                                    Update (Pro)
-                                </button>
+                                <td>
+                                    {isResolved ? (
+                                        <span className="text-green-600 font-semibold">
+                                            Closed
+                                        </span>
+                                    ) : (
+                                        <div className="flex gap-2 justify-center">
+                                            {req.status === "pending" && (
+                                                <button
+                                                    className="bg-blue-500 text-white px-3 py-1 rounded"
+                                                    onClick={() =>
+                                                        updateStatus(
+                                                            req._id,
+                                                            "in-progress"
+                                                        )
+                                                    }
+                                                >
+                                                    In Progress
+                                                </button>
+                                            )}
 
-                                {/* ===== PHASE 2 ===== */}
-                                <button
-                                    className="bg-red-600 text-white px-3 py-1 rounded"
-                                    onClick={() =>
-                                        setArchiveTarget(req)
-                                    }
-                                >
-                                    Close & Archive
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
+                                            <button
+                                                className="bg-green-600 text-white px-3 py-1 rounded"
+                                                onClick={() =>
+                                                    updateStatus(
+                                                        req._id,
+                                                        "resolved"
+                                                    )
+                                                }
+                                            >
+                                                Resolve
+                                            </button>
+
+                                            <button
+                                                className="bg-gray-800 text-white px-3 py-1 rounded"
+                                                onClick={() =>
+                                                    setSelectedRequest(
+                                                        req
+                                                    )
+                                                }
+                                            >
+                                                Update (Pro)
+                                            </button>
+
+                                            <button
+                                                className="bg-red-600 text-white px-3 py-1 rounded"
+                                                onClick={() =>
+                                                    setArchiveTarget(req)
+                                                }
+                                            >
+                                                Close & Archive
+                                            </button>
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
 
@@ -214,11 +225,6 @@ export default function AdminRequests() {
                         <h3 className="font-bold mb-3">
                             Close & Archive Request
                         </h3>
-
-                        <p className="text-sm text-gray-600 mb-2">
-                            <strong>Request:</strong>{" "}
-                            {archiveTarget.message}
-                        </p>
 
                         <textarea
                             className="w-full border p-2 mb-4"

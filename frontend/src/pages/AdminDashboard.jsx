@@ -1,31 +1,30 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import StatCard from "../components/StatCard";
 import Loader from "../components/Loader";
-import RequestTable from "../components/RequestTable";
 import RequestsChart from "../components/RequestsChart";
 
 import useAdminStats from "../hooks/useAdminStats";
-import { getRequests, updateRequestStatus } from "../services/adminService";
+import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
 /**
- * AdminDashboard � Phase 3 (Revenue)
- * - Total Revenue
- * - Outstanding Balance
- * - Monthly Revenue Chart
+ * AdminDashboard – Phase 4 FINAL
+ * - Active requests preview
+ * - Full requests chart restored
+ * - Clean separation of concerns
  */
 
 export default function AdminDashboard() {
     const { stats, loading } = useAdminStats();
 
-    const [requests, setRequests] = useState([]);
+    const [allRequests, setAllRequests] = useState([]);
+    const [activeRequests, setActiveRequests] = useState([]);
     const [reqLoading, setReqLoading] = useState(true);
 
-    /* ===== PHASE 3: PAYMENTS ===== */
     const [payments, setPayments] = useState([]);
     const [revenueLoading, setRevenueLoading] = useState(true);
 
@@ -34,10 +33,21 @@ export default function AdminDashboard() {
         try {
             setReqLoading(true);
             const data = await getRequests();
-            setRequests(Array.isArray(data) ? data : []);
+            const safeData = Array.isArray(data) ? data : [];
+
+            setAllRequests(safeData);
+
+            const active = safeData.filter(
+                (r) =>
+                    r.status !== "resolved" &&
+                    r.workflowStatus !== "Done"
+            );
+
+            setActiveRequests(active.slice(0, 5));
         } catch {
             toast.error("Failed to load requests");
-            setRequests([]);
+            setAllRequests([]);
+            setActiveRequests([]);
         } finally {
             setReqLoading(false);
         }
@@ -62,19 +72,25 @@ export default function AdminDashboard() {
         fetchPayments();
     }, [fetchRequests]);
 
-    /* ================= REQUEST CHART ================= */
+    /* ================= REQUESTS CHART (ALL DATA) ================= */
     const chartData = [
         {
             status: "pending",
-            count: requests.filter((r) => r.status === "pending").length
+            count: allRequests.filter(
+                (r) => r.status === "pending"
+            ).length
         },
         {
             status: "in-progress",
-            count: requests.filter((r) => r.status === "in-progress").length
+            count: allRequests.filter(
+                (r) => r.status === "in-progress"
+            ).length
         },
         {
             status: "resolved",
-            count: requests.filter((r) => r.status === "resolved").length
+            count: allRequests.filter(
+                (r) => r.status === "resolved"
+            ).length
         }
     ];
 
@@ -91,47 +107,17 @@ export default function AdminDashboard() {
     const monthlyRevenue = payments
         .filter((p) => p.status === "paid")
         .reduce((acc, p) => {
-            const month = new Date(p.createdAt).toLocaleString("default", {
-                month: "short",
-                year: "numeric"
-            });
-
+            const month = new Date(p.createdAt).toLocaleString(
+                "default",
+                { month: "short", year: "numeric" }
+            );
             acc[month] = (acc[month] || 0) + p.amount;
             return acc;
         }, {});
 
     const revenueChartData = Object.entries(monthlyRevenue).map(
-        ([month, amount]) => ({
-            month,
-            amount
-        })
+        ([month, amount]) => ({ month, amount })
     );
-
-    /* ================= BULK RESOLVE ================= */
-    const bulkResolve = async () => {
-        const toResolve = requests.filter(
-            (r) => r.status !== "resolved"
-        );
-
-        if (toResolve.length === 0) {
-            toast("Nothing to resolve");
-            return;
-        }
-
-        if (!window.confirm(`Resolve ${toResolve.length} request(s)?`)) {
-            return;
-        }
-
-        try {
-            for (const r of toResolve) {
-                await updateRequestStatus(r._id, "resolved");
-            }
-            toast.success("Bulk resolve completed");
-            fetchRequests();
-        } catch {
-            toast.error("Bulk action failed");
-        }
-    };
 
     return (
         <DashboardLayout>
@@ -168,7 +154,7 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* ================= REVENUE CHART ================= */}
+                {/* ================= REVENUE SUMMARY ================= */}
                 {revenueChartData.length > 0 && (
                     <div className="bg-white rounded-xl shadow p-6 mt-8">
                         <h3 className="text-lg font-semibold mb-4">
@@ -191,38 +177,48 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* ================= REQUESTS ================= */}
+                {/* ================= ACTIVE REQUESTS PREVIEW ================= */}
                 <h3 className="text-xl font-semibold mt-8 mb-4">
-                    Maintenance Requests
+                    Active Maintenance Requests
                 </h3>
 
                 {reqLoading ? (
                     <Loader />
-                ) : requests.length === 0 ? (
+                ) : activeRequests.length === 0 ? (
                     <div className="bg-white rounded-xl shadow p-6 text-center text-gray-500">
-                        No maintenance requests yet.
+                        No active requests 🎉
                     </div>
                 ) : (
-                    <RequestTable
-                        requests={requests}
-                        refresh={fetchRequests}
-                    />
+                    <div className="bg-white rounded-xl shadow p-4">
+                        <ul className="space-y-3">
+                            {activeRequests.map((r) => (
+                                <li
+                                    key={r._id}
+                                    className="flex justify-between items-center border-b pb-2"
+                                >
+                                    <span>{r.message}</span>
+                                    <span className="text-sm capitalize font-medium text-blue-600">
+                                        {r.status}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+
+                        <div className="text-right mt-4">
+                            <a
+                                href="/admin/requests"
+                                className="text-blue-600 hover:underline"
+                            >
+                                View all requests →
+                            </a>
+                        </div>
+                    </div>
                 )}
 
                 {/* ================= REQUESTS CHART ================= */}
-                {!reqLoading && requests.length > 0 && (
+                {!reqLoading && chartData.some((d) => d.count > 0) && (
                     <RequestsChart data={chartData} />
                 )}
-
-                {/* ================= ACTION ================= */}
-                <div className="mt-6">
-                    <button
-                        onClick={bulkResolve}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                        Resolve All Requests
-                    </button>
-                </div>
             </motion.div>
         </DashboardLayout>
     );

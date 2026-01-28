@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+﻿import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 import Login from "./pages/Login";
@@ -6,8 +6,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ResidentDashboard from "./pages/ResidentDashboard";
 import AdminResidents from "./pages/AdminResidents";
 import AdminRequests from "./pages/AdminRequests";
+import RequestHistory from "./pages/RequestHistory"; // ✅ ADD THIS
 import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
+import Rooms from "./pages/Rooms";
 
 import AdminRoute from "./routes/AdminRoute";
 import ResidentRoute from "./routes/ResidentRoute";
@@ -19,10 +21,10 @@ function AnimatedRoutes() {
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-                {/* ================= PUBLIC ================= */}
+                {/* PUBLIC */}
                 <Route path="/" element={<Login />} />
 
-                {/* ================= ADMIN ================= */}
+                {/* ADMIN */}
                 <Route
                     path="/admin"
                     element={
@@ -42,10 +44,28 @@ function AnimatedRoutes() {
                 />
 
                 <Route
+                    path="/admin/history"
+                    element={
+                        <AdminRoute>
+                            <RequestHistory />
+                        </AdminRoute>
+                    }
+                />
+
+                <Route
                     path="/admin/residents"
                     element={
                         <AdminRoute>
                             <AdminResidents />
+                        </AdminRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/rooms"
+                    element={
+                        <AdminRoute>
+                            <Rooms />
                         </AdminRoute>
                     }
                 />
@@ -59,21 +79,13 @@ function AnimatedRoutes() {
                     }
                 />
 
-                {/* ================= RESIDENT ================= */}
+                {/* RESIDENT */}
                 <Route
                     path="/resident"
                     element={
                         <ResidentRoute>
                             <ResidentDashboard />
                         </ResidentRoute>
-                    }
-                />
-                <Route
-                    path="/admin/rooms"
-                    element={
-                        <AdminRoute>
-                            <Rooms />
-                        </AdminRoute>
                     }
                 />
 
@@ -90,7 +102,7 @@ function AnimatedRoutes() {
     );
 }
 
-export default function App() {
+export default function App() { 
     return (
         <BrowserRouter>
             <ToastProvider />
