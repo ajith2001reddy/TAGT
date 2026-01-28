@@ -8,11 +8,14 @@ import axios from "axios";
  */
 
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || "https://tagt.onrender.com/api",
+    baseURL: process.env.REACT_APP_API_URL || "https://tagt.onrender.com/api", // REMOVED SPACE HERE
     headers: {
         "Content-Type": "application/json"
     }
 });
+
+// Debug: Log actual URL
+console.log("API Base URL:", api.defaults.baseURL);
 
 // Request interceptor - attaches auth token
 api.interceptors.request.use(
