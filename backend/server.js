@@ -32,16 +32,17 @@ const generalLimiter = rateLimit({
 app.use(generalLimiter);
 
 /* ================= CORS (FIXED FOR LOCALHOST + RENDER) ================= */
+
+/* ================= CORS (FIXED FOR LOCALHOST + RENDER) ================= */
 const allowedOrigins = [
-    "http://localhost:3000",    // React dev server
-    "http://localhost:3001",    // Alternative port
-    "https://tagt.onrender.com", // Your Render frontend (if you have one)
-    process.env.FRONTEND_URL    // Additional from env
-].filter(Boolean); // Remove undefined/null
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://tagt.onrender.com",
+    process.env.FRONTEND_URL
+].filter(Boolean);
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (mobile apps, curl, Postman)
         if (!origin) return callback(null, true);
 
         if (allowedOrigins.includes(origin)) {
@@ -55,6 +56,9 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// 🔴 THIS LINE FIXES YOUR ERROR
+app.options("*", cors());
 
 /* ================= MIDDLEWARE ================= */
 app.use(express.json());
