@@ -29,3 +29,8 @@ export const getMyRequests = async () => {
         }))
         : [];
 };
+
+/* ================= DELETE REQUEST ================= */
+export const deleteRequest = async (id) => {
+    await api.delete(`/resident/request/${id}`);
+};

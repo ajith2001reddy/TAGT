@@ -96,6 +96,19 @@ export default function AdminResidents() {
         }
     };
 
+    /* ================= DELETE RESIDENT (NEW) ================= */
+    const deleteResident = async (id) => {
+        if (!window.confirm("Delete this resident permanently?")) return;
+
+        try {
+            await api.delete(`/admin/residents/${id}`);
+            toast.success("Resident deleted successfully");
+            fetchResidents();
+        } catch {
+            toast.error("Failed to delete resident");
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="space-y-10">
@@ -226,7 +239,7 @@ export default function AdminResidents() {
                                             <td className="p-2 text-center">
                                                 {r.rent}
                                             </td>
-                                            <td className="p-2 text-center">
+                                            <td className="p-2 text-center space-x-2">
                                                 <button
                                                     onClick={() =>
                                                         setBillingTarget(r)
@@ -234,6 +247,16 @@ export default function AdminResidents() {
                                                     className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700"
                                                 >
                                                     Send Bill
+                                                </button>
+
+                                                {/* DELETE BUTTON (NEW) */}
+                                                <button
+                                                    onClick={() =>
+                                                        deleteResident(r._id)
+                                                    }
+                                                    className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
+                                                >
+                                                    Delete
                                                 </button>
                                             </td>
                                         </tr>

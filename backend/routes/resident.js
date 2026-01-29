@@ -31,4 +31,23 @@ router.get("/requests", auth, async (req, res, next) => {
     }
 });
 
+/* ===== DELETE MY REQUEST ===== */
+router.delete("/request/:id", auth, async (req, res, next) => {
+    try {
+        const request = await Request.findOne({
+            _id: req.params.id,
+            residentId: req.user.id
+        });
+
+        if (!request) {
+            return res.status(404).json("Request not found");
+        }
+
+        await request.deleteOne();
+        res.json("Request deleted successfully");
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = router;
