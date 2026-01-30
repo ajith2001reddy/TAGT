@@ -11,8 +11,8 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const residentRoutes = require("./routes/resident");
 const paymentsRoutes = require("./routes/payments");
-const errorHandler = require("./middleware/errorHandler");
 const roomsRoutes = require("./routes/rooms");
+const errorHandler = require("./middleware/errorHandler");
 
 /* ================= APP INIT ================= */
 const app = express();
@@ -31,9 +31,8 @@ const generalLimiter = rateLimit({
 });
 app.use(generalLimiter);
 
-/* ================= CORS (FIXED FOR LOCALHOST + RENDER) ================= */
+/* ================= CORS (FINAL – VERCEL SAFE) ================= */
 
-/* ================= CORS (FIXED FOR LOCALHOST + RENDER) ================= */
 const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:3001",
@@ -41,23 +40,32 @@ const allowedOrigins = [
     process.env.FRONTEND_URL
 ].filter(Boolean);
 
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            // Allow server-to-server, curl, Postman
+            if (!origin) return callback(null, true);
 
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log("CORS blocked origin:", origin);
+            // Allow explicit whitelist
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            // 🔥 ALLOW ALL VERCEL DEPLOYMENTS (preview + prod)
+            if (origin.endsWith(".vercel.app")) {
+                return callback(null, true);
+            }
+
+            console.log("❌ CORS blocked origin:", origin);
             callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-}));
+        },
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"]
+    })
+);
 
-// 🔴 THIS LINE FIXES YOUR ERROR
+// ✅ REQUIRED FOR PREFLIGHT
 app.options("*", cors());
 
 /* ================= MIDDLEWARE ================= */
