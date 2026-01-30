@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
 /**
- * STAT CARD (SaaS GRADE)
- * - Supports icon
- * - Supports trend / subtitle
- * - Works for money, counts, status
+ * STAT CARD (DARK THEME FIXED)
+ * - SaaS grade
+ * - Works on dark glass UI
+ * - No logic changes
  */
 
 export default function StatCard({
@@ -15,24 +15,24 @@ export default function StatCard({
     accent = "blue"
 }) {
     const accentMap = {
-        blue: "bg-blue-50 text-blue-600",
-        green: "bg-green-50 text-green-600",
-        red: "bg-red-50 text-red-600",
-        yellow: "bg-yellow-50 text-yellow-600"
+        blue: "bg-blue-600/20 text-blue-400",
+        green: "bg-green-600/20 text-green-400",
+        red: "bg-red-600/20 text-red-400",
+        yellow: "bg-yellow-600/20 text-yellow-400"
     };
 
     return (
         <motion.div
             whileHover={{ y: -4 }}
             transition={{ type: "spring", stiffness: 300 }}
-            className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition"
+            className="bg-white/10 border border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-md transition text-gray-100"
         >
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-gray-500">
+                    <p className="text-sm font-medium text-gray-400">
                         {title}
                     </p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-2">
+                    <h3 className="text-3xl font-bold mt-2">
                         {value}
                     </h3>
                     {subtitle && (

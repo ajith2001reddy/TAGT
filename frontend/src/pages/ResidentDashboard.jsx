@@ -4,11 +4,10 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { createRequest, getMyRequests } from "../services/residentService";
 
 /**
- * RESIDENT DASHBOARD (PROFESSIONAL UX)
- * - Calm, clear request flow
- * - Strong visual separation
- * - Trust-building status communication
- * - Clean admin notes presentation
+ * RESIDENT DASHBOARD (DARK THEME FIXED)
+ * - Clear request flow
+ * - Readable on dark UI
+ * - No logic changes
  */
 
 export default function ResidentDashboard() {
@@ -68,21 +67,21 @@ export default function ResidentDashboard() {
 
         if (status === "pending")
             return (
-                <span className={`${base} bg-yellow-100 text-yellow-700`}>
+                <span className={`${base} bg-yellow-600/20 text-yellow-400`}>
                     Pending
                 </span>
             );
 
         if (status === "in-progress")
             return (
-                <span className={`${base} bg-blue-100 text-blue-700`}>
+                <span className={`${base} bg-blue-600/20 text-blue-400`}>
                     In Progress
                 </span>
             );
 
         if (status === "resolved")
             return (
-                <span className={`${base} bg-green-100 text-green-700`}>
+                <span className={`${base} bg-green-600/20 text-green-400`}>
                     Resolved
                 </span>
             );
@@ -93,26 +92,26 @@ export default function ResidentDashboard() {
     return (
         <DashboardLayout>
             <div className="space-y-10">
-                {/* ================= HEADER ================= */}
+                {/* HEADER */}
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
+                    <h1 className="text-3xl font-bold">
                         My Maintenance Requests
                     </h1>
-                    <p className="text-gray-500 mt-1">
+                    <p className="text-gray-400 mt-1">
                         Submit new requests and track their progress
                     </p>
                 </div>
 
-                {/* ================= CREATE REQUEST ================= */}
-                <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                {/* CREATE REQUEST */}
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                    <h2 className="text-lg font-semibold mb-3">
                         Submit a New Request
                     </h2>
 
                     <textarea
-                        className="w-full p-4 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full bg-black/30 text-gray-100 placeholder-gray-400 p-4 border border-white/10 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         rows={4}
-                        placeholder="Describe the issue in detail (e.g., water leakage, electrical problem)..."
+                        placeholder="Describe the issue in detail (e.g., water leakage, electrical problem)…"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                     />
@@ -120,33 +119,35 @@ export default function ResidentDashboard() {
                     <div className="flex justify-end mt-4">
                         <button
                             onClick={submitRequest}
-                            className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition"
                         >
                             Submit Request
                         </button>
                     </div>
                 </div>
 
-                {/* ================= ACTIVE REQUESTS ================= */}
-                <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                {/* ACTIVE REQUESTS */}
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                    <h2 className="text-lg font-semibold mb-4">
                         Active Requests
                     </h2>
 
                     {loading ? (
-                        <p className="text-gray-500">Loading requests…</p>
+                        <p className="text-gray-400">
+                            Loading requests…
+                        </p>
                     ) : activeRequests.length === 0 ? (
-                        <p className="text-gray-500">
+                        <p className="text-gray-400">
                             You have no active requests.
                         </p>
                     ) : (
-                        <ul className="divide-y">
+                        <ul className="divide-y divide-white/10">
                             {activeRequests.map((r) => (
                                 <li
                                     key={r._id}
                                     className="py-3 flex items-start justify-between"
                                 >
-                                    <p className="text-gray-800">
+                                    <p className="text-gray-200">
                                         {r.message}
                                     </p>
                                     <StatusBadge status={r.status} />
@@ -156,18 +157,18 @@ export default function ResidentDashboard() {
                     )}
                 </div>
 
-                {/* ================= RESOLVED REQUESTS ================= */}
-                <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                {/* RESOLVED REQUESTS */}
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                    <h2 className="text-lg font-semibold mb-4">
                         Resolved Requests
                     </h2>
 
                     {resolvedRequests.length === 0 ? (
-                        <p className="text-gray-500">
+                        <p className="text-gray-400">
                             No resolved requests yet.
                         </p>
                     ) : (
-                        <ul className="divide-y">
+                        <ul className="divide-y divide-white/10">
                             {resolvedRequests.map((r) => {
                                 const isOpen = expandedId === r._id;
                                 const lastNote =
@@ -180,7 +181,7 @@ export default function ResidentDashboard() {
                                 return (
                                     <li key={r._id} className="py-4">
                                         <div className="flex justify-between items-start">
-                                            <p className="text-gray-800">
+                                            <p className="text-gray-200">
                                                 {r.message}
                                             </p>
                                             <StatusBadge status="resolved" />
@@ -192,7 +193,7 @@ export default function ResidentDashboard() {
                                                     isOpen ? null : r._id
                                                 )
                                             }
-                                            className="mt-2 text-sm text-blue-600 hover:underline"
+                                            className="mt-2 text-sm text-blue-400 hover:underline"
                                         >
                                             {isOpen
                                                 ? "Hide details"
@@ -200,10 +201,10 @@ export default function ResidentDashboard() {
                                         </button>
 
                                         {isOpen && (
-                                            <div className="mt-4 bg-gray-50 rounded-lg p-4 text-sm space-y-2">
+                                            <div className="mt-4 bg-black/30 border border-white/10 rounded-lg p-4 text-sm space-y-2">
                                                 {r.workflowStatus && (
                                                     <p>
-                                                        <strong>
+                                                        <strong className="text-gray-300">
                                                             Final Status:
                                                         </strong>{" "}
                                                         {r.workflowStatus}
@@ -212,15 +213,15 @@ export default function ResidentDashboard() {
 
                                                 {lastNote ? (
                                                     <>
-                                                        <p className="font-medium">
+                                                        <p className="font-medium text-gray-300">
                                                             Admin Resolution
                                                         </p>
-                                                        <p className="text-gray-700">
+                                                        <p className="text-gray-400">
                                                             {lastNote.note}
                                                         </p>
                                                     </>
                                                 ) : (
-                                                    <p className="text-gray-500">
+                                                    <p className="text-gray-400">
                                                         No admin notes
                                                         available.
                                                     </p>

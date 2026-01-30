@@ -13,11 +13,7 @@ import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
 /**
- * ADMIN DASHBOARD (SaaS GRADE)
- * - Clear visual hierarchy
- * - Metric-first layout
- * - Clean request preview
- * - Financial confidence UI
+ * ADMIN DASHBOARD (DARK THEME FIXED)
  */
 
 export default function AdminDashboard() {
@@ -113,17 +109,17 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.3 }}
                 className="space-y-10"
             >
-                {/* ================= HEADER ================= */}
+                {/* HEADER */}
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
+                    <h1 className="text-3xl font-bold">
                         Admin Dashboard
                     </h1>
-                    <p className="text-gray-500 mt-1">
+                    <p className="text-gray-400 mt-1">
                         Overview of operations, requests, and revenue
                     </p>
                 </div>
 
-                {/* ================= METRICS ================= */}
+                {/* METRICS */}
                 {loading || revenueLoading ? (
                     <Loader />
                 ) : (
@@ -158,27 +154,26 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* ================= REQUESTS OVERVIEW ================= */}
+                {/* REQUESTS OVERVIEW */}
                 {!reqLoading && chartData.some((d) => d.count > 0) && (
-                    <div className="bg-white rounded-2xl border p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <h2 className="text-lg font-semibold mb-4">
                             Requests Overview
                         </h2>
                         <RequestsChart data={chartData} />
                     </div>
                 )}
 
-                {/* ================= ACTIVE REQUESTS ================= */}
-                <div className="bg-white rounded-2xl border p-6">
+                {/* ACTIVE REQUESTS */}
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-gray-900">
+                        <h2 className="text-lg font-semibold">
                             Active Maintenance Requests
                         </h2>
 
-                        {/* ✅ SPA SAFE LINK */}
                         <Link
                             to="/admin/requests"
-                            className="text-sm text-blue-600 hover:underline"
+                            className="text-sm text-blue-400 hover:underline"
                         >
                             View all
                         </Link>
@@ -187,20 +182,20 @@ export default function AdminDashboard() {
                     {reqLoading ? (
                         <Loader />
                     ) : activeRequests.length === 0 ? (
-                        <p className="text-gray-500 text-center py-6">
+                        <p className="text-gray-400 text-center py-6">
                             No active requests 🎉
                         </p>
                     ) : (
-                        <ul className="divide-y">
+                        <ul className="divide-y divide-white/10">
                             {activeRequests.map((r) => (
                                 <li
                                     key={r._id}
                                     className="py-3 flex items-center justify-between"
                                 >
-                                    <p className="text-gray-800">
+                                    <p className="text-gray-200">
                                         {r.message}
                                     </p>
-                                    <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-50 text-blue-600 capitalize">
+                                    <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-600/20 text-blue-400 capitalize">
                                         {r.status}
                                     </span>
                                 </li>

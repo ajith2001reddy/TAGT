@@ -5,13 +5,8 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * Rooms
+ * Rooms (DARK THEME FIXED)
  * Phase 4 – Room & Bed Management (Admin)
- *
- * - Add rooms
- * - View total / occupied / available beds
- * - Update occupancy
- * - Delete empty rooms
  */
 
 export default function Rooms() {
@@ -115,74 +110,76 @@ export default function Rooms() {
 
     return (
         <DashboardLayout>
-            <div className="bg-white p-6 rounded-xl shadow">
-                <h2 className="text-xl font-bold mb-6">
-                    Rooms & Bed Management
-                </h2>
+            <h2 className="text-2xl font-bold mb-6">
+                Rooms & Bed Management
+            </h2>
 
-                {/* ================= ADD ROOM ================= */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
-                    <input
-                        placeholder="Room Number"
-                        className="border p-2 rounded"
-                        value={form.roomNumber}
-                        onChange={(e) =>
-                            setForm({
-                                ...form,
-                                roomNumber: e.target.value
-                            })
-                        }
-                    />
+            {/* ADD ROOM */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+                <input
+                    placeholder="Room Number"
+                    className="bg-black/30 text-gray-100 border border-white/10 p-2 rounded focus:outline-none"
+                    value={form.roomNumber}
+                    onChange={(e) =>
+                        setForm({
+                            ...form,
+                            roomNumber: e.target.value
+                        })
+                    }
+                />
 
-                    <input
-                        type="number"
-                        placeholder="Total Beds"
-                        className="border p-2 rounded"
-                        value={form.totalBeds}
-                        onChange={(e) =>
-                            setForm({
-                                ...form,
-                                totalBeds: e.target.value
-                            })
-                        }
-                    />
+                <input
+                    type="number"
+                    placeholder="Total Beds"
+                    className="bg-black/30 text-gray-100 border border-white/10 p-2 rounded focus:outline-none"
+                    value={form.totalBeds}
+                    onChange={(e) =>
+                        setForm({
+                            ...form,
+                            totalBeds: e.target.value
+                        })
+                    }
+                />
 
-                    <input
-                        placeholder="Note (optional)"
-                        className="border p-2 rounded"
-                        value={form.note}
-                        onChange={(e) =>
-                            setForm({
-                                ...form,
-                                note: e.target.value
-                            })
-                        }
-                    />
+                <input
+                    placeholder="Note (optional)"
+                    className="bg-black/30 text-gray-100 border border-white/10 p-2 rounded focus:outline-none"
+                    value={form.note}
+                    onChange={(e) =>
+                        setForm({
+                            ...form,
+                            note: e.target.value
+                        })
+                    }
+                />
 
-                    <button
-                        onClick={addRoom}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                        Add Room
-                    </button>
-                </div>
+                <button
+                    onClick={addRoom}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                    Add Room
+                </button>
+            </div>
 
-                {/* ================= ROOMS TABLE ================= */}
-                {loading ? (
-                    <p className="text-center text-gray-500">Loading...</p>
-                ) : rooms.length === 0 ? (
-                    <p className="text-center text-gray-500">
-                        No rooms added yet.
-                    </p>
-                ) : (
-                    <table className="w-full border">
-                        <thead>
-                            <tr className="border-b">
-                                <th className="p-2">Room</th>
-                                <th className="p-2">Total Beds</th>
-                                <th className="p-2">Occupied</th>
-                                <th className="p-2">Available</th>
-                                <th className="p-2">Action</th>
+            {/* ROOMS TABLE */}
+            {loading ? (
+                <p className="text-center text-gray-400">
+                    Loading…
+                </p>
+            ) : rooms.length === 0 ? (
+                <p className="text-center text-gray-400">
+                    No rooms added yet.
+                </p>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-gray-200 border border-white/10 rounded-lg">
+                        <thead className="bg-white/10">
+                            <tr>
+                                <th className="p-3">Room</th>
+                                <th className="p-3">Total Beds</th>
+                                <th className="p-3">Occupied</th>
+                                <th className="p-3">Available</th>
+                                <th className="p-3">Action</th>
                             </tr>
                         </thead>
 
@@ -190,21 +187,15 @@ export default function Rooms() {
                             {rooms.map((r) => (
                                 <tr
                                     key={r._id}
-                                    className="border-b text-center"
+                                    className="border-t border-white/10 text-center hover:bg-white/5"
                                 >
-                                    <td className="p-2">
-                                        {r.roomNumber}
-                                    </td>
-                                    <td className="p-2">
-                                        {r.totalBeds}
-                                    </td>
-                                    <td className="p-2">
-                                        {r.occupiedBeds}
-                                    </td>
-                                    <td className="p-2 font-semibold">
+                                    <td className="p-3">{r.roomNumber}</td>
+                                    <td className="p-3">{r.totalBeds}</td>
+                                    <td className="p-3">{r.occupiedBeds}</td>
+                                    <td className="p-3 font-semibold">
                                         {r.availableBeds}
                                     </td>
-                                    <td className="p-2 space-x-2">
+                                    <td className="p-3 space-x-2">
                                         <button
                                             onClick={() => {
                                                 setSelectedRoom(r);
@@ -212,16 +203,14 @@ export default function Rooms() {
                                                     r.occupiedBeds
                                                 );
                                             }}
-                                            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
                                         >
                                             Update
                                         </button>
 
                                         <button
-                                            onClick={() =>
-                                                deleteRoom(r)
-                                            }
-                                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                                            onClick={() => deleteRoom(r)}
+                                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
                                         >
                                             Delete
                                         </button>
@@ -230,13 +219,13 @@ export default function Rooms() {
                             ))}
                         </tbody>
                     </table>
-                )}
-            </div>
+                </div>
+            )}
 
-            {/* ================= OCCUPANCY MODAL ================= */}
+            {/* OCCUPANCY MODAL */}
             {selectedRoom && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                    <div className="bg-white p-6 rounded w-96">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-xl w-96">
                         <h3 className="font-bold mb-3">
                             Update Occupancy – Room{" "}
                             {selectedRoom.roomNumber}
@@ -244,7 +233,7 @@ export default function Rooms() {
 
                         <input
                             type="number"
-                            className="w-full border p-2 mb-4"
+                            className="w-full bg-black/30 text-gray-100 border border-white/10 p-2 mb-4 rounded"
                             value={occupiedBeds}
                             onChange={(e) =>
                                 setOccupiedBeds(e.target.value)
@@ -256,12 +245,13 @@ export default function Rooms() {
                                 onClick={() =>
                                     setSelectedRoom(null)
                                 }
+                                className="text-gray-400 hover:text-gray-200"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={updateOccupancy}
-                                className="bg-blue-600 text-white px-4 py-2 rounded"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                             >
                                 Save
                             </button>
