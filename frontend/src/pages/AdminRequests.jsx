@@ -26,10 +26,10 @@ export default function AdminRequests() {
     };
 
     const WORKFLOW_COLORS = {
-        Received: "bg-yellow-100 text-yellow-800 border-yellow-200",
-        "In-Progress": "bg-blue-100 text-blue-800 border-blue-200",
-        "On Hold": "bg-orange-100 text-orange-800 border-orange-200",
-        Done: "bg-green-100 text-green-800 border-green-200"
+        Received: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+        "In-Progress": "bg-blue-500/20 text-blue-300 border-blue-500/30",
+        "On Hold": "bg-orange-500/20 text-orange-300 border-orange-500/30",
+        Done: "bg-green-500/20 text-green-300 border-green-500/30"
     };
 
     useEffect(() => {
@@ -48,7 +48,6 @@ export default function AdminRequests() {
         }
     };
 
-    /* ================= DELETE REQUEST ================= */
     const deleteRequest = async (id) => {
         if (!window.confirm("Delete this request permanently?")) return;
 
@@ -64,7 +63,6 @@ export default function AdminRequests() {
         }
     };
 
-    /* ================= WORKFLOW ================= */
     const openWorkflowModal = (req) => {
         setSelectedRequest(req);
         setWorkflowStatus("");
@@ -100,7 +98,6 @@ export default function AdminRequests() {
         }
     };
 
-    /* ================= ARCHIVE ================= */
     const openArchiveModal = (req) => {
         setArchiveTarget(req);
         setFinalResolution("");
@@ -135,7 +132,7 @@ export default function AdminRequests() {
 
     const getStatusBadge = (status) => (
         <span
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${WORKFLOW_COLORS[status] || "bg-gray-100 text-gray-800"
+            className={`px-3 py-1 rounded-full text-xs font-medium border ${WORKFLOW_COLORS[status] || "bg-gray-500/20 text-gray-300 border-gray-500/30"
                 }`}
         >
             {status}
@@ -144,40 +141,32 @@ export default function AdminRequests() {
 
     return (
         <DashboardLayout>
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto text-gray-100">
                 <h1 className="text-3xl font-bold mb-6">
                     Maintenance Requests
                 </h1>
 
-                <div className="bg-white rounded-xl shadow border overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
-                                    Message
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
-                                    Resident
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500">
-                                    Actions
-                                </th>
+                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 overflow-hidden">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-gray-400 border-b border-white/10">
+                                <th className="px-6 py-4 text-left">Message</th>
+                                <th className="px-6 py-4 text-left">Resident</th>
+                                <th className="px-6 py-4 text-left">Status</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="4" className="p-6 text-center">
+                                    <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
                                         Loading…
                                     </td>
                                 </tr>
                             ) : requests.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="p-6 text-center text-gray-400">
+                                    <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
                                         No requests found
                                     </td>
                                 </tr>
@@ -189,7 +178,7 @@ export default function AdminRequests() {
                                     return (
                                         <tr
                                             key={req._id}
-                                            className="border-t hover:bg-gray-50"
+                                            className="border-t border-white/5 hover:bg-white/5 transition"
                                         >
                                             <td className="px-6 py-4">
                                                 {req.message}
@@ -204,39 +193,30 @@ export default function AdminRequests() {
                                                 {!isDone && (
                                                     <>
                                                         <button
-                                                            onClick={() =>
-                                                                openWorkflowModal(req)
-                                                            }
-                                                            className="px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700"
+                                                            onClick={() => openWorkflowModal(req)}
+                                                            className="px-3 py-1 bg-indigo-600/90 hover:bg-indigo-700 text-xs rounded text-white"
                                                         >
                                                             Update
                                                         </button>
 
                                                         <button
-                                                            onClick={() =>
-                                                                openArchiveModal(req)
-                                                            }
-                                                            className="px-3 py-1 bg-gray-200 text-xs rounded hover:bg-gray-300"
+                                                            onClick={() => openArchiveModal(req)}
+                                                            className="px-3 py-1 bg-gray-500/20 hover:bg-gray-500/30 text-xs rounded"
                                                         >
                                                             Archive
                                                         </button>
                                                     </>
                                                 )}
 
-                                                {/* DELETE ALWAYS VISIBLE */}
                                                 <button
-                                                    onClick={() =>
-                                                        deleteRequest(req._id)
-                                                    }
+                                                    onClick={() => deleteRequest(req._id)}
                                                     disabled={deletingId === req._id}
                                                     className={`px-3 py-1 text-xs rounded text-white ${deletingId === req._id
-                                                            ? "bg-red-300 cursor-not-allowed"
-                                                            : "bg-red-600 hover:bg-red-700"
+                                                        ? "bg-red-400/40 cursor-not-allowed"
+                                                        : "bg-red-600/90 hover:bg-red-700"
                                                         }`}
                                                 >
-                                                    {deletingId === req._id
-                                                        ? "Deleting..."
-                                                        : "Delete"}
+                                                    {deletingId === req._id ? "Deleting…" : "Delete"}
                                                 </button>
                                             </td>
                                         </tr>
@@ -251,46 +231,41 @@ export default function AdminRequests() {
             {/* WORKFLOW MODAL */}
             <AnimatePresence>
                 {selectedRequest && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-xl p-6 w-96"
+                            className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
                         >
                             <h3 className="text-lg font-semibold mb-4">
                                 Update Status
                             </h3>
 
                             <select
-                                className="w-full border rounded p-2 mb-3"
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-3"
                                 value={workflowStatus}
-                                onChange={(e) =>
-                                    setWorkflowStatus(e.target.value)
-                                }
+                                onChange={(e) => setWorkflowStatus(e.target.value)}
                             >
                                 <option value="">Select status</option>
                                 {WORKFLOW_FLOW[
-                                    selectedRequest.workflowStatus ||
-                                    "Received"
+                                    selectedRequest.workflowStatus || "Received"
                                 ]?.map((s) => (
                                     <option key={s}>{s}</option>
                                 ))}
                             </select>
 
                             <textarea
-                                className="w-full border rounded p-2 mb-4"
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-4"
                                 placeholder="Admin note"
                                 value={adminNote}
-                                onChange={(e) =>
-                                    setAdminNote(e.target.value)
-                                }
+                                onChange={(e) => setAdminNote(e.target.value)}
                             />
 
                             <div className="flex justify-end gap-2">
                                 <button
                                     onClick={closeWorkflowModal}
-                                    className="px-3 py-1 border rounded"
+                                    className="px-3 py-1 border border-white/10 rounded"
                                 >
                                     Cancel
                                 </button>
@@ -309,30 +284,28 @@ export default function AdminRequests() {
             {/* ARCHIVE MODAL */}
             <AnimatePresence>
                 {archiveTarget && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-xl p-6 w-96"
+                            className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
                         >
                             <h3 className="text-lg font-semibold mb-4">
                                 Archive Request
                             </h3>
 
                             <textarea
-                                className="w-full border rounded p-2 mb-4"
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-4"
                                 placeholder="Final resolution"
                                 value={finalResolution}
-                                onChange={(e) =>
-                                    setFinalResolution(e.target.value)
-                                }
+                                onChange={(e) => setFinalResolution(e.target.value)}
                             />
 
                             <div className="flex justify-end gap-2">
                                 <button
                                     onClick={closeArchiveModal}
-                                    className="px-3 py-1 border rounded"
+                                    className="px-3 py-1 border border-white/10 rounded"
                                 >
                                     Cancel
                                 </button>
