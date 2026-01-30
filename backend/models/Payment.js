@@ -60,6 +60,7 @@ const PaymentSchema = new mongoose.Schema(
             type: Date,
             index: true // For revenue reports by date
         },
+        },
 
         adminNote: {
             type: String
