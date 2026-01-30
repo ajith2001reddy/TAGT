@@ -2,22 +2,22 @@ import axios from "axios";
 
 /**
  * Backend API Configuration
- * - Uses environment variable for flexibility (local dev vs production)
- * - Automatically attaches JWT token to requests
- * - Handles common errors globally
+ * - Uses environment variable for flexibility
+ * - Defaults to Render backend
+ * - Automatically attaches JWT token
  */
 
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || "https://tagt.onrender.com/api", // REMOVED SPACE HERE
+    baseURL:
+        process.env.REACT_APP_API_URL?.replace(/\/$/, "") ||
+        "https://tagt.onrender.com/api",
     headers: {
         "Content-Type": "application/json"
-    }
+    },
+    withCredentials: true
 });
 
-// Debug: Log actual URL
-console.log("API Base URL:", api.defaults.baseURL);
-
-// Request interceptor - attaches auth token
+// Request interceptor - attach auth token
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -29,18 +29,16 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response interceptor - handle common errors globally
+// Response interceptor - global error handling
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Handle 401 Unauthorized (expired/invalid token)
         if (error.response?.status === 401) {
             localStorage.removeItem("token");
             localStorage.removeItem("role");
             window.location.href = "/";
         }
 
-        // Handle 403 Forbidden
         if (error.response?.status === 403) {
             console.error("Access denied");
         }
