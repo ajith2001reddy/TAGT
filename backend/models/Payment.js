@@ -4,40 +4,38 @@ const mongoose = require("mongoose");
  * Payment
  * Phase 3 – Billing & Revenue
  *
- * Backward compatible:
- * - Existing records with only month/amount/status still work
- * - New fields are optional and additive
+ * - Resident payments
+ * - Admin-created bills
+ * - Fully compatible with /payments/my
  */
 
 const PaymentSchema = new mongoose.Schema(
     {
-        /* ================= EXISTING (UNCHANGED) ================= */
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
-            index: true // Critical for "get my payments" queries
+            index: true
         },
 
-        // Used for rent (e.g. "2026-01")
         month: {
             type: String,
-            index: true // For monthly rent reports
+            default: null,
+            index: true
         },
 
         amount: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
 
         status: {
             type: String,
             enum: ["paid", "unpaid"],
             default: "unpaid",
-            index: true // Critical for filtering paid vs unpaid
+            index: true
         },
-
-        /* ================= PHASE 3 ADDITIONS ================= */
 
         description: {
             type: String,
@@ -48,40 +46,35 @@ const PaymentSchema = new mongoose.Schema(
             type: String,
             enum: ["rent", "manual", "maintenance"],
             default: "manual",
-            index: true // For filtering by payment type
+            index: true
         },
 
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
+            ref: "User",
+            required: true
         },
 
         paidAt: {
             type: Date,
-            index: true // For revenue reports by date
-        },
+            default: null,
+            index: true
         },
 
         adminNote: {
-            type: String
+            type: String,
+            default: ""
         }
     },
     {
-        timestamps: true,
-        toJSON: { virtuals: true },
-        toObject: { virtuals: true }
+        timestamps: true
     }
 );
 
-/* ================= PERFORMANCE INDEXES ================= */
+/* ================= INDEXES ================= */
 
-// Critical for resident dashboard: "my unpaid bills"
 PaymentSchema.index({ residentId: 1, status: 1 });
-
-// For admin revenue queries: "show me all paid payments sorted by date"
 PaymentSchema.index({ status: 1, paidAt: -1 });
-
-// For monthly rent reports: "show me January rent payments"
 PaymentSchema.index({ month: 1, status: 1 });
 
 module.exports = mongoose.model("Payment", PaymentSchema);
