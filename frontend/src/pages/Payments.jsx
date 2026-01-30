@@ -1,14 +1,11 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * Phase 3 � Admin Payments Page
- * - View all payments
- * - Filter paid / unpaid
- * - Mark payment as paid
+ * Admin Payments Page – ACTION FIXED
  */
 
 export default function Payments() {
@@ -16,12 +13,34 @@ export default function Payments() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all");
 
+    const isUnpaid = (status) =>
+        ["unpaid", "due", "pending"].includes(
+            String(status).toLowerCase()
+        );
+
     /* ================= FETCH PAYMENTS ================= */
     const fetchPayments = async () => {
         try {
             setLoading(true);
             const res = await api.get("/payments");
-            setPayments(Array.isArray(res.data) ? res.data : []);
+
+            const raw = Array.isArray(res.data) ? res.data : [];
+
+            const cleaned = raw
+                .filter(
+                    (p) =>
+                        p &&
+                        p._id &&
+                        typeof p.amount === "number" &&
+                        p.amount > 0 &&
+                        p.residentId
+                )
+                .map((p) => ({
+                    ...p,
+                    status: String(p.status || "unpaid").toLowerCase()
+                }));
+
+            setPayments(cleaned);
         } catch (err) {
             console.error(err);
             toast.error("Failed to load payments");
@@ -43,8 +62,7 @@ export default function Payments() {
             await api.put(`/payments/${id}/paid`);
             toast.success("Payment marked as paid");
             fetchPayments();
-        } catch (err) {
-            console.error(err);
+        } catch {
             toast.error("Failed to update payment");
         }
     };
@@ -53,21 +71,25 @@ export default function Payments() {
     const filteredPayments =
         filter === "all"
             ? payments
-            : payments.filter((p) => p.status === filter);
+            : payments.filter((p) =>
+                filter === "paid"
+                    ? p.status === "paid"
+                    : isUnpaid(p.status)
+            );
 
     return (
         <DashboardLayout>
-            <div className="bg-white p-6 rounded-xl shadow">
-                <h2 className="text-xl font-bold mb-6">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-xl">
+                <h2 className="text-2xl font-bold text-gray-100 mb-6">
                     Payments
                 </h2>
 
-                {/* ================= FILTER BAR ================= */}
-                <div className="mb-4 flex gap-3">
+                {/* FILTER */}
+                <div className="mb-4">
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        className="border rounded px-3 py-2"
+                        className="bg-black/30 text-gray-100 border border-white/10 rounded px-3 py-2"
                     >
                         <option value="all">All</option>
                         <option value="unpaid">Unpaid</option>
@@ -75,69 +97,73 @@ export default function Payments() {
                     </select>
                 </div>
 
-                {/* ================= PAYMENTS TABLE ================= */}
+                {/* TABLE */}
                 {loading ? (
-                    <p className="text-center text-gray-500">
-                        Loading payments...
+                    <p className="text-center text-gray-400">
+                        Loading payments…
                     </p>
                 ) : filteredPayments.length === 0 ? (
-                    <p className="text-center text-gray-500">
+                    <p className="text-center text-gray-400">
                         No payments found.
                     </p>
                 ) : (
-                    <table className="w-full border">
-                        <thead>
-                            <tr className="border-b">
-                                <th className="p-2">Resident</th>
-                                <th className="p-2">Amount</th>
-                                <th className="p-2">Description</th>
-                                <th className="p-2">Status</th>
-                                <th className="p-2">Action</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {filteredPayments.map((p) => (
-                                <tr
-                                    key={p._id}
-                                    className="border-b text-center"
-                                >
-                                    <td className="p-2">
-                                        {p.residentId?.email}
-                                    </td>
-
-                                    <td className="p-2 font-semibold">
-                                        ${p.amount}
-                                    </td>
-
-                                    <td className="p-2">
-                                        {p.description}
-                                    </td>
-
-                                    <td className="p-2 capitalize">
-                                        {p.status}
-                                    </td>
-
-                                    <td className="p-2">
-                                        {p.status === "unpaid" ? (
-                                            <button
-                                                onClick={() =>
-                                                    markAsPaid(p._id)
-                                                }
-                                                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                                            >
-                                                Mark Paid
-                                            </button>
-                                        ) : (
-                                            <span className="text-gray-500">
-                                                �
-                                            </span>
-                                        )}
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-gray-200 border border-white/10 rounded-lg">
+                            <thead className="bg-white/10">
+                                <tr>
+                                    <th className="p-3 text-left">Resident</th>
+                                    <th className="p-3 text-right">Amount</th>
+                                    <th className="p-3 text-left">Description</th>
+                                    <th className="p-3 text-center">Status</th>
+                                    <th className="p-3 text-center">Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+
+                            <tbody>
+                                {filteredPayments.map((p) => (
+                                    <tr
+                                        key={p._id}
+                                        className="border-t border-white/10 hover:bg-white/5 transition"
+                                    >
+                                        <td className="p-3">
+                                            {p.residentId?.email}
+                                        </td>
+
+                                        <td className="p-3 text-right font-semibold">
+                                            ${p.amount.toLocaleString()}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {p.description || "—"}
+                                        </td>
+
+                                        <td className="p-3 text-center capitalize">
+                                            {isUnpaid(p.status)
+                                                ? "unpaid"
+                                                : "paid"}
+                                        </td>
+
+                                        <td className="p-3 text-center">
+                                            {isUnpaid(p.status) ? (
+                                                <button
+                                                    onClick={() =>
+                                                        markAsPaid(p._id)
+                                                    }
+                                                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition"
+                                                >
+                                                    Mark Paid
+                                                </button>
+                                            ) : (
+                                                <span className="text-gray-500">
+                                                    —
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
         </DashboardLayout>

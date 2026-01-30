@@ -1,4 +1,4 @@
-const express = require("express");
+ï»¿const express = require("express");
 const router = express.Router();
 
 const Payment = require("../models/Payment");
@@ -6,9 +6,9 @@ const auth = require("../middleware/auth");
 const isAdmin = require("../middleware/isAdmin");
 
 /* =========================================================
-   PHASE 3 – ADMIN CREATE BILL (NEW)
-   - Direct billing to a resident
-   - Used for rent, penalties, maintenance, etc.
+   ADMIN CREATE BILL (FIXED)
+   - Always sets status
+   - Prevents invalid payments
 ========================================================= */
 router.post("/", auth, isAdmin, async (req, res) => {
     try {
@@ -21,30 +21,32 @@ router.post("/", auth, isAdmin, async (req, res) => {
             adminNote
         } = req.body;
 
-        if (!residentId || !amount) {
+        if (!residentId || typeof amount !== "number" || amount <= 0) {
             return res
                 .status(400)
-                .json("Resident and amount are required");
+                .json("Resident and valid amount are required");
         }
 
         const payment = await Payment.create({
             residentId,
             amount,
-            description,
-            type,
-            month,
-            adminNote,
+            description: description || "",
+            type: type || "manual",
+            month: month || null,
+            adminNote: adminNote || "",
+            status: "unpaid",          // ğŸ”¥ FIX
             createdBy: req.user.id
         });
 
         res.status(201).json(payment);
     } catch (err) {
+        console.error(err);
         res.status(500).json("Failed to create payment");
     }
 });
 
 /* =========================================================
-   PHASE 3 – ADMIN GET ALL PAYMENTS (NEW)
+   ADMIN GET ALL PAYMENTS (SAFE)
 ========================================================= */
 router.get("/", auth, isAdmin, async (req, res) => {
     try {
@@ -54,12 +56,13 @@ router.get("/", auth, isAdmin, async (req, res) => {
 
         res.json(payments);
     } catch (err) {
+        console.error(err);
         res.status(500).json("Failed to fetch payments");
     }
 });
 
 /* =========================================================
-   PHASE 3 – RESIDENT GET OWN PAYMENTS (NEW)
+   RESIDENT GET OWN PAYMENTS
 ========================================================= */
 router.get("/my", auth, async (req, res) => {
     try {
@@ -69,22 +72,34 @@ router.get("/my", auth, async (req, res) => {
 
         res.json(payments);
     } catch (err) {
+        console.error(err);
         res.status(500).json("Failed to fetch payments");
     }
 });
 
 /* =========================================================
-   MARK PAYMENT AS PAID (EXISTING – EXTENDED SAFELY)
+   MARK PAYMENT AS PAID (HARDENED)
 ========================================================= */
 router.put("/:id/paid", auth, isAdmin, async (req, res) => {
     try {
-        await Payment.findByIdAndUpdate(req.params.id, {
-            status: "paid",
-            paidAt: new Date()
-        });
+        const payment = await Payment.findById(req.params.id);
+
+        if (!payment) {
+            return res.status(404).json("Payment not found");
+        }
+
+        if (payment.status === "paid") {
+            return res.json("Payment already marked as paid");
+        }
+
+        payment.status = "paid";
+        payment.paidAt = new Date();
+
+        await payment.save();
 
         res.json("Payment marked as paid");
     } catch (err) {
+        console.error(err);
         res.status(500).json("Failed to mark payment as paid");
     }
 });
