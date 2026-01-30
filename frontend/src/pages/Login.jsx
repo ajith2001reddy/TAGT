@@ -16,15 +16,12 @@ export default function Login() {
     // Prevent double submission
     const isSubmitting = useRef(false);
 
-    const validateEmail = (email) => {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    };
+    const validateEmail = (email) =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const login = async () => {
-        // Prevent double click
         if (isSubmitting.current || loading) return;
 
-        // Basic validation only (don't block submission for password length)
         const newErrors = {};
 
         if (!email.trim()) {
@@ -39,7 +36,6 @@ export default function Login() {
 
         setErrors(newErrors);
 
-        // If validation errors exist, show toast once and stop
         if (Object.keys(newErrors).length > 0) {
             toast.error("Please fill in all fields correctly");
             return;
@@ -49,36 +45,35 @@ export default function Login() {
         setLoading(true);
 
         try {
-            console.log("Attempting login with:", email.trim()); // Debug
-
             const res = await api.post("/auth/login", {
                 email: email.trim().toLowerCase(),
-                password: password
+                password
             });
 
-            console.log("Login response:", res.data); // Debug
-
-            if (!res.data.token) {
-                toast.error("Invalid server response");
+            if (!res.data?.token) {
+                toast.error("Unexpected server response");
                 return;
             }
 
             localStorage.setItem("token", res.data.token);
             localStorage.setItem("role", res.data.role);
 
-            toast.success("Login successful!");
+            toast.success("Login successful");
 
             setTimeout(() => {
                 window.location.href =
                     res.data.role === "admin" ? "/admin" : "/resident";
-            }, 500);
+            }, 400);
         } catch (err) {
-            console.error("Login error:", err.response?.data || err.message);
+            if (!err.response) {
+                toast.error("Network error. Please try again.");
+            } else {
+                toast.error(
+                    err.response?.data?.message ||
+                    "Invalid email or password"
+                );
+            }
 
-            const errorMessage = err.response?.data?.message || "Invalid email or password";
-            toast.error(errorMessage);
-
-            // Clear password on error
             setPassword("");
             setErrors({});
         } finally {
@@ -89,7 +84,7 @@ export default function Login() {
         }
     };
 
-    const handleKeyPress = (e) => {
+    const handleKeyDown = (e) => {
         if (e.key === "Enter" && !loading) {
             login();
         }
@@ -113,7 +108,7 @@ export default function Login() {
                     </p>
                 </div>
 
-                {/* Email Field */}
+                {/* Email */}
                 <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email
@@ -128,9 +123,10 @@ export default function Login() {
                         value={email}
                         onChange={(e) => {
                             setEmail(e.target.value);
-                            if (errors.email) setErrors({ ...errors, email: "" });
+                            if (errors.email)
+                                setErrors({ ...errors, email: "" });
                         }}
-                        onKeyPress={handleKeyPress}
+                        onKeyDown={handleKeyDown}
                         disabled={loading}
                         autoComplete="email"
                         autoFocus
@@ -142,7 +138,7 @@ export default function Login() {
                     )}
                 </div>
 
-                {/* Password Field */}
+                {/* Password */}
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Password
@@ -157,9 +153,10 @@ export default function Login() {
                         value={password}
                         onChange={(e) => {
                             setPassword(e.target.value);
-                            if (errors.password) setErrors({ ...errors, password: "" });
+                            if (errors.password)
+                                setErrors({ ...errors, password: "" });
                         }}
-                        onKeyPress={handleKeyPress}
+                        onKeyDown={handleKeyDown}
                         disabled={loading}
                         autoComplete="current-password"
                     />
@@ -172,24 +169,12 @@ export default function Login() {
 
                 <Button
                     onClick={login}
-                    className={`w-full py-2.5 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    className={`w-full py-2.5 ${loading ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
                     disabled={loading}
                 >
-                    {loading ? (
-                        <span className="flex items-center justify-center">
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Signing in...
-                        </span>
-                    ) : "Sign In"}
+                    {loading ? "Signing in..." : "Sign In"}
                 </Button>
-
-                {/* Debug info - remove in production */}
-                <div className="mt-4 text-xs text-gray-400 text-center">
-                    API: {process.env.REACT_APP_API_URL || "Using default"}
-                </div>
             </Card>
         </motion.div>
     );
