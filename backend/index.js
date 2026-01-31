@@ -17,7 +17,6 @@ const allowedOrigins = [
 app.use(
     cors({
         origin: function (origin, callback) {
-            // Allow requests with no origin (Postman, server-to-server)
             if (!origin) return callback(null, true);
 
             if (allowedOrigins.includes(origin)) {
@@ -52,6 +51,7 @@ mongoose
 
 /* ================= ROUTES ================= */
 const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
 
 /* ================= HEALTH ================= */
 app.get("/api/health", (req, res) => {
@@ -60,6 +60,9 @@ app.get("/api/health", (req, res) => {
 
 /* ================= AUTH ================= */
 app.use("/api/auth", authRoutes);
+
+/* ================= ADMIN ================= */
+app.use("/api/admin", adminRoutes);
 
 /* ================= 404 HANDLER ================= */
 app.use((req, res) => {
