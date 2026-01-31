@@ -37,8 +37,11 @@ const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:3001",
     "https://tagt.onrender.com",
+    "https://tagt.website",
+    "https://www.tagt.website",
     process.env.FRONTEND_URL
 ].filter(Boolean);
+
 
 app.use(
     cors({
