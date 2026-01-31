@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+ï»¿import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 
 import api from "../api/axios";
@@ -42,6 +42,7 @@ export default function Login() {
         setLoading(true);
 
         try {
+            // âœ… CORRECT ROUTE (NO double /api)
             const response = await api.post("/auth/login", {
                 email: email.trim().toLowerCase(),
                 password
@@ -119,7 +120,7 @@ export default function Login() {
                             value={password}
                             disabled={loading}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                             className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
