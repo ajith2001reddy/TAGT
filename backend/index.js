@@ -11,13 +11,11 @@ const PORT = process.env.PORT || 5000;
 /* ================= CORS ================= */
 app.use(
     cors({
-        origin: [
-            "https://tagt.website",
-            "https://www.tagt.website"
-        ],
+        origin: process.env.FRONTEND_URL,
         credentials: true
     })
 );
+
 
 /* ================= MIDDLEWARE ================= */
 app.use(express.json());
