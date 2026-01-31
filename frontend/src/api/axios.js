@@ -1,21 +1,23 @@
 import axios from "axios";
 
 /**
- * Backend API Configuration (PRODUCTION SAFE)
- * - Uses environment variable ONLY
- * - No hardcoded URLs
- * - Attaches JWT automatically
+ * Backend API Configuration
+ * - Explicit production-safe fallback
+ * - Prevents undefined baseURL
+ * - Always targets /api
  */
 
+const API_URL =
+    process.env.REACT_APP_API_URL || "https://api.tagt.website/api";
+
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL.replace(/\/$/, ""),
+    baseURL: API_URL.replace(/\/$/, ""),
     headers: {
         "Content-Type": "application/json"
-    },
-    withCredentials: true
+    }
 });
 
-// Attach JWT token
+// Attach JWT token automatically
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -34,7 +36,6 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem("token");
             localStorage.removeItem("role");
-            window.location.href = "/";
         }
         return Promise.reject(error);
     }

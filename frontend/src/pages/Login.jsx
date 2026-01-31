@@ -13,14 +13,13 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
-    // Prevent double submission
     const isSubmitting = useRef(false);
 
-    const validateEmail = (email) =>
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validateEmail = (value) =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
     const login = async () => {
-        if (isSubmitting.current || loading) return;
+        if (loading || isSubmitting.current) return;
 
         const newErrors = {};
 
@@ -45,32 +44,36 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const res = await api.post("/auth/login", {
+            const response = await api.post("/auth/login", {
                 email: email.trim().toLowerCase(),
                 password
             });
 
-            if (!res.data?.token) {
-                toast.error("Unexpected server response");
+            const { token, role } = response.data || {};
+
+            if (!token) {
+                toast.error("Login failed: no token received");
                 return;
             }
 
-            localStorage.setItem("token", res.data.token);
-            localStorage.setItem("role", res.data.role);
+            localStorage.setItem("token", token);
+            if (role) localStorage.setItem("role", role);
 
             toast.success("Login successful");
 
             setTimeout(() => {
-                window.location.href =
-                    res.data.role === "admin" ? "/admin" : "/resident";
-            }, 400);
+                if (role === "admin") {
+                    window.location.assign("/admin");
+                } else {
+                    window.location.assign("/resident");
+                }
+            }, 300);
         } catch (err) {
             if (!err.response) {
                 toast.error("Network error. Please try again.");
             } else {
                 toast.error(
-                    err.response?.data?.message ||
-                    "Invalid email or password"
+                    err.response?.data?.message || "Invalid email or password"
                 );
             }
 
@@ -80,7 +83,7 @@ export default function Login() {
             setLoading(false);
             setTimeout(() => {
                 isSubmitting.current = false;
-            }, 500);
+            }, 300);
         }
     };
 
@@ -115,21 +118,22 @@ export default function Login() {
                     </label>
                     <input
                         type="email"
-                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 transition ${errors.email
+                        value={email}
+                        disabled={loading}
+                        autoFocus
+                        autoComplete="email"
+                        onKeyDown={handleKeyDown}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (errors.email) {
+                                setErrors({ ...errors, email: "" });
+                            }
+                        }}
+                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${errors.email
                                 ? "border-red-500 focus:ring-red-500 bg-red-50"
                                 : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                             }`}
                         placeholder="admin@example.com"
-                        value={email}
-                        onChange={(e) => {
-                            setEmail(e.target.value);
-                            if (errors.email)
-                                setErrors({ ...errors, email: "" });
-                        }}
-                        onKeyDown={handleKeyDown}
-                        disabled={loading}
-                        autoComplete="email"
-                        autoFocus
                     />
                     {errors.email && (
                         <p className="text-red-500 text-xs mt-1 font-medium">
@@ -145,20 +149,21 @@ export default function Login() {
                     </label>
                     <input
                         type="password"
-                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 transition ${errors.password
+                        value={password}
+                        disabled={loading}
+                        autoComplete="current-password"
+                        onKeyDown={handleKeyDown}
+                        onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (errors.password) {
+                                setErrors({ ...errors, password: "" });
+                            }
+                        }}
+                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${errors.password
                                 ? "border-red-500 focus:ring-red-500 bg-red-50"
                                 : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                             }`}
                         placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => {
-                            setPassword(e.target.value);
-                            if (errors.password)
-                                setErrors({ ...errors, password: "" });
-                        }}
-                        onKeyDown={handleKeyDown}
-                        disabled={loading}
-                        autoComplete="current-password"
                     />
                     {errors.password && (
                         <p className="text-red-500 text-xs mt-1 font-medium">
@@ -169,9 +174,9 @@ export default function Login() {
 
                 <Button
                     onClick={login}
+                    disabled={loading}
                     className={`w-full py-2.5 ${loading ? "opacity-70 cursor-not-allowed" : ""
                         }`}
-                    disabled={loading}
                 >
                     {loading ? "Signing in..." : "Sign In"}
                 </Button>
