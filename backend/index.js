@@ -6,15 +6,13 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(
-    cors({
-        origin: [
-            "https://tagt.website",
-            "https://www.tagt.website"
-        ],
-        credentials: true
-    })
-);
+app.use(cors({
+    origin: [
+        "https://tagt.website",
+        "https://www.tagt.website"
+    ],
+    credentials: true
+}));
 
 app.use(express.json());
 
@@ -36,5 +34,5 @@ app.post("/api/auth/login", (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log("Backend running on port", PORT);
+    console.log("✅ Backend running on port", PORT);
 });
