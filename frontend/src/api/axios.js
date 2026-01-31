@@ -8,7 +8,7 @@ import axios from "axios";
  */
 
 const API_URL =
-    process.env.REACT_APP_API_URL || "https://api.tagt.website";
+    process.env.REACT_APP_API_URL || "https://api.tagt.website/api";
 
 const api = axios.create({
     baseURL: API_URL.replace(/\/$/, ""),
