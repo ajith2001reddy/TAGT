@@ -5,14 +5,16 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-// LOGIN
+/* ================= LOGIN ================= */
 router.post("/login", async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
         // Input validation
         if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
+            return res
+                .status(400)
+                .json({ message: "Email and password are required" });
         }
 
         const user = await User.findOne({ email });

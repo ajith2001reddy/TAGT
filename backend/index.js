@@ -2,37 +2,65 @@
 
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 
+/* ================= APP INIT ================= */
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-    origin: [
-        "https://tagt.website",
-        "https://www.tagt.website"
-    ],
-    credentials: true
-}));
+/* ================= CORS ================= */
+app.use(
+    cors({
+        origin: [
+            "https://tagt.website",
+            "https://www.tagt.website"
+        ],
+        credentials: true
+    })
+);
 
+/* ================= MIDDLEWARE ================= */
 app.use(express.json());
 
+/* ================= DB CONNECT ================= */
+if (!process.env.MONGO_URI) {
+    console.error("❌ MONGO_URI not defined");
+    process.exit(1);
+}
+
+mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch((err) => {
+        console.error("❌ MongoDB connection failed", err);
+        process.exit(1);
+    });
+
+/* ================= ROUTES ================= */
+const authRoutes = require("./routes/auth");
+
+/* ================= HEALTH ================= */
 app.get("/api/health", (req, res) => {
     res.json({ status: "OK" });
 });
 
-app.post("/api/auth/login", (req, res) => {
-    const { email, password } = req.body;
+/* ================= AUTH ================= */
+app.use("/api/auth", authRoutes);
 
-    if (email !== "admin@test.com" || password !== "123456") {
-        return res.status(401).json({ message: "Invalid credentials" });
-    }
+/* ================= 404 HANDLER ================= */
+app.use((req, res) => {
+    res.status(404).json({ message: "Route not found" });
+});
 
-    res.json({
-        token: "demo-token",
-        role: "admin"
+/* ================= ERROR HANDLER ================= */
+app.use((err, req, res, next) => {
+    console.error("❌ ERROR:", err.message);
+    res.status(err.status || 500).json({
+        message: err.message || "Server error"
     });
 });
 
+/* ================= START SERVER ================= */
 app.listen(PORT, () => {
-    console.log("✅ Backend running on port", PORT);
+    console.log(`✅ Backend running on port ${PORT}`);
 });

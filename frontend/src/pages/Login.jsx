@@ -1,11 +1,9 @@
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
 import api from "../api/axios";
 import Button from "../components/Button";
 import Card from "../components/Card";
-import { pageVariants } from "../animations/pageTransition";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -62,21 +60,15 @@ export default function Login() {
             toast.success("Login successful");
 
             setTimeout(() => {
-                if (role === "admin") {
-                    window.location.assign("/admin");
-                } else {
-                    window.location.assign("/resident");
-                }
+                window.location.assign(
+                    role === "admin" ? "/admin" : "/resident"
+                );
             }, 300);
         } catch (err) {
-            if (!err.response) {
-                toast.error("Network error. Please try again.");
-            } else {
-                toast.error(
-                    err.response?.data?.message || "Invalid email or password"
-                );
-            }
-
+            toast.error(
+                err.response?.data?.message ||
+                "Invalid email or password"
+            );
             setPassword("");
             setErrors({});
         } finally {
@@ -87,20 +79,8 @@ export default function Login() {
         }
     };
 
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter" && !loading) {
-            login();
-        }
-    };
-
     return (
-        <motion.div
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="min-h-screen flex items-center justify-center bg-gray-100"
-        >
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <Card>
                 <div className="mb-6 text-center">
                     <h2 className="text-2xl font-bold text-gray-800">
@@ -111,7 +91,6 @@ export default function Login() {
                     </p>
                 </div>
 
-                {/* Email */}
                 <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email
@@ -121,28 +100,11 @@ export default function Login() {
                         value={email}
                         disabled={loading}
                         autoFocus
-                        autoComplete="email"
-                        onKeyDown={handleKeyDown}
-                        onChange={(e) => {
-                            setEmail(e.target.value);
-                            if (errors.email) {
-                                setErrors({ ...errors, email: "" });
-                            }
-                        }}
-                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${errors.email
-                                ? "border-red-500 focus:ring-red-500 bg-red-50"
-                                : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                            }`}
-                        placeholder="admin@example.com"
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-md"
                     />
-                    {errors.email && (
-                        <p className="text-red-500 text-xs mt-1 font-medium">
-                            {errors.email}
-                        </p>
-                    )}
                 </div>
 
-                {/* Password */}
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Password
@@ -151,36 +113,19 @@ export default function Login() {
                         type="password"
                         value={password}
                         disabled={loading}
-                        autoComplete="current-password"
-                        onKeyDown={handleKeyDown}
-                        onChange={(e) => {
-                            setPassword(e.target.value);
-                            if (errors.password) {
-                                setErrors({ ...errors, password: "" });
-                            }
-                        }}
-                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${errors.password
-                                ? "border-red-500 focus:ring-red-500 bg-red-50"
-                                : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                            }`}
-                        placeholder="Enter your password"
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-md"
                     />
-                    {errors.password && (
-                        <p className="text-red-500 text-xs mt-1 font-medium">
-                            {errors.password}
-                        </p>
-                    )}
                 </div>
 
                 <Button
                     onClick={login}
                     disabled={loading}
-                    className={`w-full py-2.5 ${loading ? "opacity-70 cursor-not-allowed" : ""
-                        }`}
+                    className="w-full py-2.5"
                 >
                     {loading ? "Signing in..." : "Sign In"}
                 </Button>
             </Card>
-        </motion.div>
+        </div>
     );
 }
