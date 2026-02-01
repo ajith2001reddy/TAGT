@@ -10,12 +10,13 @@ const Room = require("../models/Room");
 ========================================================= */
 router.post("/", auth, isAdmin, async (req, res) => {
     try {
-        const { roomNumber, totalBeds, note } = req.body;
+        const { roomNumber, note } = req.body;
+        const totalBeds = Number(req.body.totalBeds);
 
-        if (!roomNumber || !totalBeds) {
+        if (!roomNumber || !Number.isInteger(totalBeds) || totalBeds <= 0) {
             return res
                 .status(400)
-                .json("Room number and total beds are required");
+                .json("Room number and valid total beds are required");
         }
 
         const exists = await Room.findOne({ roomNumber });
@@ -26,11 +27,13 @@ router.post("/", auth, isAdmin, async (req, res) => {
         const room = await Room.create({
             roomNumber,
             totalBeds,
-            note
+            occupiedBeds: 0,
+            note: note || ""
         });
 
         res.status(201).json(room);
     } catch (err) {
+        console.error(err);
         res.status(500).json("Failed to create room");
     }
 });
@@ -43,24 +46,26 @@ router.get("/", auth, isAdmin, async (req, res) => {
         const rooms = await Room.find().sort({ roomNumber: 1 });
         res.json(rooms);
     } catch (err) {
+        console.error(err);
         res.status(500).json("Failed to fetch rooms");
     }
 });
 
 /* =========================================================
    UPDATE OCCUPIED BEDS (ADMIN)
-   - Safe increment / decrement
 ========================================================= */
 router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
     try {
-        const { occupiedBeds } = req.body;
+        const occupiedBeds = Number(req.body.occupiedBeds);
 
-        if (occupiedBeds < 0) {
+        if (!Number.isInteger(occupiedBeds) || occupiedBeds < 0) {
             return res.status(400).json("Invalid occupied beds value");
         }
 
         const room = await Room.findById(req.params.id);
-        if (!room) return res.status(404).json("Room not found");
+        if (!room) {
+            return res.status(404).json("Room not found");
+        }
 
         if (occupiedBeds > room.totalBeds) {
             return res
@@ -73,6 +78,7 @@ router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
 
         res.json(room);
     } catch (err) {
+        console.error(err);
         res.status(500).json("Failed to update occupancy");
     }
 });
@@ -83,7 +89,9 @@ router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
 router.delete("/:id", auth, isAdmin, async (req, res) => {
     try {
         const room = await Room.findById(req.params.id);
-        if (!room) return res.status(404).json("Room not found");
+        if (!room) {
+            return res.status(404).json("Room not found");
+        }
 
         if (room.occupiedBeds > 0) {
             return res
@@ -94,6 +102,7 @@ router.delete("/:id", auth, isAdmin, async (req, res) => {
         await room.deleteOne();
         res.json("Room deleted");
     } catch (err) {
+        console.error(err);
         res.status(500).json("Failed to delete room");
     }
 });

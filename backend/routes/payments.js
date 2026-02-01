@@ -6,22 +6,21 @@ const auth = require("../middleware/auth");
 const isAdmin = require("../middleware/isAdmin");
 
 /* =========================================================
-   ADMIN CREATE BILL (FIXED)
-   - Always sets status
-   - Prevents invalid payments
+   ADMIN CREATE BILL
 ========================================================= */
 router.post("/", auth, isAdmin, async (req, res) => {
     try {
         const {
             residentId,
-            amount,
             description,
             type,
             month,
             adminNote
         } = req.body;
 
-        if (!residentId || typeof amount !== "number" || amount <= 0) {
+        const amount = Number(req.body.amount);
+
+        if (!residentId || !Number.isFinite(amount) || amount <= 0) {
             return res
                 .status(400)
                 .json("Resident and valid amount are required");
@@ -34,7 +33,7 @@ router.post("/", auth, isAdmin, async (req, res) => {
             type: type || "manual",
             month: month || null,
             adminNote: adminNote || "",
-            status: "unpaid",          // 🔥 FIX
+            status: "unpaid",
             createdBy: req.user.id
         });
 
@@ -46,7 +45,7 @@ router.post("/", auth, isAdmin, async (req, res) => {
 });
 
 /* =========================================================
-   ADMIN GET ALL PAYMENTS (SAFE)
+   ADMIN GET ALL PAYMENTS
 ========================================================= */
 router.get("/", auth, isAdmin, async (req, res) => {
     try {
@@ -78,7 +77,7 @@ router.get("/my", auth, async (req, res) => {
 });
 
 /* =========================================================
-   MARK PAYMENT AS PAID (HARDENED)
+   MARK PAYMENT AS PAID (ADMIN)
 ========================================================= */
 router.put("/:id/paid", auth, isAdmin, async (req, res) => {
     try {

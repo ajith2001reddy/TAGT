@@ -3,26 +3,16 @@ import toast from "react-hot-toast";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
-/**
- * ADMIN ROOMS
- * - Room & bed management
- * - Visual availability
- * - Safe occupancy updates
- * - No destructive actions without confirmation
- */
-
 export default function AdminRooms() {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    /* ===== ADD ROOM FORM ===== */
     const [form, setForm] = useState({
         roomNumber: "",
         totalBeds: "",
         note: ""
     });
 
-    /* ===== OCCUPANCY MODAL ===== */
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
@@ -73,12 +63,16 @@ export default function AdminRooms() {
 
     /* ================= UPDATE OCCUPANCY ================= */
     const updateOccupancy = async () => {
-        if (occupiedBeds === "" || Number(occupiedBeds) < 0) {
+        if (!selectedRoom) return;
+
+        const value = Number(occupiedBeds);
+
+        if (!Number.isInteger(value) || value < 0) {
             toast.error("Enter a valid occupied beds value");
             return;
         }
 
-        if (Number(occupiedBeds) > selectedRoom.totalBeds) {
+        if (value > selectedRoom.totalBeds) {
             toast.error("Occupied beds cannot exceed total beds");
             return;
         }
@@ -86,7 +80,7 @@ export default function AdminRooms() {
         try {
             await api.put(
                 `/rooms/${selectedRoom._id}/occupancy`,
-                { occupiedBeds: Number(occupiedBeds) }
+                { occupiedBeds: value }
             );
 
             toast.success("Occupancy updated");
@@ -123,7 +117,6 @@ export default function AdminRooms() {
     return (
         <DashboardLayout>
             <div className="space-y-10">
-                {/* ================= HEADER ================= */}
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">
                         Rooms & Bed Management
@@ -133,7 +126,7 @@ export default function AdminRooms() {
                     </p>
                 </div>
 
-                {/* ================= ADD ROOM ================= */}
+                {/* ADD ROOM */}
                 <div className="bg-white rounded-2xl border p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Add New Room
@@ -145,10 +138,7 @@ export default function AdminRooms() {
                             className="border rounded-lg p-2"
                             value={form.roomNumber}
                             onChange={(e) =>
-                                setForm({
-                                    ...form,
-                                    roomNumber: e.target.value
-                                })
+                                setForm({ ...form, roomNumber: e.target.value })
                             }
                         />
 
@@ -158,10 +148,7 @@ export default function AdminRooms() {
                             className="border rounded-lg p-2"
                             value={form.totalBeds}
                             onChange={(e) =>
-                                setForm({
-                                    ...form,
-                                    totalBeds: e.target.value
-                                })
+                                setForm({ ...form, totalBeds: e.target.value })
                             }
                         />
 
@@ -170,10 +157,7 @@ export default function AdminRooms() {
                             className="border rounded-lg p-2"
                             value={form.note}
                             onChange={(e) =>
-                                setForm({
-                                    ...form,
-                                    note: e.target.value
-                                })
+                                setForm({ ...form, note: e.target.value })
                             }
                         />
 
@@ -186,11 +170,9 @@ export default function AdminRooms() {
                     </div>
                 </div>
 
-                {/* ================= ROOMS TABLE ================= */}
+                {/* ROOMS TABLE */}
                 <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Rooms
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-4">Rooms</h2>
 
                     {loading ? (
                         <p className="text-gray-500 text-center">
@@ -205,9 +187,7 @@ export default function AdminRooms() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b text-gray-500">
-                                        <th className="p-2 text-left">
-                                            Room
-                                        </th>
+                                        <th className="p-2 text-left">Room</th>
                                         <th className="p-2 text-center">
                                             Total Beds
                                         </th>
@@ -222,53 +202,54 @@ export default function AdminRooms() {
                                         </th>
                                     </tr>
                                 </thead>
-
                                 <tbody>
-                                    {rooms.map((r) => (
-                                        <tr
-                                            key={r._id}
-                                            className="border-b hover:bg-gray-50"
-                                        >
-                                            <td className="p-2">
-                                                {r.roomNumber}
-                                            </td>
+                                    {rooms.map((r) => {
+                                        const availableBeds =
+                                            r.totalBeds - r.occupiedBeds;
 
-                                            <td className="p-2 text-center">
-                                                {r.totalBeds}
-                                            </td>
-
-                                            <td className="p-2 text-center">
-                                                {r.occupiedBeds}
-                                            </td>
-
-                                            <td className="p-2 text-center font-semibold">
-                                                {r.availableBeds}
-                                            </td>
-
-                                            <td className="p-2 text-center space-x-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedRoom(r);
-                                                        setOccupiedBeds(
-                                                            r.occupiedBeds
-                                                        );
-                                                    }}
-                                                    className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
-                                                >
-                                                    Update
-                                                </button>
-
-                                                <button
-                                                    onClick={() =>
-                                                        deleteRoom(r)
-                                                    }
-                                                    className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                        return (
+                                            <tr
+                                                key={r._id}
+                                                className="border-b hover:bg-gray-50"
+                                            >
+                                                <td className="p-2">
+                                                    {r.roomNumber}
+                                                </td>
+                                                <td className="p-2 text-center">
+                                                    {r.totalBeds}
+                                                </td>
+                                                <td className="p-2 text-center">
+                                                    {r.occupiedBeds}
+                                                </td>
+                                                <td className="p-2 text-center font-semibold">
+                                                    {availableBeds}
+                                                </td>
+                                                <td className="p-2 text-center space-x-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedRoom(r);
+                                                            setOccupiedBeds(
+                                                                String(
+                                                                    r.occupiedBeds
+                                                                )
+                                                            );
+                                                        }}
+                                                        className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                                    >
+                                                        Update
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            deleteRoom(r)
+                                                        }
+                                                        className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -276,7 +257,7 @@ export default function AdminRooms() {
                 </div>
             </div>
 
-            {/* ================= OCCUPANCY MODAL ================= */}
+            {/* OCCUPANCY MODAL */}
             {selectedRoom && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl p-6 w-96">
@@ -296,9 +277,7 @@ export default function AdminRooms() {
 
                         <div className="flex justify-end gap-3">
                             <button
-                                onClick={() =>
-                                    setSelectedRoom(null)
-                                }
+                                onClick={() => setSelectedRoom(null)}
                                 className="px-4 py-2 border rounded-lg"
                             >
                                 Cancel
