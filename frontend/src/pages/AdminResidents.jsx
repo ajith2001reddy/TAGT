@@ -9,6 +9,7 @@ export default function AdminResidents() {
     const [residents, setResidents] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    /* ===== ADD RESIDENT FORM ===== */
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -17,6 +18,7 @@ export default function AdminResidents() {
         rent: ""
     });
 
+    /* ===== BILLING ===== */
     const [billingTarget, setBillingTarget] = useState(null);
     const [billAmount, setBillAmount] = useState("");
     const [billDescription, setBillDescription] = useState("");
@@ -81,7 +83,7 @@ export default function AdminResidents() {
 
         try {
             await api.post("/payments", {
-                residentId: userId, // ✅ ALWAYS USER _id
+                residentId: userId,
                 amount: Number(billAmount),
                 description: billDescription || "Direct charge",
                 type: "manual"
@@ -93,19 +95,6 @@ export default function AdminResidents() {
             setBillDescription("");
         } catch (err) {
             toast.error(err.response?.data || "Failed to send bill");
-        }
-    };
-
-    /* ================= DELETE RESIDENT ================= */
-    const deleteResident = async (id) => {
-        if (!window.confirm("Delete this resident permanently?")) return;
-
-        try {
-            await api.delete(`/admin/residents/${id}`);
-            toast.success("Resident deleted successfully");
-            fetchResidents();
-        } catch (err) {
-            toast.error(err.response?.data || "Failed to delete resident");
         }
     };
 
@@ -131,7 +120,42 @@ export default function AdminResidents() {
                     </p>
                 </div>
 
-                {/* RESIDENT LIST */}
+                {/* ================= ADD RESIDENT ================= */}
+                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
+                    <h2 className="text-lg font-semibold mb-4">
+                        Add New Resident
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        {["name", "email", "password", "room", "rent"].map((field) => (
+                            <input
+                                key={field}
+                                type={
+                                    field === "password"
+                                        ? "password"
+                                        : field === "rent"
+                                            ? "number"
+                                            : "text"
+                                }
+                                placeholder={field.toUpperCase()}
+                                className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm text-white"
+                                value={form[field]}
+                                onChange={(e) =>
+                                    setForm({ ...form, [field]: e.target.value })
+                                }
+                            />
+                        ))}
+
+                        <MotionButton
+                            onClick={addResident}
+                            className="md:col-span-5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                        >
+                            Add Resident
+                        </MotionButton>
+                    </div>
+                </div>
+
+                {/* ================= RESIDENT LIST ================= */}
                 <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Resident List
@@ -182,7 +206,7 @@ export default function AdminResidents() {
                 </div>
             </div>
 
-            {/* BILLING MODAL */}
+            {/* ================= BILL MODAL ================= */}
             {billingTarget && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <motion.div
