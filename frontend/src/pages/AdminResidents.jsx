@@ -1,14 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+ï»¿import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
-
-/**
- * ADMIN RESIDENTS
- * PHASE 3 – Action Micro-Interactions
- */
 
 export default function AdminResidents() {
     const [residents, setResidents] = useState([]);
@@ -26,6 +21,7 @@ export default function AdminResidents() {
     const [billAmount, setBillAmount] = useState("");
     const [billDescription, setBillDescription] = useState("");
 
+    /* ================= FETCH RESIDENTS ================= */
     const fetchResidents = useCallback(async () => {
         try {
             setLoading(true);
@@ -43,6 +39,7 @@ export default function AdminResidents() {
         fetchResidents();
     }, [fetchResidents]);
 
+    /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
         if (!form.name || !form.email || !form.password || !form.room || !form.rent) {
             toast.error("All fields are required");
@@ -68,7 +65,15 @@ export default function AdminResidents() {
         }
     };
 
+    /* ================= SEND BILL (FIXED) ================= */
     const sendBill = async () => {
+        const userId = billingTarget?.userId?._id;
+
+        if (!userId) {
+            toast.error("Invalid resident selected. Please reload.");
+            return;
+        }
+
         if (!billAmount || Number(billAmount) <= 0) {
             toast.error("Enter a valid amount");
             return;
@@ -76,7 +81,7 @@ export default function AdminResidents() {
 
         try {
             await api.post("/payments", {
-                residentId: billingTarget.userId._id,
+                residentId: userId, // âœ… ALWAYS USER _id
                 amount: Number(billAmount),
                 description: billDescription || "Direct charge",
                 type: "manual"
@@ -86,11 +91,12 @@ export default function AdminResidents() {
             setBillingTarget(null);
             setBillAmount("");
             setBillDescription("");
-        } catch {
-            toast.error("Failed to send bill");
+        } catch (err) {
+            toast.error(err.response?.data || "Failed to send bill");
         }
     };
 
+    /* ================= DELETE RESIDENT ================= */
     const deleteResident = async (id) => {
         if (!window.confirm("Delete this resident permanently?")) return;
 
@@ -125,35 +131,6 @@ export default function AdminResidents() {
                     </p>
                 </div>
 
-                {/* ADD RESIDENT */}
-                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Add New Resident
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        {["name", "email", "password", "room", "rent"].map((field) => (
-                            <input
-                                key={field}
-                                type={field === "password" ? "password" : field === "rent" ? "number" : "text"}
-                                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                                className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                value={form[field]}
-                                onChange={(e) =>
-                                    setForm({ ...form, [field]: e.target.value })
-                                }
-                            />
-                        ))}
-
-                        <MotionButton
-                            onClick={addResident}
-                            className="md:col-span-5 bg-blue-600/90 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-                        >
-                            Add Resident
-                        </MotionButton>
-                    </div>
-                </div>
-
                 {/* RESIDENT LIST */}
                 <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
                     <h2 className="text-lg font-semibold mb-4">
@@ -162,7 +139,7 @@ export default function AdminResidents() {
 
                     {loading ? (
                         <p className="text-center text-gray-400">
-                            Loading residents…
+                            Loading residentsâ€¦
                         </p>
                     ) : residents.length === 0 ? (
                         <p className="text-center text-gray-400">
@@ -183,25 +160,18 @@ export default function AdminResidents() {
                                 {residents.map((r) => (
                                     <tr
                                         key={r._id}
-                                        className="border-b border-white/5 hover:bg-white/5 transition"
+                                        className="border-b border-white/5 hover:bg-white/5"
                                     >
                                         <td className="p-2">{r.userId?.name}</td>
                                         <td className="p-2">{r.userId?.email}</td>
                                         <td className="p-2 text-center">{r.room}</td>
                                         <td className="p-2 text-center">{r.rent}</td>
-                                        <td className="p-2 text-center space-x-2">
+                                        <td className="p-2 text-center">
                                             <MotionButton
                                                 onClick={() => setBillingTarget(r)}
-                                                className="bg-green-600/90 hover:bg-green-700 text-white px-3 py-1 rounded-lg"
+                                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg"
                                             >
                                                 Send Bill
-                                            </MotionButton>
-
-                                            <MotionButton
-                                                onClick={() => deleteResident(r._id)}
-                                                className="bg-red-600/90 hover:bg-red-700 text-white px-3 py-1 rounded-lg"
-                                            >
-                                                Delete
                                             </MotionButton>
                                         </td>
                                     </tr>
@@ -218,7 +188,6 @@ export default function AdminResidents() {
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.95, opacity: 0 }}
                         className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
                     >
                         <h3 className="text-lg font-semibold mb-4">
