@@ -4,6 +4,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
+
+
 /* ================= APP INIT ================= */
 const app = express(); // ✅ MUST COME BEFORE app.get / app.use
 const PORT = process.env.PORT || 5000;
@@ -54,6 +56,7 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const roomRoutes = require("./routes/rooms");
 const paymentRoutes = require("./routes/payments");
+const residentRoutes = require("./routes/resident");
 
 /* ================= HEALTH ================= */
 app.get("/api/health", (req, res) => {
@@ -65,6 +68,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/resident", residentRoutes);
+
 
 /* ================= 404 HANDLER ================= */
 app.use((req, res) => {
