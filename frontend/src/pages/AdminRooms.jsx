@@ -34,10 +34,10 @@ export default function AdminRooms() {
         fetchRooms();
     }, [fetchRooms]);
 
-    /* ================= ADD ROOM ================= */
+    /* ================= ADD rooms ================= */
     const addRoom = async () => {
         if (!form.roomNumber || !form.totalBeds) {
-            toast.error("Room number and total beds are required");
+            toast.error("rooms number and total beds are required");
             return;
         }
 
@@ -53,11 +53,11 @@ export default function AdminRooms() {
                 note: form.note
             });
 
-            toast.success("Room added successfully");
+            toast.success("rooms added successfully");
             setForm({ roomNumber: "", totalBeds: "", note: "" });
             fetchRooms();
         } catch {
-            toast.error("Failed to add room");
+            toast.error("Failed to add rooms");
         }
     };
 
@@ -92,25 +92,25 @@ export default function AdminRooms() {
         }
     };
 
-    /* ================= DELETE ROOM ================= */
-    const deleteRoom = async (room) => {
-        if (room.occupiedBeds > 0) {
-            toast.error("Cannot delete a room with occupied beds");
+    /* ================= DELETE rooms ================= */
+    const deleteRoom = async (rooms) => {
+        if (rooms.occupiedBeds > 0) {
+            toast.error("Cannot delete a rooms with occupied beds");
             return;
         }
 
         const confirm = window.confirm(
-            `Delete room ${room.roomNumber}? This cannot be undone.`
+            `Delete rooms ${rooms.roomNumber}? This cannot be undone.`
         );
 
         if (!confirm) return;
 
         try {
-            await api.delete(`/rooms/${room._id}`);
-            toast.success("Room deleted");
+            await api.delete(`/rooms/${rooms._id}`);
+            toast.success("rooms deleted");
             fetchRooms();
         } catch {
-            toast.error("Failed to delete room");
+            toast.error("Failed to delete rooms");
         }
     };
 
@@ -126,15 +126,15 @@ export default function AdminRooms() {
                     </p>
                 </div>
 
-                {/* ADD ROOM */}
+                {/* ADD rooms */}
                 <div className="bg-white rounded-2xl border p-6">
                     <h2 className="text-lg font-semibold mb-4">
-                        Add New Room
+                        Add New rooms
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <input
-                            placeholder="Room Number"
+                            placeholder="rooms Number"
                             className="border rounded-lg p-2"
                             value={form.roomNumber}
                             onChange={(e) =>
@@ -165,7 +165,7 @@ export default function AdminRooms() {
                             onClick={addRoom}
                             className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
                         >
-                            Add Room
+                            Add rooms
                         </button>
                     </div>
                 </div>
@@ -187,7 +187,7 @@ export default function AdminRooms() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b text-gray-500">
-                                        <th className="p-2 text-left">Room</th>
+                                        <th className="p-2 text-left">rooms</th>
                                         <th className="p-2 text-center">
                                             Total Beds
                                         </th>
@@ -262,7 +262,7 @@ export default function AdminRooms() {
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl p-6 w-96">
                         <h3 className="text-lg font-semibold mb-4">
-                            Update Occupancy – Room{" "}
+                            Update Occupancy – rooms{" "}
                             {selectedRoom.roomNumber}
                         </h3>
 
