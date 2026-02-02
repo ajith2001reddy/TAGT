@@ -52,7 +52,7 @@ export default function AdminDashboard() {
     }, []);
 
     /* ================= FETCH PAYMENTS ================= */
-    const fetchPayments = async () => {
+    const fetchPayments = useCallback(async () => {
         try {
             setRevenueLoading(true);
             const res = await api.get("/payments");
@@ -63,12 +63,13 @@ export default function AdminDashboard() {
         } finally {
             setRevenueLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchRequests();
         fetchPayments();
-    }, [fetchRequests]);
+    }, [fetchRequests, fetchPayments]);
+
 
     /* ================= REQUEST STATUS METRICS ================= */
     const chartData = [
