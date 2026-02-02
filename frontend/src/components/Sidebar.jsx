@@ -1,17 +1,9 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 
-/**
- * Sidebar
- * - Role-aware (admin / resident)
- * - Hamburger ready (open / close)
- * - Uses NavLink active state
- */
-
-const baseLink =
-    "block px-4 py-2 rounded transition hover:bg-gray-700";
-
-const activeLink =
+const base =
+    "block px-4 py-2 rounded hover:bg-gray-700 transition";
+const active =
     "bg-gray-800 font-semibold";
 
 export default function Sidebar({ open, onClose }) {
@@ -27,98 +19,61 @@ export default function Sidebar({ open, onClose }) {
                 />
             )}
 
-            {/* Sidebar */}
             <motion.aside
-                initial={{ x: -260 }}
-                animate={{
-                    x: open ? 0 : -260
-                }}
+                initial={false}
+                animate={{ x: open ? 0 : -260 }}
                 transition={{ duration: 0.25 }}
-                className="fixed md:static top-0 left-0 z-50 w-64 bg-gray-900 text-white min-h-screen"
+                className="fixed md:static top-0 left-0 z-50 w-64 min-h-screen bg-gray-900 text-white"
             >
                 <div className="p-4 text-xl font-bold border-b border-gray-700">
                     TAGT PMS
                 </div>
 
                 <nav className="p-4 space-y-2">
-                    {/* ================= COMMON ================= */}
                     <NavLink
-                        to={role === "admin" ? "/admin" : "/resident"}
+                        to={role === "admin"
+                            ? "/admin/dashboard"
+                            : "/resident/dashboard"}
                         onClick={onClose}
                         className={({ isActive }) =>
-                            `${baseLink} ${isActive ? activeLink : ""}`
+                            `${base} ${isActive ? active : ""}`
                         }
                     >
                         Dashboard
                     </NavLink>
 
-                    {/* ================= ADMIN ================= */}
                     {role === "admin" && (
                         <>
-                            <NavLink
-                                to="/admin/requests"
-                                onClick={onClose}
+                            <NavLink to="/admin/requests" onClick={onClose}
                                 className={({ isActive }) =>
-                                    `${baseLink} ${isActive ? activeLink : ""}`
-                                }
-                            >
+                                    `${base} ${isActive ? active : ""}`
+                                }>
                                 Requests
                             </NavLink>
-
-                            <NavLink
-                                to="/admin/residents"
-                                onClick={onClose}
+                            <NavLink to="/admin/residents" onClick={onClose}
                                 className={({ isActive }) =>
-                                    `${baseLink} ${isActive ? activeLink : ""}`
-                                }
-                            >
+                                    `${base} ${isActive ? active : ""}`
+                                }>
                                 Residents
                             </NavLink>
-
-                            <NavLink
-                                to="/admin/payments"
-                                onClick={onClose}
-                                className={({ isActive }) =>
-                                    `${baseLink} ${isActive ? activeLink : ""}`
-                                }
-                            >
-                                Payments
-                            </NavLink>
                         </>
                     )}
 
-                    {/* ================= RESIDENT ================= */}
                     {role === "resident" && (
-                        <>
-                            <NavLink
-                                to="/resident/requests"
-                                onClick={onClose}
-                                className={({ isActive }) =>
-                                    `${baseLink} ${isActive ? activeLink : ""}`
-                                }
-                            >
-                                My Requests
-                            </NavLink>
-
-                            <NavLink
-                                to="/resident/payments"
-                                onClick={onClose}
-                                className={({ isActive }) =>
-                                    `${baseLink} ${isActive ? activeLink : ""}`
-                                }
-                            >
-                                Payments
-                            </NavLink>
-                        </>
+                        <NavLink to="/resident/requests" onClick={onClose}
+                            className={({ isActive }) =>
+                                `${base} ${isActive ? active : ""}`
+                            }>
+                            My Requests
+                        </NavLink>
                     )}
 
-                    {/* ================= LOGOUT ================= */}
                     <button
                         onClick={() => {
                             localStorage.clear();
-                            window.location.href = "/login";
+                            window.location.href = "/";
                         }}
-                        className="mt-6 w-full text-left px-4 py-2 rounded text-red-400 hover:bg-red-500/10"
+                        className="mt-6 text-left px-4 py-2 text-red-400 hover:bg-red-500/10 rounded"
                     >
                         Logout
                     </button>
