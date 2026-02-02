@@ -78,16 +78,14 @@ export default function AdminResidents() {
             fetchResidents();
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data || "Failed to add resident");
+            toast.error("Failed to add resident");
         }
     };
 
-    /* ================= SEND BILL (FINAL & HARDENED) ================= */
+    /* ================= SEND BILL ================= */
     const sendBill = async () => {
-        const userId = billingTarget?.userId?._id;
-
-        if (!userId || typeof userId !== "string") {
-            toast.error("Invalid resident selected. Please refresh the page.");
+        if (!billingTarget?._id) {
+            toast.error("Invalid resident selected");
             return;
         }
 
@@ -99,21 +97,19 @@ export default function AdminResidents() {
 
         try {
             await api.post("/payments", {
-                residentId: userId,                 // ✅ ALWAYS User._id
+                residentId: billingTarget._id, // ✅ User._id
                 amount,
-                description: billDescription?.trim() || "Direct charge",
+                description: billDescription || "Direct charge",
                 type: "manual"
             });
 
             toast.success("Bill sent successfully");
-
-            // reset modal state
             setBillingTarget(null);
             setBillAmount("");
             setBillDescription("");
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data || "Failed to send bill");
+            toast.error("Failed to send bill");
         }
     };
 
@@ -132,7 +128,6 @@ export default function AdminResidents() {
     return (
         <DashboardLayout>
             <div className="space-y-10 text-gray-100">
-                {/* HEADER */}
                 <div>
                     <h1 className="text-3xl font-bold">Residents</h1>
                     <p className="text-gray-400 mt-1">
@@ -140,8 +135,8 @@ export default function AdminResidents() {
                     </p>
                 </div>
 
-                {/* ================= ADD RESIDENT ================= */}
-                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
+                {/* ADD RESIDENT */}
+                <div className="rounded-2xl bg-white/10 border border-white/10 p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Add New Resident
                     </h2>
@@ -159,7 +154,7 @@ export default function AdminResidents() {
                                                 : "text"
                                     }
                                     placeholder={field.toUpperCase()}
-                                    className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm text-white"
+                                    className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm"
                                     value={form[field]}
                                     onChange={(e) =>
                                         setForm({
@@ -173,15 +168,15 @@ export default function AdminResidents() {
 
                         <MotionButton
                             onClick={addResident}
-                            className="md:col-span-5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                            className="md:col-span-5 bg-blue-600 text-white px-4 py-2 rounded-lg"
                         >
                             Add Resident
                         </MotionButton>
                     </div>
                 </div>
 
-                {/* ================= RESIDENT LIST ================= */}
-                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
+                {/* RESIDENT LIST */}
+                <div className="rounded-2xl bg-white/10 border border-white/10 p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Resident List
                     </h2>
@@ -209,26 +204,22 @@ export default function AdminResidents() {
                                 {residents.map((r) => (
                                     <tr
                                         key={r._id}
-                                        className="border-b border-white/5 hover:bg-white/5"
+                                        className="border-b border-white/5"
                                     >
-                                        <td className="p-2">
-                                            {r.userId?.name}
-                                        </td>
-                                        <td className="p-2">
-                                            {r.userId?.email}
+                                        <td className="p-2">{r.name}</td>
+                                        <td className="p-2">{r.email}</td>
+                                        <td className="p-2 text-center">
+                                            {r.room || "-"}
                                         </td>
                                         <td className="p-2 text-center">
-                                            {r.room}
-                                        </td>
-                                        <td className="p-2 text-center">
-                                            {r.rent}
+                                            {r.rent || "-"}
                                         </td>
                                         <td className="p-2 text-center">
                                             <MotionButton
                                                 onClick={() =>
                                                     setBillingTarget(r)
                                                 }
-                                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg"
+                                                className="bg-green-600 text-white px-3 py-1 rounded-lg"
                                             >
                                                 Send Bill
                                             </MotionButton>
@@ -241,17 +232,16 @@ export default function AdminResidents() {
                 </div>
             </div>
 
-            {/* ================= BILL MODAL ================= */}
+            {/* BILL MODAL */}
             {billingTarget && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
+                        className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
                     >
                         <h3 className="text-lg font-semibold mb-4">
-                            Send Bill to{" "}
-                            {billingTarget.userId?.email}
+                            Send Bill to {billingTarget.email}
                         </h3>
 
                         <input
@@ -265,7 +255,7 @@ export default function AdminResidents() {
                         />
 
                         <textarea
-                            placeholder="Description (optional)"
+                            placeholder="Description"
                             className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-4"
                             rows={3}
                             value={billDescription}
@@ -277,14 +267,14 @@ export default function AdminResidents() {
                         <div className="flex justify-end gap-3">
                             <MotionButton
                                 onClick={() => setBillingTarget(null)}
-                                className="px-4 py-2 rounded-lg border border-white/10"
+                                className="px-4 py-2 border border-white/10 rounded-lg"
                             >
                                 Cancel
                             </MotionButton>
 
                             <MotionButton
                                 onClick={sendBill}
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                                className="bg-green-600 text-white px-4 py-2 rounded-lg"
                             >
                                 Send Bill
                             </MotionButton>
