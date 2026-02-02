@@ -1,306 +1,342 @@
-﻿import { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
+﻿import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import api from "../api/axios";
+import DashboardLayout from "../layouts/DashboardLayout";
 import toast from "react-hot-toast";
 
-import DashboardLayout from "../layouts/DashboardLayout";
-import api from "../api/axios";
-
-export default function AdminResidents() {
-    const [residents, setResidents] = useState([]);
-    const [rooms, setRooms] = useState([]);
+export default function AdminRequests() {
+    const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    /* ===== ADD RESIDENT FORM ===== */
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        password: "",
-        roomId: ""
-    });
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [workflowStatus, setWorkflowStatus] = useState("");
+    const [adminNote, setAdminNote] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
-    /* ===== BILLING ===== */
-    const [billingTarget, setBillingTarget] = useState(null);
-    const [billAmount, setBillAmount] = useState("");
-    const [billDescription, setBillDescription] = useState("");
+    const [archiveTarget, setArchiveTarget] = useState(null);
+    const [finalResolution, setFinalResolution] = useState("");
+    const [archiving, setArchiving] = useState(false);
 
-    /* ================= FETCH RESIDENTS ================= */
-    const fetchResidents = useCallback(async () => {
-        try {
-            const res = await api.get("/admin/residents");
-            setResidents(res.data || []);
-        } catch {
-            toast.error("Failed to load residents");
-            setResidents([]);
-        }
-    }, []);
+    const WORKFLOW_FLOW = {
+        Received: ["In-Progress"],
+        "In-Progress": ["On Hold", "Done"],
+        "On Hold": ["In-Progress"]
+    };
 
-    /* ================= FETCH ROOMS ================= */
-    const fetchRooms = useCallback(async () => {
-        try {
-            const res = await api.get("/rooms");
-            setRooms(res.data?.rooms || res.data || []);
-        } catch {
-            toast.error("Failed to load rooms");
-            setRooms([]);
-        }
-    }, []);
+    const WORKFLOW_COLORS = {
+        Received: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+        "In-Progress": "bg-blue-500/20 text-blue-300 border-blue-500/30",
+        "On Hold": "bg-orange-500/20 text-orange-300 border-orange-500/30",
+        Done: "bg-green-500/20 text-green-300 border-green-500/30"
+    };
 
     useEffect(() => {
-        setLoading(true);
-        Promise.all([fetchResidents(), fetchRooms()]).finally(() =>
-            setLoading(false)
-        );
-    }, [fetchResidents, fetchRooms]);
+        fetchRequests();
+    }, []);
 
-    /* ================= ADD RESIDENT ================= */
-    const addResident = async () => {
-        const { name, email, password, roomId } = form;
-
-        if (!name || !email || !password) {
-            toast.error("Name, email, and password are required");
-            return;
-        }
-
-        const selectedRoom = rooms.find((r) => r._id === roomId);
-        if (selectedRoom && selectedRoom.availableBeds <= 0) {
-            toast.error("Selected room has no available beds");
-            return;
-        }
-
+    const fetchRequests = async () => {
         try {
-            await api.post("/admin/residents", {
-                name,
-                email,
-                password,
-                roomId: roomId || null
-            });
-
-            toast.success("Resident added successfully");
-            setForm({ name: "", email: "", password: "", roomId: "" });
-
-            fetchResidents();
-            fetchRooms(); // 🔥 refresh availability
+            setLoading(true);
+            const res = await api.get("/admin/requests");
+            setRequests(Array.isArray(res.data) ? res.data : []);
         } catch {
-            toast.error("Failed to add resident");
+            toast.error("Failed to load requests");
+        } finally {
+            setLoading(false);
         }
     };
 
-    /* ================= SEND BILL ================= */
-    const sendBill = async () => {
-        if (!billingTarget?._id) {
-            toast.error("Invalid resident selected");
+    /* ================= WORKFLOW ================= */
+    const openWorkflowModal = (req) => {
+        setSelectedRequest(req);
+        setWorkflowStatus("");
+        setAdminNote("");
+    };
+
+    const closeWorkflowModal = () => {
+        setSelectedRequest(null);
+        setWorkflowStatus("");
+        setAdminNote("");
+    };
+
+    const updateWorkflowStatus = async () => {
+        if (!workflowStatus || !adminNote.trim()) {
+            toast.error("Status and admin note are required");
             return;
         }
 
-        const amount = Number(billAmount);
-        if (!Number.isFinite(amount) || amount <= 0) {
-            toast.error("Enter a valid amount");
-            return;
-        }
-
+        setSubmitting(true);
         try {
-            await api.post("/payments", {
-                residentId: billingTarget._id,
-                amount,
-                description: billDescription || "Direct charge",
-                type: "manual"
-            });
+            await api.put(
+                `/admin/requests/${selectedRequest._id}/workflow-status`,
+                {
+                    workflowStatus,
+                    note: adminNote.trim()
+                }
+            );
 
-            toast.success("Bill sent successfully");
-            setBillingTarget(null);
-            setBillAmount("");
-            setBillDescription("");
+            toast.success("Status updated");
+            closeWorkflowModal();
+            fetchRequests();
         } catch {
-            toast.error("Failed to send bill");
+            toast.error("Failed to update status");
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    const MotionButton = ({ children, className, ...props }) => (
-        <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            transition={{ duration: 0.15 }}
-            className={className}
-            {...props}
+    /* ================= ARCHIVE ================= */
+    const openArchiveModal = (req) => {
+        if (req.workflowStatus !== "Done") {
+            toast.error("Only completed requests can be archived");
+            return;
+        }
+        setArchiveTarget(req);
+        setFinalResolution("");
+    };
+
+    const closeArchiveModal = () => {
+        setArchiveTarget(null);
+        setFinalResolution("");
+    };
+
+    const archiveRequest = async () => {
+        if (!finalResolution.trim()) {
+            toast.error("Final resolution is required");
+            return;
+        }
+
+        setArchiving(true);
+        try {
+            await api.post(
+                `/admin/requests/${archiveTarget._id}/archive`,
+                {
+                    finalResolution: finalResolution.trim()
+                }
+            );
+
+            toast.success("Request archived");
+            closeArchiveModal();
+            fetchRequests();
+        } catch {
+            toast.error("Failed to archive request");
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    const getStatusBadge = (status = "Received") => (
+        <span
+            className={`px-3 py-1 rounded-full text-xs font-medium border ${WORKFLOW_COLORS[status] ||
+                "bg-gray-500/20 text-gray-300 border-gray-500/30"
+                }`}
         >
-            {children}
-        </motion.button>
+            {status}
+        </span>
     );
 
     return (
         <DashboardLayout>
-            <div className="space-y-10">
-                <div>
-                    <h1 className="text-3xl font-bold">Residents</h1>
-                    <p className="text-gray-500 mt-1">
-                        Manage residents and room assignments
-                    </p>
-                </div>
+            <div className="max-w-7xl mx-auto text-gray-100">
+                <h1 className="text-3xl font-bold mb-6">
+                    Maintenance Requests
+                </h1>
 
-                {/* ADD RESIDENT */}
-                <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Add New Resident
-                    </h2>
+                <div className="rounded-2xl bg-white/10 border border-white/10 overflow-hidden">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-gray-400 border-b border-white/10">
+                                <th className="px-6 py-4 text-left">
+                                    Message
+                                </th>
+                                <th className="px-6 py-4 text-left">
+                                    Resident
+                                </th>
+                                <th className="px-6 py-4 text-left">
+                                    Status
+                                </th>
+                                <th className="px-6 py-4 text-right">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        <input
-                            placeholder="Name"
-                            className="border rounded-lg p-2"
-                            value={form.name}
-                            onChange={(e) =>
-                                setForm({ ...form, name: e.target.value })
-                            }
-                        />
-
-                        <input
-                            placeholder="Email"
-                            className="border rounded-lg p-2"
-                            value={form.email}
-                            onChange={(e) =>
-                                setForm({ ...form, email: e.target.value })
-                            }
-                        />
-
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            className="border rounded-lg p-2"
-                            value={form.password}
-                            onChange={(e) =>
-                                setForm({ ...form, password: e.target.value })
-                            }
-                        />
-
-                        {/* ROOM SELECT */}
-                        <select
-                            className="border rounded-lg p-2"
-                            value={form.roomId}
-                            onChange={(e) =>
-                                setForm({ ...form, roomId: e.target.value })
-                            }
-                        >
-                            <option value="">No Room</option>
-                            {rooms.map((r) => (
-                                <option
-                                    key={r._id}
-                                    value={r._id}
-                                    disabled={r.availableBeds <= 0}
-                                >
-                                    Room {r.roomNumber} — {r.availableBeds} beds
-                                </option>
-                            ))}
-                        </select>
-
-                        <MotionButton
-                            onClick={addResident}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                        >
-                            Add Resident
-                        </MotionButton>
-                    </div>
-                </div>
-
-                {/* RESIDENT LIST */}
-                <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Resident List
-                    </h2>
-
-                    {loading ? (
-                        <p className="text-center text-gray-500">
-                            Loading residents…
-                        </p>
-                    ) : residents.length === 0 ? (
-                        <p className="text-center text-gray-500">
-                            No residents found.
-                        </p>
-                    ) : (
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-gray-500">
-                                    <th className="p-2 text-left">Name</th>
-                                    <th className="p-2 text-left">Email</th>
-                                    <th className="p-2 text-center">Room</th>
-                                    <th className="p-2 text-center">Action</th>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td
+                                        colSpan="4"
+                                        className="px-6 py-8 text-center text-gray-400"
+                                    >
+                                        Loading…
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {residents.map((r) => (
-                                    <tr key={r._id} className="border-b">
-                                        <td className="p-2">{r.name}</td>
-                                        <td className="p-2">{r.email}</td>
-                                        <td className="p-2 text-center">
-                                            {r.roomId?.roomNumber || "-"}
-                                        </td>
-                                        <td className="p-2 text-center">
-                                            <MotionButton
-                                                onClick={() =>
-                                                    setBillingTarget(r)
-                                                }
-                                                className="bg-green-600 text-white px-3 py-1 rounded-lg"
-                                            >
-                                                Send Bill
-                                            </MotionButton>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                            ) : requests.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan="4"
+                                        className="px-6 py-8 text-center text-gray-400"
+                                    >
+                                        No requests found
+                                    </td>
+                                </tr>
+                            ) : (
+                                requests.map((req) => {
+                                    const status =
+                                        req.workflowStatus || "Received";
+                                    const isDone = status === "Done";
+
+                                    return (
+                                        <tr
+                                            key={req._id}
+                                            className="border-t border-white/5 hover:bg-white/5"
+                                        >
+                                            <td className="px-6 py-4">
+                                                {req.message}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {req.residentId?.email}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {getStatusBadge(status)}
+                                            </td>
+                                            <td className="px-6 py-4 text-right space-x-2">
+                                                {!isDone && (
+                                                    <button
+                                                        onClick={() =>
+                                                            openWorkflowModal(
+                                                                req
+                                                            )
+                                                        }
+                                                        className="px-3 py-1 bg-indigo-600 text-xs rounded text-white"
+                                                    >
+                                                        Update
+                                                    </button>
+                                                )}
+
+                                                {isDone && (
+                                                    <button
+                                                        onClick={() =>
+                                                            openArchiveModal(
+                                                                req
+                                                            )
+                                                        }
+                                                        className="px-3 py-1 bg-gray-500/20 text-xs rounded"
+                                                    >
+                                                        Archive
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* BILL MODAL */}
-            {billingTarget && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="bg-white rounded-2xl p-6 w-96"
-                    >
-                        <h3 className="text-lg font-semibold mb-4">
-                            Send Bill to {billingTarget.email}
-                        </h3>
+            {/* WORKFLOW MODAL */}
+            <AnimatePresence>
+                {selectedRequest && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
+                        >
+                            <h3 className="text-lg font-semibold mb-4">
+                                Update Status
+                            </h3>
 
-                        <input
-                            type="number"
-                            placeholder="Amount"
-                            className="w-full border rounded-lg p-2 mb-3"
-                            value={billAmount}
-                            onChange={(e) =>
-                                setBillAmount(e.target.value)
-                            }
-                        />
-
-                        <textarea
-                            placeholder="Description"
-                            className="w-full border rounded-lg p-2 mb-4"
-                            rows={3}
-                            value={billDescription}
-                            onChange={(e) =>
-                                setBillDescription(e.target.value)
-                            }
-                        />
-
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setBillingTarget(null)}
-                                className="px-4 py-2 border rounded-lg"
+                            <select
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-3"
+                                value={workflowStatus}
+                                onChange={(e) =>
+                                    setWorkflowStatus(e.target.value)
+                                }
                             >
-                                Cancel
-                            </button>
+                                <option value="">Select status</option>
+                                {WORKFLOW_FLOW[
+                                    selectedRequest.workflowStatus ||
+                                    "Received"
+                                ]?.map((s) => (
+                                    <option key={s}>{s}</option>
+                                ))}
+                            </select>
 
-                            <button
-                                onClick={sendBill}
-                                className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                            >
-                                Send Bill
-                            </button>
-                        </div>
-                    </motion.div>
-                </div>
-            )}
+                            <textarea
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-4"
+                                placeholder="Admin note"
+                                value={adminNote}
+                                onChange={(e) =>
+                                    setAdminNote(e.target.value)
+                                }
+                            />
+
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    onClick={closeWorkflowModal}
+                                    className="px-3 py-1 border border-white/10 rounded"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    disabled={submitting}
+                                    onClick={updateWorkflowStatus}
+                                    className="px-3 py-1 bg-indigo-600 text-white rounded"
+                                >
+                                    {submitting ? "Saving…" : "Save"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ARCHIVE MODAL */}
+            <AnimatePresence>
+                {archiveTarget && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
+                        >
+                            <h3 className="text-lg font-semibold mb-4">
+                                Archive Request
+                            </h3>
+
+                            <textarea
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-4"
+                                placeholder="Final resolution"
+                                value={finalResolution}
+                                onChange={(e) =>
+                                    setFinalResolution(e.target.value)
+                                }
+                            />
+
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    onClick={closeArchiveModal}
+                                    className="px-3 py-1 border border-white/10 rounded"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    disabled={archiving}
+                                    onClick={archiveRequest}
+                                    className="px-3 py-1 bg-red-600 text-white rounded"
+                                >
+                                    {archiving ? "Archiving…" : "Archive"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </DashboardLayout>
     );
 }
