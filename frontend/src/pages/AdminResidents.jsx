@@ -29,7 +29,8 @@ export default function AdminResidents() {
             setLoading(true);
             const res = await api.get("/admin/residents");
             setResidents(Array.isArray(res.data) ? res.data : []);
-        } catch {
+        } catch (err) {
+            console.error(err);
             toast.error("Failed to load residents");
             setResidents([]);
         } finally {
@@ -43,57 +44,75 @@ export default function AdminResidents() {
 
     /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
-        if (!form.name || !form.email || !form.password || !form.room || !form.rent) {
+        const { name, email, password, room, rent } = form;
+
+        if (!name || !email || !password || !room || !rent) {
             toast.error("All fields are required");
             return;
         }
 
-        if (Number(form.rent) <= 0) {
+        const rentValue = Number(rent);
+        if (!Number.isFinite(rentValue) || rentValue <= 0) {
             toast.error("Rent must be greater than 0");
             return;
         }
 
         try {
             await api.post("/admin/residents", {
-                ...form,
-                rent: Number(form.rent)
+                name,
+                email,
+                password,
+                room,
+                rent: rentValue
             });
 
             toast.success("Resident added successfully");
-            setForm({ name: "", email: "", password: "", room: "", rent: "" });
+            setForm({
+                name: "",
+                email: "",
+                password: "",
+                room: "",
+                rent: ""
+            });
+
             fetchResidents();
         } catch (err) {
+            console.error(err);
             toast.error(err.response?.data || "Failed to add resident");
         }
     };
 
-    /* ================= SEND BILL (FIXED) ================= */
+    /* ================= SEND BILL (FINAL & HARDENED) ================= */
     const sendBill = async () => {
         const userId = billingTarget?.userId?._id;
 
-        if (!userId) {
-            toast.error("Invalid resident selected. Please reload.");
+        if (!userId || typeof userId !== "string") {
+            toast.error("Invalid resident selected. Please refresh the page.");
             return;
         }
 
-        if (!billAmount || Number(billAmount) <= 0) {
+        const amount = Number(billAmount);
+        if (!Number.isFinite(amount) || amount <= 0) {
             toast.error("Enter a valid amount");
             return;
         }
 
         try {
             await api.post("/payments", {
-                residentId: userId,
-                amount: Number(billAmount),
-                description: billDescription || "Direct charge",
+                residentId: userId,                 // ✅ ALWAYS User._id
+                amount,
+                description: billDescription?.trim() || "Direct charge",
                 type: "manual"
             });
 
             toast.success("Bill sent successfully");
+
+            // reset modal state
             setBillingTarget(null);
             setBillAmount("");
             setBillDescription("");
         } catch (err) {
+            console.error(err);
             toast.error(err.response?.data || "Failed to send bill");
         }
     };
@@ -113,6 +132,7 @@ export default function AdminResidents() {
     return (
         <DashboardLayout>
             <div className="space-y-10 text-gray-100">
+                {/* HEADER */}
                 <div>
                     <h1 className="text-3xl font-bold">Residents</h1>
                     <p className="text-gray-400 mt-1">
@@ -127,24 +147,29 @@ export default function AdminResidents() {
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        {["name", "email", "password", "room", "rent"].map((field) => (
-                            <input
-                                key={field}
-                                type={
-                                    field === "password"
-                                        ? "password"
-                                        : field === "rent"
-                                            ? "number"
-                                            : "text"
-                                }
-                                placeholder={field.toUpperCase()}
-                                className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm text-white"
-                                value={form[field]}
-                                onChange={(e) =>
-                                    setForm({ ...form, [field]: e.target.value })
-                                }
-                            />
-                        ))}
+                        {["name", "email", "password", "room", "rent"].map(
+                            (field) => (
+                                <input
+                                    key={field}
+                                    type={
+                                        field === "password"
+                                            ? "password"
+                                            : field === "rent"
+                                                ? "number"
+                                                : "text"
+                                    }
+                                    placeholder={field.toUpperCase()}
+                                    className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm text-white"
+                                    value={form[field]}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            [field]: e.target.value
+                                        })
+                                    }
+                                />
+                            )
+                        )}
 
                         <MotionButton
                             onClick={addResident}
@@ -186,13 +211,23 @@ export default function AdminResidents() {
                                         key={r._id}
                                         className="border-b border-white/5 hover:bg-white/5"
                                     >
-                                        <td className="p-2">{r.userId?.name}</td>
-                                        <td className="p-2">{r.userId?.email}</td>
-                                        <td className="p-2 text-center">{r.room}</td>
-                                        <td className="p-2 text-center">{r.rent}</td>
+                                        <td className="p-2">
+                                            {r.userId?.name}
+                                        </td>
+                                        <td className="p-2">
+                                            {r.userId?.email}
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            {r.room}
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            {r.rent}
+                                        </td>
                                         <td className="p-2 text-center">
                                             <MotionButton
-                                                onClick={() => setBillingTarget(r)}
+                                                onClick={() =>
+                                                    setBillingTarget(r)
+                                                }
                                                 className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg"
                                             >
                                                 Send Bill
@@ -215,7 +250,8 @@ export default function AdminResidents() {
                         className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
                     >
                         <h3 className="text-lg font-semibold mb-4">
-                            Send Bill to {billingTarget.userId?.email}
+                            Send Bill to{" "}
+                            {billingTarget.userId?.email}
                         </h3>
 
                         <input
@@ -223,7 +259,9 @@ export default function AdminResidents() {
                             placeholder="Amount"
                             className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-3"
                             value={billAmount}
-                            onChange={(e) => setBillAmount(e.target.value)}
+                            onChange={(e) =>
+                                setBillAmount(e.target.value)
+                            }
                         />
 
                         <textarea
@@ -231,7 +269,9 @@ export default function AdminResidents() {
                             className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-4"
                             rows={3}
                             value={billDescription}
-                            onChange={(e) => setBillDescription(e.target.value)}
+                            onChange={(e) =>
+                                setBillDescription(e.target.value)
+                            }
                         />
 
                         <div className="flex justify-end gap-3">
