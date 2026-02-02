@@ -4,17 +4,15 @@ const isAdmin = require("../middleware/isAdmin");
 
 const { getKPIs } = require("../analytics/kpiCalculator");
 const { predictOccupancy } = require("../analytics/forecastEngine");
-const {
-    predictMaintenanceCost
-} = require("../analytics/maintenanceForecast");
-const { predictChurn } = require("../analytics/churnModel"); // ✅ STEP 4
+const { predictMaintenanceCost } = require("../analytics/maintenanceForecast");
+const { predictChurn } = require("../analytics/churnModel");
+const { optimizeRevenue } = require("../analytics/revenueOptimizer"); // ✅ STEP 5
 
 const router = express.Router();
 
 /* =====================================================
    ADMIN → ANALYTICS DASHBOARD (KPIs)  [STEP 1]
 ===================================================== */
-
 router.get("/kpis", auth, isAdmin, async (req, res) => {
     try {
         const { fromDate, toDate } = req.query;
@@ -28,9 +26,9 @@ router.get("/kpis", auth, isAdmin, async (req, res) => {
                 isNaN(filters.fromDate.getTime()) ||
                 isNaN(filters.toDate.getTime())
             ) {
-                return res
-                    .status(400)
-                    .json({ message: "Invalid date range" });
+                return res.status(400).json({
+                    message: "Invalid date range"
+                });
             }
         }
 
@@ -52,7 +50,6 @@ router.get("/kpis", auth, isAdmin, async (req, res) => {
 /* =====================================================
    ADMIN → OCCUPANCY FORECAST  [STEP 2]
 ===================================================== */
-
 router.get("/predict/occupancy", auth, isAdmin, async (req, res) => {
     try {
         const months = Math.min(
@@ -78,60 +75,68 @@ router.get("/predict/occupancy", auth, isAdmin, async (req, res) => {
 /* =====================================================
    ADMIN → MAINTENANCE COST FORECAST  [STEP 3]
 ===================================================== */
+router.get("/predict/maintenance", auth, isAdmin, async (req, res) => {
+    try {
+        const months = Math.min(
+            Number(req.query.months) || 6,
+            12
+        );
 
-router.get(
-    "/predict/maintenance",
-    auth,
-    isAdmin,
-    async (req, res) => {
-        try {
-            const months = Math.min(
-                Number(req.query.months) || 6,
-                12
-            );
+        const forecast = await predictMaintenanceCost(months);
 
-            const forecast =
-                await predictMaintenanceCost(months);
-
-            res.json({
-                success: true,
-                data: forecast
-            });
-        } catch (err) {
-            console.error(
-                "❌ MAINTENANCE FORECAST ERROR:",
-                err
-            );
-            res.status(500).json({
-                success: false,
-                message:
-                    "Failed to generate maintenance cost forecast"
-            });
-        }
+        res.json({
+            success: true,
+            data: forecast
+        });
+    } catch (err) {
+        console.error("❌ MAINTENANCE FORECAST ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate maintenance cost forecast"
+        });
     }
-);
+});
 
 /* =====================================================
    ADMIN → RESIDENT CHURN PREDICTION  [STEP 4]
 ===================================================== */
+router.get("/predict/churn", auth, isAdmin, async (req, res) => {
+    try {
+        const churnData = await predictChurn();
 
+        res.json({
+            success: true,
+            data: churnData
+        });
+    } catch (err) {
+        console.error("❌ CHURN PREDICTION ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate churn prediction"
+        });
+    }
+});
+
+/* =====================================================
+   ADMIN → REVENUE OPTIMIZATION  [STEP 5]
+===================================================== */
 router.get(
-    "/predict/churn",
+    "/optimize/revenue",
     auth,
     isAdmin,
     async (req, res) => {
         try {
-            const churnData = await predictChurn();
+            const insights = await optimizeRevenue();
 
             res.json({
                 success: true,
-                data: churnData
+                data: insights
             });
         } catch (err) {
-            console.error("❌ CHURN PREDICTION ERROR:", err);
+            console.error("❌ REVENUE OPTIMIZATION ERROR:", err);
             res.status(500).json({
                 success: false,
-                message: "Failed to generate churn prediction"
+                message: "Failed to generate revenue optimization insights"
             });
         }
     }

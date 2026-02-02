@@ -60,11 +60,25 @@ export const predictMaintenanceCost = async (months = 6) => {
 };
 
 /* =======================
-   FUTURE AI MODULES
+   CHURN PREDICTION (STEP 4)
 ======================= */
 
-// Predict resident churn (STEP 4)
+/**
+ * Predict resident churn risk
+ */
 export const predictChurn = async () => {
     const res = await api.get("/analytics/predict/churn");
+    return res.data?.data;
+};
+
+/* =======================
+   REVENUE OPTIMIZATION (STEP 5)
+======================= */
+
+/**
+ * Get AI revenue optimization insights
+ */
+export const optimizeRevenue = async () => {
+    const res = await api.get("/analytics/optimize/revenue");
     return res.data?.data;
 };
