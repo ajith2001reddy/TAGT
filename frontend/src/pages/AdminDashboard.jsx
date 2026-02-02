@@ -7,13 +7,14 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import StatCard from "../components/StatCard";
 import Loader from "../components/Loader";
 import RequestsChart from "../components/RequestsChart";
+import KpiCards from "../components/KpiCards"; // ✅ NEW
 
 import useAdminStats from "../hooks/useAdminStats";
 import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
 /**
- * ADMIN DASHBOARD (DARK THEME FIXED)
+ * ADMIN DASHBOARD (ADVANCED + AI READY)
  */
 
 export default function AdminDashboard() {
@@ -70,7 +71,6 @@ export default function AdminDashboard() {
         fetchPayments();
     }, [fetchRequests, fetchPayments]);
 
-
     /* ================= REQUEST STATUS METRICS ================= */
     const chartData = [
         {
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="space-y-10"
+                className="space-y-12"
             >
                 {/* HEADER */}
                 <div>
@@ -116,11 +116,19 @@ export default function AdminDashboard() {
                         Admin Dashboard
                     </h1>
                     <p className="text-gray-400 mt-1">
-                        Overview of operations, requests, and revenue
+                        Overview of operations, analytics, and performance
                     </p>
                 </div>
 
-                {/* METRICS */}
+                {/* 🔥 AI ANALYTICS KPIs */}
+                <div>
+                    <h2 className="text-xl font-semibold mb-4">
+                        Real-Time Analytics
+                    </h2>
+                    <KpiCards />
+                </div>
+
+                {/* CORE METRICS */}
                 {loading || revenueLoading ? (
                     <Loader />
                 ) : (

@@ -4,10 +4,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-
-
 /* ================= APP INIT ================= */
-const app = express(); // ✅ MUST COME BEFORE app.get / app.use
+const app = express(); // MUST be before routes
 const PORT = process.env.PORT || 5000;
 
 /* ================= CORS ================= */
@@ -57,10 +55,15 @@ const adminRoutes = require("./routes/admin");
 const roomRoutes = require("./routes/rooms");
 const paymentRoutes = require("./routes/payments");
 const residentRoutes = require("./routes/resident");
+const analyticsRoutes = require("./routes/analytics"); // ✅ NEW
 
 /* ================= HEALTH ================= */
 app.get("/api/health", (req, res) => {
-    res.json({ status: "OK" });
+    res.json({
+        status: "OK",
+        uptime: process.uptime(),
+        timestamp: new Date()
+    });
 });
 
 /* ================= API ROUTES ================= */
@@ -69,17 +72,21 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/resident", residentRoutes);
-
+app.use("/api/analytics", analyticsRoutes); // ✅ NEW
 
 /* ================= 404 HANDLER ================= */
 app.use((req, res) => {
-    res.status(404).json({ message: "Route not found" });
+    res.status(404).json({
+        success: false,
+        message: "Route not found"
+    });
 });
 
 /* ================= ERROR HANDLER ================= */
 app.use((err, req, res, next) => {
     console.error("❌ ERROR:", err.message);
     res.status(err.status || 500).json({
+        success: false,
         message: err.message || "Server error"
     });
 });
