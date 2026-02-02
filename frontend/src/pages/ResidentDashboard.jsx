@@ -4,10 +4,10 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { createRequest, getMyRequests } from "../services/residentService";
 
 /**
- * RESIDENT DASHBOARD (DARK THEME FIXED)
- * - Clear request flow
- * - Readable on dark UI
- * - No logic changes
+ * RESIDENT DASHBOARD (FINAL FIX)
+ * - Correctly reflects admin-updated request status
+ * - Handles status + workflowStatus
+ * - No stale "pending" state
  */
 
 export default function ResidentDashboard() {
@@ -51,13 +51,18 @@ export default function ResidentDashboard() {
         loadRequests();
     }, []);
 
-    /* ================= SPLIT REQUESTS ================= */
+    /* ================= RESOLUTION LOGIC (FIX) ================= */
+    const isResolved = (r) =>
+        r.status === "resolved" ||
+        r.workflowStatus === "Done" ||
+        r.workflowStatus === "Resolved";
+
     const activeRequests = requests.filter(
-        (r) => r.status !== "resolved"
+        (r) => !isResolved(r)
     );
 
     const resolvedRequests = requests.filter(
-        (r) => r.status === "resolved"
+        (r) => isResolved(r)
     );
 
     /* ================= STATUS BADGE ================= */
@@ -150,7 +155,7 @@ export default function ResidentDashboard() {
                                     <p className="text-gray-200">
                                         {r.message}
                                     </p>
-                                    <StatusBadge status={r.status} />
+                                    <StatusBadge status={r.status || "pending"} />
                                 </li>
                             ))}
                         </ul>
@@ -173,9 +178,7 @@ export default function ResidentDashboard() {
                                 const isOpen = expandedId === r._id;
                                 const lastNote =
                                     r.adminNotes?.length > 0
-                                        ? r.adminNotes[
-                                        r.adminNotes.length - 1
-                                        ]
+                                        ? r.adminNotes[r.adminNotes.length - 1]
                                         : null;
 
                                 return (
@@ -222,8 +225,7 @@ export default function ResidentDashboard() {
                                                     </>
                                                 ) : (
                                                     <p className="text-gray-400">
-                                                        No admin notes
-                                                        available.
+                                                        No admin notes available.
                                                     </p>
                                                 )}
                                             </div>
@@ -238,3 +240,4 @@ export default function ResidentDashboard() {
         </DashboardLayout>
     );
 }
+cd

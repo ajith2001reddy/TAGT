@@ -5,11 +5,12 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * ResidentPayments (DARK THEME FIXED)
+ * ResidentPayments (FINAL)
  *
- * - Resident sees ONLY their own payments
- * - Read-only
- * - Fully visible on dark dashboard
+ * - Shows only logged-in resident payments
+ * - Uses /api/payments/my
+ * - Safe number + status handling
+ * - Dark-theme friendly
  */
 
 export default function ResidentPayments() {
@@ -21,7 +22,16 @@ export default function ResidentPayments() {
         try {
             setLoading(true);
             const res = await api.get("/payments/my");
-            setPayments(Array.isArray(res.data) ? res.data : []);
+
+            const cleaned = (Array.isArray(res.data) ? res.data : []).map(
+                (p) => ({
+                    ...p,
+                    amount: Number(p.amount),
+                    status: String(p.status || "unpaid").toLowerCase()
+                })
+            );
+
+            setPayments(cleaned);
         } catch (err) {
             console.error(err);
             toast.error("Failed to load payments");
@@ -41,7 +51,6 @@ export default function ResidentPayments() {
                 My Payments
             </h2>
 
-            {/* CONTENT */}
             {loading ? (
                 <p className="text-center text-gray-400">
                     Loading payments…
@@ -69,7 +78,7 @@ export default function ResidentPayments() {
                                     className="border-t border-white/10 hover:bg-white/5 transition"
                                 >
                                     <td className="p-3 text-right font-semibold">
-                                        ${p.amount.toLocaleString()}
+                                        ${Number(p.amount).toLocaleString()}
                                     </td>
 
                                     <td className="p-3">
@@ -86,9 +95,11 @@ export default function ResidentPayments() {
                                     </td>
 
                                     <td className="p-3 text-center text-gray-400 text-sm">
-                                        {new Date(
-                                            p.createdAt
-                                        ).toLocaleDateString()}
+                                        {p.createdAt
+                                            ? new Date(
+                                                p.createdAt
+                                            ).toLocaleDateString()
+                                            : "—"}
                                     </td>
                                 </tr>
                             ))}
