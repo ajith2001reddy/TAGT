@@ -1,14 +1,14 @@
 ﻿const express = require("express");
 const auth = require("../middleware/auth");
 const isAdmin = require("../middleware/isAdmin");
+
 const { getKPIs } = require("../analytics/kpiCalculator");
+const { predictOccupancy } = require("../analytics/forecastEngine");
 
 const router = express.Router();
 
 /* =====================================================
    ADMIN → ANALYTICS DASHBOARD (KPIs)
-   - Real-time metrics
-   - Optional date filtering
 ===================================================== */
 
 /**
@@ -16,14 +16,10 @@ const router = express.Router();
  * Optional query params:
  *  - fromDate (ISO string)
  *  - toDate   (ISO string)
- *
- * Example:
- * /api/analytics/kpis?fromDate=2025-01-01&toDate=2025-01-31
  */
 router.get("/kpis", auth, isAdmin, async (req, res) => {
     try {
         const { fromDate, toDate } = req.query;
-
         const filters = {};
 
         if (fromDate && toDate) {
@@ -54,5 +50,44 @@ router.get("/kpis", auth, isAdmin, async (req, res) => {
         });
     }
 });
+
+/* =====================================================
+   ADMIN → OCCUPANCY FORECAST (STEP 2)
+===================================================== */
+
+/**
+ * GET /api/analytics/predict/occupancy
+ * Query params:
+ *  - months (optional, default = 6)
+ *
+ * Example:
+ * /api/analytics/predict/occupancy?months=3
+ */
+router.get(
+    "/predict/occupancy",
+    auth,
+    isAdmin,
+    async (req, res) => {
+        try {
+            const months = Math.min(
+                Number(req.query.months) || 6,
+                12 // hard limit for safety
+            );
+
+            const forecast = await predictOccupancy(months);
+
+            res.json({
+                success: true,
+                data: forecast
+            });
+        } catch (err) {
+            console.error("❌ OCCUPANCY FORECAST ERROR:", err);
+            res.status(500).json({
+                success: false,
+                message: "Failed to generate occupancy forecast"
+            });
+        }
+    }
+);
 
 module.exports = router;

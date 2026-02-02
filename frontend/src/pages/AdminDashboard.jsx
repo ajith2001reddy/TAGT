@@ -7,7 +7,8 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import StatCard from "../components/StatCard";
 import Loader from "../components/Loader";
 import RequestsChart from "../components/RequestsChart";
-import KpiCards from "../components/KpiCards"; // ✅ NEW
+import KpiCards from "../components/KpiCards";
+import OccupancyForecast from "../components/OccupancyForecast"; // ✅ ADD THIS
 
 import useAdminStats from "../hooks/useAdminStats";
 import { getRequests } from "../services/adminService";
@@ -120,13 +121,16 @@ export default function AdminDashboard() {
                     </p>
                 </div>
 
-                {/* 🔥 AI ANALYTICS KPIs */}
+                {/* 🔥 REAL-TIME KPIs */}
                 <div>
                     <h2 className="text-xl font-semibold mb-4">
                         Real-Time Analytics
                     </h2>
                     <KpiCards />
                 </div>
+
+                {/* 📈 OCCUPANCY FORECAST (STEP 2) */}
+                <OccupancyForecast />
 
                 {/* CORE METRICS */}
                 {loading || revenueLoading ? (
