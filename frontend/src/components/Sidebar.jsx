@@ -11,10 +11,10 @@ export default function Sidebar({ open, onClose }) {
 
     return (
         <>
-            {/* Overlay (mobile) */}
+            {/* Overlay */}
             {open && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    className="fixed inset-0 bg-black/50 z-40"
                     onClick={onClose}
                 />
             )}
@@ -23,7 +23,7 @@ export default function Sidebar({ open, onClose }) {
                 initial={false}
                 animate={{ x: open ? 0 : -260 }}
                 transition={{ duration: 0.25 }}
-                className="fixed md:static top-0 left-0 z-50 w-64 min-h-screen bg-gray-900 text-white"
+                className="fixed top-0 left-0 z-50 w-64 min-h-screen bg-gray-900 text-white"
             >
                 <div className="p-4 text-xl font-bold border-b border-gray-700">
                     TAGT PMS
@@ -31,9 +31,11 @@ export default function Sidebar({ open, onClose }) {
 
                 <nav className="p-4 space-y-2">
                     <NavLink
-                        to={role === "admin"
-                            ? "/admin/dashboard"
-                            : "/resident/dashboard"}
+                        to={
+                            role === "admin"
+                                ? "/admin/dashboard"
+                                : "/resident/dashboard"
+                        }
                         onClick={onClose}
                         className={({ isActive }) =>
                             `${base} ${isActive ? active : ""}`
@@ -44,26 +46,35 @@ export default function Sidebar({ open, onClose }) {
 
                     {role === "admin" && (
                         <>
-                            <NavLink to="/admin/requests" onClick={onClose}
+                            <NavLink
+                                to="/admin/requests"
+                                onClick={onClose}
                                 className={({ isActive }) =>
                                     `${base} ${isActive ? active : ""}`
-                                }>
+                                }
+                            >
                                 Requests
                             </NavLink>
-                            <NavLink to="/admin/residents" onClick={onClose}
+                            <NavLink
+                                to="/admin/residents"
+                                onClick={onClose}
                                 className={({ isActive }) =>
                                     `${base} ${isActive ? active : ""}`
-                                }>
+                                }
+                            >
                                 Residents
                             </NavLink>
                         </>
                     )}
 
                     {role === "resident" && (
-                        <NavLink to="/resident/requests" onClick={onClose}
+                        <NavLink
+                            to="/resident/requests"
+                            onClick={onClose}
                             className={({ isActive }) =>
                                 `${base} ${isActive ? active : ""}`
-                            }>
+                            }
+                        >
                             My Requests
                         </NavLink>
                     )}
