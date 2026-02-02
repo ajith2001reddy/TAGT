@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import AppLayout from "../components/AppLayout";
-import {
-    createRequest,
-    getMyRequests
-} from "../services/residentService";
+import DashboardLayout from "../layouts/DashboardLayout";
+import { createRequest, getMyRequests } from "../services/residentService";
 
 /**
- * RESIDENT DASHBOARD
+ * RESIDENT DASHBOARD (FINAL FIX)
  * - Correctly reflects admin-updated request status
- * - Uses shared AppLayout (hamburger + sidebar)
+ * - Handles status + workflowStatus
+ * - No stale "pending" state
  */
 
 export default function ResidentDashboard() {
@@ -53,7 +51,7 @@ export default function ResidentDashboard() {
         loadRequests();
     }, []);
 
-    /* ================= RESOLUTION LOGIC ================= */
+    /* ================= RESOLUTION LOGIC (FIX) ================= */
     const isResolved = (r) =>
         r.status === "resolved" ||
         r.workflowStatus === "Done" ||
@@ -97,7 +95,7 @@ export default function ResidentDashboard() {
     };
 
     return (
-        <AppLayout>
+        <DashboardLayout>
             <div className="space-y-10">
                 {/* HEADER */}
                 <div>
@@ -118,7 +116,7 @@ export default function ResidentDashboard() {
                     <textarea
                         className="w-full bg-black/30 text-gray-100 placeholder-gray-400 p-4 border border-white/10 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         rows={4}
-                        placeholder="Describe the issue in detail…"
+                        placeholder="Describe the issue in detail (e.g., water leakage, electrical problem)…"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                     />
@@ -152,14 +150,12 @@ export default function ResidentDashboard() {
                             {activeRequests.map((r) => (
                                 <li
                                     key={r._id}
-                                    className="py-3 flex justify-between"
+                                    className="py-3 flex items-start justify-between"
                                 >
                                     <p className="text-gray-200">
                                         {r.message}
                                     </p>
-                                    <StatusBadge
-                                        status={r.status || "pending"}
-                                    />
+                                    <StatusBadge status={r.status || "pending"} />
                                 </li>
                             ))}
                         </ul>
@@ -182,14 +178,12 @@ export default function ResidentDashboard() {
                                 const isOpen = expandedId === r._id;
                                 const lastNote =
                                     r.adminNotes?.length > 0
-                                        ? r.adminNotes[
-                                        r.adminNotes.length - 1
-                                        ]
+                                        ? r.adminNotes[r.adminNotes.length - 1]
                                         : null;
 
                                 return (
                                     <li key={r._id} className="py-4">
-                                        <div className="flex justify-between">
+                                        <div className="flex justify-between items-start">
                                             <p className="text-gray-200">
                                                 {r.message}
                                             </p>
@@ -210,7 +204,16 @@ export default function ResidentDashboard() {
                                         </button>
 
                                         {isOpen && (
-                                            <div className="mt-4 bg-black/30 border border-white/10 rounded-lg p-4 text-sm">
+                                            <div className="mt-4 bg-black/30 border border-white/10 rounded-lg p-4 text-sm space-y-2">
+                                                {r.workflowStatus && (
+                                                    <p>
+                                                        <strong className="text-gray-300">
+                                                            Final Status:
+                                                        </strong>{" "}
+                                                        {r.workflowStatus}
+                                                    </p>
+                                                )}
+
                                                 {lastNote ? (
                                                     <>
                                                         <p className="font-medium text-gray-300">
@@ -234,6 +237,6 @@ export default function ResidentDashboard() {
                     )}
                 </div>
             </div>
-        </AppLayout>
+        </DashboardLayout>
     );
 }

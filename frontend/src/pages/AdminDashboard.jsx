@@ -3,14 +3,14 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import AppLayout from "../components/AppLayout";
+import DashboardLayout from "../layouts/DashboardLayout";
 import StatCard from "../components/StatCard";
 import Loader from "../components/Loader";
 import RequestsChart from "../components/RequestsChart";
 import KpiCards from "../components/KpiCards";
 import OccupancyForecast from "../components/OccupancyForecast";
 import MaintenanceCostForecast from "../components/MaintenanceCostForecast";
-import ChurnRiskTable from "../components/ChurnRiskTable";
+import ChurnRiskTable from "../components/ChurnRiskTable"; // ✅ STEP 4
 
 import useAdminStats from "../hooks/useAdminStats";
 import { getRequests } from "../services/adminService";
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
         .reduce((sum, p) => sum + p.amount, 0);
 
     return (
-        <AppLayout>
+        <DashboardLayout>
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -127,16 +127,21 @@ export default function AdminDashboard() {
                     </p>
                 </div>
 
-                {/* STEP 1 — KPIs */}
-                <KpiCards />
+                {/* 🔥 STEP 1 — REAL-TIME KPIs */}
+                <div>
+                    <h2 className="text-xl font-semibold mb-4">
+                        Real-Time Analytics
+                    </h2>
+                    <KpiCards />
+                </div>
 
-                {/* STEP 2 */}
+                {/* 📈 STEP 2 — OCCUPANCY FORECAST */}
                 <OccupancyForecast />
 
-                {/* STEP 3 */}
+                {/* 🛠️ STEP 3 — MAINTENANCE COST FORECAST */}
                 <MaintenanceCostForecast />
 
-                {/* STEP 4 */}
+                {/* 🚦 STEP 4 — RESIDENT CHURN PREDICTION */}
                 <ChurnRiskTable />
 
                 {/* CORE METRICS */}
@@ -147,21 +152,25 @@ export default function AdminDashboard() {
                         <StatCard
                             title="Total Residents"
                             value={stats.totalResidents}
+                            subtitle="Currently active"
                             accent="blue"
                         />
                         <StatCard
                             title="Pending Requests"
                             value={stats.pendingRequests}
+                            subtitle="Needs attention"
                             accent="yellow"
                         />
                         <StatCard
                             title="Total Revenue"
                             value={`$${totalRevenue}`}
+                            subtitle="Collected"
                             accent="green"
                         />
                         <StatCard
                             title="Outstanding Balance"
                             value={`$${outstandingBalance}`}
+                            subtitle="Yet to be paid"
                             accent="red"
                         />
                     </div>
@@ -170,19 +179,22 @@ export default function AdminDashboard() {
                 {/* REQUESTS OVERVIEW */}
                 {!reqLoading && chartData.some((d) => d.count > 0) && (
                     <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                        <h2 className="text-lg font-semibold mb-4">
+                            Requests Overview
+                        </h2>
                         <RequestsChart data={chartData} />
                     </div>
                 )}
 
                 {/* ACTIVE REQUESTS */}
                 <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
-                    <div className="flex justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold">
                             Active Maintenance Requests
                         </h2>
                         <Link
                             to="/admin/requests"
-                            className="text-sm text-blue-400"
+                            className="text-sm text-blue-400 hover:underline"
                         >
                             View all
                         </Link>
@@ -191,7 +203,7 @@ export default function AdminDashboard() {
                     {reqLoading ? (
                         <Loader />
                     ) : activeRequests.length === 0 ? (
-                        <p className="text-center text-gray-400">
+                        <p className="text-gray-400 text-center py-6">
                             No active requests 🎉
                         </p>
                     ) : (
@@ -199,10 +211,12 @@ export default function AdminDashboard() {
                             {activeRequests.map((r) => (
                                 <li
                                     key={r._id}
-                                    className="py-3 flex justify-between"
+                                    className="py-3 flex items-center justify-between"
                                 >
-                                    <span>{r.message}</span>
-                                    <span className="text-xs px-2 py-1 bg-blue-600/20 text-blue-400 rounded">
+                                    <p className="text-gray-200">
+                                        {r.message}
+                                    </p>
+                                    <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-600/20 text-blue-400 capitalize">
                                         {r.status}
                                     </span>
                                 </li>
@@ -211,6 +225,6 @@ export default function AdminDashboard() {
                     )}
                 </div>
             </motion.div>
-        </AppLayout>
+        </DashboardLayout>
     );
 }
