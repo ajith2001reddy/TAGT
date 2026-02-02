@@ -1,0 +1,228 @@
+﻿# CODE REVIEW - PART 16
+Generated: 2026-02-02 13:10:51
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: frontend\src\components\ToastProvider.jsx
+// SIZE: 390 bytes
+// MODIFIED: 2026-01-27 00:23:05
+// ##########################################
+
+import { Toaster } from "react-hot-toast";
+
+export default function ToastProvider() {
+    return (
+        <Toaster
+            position="top-right"
+            toastOptions={{
+                style: {
+                    borderRadius: "10px",
+                    background: "#1e293b",
+                    color: "#fff"
+                }
+            }}
+        />
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\context\AuthContext.jsx
+// SIZE: 1662 bytes
+// MODIFIED: 2026-02-01 20:37:53
+// ##########################################
+
+import { createContext, useContext, useEffect, useState } from "react";
+
+/**
+ * Auth Context
+ * - Stores token & role
+ * - Persists login across refresh
+ * - Used across entire app
+ */
+
+const AuthContext = createContext(null);
+
+export const AuthProvider = ({ children }) => {
+    const [token, setToken] = useState(null);
+    const [role, setRole] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // Load auth state on app start
+    useEffect(() => {
+        const storedToken = localStorage.getItem("token");
+        const storedRole = localStorage.getItem("role");
+
+        if (storedToken && storedRole) {
+            setToken(storedToken);
+            setRole(storedRole);
+        }
+
+        setLoading(false);
+    }, []);
+
+    // Login handler
+    const login = (token, role) => {
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", role);
+
+        setToken(token);
+        setRole(role);
+    };
+
+    // Logout handler
+    const logout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+
+        setToken(null);
+        setRole(null);
+    };
+
+    return (
+        <AuthContext.Provider
+            value={{
+                token,
+                role,
+                isAuthenticated: !!token,
+                isAdmin: role === "admin",
+                login,
+                logout,
+                loading
+            }}
+        >
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+// Hook for easy usage
+export const useAuth = () => {
+    return useContext(AuthContext);
+};
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\hooks\useAdminStats.js
+// SIZE: 1546 bytes
+// MODIFIED: 2026-01-30 12:55:34
+// ##########################################
+
+import { useEffect, useState } from "react";
+import { getAdminStats } from "../services/adminService";
+import toast from "react-hot-toast";
+
+/**
+ * Admin Dashboard Stats Hook (FIXED)
+ * - Always returns full stats shape
+ * - Prevents undefined dashboard values
+ * - Safe against backend inconsistencies
+ */
+
+export default function useAdminStats() {
+    const [stats, setStats] = useState({
+        totalResidents: 0,
+        pendingRequests: 0,
+        unpaidPayments: 0,
+        totalRevenue: 0,
+        outstandingBalance: 0
+    });
+
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await getAdminStats();
+
+                setStats({
+                    totalResidents: Number(data?.totalResidents) || 0,
+                    pendingRequests: Number(data?.pendingRequests) || 0,
+                    unpaidPayments: Number(data?.unpaidPayments) || 0,
+                    totalRevenue: Number(data?.totalRevenue) || 0,
+                    outstandingBalance: Number(data?.outstandingBalance) || 0
+                });
+            } catch (err) {
+                console.error(err);
+                toast.error("Failed to load dashboard stats");
+
+                // fallback is already safe
+                setStats((prev) => prev);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
+    return { stats, loading };
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\index.css
+// SIZE: 1089 bytes
+// MODIFIED: 2026-01-28 23:49:00
+// ##########################################
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===============================
+   GLOBAL ANIMATED BACKGROUND
+   PHASE 1 – GEN-Z FOUNDATION
+================================ */
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    /* Animated gradient background */
+    background: linear-gradient( 270deg, #020617, #020617, #0f172a, #1e293b, #020617 );
+    background-size: 600% 600%;
+    animation: gradientFlow 25s ease infinite;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #e5e7eb; /* soft light text */
+}
+
+/* Smooth animated movement */
+@keyframes gradientFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Code blocks unchanged */
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+
+
+

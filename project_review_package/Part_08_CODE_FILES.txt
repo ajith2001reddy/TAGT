@@ -1,0 +1,437 @@
+﻿# CODE REVIEW - PART 8
+Generated: 2026-02-02 13:10:51
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: backend\routes\payments.js
+// SIZE: 4102 bytes
+// MODIFIED: 2026-02-01 20:32:48
+// ##########################################
+
+const express = require("express");
+const mongoose = require("mongoose");
+const router = express.Router();
+
+const Payment = require("../models/Payment");
+const User = require("../models/User");
+const auth = require("../middleware/auth");
+const isAdmin = require("../middleware/isAdmin");
+
+/* =========================================================
+   ADMIN → CREATE BILL
+========================================================= */
+router.post("/", auth, isAdmin, async (req, res) => {
+    try {
+        const { residentId, description, type, month, adminNote } = req.body;
+        const amount = Number(req.body.amount);
+
+        if (!residentId || !mongoose.Types.ObjectId.isValid(residentId)) {
+            return res.status(400).json({ message: "Invalid resident" });
+        }
+
+        if (!Number.isFinite(amount) || amount <= 0) {
+            return res.status(400).json({ message: "Invalid amount" });
+        }
+
+        const resident = await User.findOne({
+            _id: residentId,
+            role: "resident",
+            isActive: true
+        });
+
+        if (!resident) {
+            return res
+                .status(400)
+                .json({ message: "Resident not found or inactive" });
+        }
+
+        const payment = await Payment.create({
+            residentId,
+            amount,
+            description: description || "",
+            type: type || "manual",
+            month: month || null,
+            adminNote: adminNote || "",
+            status: "unpaid",
+            createdBy: req.user.id
+        });
+
+        res.status(201).json(payment);
+    } catch (err) {
+        console.error("CREATE PAYMENT ERROR:", err);
+        res.status(500).json({ message: "Failed to create payment" });
+    }
+});
+
+/* =========================================================
+   ADMIN → GET ALL PAYMENTS
+========================================================= */
+router.get("/", auth, isAdmin, async (req, res) => {
+    try {
+        const payments = await Payment.find()
+            .populate("residentId", "email name")
+            .sort({ createdAt: -1 });
+
+        res.json(payments);
+    } catch (err) {
+        console.error("FETCH PAYMENTS ERROR:", err);
+        res.status(500).json({ message: "Failed to fetch payments" });
+    }
+});
+
+/* =========================================================
+   RESIDENT → GET OWN PAYMENTS
+========================================================= */
+router.get("/my", auth, async (req, res) => {
+    try {
+        res.set({
+            "Cache-Control": "no-store, no-cache, must-revalidate, private",
+            Pragma: "no-cache",
+            Expires: "0"
+        });
+
+        const payments = await Payment.find({
+            residentId: req.user.id
+        }).sort({ createdAt: -1 });
+
+        res.json(payments);
+    } catch (err) {
+        console.error("FETCH MY PAYMENTS ERROR:", err);
+        res.status(500).json({ message: "Failed to fetch payments" });
+    }
+});
+
+/* =========================================================
+   ADMIN → MARK PAYMENT AS PAID
+========================================================= */
+router.put("/:id/paid", auth, isAdmin, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid payment ID" });
+        }
+
+        const payment = await Payment.findById(req.params.id);
+        if (!payment) {
+            return res.status(404).json({ message: "Payment not found" });
+        }
+
+        if (payment.status === "paid") {
+            return res.json({ message: "Payment already marked as paid" });
+        }
+
+        payment.status = "paid";
+        payment.paidAt = new Date();
+        await payment.save();
+
+        res.json({ message: "Payment marked as paid" });
+    } catch (err) {
+        console.error("MARK PAID ERROR:", err);
+        res.status(500).json({ message: "Failed to mark payment as paid" });
+    }
+});
+
+module.exports = router;
+
+
+
+
+
+// ##########################################
+// FILE: backend\routes\resident.js
+// SIZE: 1838 bytes
+// MODIFIED: 2026-02-01 20:34:10
+// ##########################################
+
+const express = require("express");
+const mongoose = require("mongoose");
+const auth = require("../middleware/auth");
+const Request = require("../models/Request");
+
+const router = express.Router();
+
+/* ===== CREATE REQUEST ===== */
+router.post("/request", auth, async (req, res, next) => {
+    try {
+        if (!req.body.message || !req.body.message.trim()) {
+            return res
+                .status(400)
+                .json({ message: "Request message is required" });
+        }
+
+        const request = await Request.create({
+            residentId: req.user.id,
+            message: req.body.message
+        });
+
+        res.status(201).json(request);
+    } catch (err) {
+        next(err);
+    }
+});
+
+/* ===== GET MY REQUESTS ===== */
+router.get("/requests", auth, async (req, res, next) => {
+    try {
+        const requests = await Request.find({
+            residentId: req.user.id
+        }).sort({ createdAt: -1 });
+
+        res.json(requests);
+    } catch (err) {
+        next(err);
+    }
+});
+
+/* ===== DELETE MY REQUEST ===== */
+router.delete("/request/:id", auth, async (req, res, next) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res
+                .status(400)
+                .json({ message: "Invalid request ID" });
+        }
+
+        const request = await Request.findOne({
+            _id: req.params.id,
+            residentId: req.user.id
+        });
+
+        if (!request) {
+            return res.status(404).json({
+                message: "Request not found"
+            });
+        }
+
+        await request.deleteOne();
+        res.json({
+            message: "Request deleted successfully"
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+module.exports = router;
+
+
+
+
+
+// ##########################################
+// FILE: backend\routes\rooms.js
+// SIZE: 3960 bytes
+// MODIFIED: 2026-02-01 20:33:16
+// ##########################################
+
+const express = require("express");
+const mongoose = require("mongoose");
+const router = express.Router();
+
+const auth = require("../middleware/auth");
+const isAdmin = require("../middleware/isAdmin");
+const Room = require("../models/Room");
+
+/* =========================================================
+   CREATE ROOM (ADMIN)
+========================================================= */
+router.post("/", auth, isAdmin, async (req, res) => {
+    try {
+        const { roomNumber, note } = req.body;
+        const totalBeds = Number(req.body.totalBeds);
+
+        if (!roomNumber || !Number.isInteger(totalBeds) || totalBeds <= 0) {
+            return res.status(400).json({
+                message: "Room number and valid total beds are required"
+            });
+        }
+
+        const exists = await Room.findOne({ roomNumber });
+        if (exists) {
+            return res.status(400).json({
+                message: "Room already exists"
+            });
+        }
+
+        const room = await Room.create({
+            roomNumber,
+            totalBeds,
+            occupiedBeds: 0,
+            note: note || ""
+        });
+
+        res.status(201).json(room);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to create room" });
+    }
+});
+
+/* =========================================================
+   GET ALL ROOMS (ADMIN)
+========================================================= */
+router.get("/", auth, isAdmin, async (req, res) => {
+    try {
+        const rooms = await Room.find().sort({ roomNumber: 1 });
+        res.json(rooms);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to fetch rooms" });
+    }
+});
+
+/* =========================================================
+   UPDATE OCCUPIED BEDS (ADMIN)
+========================================================= */
+router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid room ID" });
+        }
+
+        const occupiedBeds = Number(req.body.occupiedBeds);
+        if (!Number.isInteger(occupiedBeds) || occupiedBeds < 0) {
+            return res.status(400).json({
+                message: "Invalid occupied beds value"
+            });
+        }
+
+        const room = await Room.findById(req.params.id);
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+
+        if (occupiedBeds > room.totalBeds) {
+            return res.status(400).json({
+                message: "Occupied beds cannot exceed total beds"
+            });
+        }
+
+        room.occupiedBeds = occupiedBeds;
+        await room.save();
+
+        res.json(room);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to update occupancy" });
+    }
+});
+
+/* =========================================================
+   DELETE ROOM (ADMIN)
+========================================================= */
+router.delete("/:id", auth, isAdmin, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid room ID" });
+        }
+
+        const room = await Room.findById(req.params.id);
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+
+        if (room.occupiedBeds > 0) {
+            return res.status(400).json({
+                message: "Cannot delete room with occupied beds"
+            });
+        }
+
+        await room.deleteOne();
+        res.json({ message: "Room deleted" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to delete room" });
+    }
+});
+
+module.exports = router;
+
+
+
+
+
+// ##########################################
+// FILE: backend\utils\emailService.js
+// SIZE: 3730 bytes
+// MODIFIED: 2026-01-28 16:18:33
+// ##########################################
+
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransporter({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS // App password, not regular password
+    }
+});
+
+exports.sendEmail = async (to, subject, html) => {
+    try {
+        await transporter.sendMail({
+            from: `"TAGT Property Management" <${process.env.EMAIL_USER}>`,
+            to,
+            subject,
+            html
+        });
+        console.log(`Email sent to ${to}`);
+    } catch (error) {
+        console.error('Email error:', error);
+    }
+};
+
+// Templates
+exports.sendWelcomeEmail = (email, name, password) => {
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">Welcome to TAGT Property Management</h2>
+            <p>Hello ${name},</p>
+            <p>Your resident account has been created successfully.</p>
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Password:</strong> ${password}</p>
+            </div>
+            <p><a href="${process.env.FRONTEND_URL}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Login to Dashboard</a></p>
+            <p style="color: #6b7280; font-size: 12px; margin-top: 20px;">Please change your password after first login.</p>
+        </div>
+    `;
+    return this.sendEmail(email, 'Welcome to TAGT - Your Account Details', html);
+};
+
+exports.sendStatusUpdateEmail = (email, requestMessage, newStatus, adminNote) => {
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">Maintenance Request Update</h2>
+            <p>Your maintenance request has been updated:</p>
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Request:</strong> ${requestMessage}</p>
+                <p><strong>New Status:</strong> <span style="color: #2563eb; font-weight: bold;">${newStatus}</span></p>
+                <p><strong>Admin Note:</strong> ${adminNote || 'No additional notes'}</p>
+            </div>
+            <p><a href="${process.env.FRONTEND_URL}/resident" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Request</a></p>
+        </div>
+    `;
+    return this.sendEmail(email, 'TAGT: Maintenance Request Status Update', html);
+};
+
+exports.sendPaymentReminder = (email, name, amount, dueDate) => {
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc2626;">Payment Reminder</h2>
+            <p>Hello ${name},</p>
+            <p>This is a friendly reminder that your payment is due soon:</p>
+            <div style="background: #fef2f2; border: 2px solid #dc2626; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <p style="font-size: 24px; font-weight: bold; color: #dc2626; margin: 0;">$${amount}</p>
+                <p style="color: #6b7280; margin: 5px 0;">Due Date: ${new Date(dueDate).toLocaleDateString()}</p>
+            </div>
+            <p><a href="${process.env.FRONTEND_URL}/resident/payments" style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Pay Now</a></p>
+        </div>
+    `;
+    return this.sendEmail(email, 'TAGT: Payment Reminder', html);
+};
+
+
+

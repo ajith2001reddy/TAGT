@@ -1,0 +1,84 @@
+﻿# CODE REVIEW - PART 21
+Generated: 2026-02-02 13:10:51
+Files in this part: 3
+
+========================================
+
+
+// ##########################################
+// FILE: frontend\src\services\authService.js
+// SIZE: 0 bytes
+// MODIFIED: 2026-01-26 12:54:26
+// ##########################################
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\services\residentService.js
+// SIZE: 1033 bytes
+// MODIFIED: 2026-01-28 23:13:29
+// ##########################################
+
+import api from "../api/axios";
+
+/**
+ * Resident Service
+ * Phase 4 – Extended safely
+ *
+ * - Existing methods unchanged
+ * - Supports workflow status & admin notes
+ */
+
+/* ================= CREATE REQUEST ================= */
+export const createRequest = async (message) => {
+    await api.post("/resident/request", { message });
+};
+
+/* ================= GET MY REQUESTS ================= */
+export const getMyRequests = async () => {
+    const res = await api.get("/resident/requests");
+
+    // Normalize data for UI safety
+    return Array.isArray(res.data)
+        ? res.data.map((r) => ({
+            _id: r._id,
+            message: r.message,
+            status: r.status,
+            workflowStatus: r.workflowStatus || null,
+            adminNotes: r.adminNotes || [],
+            createdAt: r.createdAt
+        }))
+        : [];
+};
+
+/* ================= DELETE REQUEST ================= */
+export const deleteRequest = async (id) => {
+    await api.delete(`/resident/request/${id}`);
+};
+
+
+
+
+
+// ##########################################
+// FILE: frontend\tailwind.config.js
+// SIZE: 236 bytes
+// MODIFIED: 2026-01-28 15:49:48
+// ##########################################
+
+module.exports = {
+    content: ["./src/**/*.{js,jsx}"],
+    theme: {
+        extend: {
+            colors: {
+                primary: "#2563eb", // Blue-600 used in Button.jsx
+            }
+        }
+    },
+    plugins: []
+};
+
+
+

@@ -1,0 +1,270 @@
+﻿# CODE REVIEW - PART 11
+Generated: 2026-02-02 13:10:51
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: frontend\src\animations\pageTransition.js
+// SIZE: 394 bytes
+// MODIFIED: 2026-01-27 00:22:58
+// ##########################################
+
+export const pageVariants = {
+    initial: {
+        opacity: 0,
+        y: 20
+    },
+    animate: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.3,
+            ease: "easeOut"
+        }
+    },
+    exit: {
+        opacity: 0,
+        y: -20,
+        transition: {
+            duration: 0.2,
+            ease: "easeIn"
+        }
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\api\axios.js
+// SIZE: 1043 bytes
+// MODIFIED: 2026-02-01 20:40:34
+// ##########################################
+
+import axios from "axios";
+
+/**
+ * Backend API Configuration
+ * - Explicit production-safe fallback
+ * - Prevents undefined baseURL
+ * - Always targets /api
+ */
+
+const API_URL =
+    process.env.REACT_APP_API_URL || "https://api.tagt.website/api";
+
+const api = axios.create({
+    baseURL: API_URL.replace(/\/$/, ""),
+    headers: {
+        "Content-Type": "application/json"
+    }
+});
+
+// Attach JWT token automatically
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Global auth handling
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("role");
+        }
+        return Promise.reject(error);
+    }
+);
+
+export default api;
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\App.css
+// SIZE: 564 bytes
+// MODIFIED: 2026-01-22 18:14:23
+// ##########################################
+
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\App.js
+// SIZE: 3486 bytes
+// MODIFIED: 2026-02-01 20:39:38
+// ##########################################
+
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+
+import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
+import ResidentDashboard from "./pages/ResidentDashboard";
+import AdminResidents from "./pages/AdminResidents";
+import AdminRequests from "./pages/AdminRequests";
+import RequestHistory from "./pages/RequestHistory";
+import Payments from "./pages/Payments";
+import ResidentPayments from "./pages/ResidentPayments";
+import Rooms from "./pages/Rooms";
+
+import AdminRoute from "./routes/AdminRoute";
+import ResidentRoute from "./routes/ResidentRoute";
+import ToastProvider from "./components/ToastProvider";
+
+function AnimatedRoutes() {
+    const location = useLocation();
+
+    return (
+        <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+                {/* PUBLIC */}
+                <Route path="/" element={<Login />} />
+                <Route path="/login" element={<Login />} />
+
+                {/* ADMIN */}
+                <Route
+                    path="/admin"
+                    element={
+                        <AdminRoute>
+                            <AdminDashboard />
+                        </AdminRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/requests"
+                    element={
+                        <AdminRoute>
+                            <AdminRequests />
+                        </AdminRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/history"
+                    element={
+                        <AdminRoute>
+                            <RequestHistory />
+                        </AdminRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/residents"
+                    element={
+                        <AdminRoute>
+                            <AdminResidents />
+                        </AdminRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/rooms"
+                    element={
+                        <AdminRoute>
+                            <Rooms />
+                        </AdminRoute>
+                    }
+                />
+
+                <Route
+                    path="/payments"
+                    element={
+                        <AdminRoute>
+                            <Payments />
+                        </AdminRoute>
+                    }
+                />
+
+                {/* RESIDENT */}
+                <Route
+                    path="/resident"
+                    element={
+                        <ResidentRoute>
+                            <ResidentDashboard />
+                        </ResidentRoute>
+                    }
+                />
+
+                <Route
+                    path="/resident/payments"
+                    element={
+                        <ResidentRoute>
+                            <ResidentPayments />
+                        </ResidentRoute>
+                    }
+                />
+
+                {/* FALLBACK */}
+                <Route path="*" element={<Login />} />
+            </Routes>
+        </AnimatePresence>
+    );
+}
+
+export default function App() {
+    return (
+        <BrowserRouter>
+            <ToastProvider />
+            <AnimatedRoutes />
+        </BrowserRouter>
+    );
+}
+
+
+
+

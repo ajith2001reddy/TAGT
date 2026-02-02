@@ -1,0 +1,475 @@
+﻿# CODE REVIEW - PART 13
+Generated: 2026-02-02 13:10:51
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: frontend\src\components\ChurnRiskTable.jsx
+// SIZE: 5989 bytes
+// MODIFIED: 2026-02-01 21:33:14
+// ##########################################
+
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { predictChurn } from "../services/analyticsService";
+
+/* =====================================================
+   CHURN RISK TABLE (STEP 4)
+   - Resident churn prediction
+   - Risk levels with reasons
+   - Actionable insights
+===================================================== */
+
+export default function ChurnRiskTable() {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadChurn();
+    }, []);
+
+    const loadChurn = async () => {
+        try {
+            setLoading(true);
+            const res = await predictChurn();
+            setData(res);
+        } catch (err) {
+            console.error("CHURN LOAD ERROR", err);
+            setData(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const badgeColor = (risk) => {
+        if (risk === "HIGH") return "bg-red-600/20 text-red-400";
+        if (risk === "MEDIUM") return "bg-yellow-600/20 text-yellow-400";
+        return "bg-green-600/20 text-green-400";
+    };
+
+    if (loading) {
+        return (
+            <div className="bg-white/10 border border-white/10 rounded-2xl p-6 animate-pulse h-64" />
+        );
+    }
+
+    if (!data || !data.residents || data.residents.length === 0) {
+        return (
+            <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                <p className="text-gray-400 text-center">
+                    No churn risk data available
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/10 border border-white/10 rounded-2xl p-6"
+        >
+            {/* HEADER */}
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-lg font-semibold">
+                        Resident Churn Risk
+                    </h2>
+                    <p className="text-sm text-gray-400">
+                        Residents likely to leave soon
+                    </p>
+                </div>
+
+                {/* SUMMARY */}
+                <div className="flex gap-4 text-sm">
+                    <span className="text-red-400">
+                        High: {data.highRisk}
+                    </span>
+                    <span className="text-yellow-400">
+                        Medium: {data.mediumRisk}
+                    </span>
+                    <span className="text-green-400">
+                        Low: {data.lowRisk}
+                    </span>
+                </div>
+            </div>
+
+            {/* TABLE */}
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead className="text-gray-400 border-b border-white/10">
+                        <tr>
+                            <th className="text-left py-2">
+                                Resident
+                            </th>
+                            <th className="text-center py-2">
+                                Score
+                            </th>
+                            <th className="text-center py-2">
+                                Risk
+                            </th>
+                            <th className="text-left py-2">
+                                Reasons
+                            </th>
+                            <th className="text-left py-2">
+                                Suggested Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10">
+                        {data.residents.map((r) => (
+                            <tr key={r.residentId}>
+                                <td className="py-3">
+                                    <div className="font-medium">
+                                        {r.name}
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                        {r.email}
+                                    </div>
+                                </td>
+
+                                <td className="text-center font-semibold">
+                                    {r.score}
+                                </td>
+
+                                <td className="text-center">
+                                    <span
+                                        className={`px-2 py-1 rounded text-xs font-semibold ${badgeColor(
+                                            r.riskLevel
+                                        )}`}
+                                    >
+                                        {r.riskLevel}
+                                    </span>
+                                </td>
+
+                                <td className="py-3 text-gray-300">
+                                    {r.reasons.length > 0
+                                        ? r.reasons.join(", ")
+                                        : "No major risk factors"}
+                                </td>
+
+                                <td className="py-3 text-gray-300">
+                                    {r.riskLevel === "HIGH"
+                                        ? "Immediate follow-up"
+                                        : r.riskLevel === "MEDIUM"
+                                            ? "Check-in & support"
+                                            : "No action needed"}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </motion.div>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\KpiCards.jsx
+// SIZE: 2897 bytes
+// MODIFIED: 2026-02-01 20:52:06
+// ##########################################
+
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import {
+    getKPIs
+} from "../services/analyticsService";
+
+/* =====================================================
+   KPI CARDS – ADMIN DASHBOARD
+   - Real-time analytics
+   - Smooth animations
+   - Safe loading states
+===================================================== */
+
+export default function KpiCards() {
+    const [kpis, setKpis] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadKPIs();
+    }, []);
+
+    const loadKPIs = async () => {
+        try {
+            setLoading(true);
+            const data = await getKPIs();
+            setKpis(data);
+        } catch (err) {
+            console.error("KPI LOAD ERROR", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                    <div
+                        key={i}
+                        className="bg-white/10 h-28 rounded-xl animate-pulse"
+                    />
+                ))}
+            </div>
+        );
+    }
+
+    if (!kpis) return null;
+
+    const cards = [
+        {
+            title: "Occupancy",
+            value: `${kpis.occupancy.rate}%`,
+            subtitle: `${kpis.occupancy.occupiedBeds} / ${kpis.occupancy.totalBeds} beds`,
+            accent: "blue"
+        },
+        {
+            title: "Payment Collection",
+            value: `${kpis.payments.collectionRate}%`,
+            subtitle: `$${kpis.payments.totalCollected} collected`,
+            accent: "green"
+        },
+        {
+            title: "Avg Resolution Time",
+            value: `${kpis.maintenance.avgResolutionTime} hrs`,
+            subtitle: `${kpis.maintenance.resolvedCount} resolved`,
+            accent: "yellow"
+        }
+    ];
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {cards.map((card, index) => (
+                <motion.div
+                    key={card.title}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`bg-white/10 border border-white/10 rounded-2xl p-6`}
+                >
+                    <p className="text-sm text-gray-400">
+                        {card.title}
+                    </p>
+
+                    <h2 className="text-3xl font-bold mt-2">
+                        {card.value}
+                    </h2>
+
+                    <p className="text-sm text-gray-400 mt-1">
+                        {card.subtitle}
+                    </p>
+                </motion.div>
+            ))}
+        </div>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\Loader.jsx
+// SIZE: 246 bytes
+// MODIFIED: 2026-01-27 00:20:04
+// ##########################################
+
+export default function Loader() {
+    return (
+        <div className="flex justify-center py-10">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\MaintenanceCostForecast.jsx
+// SIZE: 6164 bytes
+// MODIFIED: 2026-02-01 21:21:19
+// ##########################################
+
+import { useEffect, useState, useCallback } from "react";
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid
+} from "recharts";
+import { motion } from "framer-motion";
+import { predictMaintenanceCost } from "../services/analyticsService";
+
+/* =====================================================
+   MAINTENANCE COST FORECAST (STEP 3)
+   - Monthly cost trend
+   - 3 / 6 / 12 month prediction
+===================================================== */
+
+export default function MaintenanceCostForecast() {
+    const [months, setMonths] = useState(6);
+    const [data, setData] = useState([]);
+    const [meta, setMeta] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    const loadForecast = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await predictMaintenanceCost(months);
+
+            const history =
+                res?.history?.map((h) => ({
+                    month: h.month,
+                    cost: h.cost,
+                    type: "History"
+                })) || [];
+
+            const forecast =
+                res?.forecast?.map((f) => ({
+                    month: f.month,
+                    cost: f.predictedCost,
+                    type: "Forecast"
+                })) || [];
+
+            setMeta(res?.meta || null);
+            setData([...history, ...forecast]);
+        } catch (err) {
+            console.error("MAINTENANCE FORECAST ERROR", err);
+            setData([]);
+            setMeta(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [months]);
+
+    useEffect(() => {
+        loadForecast();
+    }, [loadForecast]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/10 border border-white/10 rounded-2xl p-6"
+        >
+            {/* HEADER */}
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-lg font-semibold">
+                        Maintenance Cost Forecast
+                    </h2>
+                    <p className="text-sm text-gray-400">
+                        Estimated maintenance expenses
+                    </p>
+                </div>
+
+                {/* RANGE SELECTOR */}
+                <div className="flex gap-2">
+                    {[3, 6, 12].map((m) => (
+                        <button
+                            key={m}
+                            onClick={() => setMonths(m)}
+                            className={`px-3 py-1 rounded text-sm ${
+                                months === m
+                                    ? "bg-amber-600 text-white"
+                                    : "bg-white/10 text-gray-300 hover:bg-white/20"
+                            }`}
+                        >
+                            {m}M
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* META INFO */}
+            {meta && (
+                <div className="mb-4 text-sm text-gray-400 flex gap-6 flex-wrap">
+                    <span>
+                        Avg Trend:{" "}
+                        <strong className="text-gray-200">
+                            ${meta.trend}/month
+                        </strong>
+                    </span>
+                    <span>
+                        Spike Risk:{" "}
+                        <strong
+                            className={`${
+                                meta.spikeRisk === "HIGH"
+                                    ? "text-red-400"
+                                    : meta.spikeRisk === "MEDIUM"
+                                    ? "text-yellow-400"
+                                    : "text-green-400"
+                            }`}
+                        >
+                            {meta.spikeRisk}
+                        </strong>
+                    </span>
+                </div>
+            )}
+
+            {/* CHART */}
+            {loading ? (
+                <div className="h-64 animate-pulse bg-white/5 rounded-xl" />
+            ) : data.length === 0 ? (
+                <p className="text-gray-400 text-center py-10">
+                    Not enough data to generate forecast
+                </p>
+            ) : (
+                <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={data}>
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#334155"
+                            />
+                            <XAxis
+                                dataKey="month"
+                                stroke="#94a3b8"
+                            />
+                            <YAxis
+                                stroke="#94a3b8"
+                                tickFormatter={(v) => `$${v}`}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    background: "#020617",
+                                    border: "1px solid #334155",
+                                    borderRadius: "8px"
+                                }}
+                                formatter={(v) => [
+                                    `$${v}`,
+                                    "Cost"
+                                ]}
+                            />
+
+                            <Line
+                                type="monotone"
+                                dataKey="cost"
+                                stroke="#fbbf24"
+                                strokeWidth={3}
+                                dot={false}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+        </motion.div>
+    );
+}
+
+
+
+

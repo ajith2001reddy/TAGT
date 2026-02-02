@@ -1,0 +1,124 @@
+﻿# CODE REVIEW - PART 12
+Generated: 2026-02-02 13:10:51
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: frontend\src\auth\ProtectedRoute.jsx
+// SIZE: 833 bytes
+// MODIFIED: 2026-01-27 19:38:56
+// ##########################################
+
+import { Navigate, Outlet } from "react-router-dom";
+
+/**
+ * PROTECTED ROUTE
+ * - Checks login
+ * - Optionally checks role
+ * - Does NOT blindly trust localStorage role
+ */
+export default function ProtectedRoute({ role }) {
+    const token = localStorage.getItem("token");
+
+    // Not logged in
+    if (!token) {
+        return <Navigate to="/" replace />;
+    }
+
+    // Decode role safely (optional but recommended)
+    let userRole = null;
+
+    try {
+        const payload = JSON.parse(
+            atob(token.split(".")[1])
+        );
+        userRole = payload.role;
+    } catch {
+        // corrupted token
+        return <Navigate to="/" replace />;
+    }
+
+    // Role mismatch
+    if (role && userRole !== role) {
+        return <Navigate to="/" replace />;
+    }
+
+    return <Outlet />;
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\AppLayout.jsx
+// SIZE: 619 bytes
+// MODIFIED: 2026-02-02 13:06:59
+// ##########################################
+
+import { useState } from "react";
+import Sidebar from "./Sidebar";
+import Navbar from "./Navbar";
+
+export default function AppLayout({ children }) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <div className="flex min-h-screen bg-gray-950">
+            <Sidebar open={open} onClose={() => setOpen(false)} />
+
+            <div className="flex flex-col flex-1 md:ml-64">
+                <Navbar onMenuClick={() => setOpen(true)} />
+
+                <main className="flex-1 p-6">
+                    {children}
+                </main>
+            </div>
+        </div>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\Button.jsx
+// SIZE: 306 bytes
+// MODIFIED: 2026-01-27 00:19:50
+// ##########################################
+
+export default function Button({ children, className = "", ...props }) {
+    return (
+        <button
+            className={`px-4 py-2 rounded-lg bg-primary text-white hover:bg-blue-700 transition ${className}`}
+            {...props}
+        >
+            {children}
+        </button>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\Card.jsx
+// SIZE: 169 bytes
+// MODIFIED: 2026-01-27 00:19:57
+// ##########################################
+
+export default function Card({ children }) {
+    return (
+        <div className="bg-white rounded-xl shadow p-6">
+            {children}
+        </div>
+    );
+}
+
+
+
+

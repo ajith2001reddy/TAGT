@@ -1,0 +1,939 @@
+﻿# CODE REVIEW - PART 18
+Generated: 2026-02-02 13:10:51
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: frontend\src\pages\AdminResidents.jsx
+// SIZE: 12181 bytes
+// MODIFIED: 2026-02-01 19:47:57
+// ##########################################
+
+import { useEffect, useState, useCallback } from "react";
+import { motion } from "framer-motion";
+import toast from "react-hot-toast";
+
+import DashboardLayout from "../layouts/DashboardLayout";
+import api from "../api/axios";
+
+export default function AdminResidents() {
+    const [residents, setResidents] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    /* ===== ADD RESIDENT FORM ===== */
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        password: "",
+        room: "",
+        rent: ""
+    });
+
+    /* ===== BILLING ===== */
+    const [billingTarget, setBillingTarget] = useState(null);
+    const [billAmount, setBillAmount] = useState("");
+    const [billDescription, setBillDescription] = useState("");
+
+    /* ================= FETCH RESIDENTS ================= */
+    const fetchResidents = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await api.get("/admin/residents");
+            setResidents(Array.isArray(res.data) ? res.data : []);
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to load residents");
+            setResidents([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchResidents();
+    }, [fetchResidents]);
+
+    /* ================= ADD RESIDENT ================= */
+    const addResident = async () => {
+        const { name, email, password, room, rent } = form;
+
+        if (!name || !email || !password || !room || !rent) {
+            toast.error("All fields are required");
+            return;
+        }
+
+        const rentValue = Number(rent);
+        if (!Number.isFinite(rentValue) || rentValue <= 0) {
+            toast.error("Rent must be greater than 0");
+            return;
+        }
+
+        try {
+            await api.post("/admin/residents", {
+                name,
+                email,
+                password,
+                room,
+                rent: rentValue
+            });
+
+            toast.success("Resident added successfully");
+            setForm({
+                name: "",
+                email: "",
+                password: "",
+                room: "",
+                rent: ""
+            });
+
+            fetchResidents();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data || "Failed to add resident");
+        }
+    };
+
+    /* ================= SEND BILL (FINAL & HARDENED) ================= */
+    const sendBill = async () => {
+        const userId = billingTarget?.userId?._id;
+
+        if (!userId || typeof userId !== "string") {
+            toast.error("Invalid resident selected. Please refresh the page.");
+            return;
+        }
+
+        const amount = Number(billAmount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+            toast.error("Enter a valid amount");
+            return;
+        }
+
+        try {
+            await api.post("/payments", {
+                residentId: userId,                 // ✅ ALWAYS User._id
+                amount,
+                description: billDescription?.trim() || "Direct charge",
+                type: "manual"
+            });
+
+            toast.success("Bill sent successfully");
+
+            // reset modal state
+            setBillingTarget(null);
+            setBillAmount("");
+            setBillDescription("");
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data || "Failed to send bill");
+        }
+    };
+
+    const MotionButton = ({ children, className, ...props }) => (
+        <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            className={className}
+            {...props}
+        >
+            {children}
+        </motion.button>
+    );
+
+    return (
+        <DashboardLayout>
+            <div className="space-y-10 text-gray-100">
+                {/* HEADER */}
+                <div>
+                    <h1 className="text-3xl font-bold">Residents</h1>
+                    <p className="text-gray-400 mt-1">
+                        Manage residents and send direct bills
+                    </p>
+                </div>
+
+                {/* ================= ADD RESIDENT ================= */}
+                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
+                    <h2 className="text-lg font-semibold mb-4">
+                        Add New Resident
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        {["name", "email", "password", "room", "rent"].map(
+                            (field) => (
+                                <input
+                                    key={field}
+                                    type={
+                                        field === "password"
+                                            ? "password"
+                                            : field === "rent"
+                                                ? "number"
+                                                : "text"
+                                    }
+                                    placeholder={field.toUpperCase()}
+                                    className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm text-white"
+                                    value={form[field]}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            [field]: e.target.value
+                                        })
+                                    }
+                                />
+                            )
+                        )}
+
+                        <MotionButton
+                            onClick={addResident}
+                            className="md:col-span-5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                        >
+                            Add Resident
+                        </MotionButton>
+                    </div>
+                </div>
+
+                {/* ================= RESIDENT LIST ================= */}
+                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
+                    <h2 className="text-lg font-semibold mb-4">
+                        Resident List
+                    </h2>
+
+                    {loading ? (
+                        <p className="text-center text-gray-400">
+                            Loading residents…
+                        </p>
+                    ) : residents.length === 0 ? (
+                        <p className="text-center text-gray-400">
+                            No residents found.
+                        </p>
+                    ) : (
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-gray-400 border-b border-white/10">
+                                    <th className="p-2 text-left">Name</th>
+                                    <th className="p-2 text-left">Email</th>
+                                    <th className="p-2 text-center">Room</th>
+                                    <th className="p-2 text-center">Rent</th>
+                                    <th className="p-2 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {residents.map((r) => (
+                                    <tr
+                                        key={r._id}
+                                        className="border-b border-white/5 hover:bg-white/5"
+                                    >
+                                        <td className="p-2">
+                                            {r.userId?.name}
+                                        </td>
+                                        <td className="p-2">
+                                            {r.userId?.email}
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            {r.room}
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            {r.rent}
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            <MotionButton
+                                                onClick={() =>
+                                                    setBillingTarget(r)
+                                                }
+                                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg"
+                                            >
+                                                Send Bill
+                                            </MotionButton>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>
+
+            {/* ================= BILL MODAL ================= */}
+            {billingTarget && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <motion.div
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
+                    >
+                        <h3 className="text-lg font-semibold mb-4">
+                            Send Bill to{" "}
+                            {billingTarget.userId?.email}
+                        </h3>
+
+                        <input
+                            type="number"
+                            placeholder="Amount"
+                            className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-3"
+                            value={billAmount}
+                            onChange={(e) =>
+                                setBillAmount(e.target.value)
+                            }
+                        />
+
+                        <textarea
+                            placeholder="Description (optional)"
+                            className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-4"
+                            rows={3}
+                            value={billDescription}
+                            onChange={(e) =>
+                                setBillDescription(e.target.value)
+                            }
+                        />
+
+                        <div className="flex justify-end gap-3">
+                            <MotionButton
+                                onClick={() => setBillingTarget(null)}
+                                className="px-4 py-2 rounded-lg border border-white/10"
+                            >
+                                Cancel
+                            </MotionButton>
+
+                            <MotionButton
+                                onClick={sendBill}
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                            >
+                                Send Bill
+                            </MotionButton>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </DashboardLayout>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\pages\AdminRooms.jsx
+// SIZE: 12403 bytes
+// MODIFIED: 2026-01-31 20:06:08
+// ##########################################
+
+import { useEffect, useState, useCallback } from "react";
+import toast from "react-hot-toast";
+import DashboardLayout from "../layouts/DashboardLayout";
+import api from "../api/axios";
+
+export default function AdminRooms() {
+    const [rooms, setRooms] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const [form, setForm] = useState({
+        roomNumber: "",
+        totalBeds: "",
+        note: ""
+    });
+
+    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [occupiedBeds, setOccupiedBeds] = useState("");
+
+    /* ================= FETCH ROOMS ================= */
+    const fetchRooms = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await api.get("/rooms");
+            setRooms(Array.isArray(res.data) ? res.data : []);
+        } catch {
+            toast.error("Failed to load rooms");
+            setRooms([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRooms();
+    }, [fetchRooms]);
+
+    /* ================= ADD ROOM ================= */
+    const addRoom = async () => {
+        if (!form.roomNumber || !form.totalBeds) {
+            toast.error("Room number and total beds are required");
+            return;
+        }
+
+        if (Number(form.totalBeds) <= 0) {
+            toast.error("Total beds must be greater than 0");
+            return;
+        }
+
+        try {
+            await api.post("/rooms", {
+                roomNumber: form.roomNumber,
+                totalBeds: Number(form.totalBeds),
+                note: form.note
+            });
+
+            toast.success("Room added successfully");
+            setForm({ roomNumber: "", totalBeds: "", note: "" });
+            fetchRooms();
+        } catch {
+            toast.error("Failed to add room");
+        }
+    };
+
+    /* ================= UPDATE OCCUPANCY ================= */
+    const updateOccupancy = async () => {
+        if (!selectedRoom) return;
+
+        const value = Number(occupiedBeds);
+
+        if (!Number.isInteger(value) || value < 0) {
+            toast.error("Enter a valid occupied beds value");
+            return;
+        }
+
+        if (value > selectedRoom.totalBeds) {
+            toast.error("Occupied beds cannot exceed total beds");
+            return;
+        }
+
+        try {
+            await api.put(
+                `/rooms/${selectedRoom._id}/occupancy`,
+                { occupiedBeds: value }
+            );
+
+            toast.success("Occupancy updated");
+            setSelectedRoom(null);
+            setOccupiedBeds("");
+            fetchRooms();
+        } catch {
+            toast.error("Failed to update occupancy");
+        }
+    };
+
+    /* ================= DELETE ROOM ================= */
+    const deleteRoom = async (room) => {
+        if (room.occupiedBeds > 0) {
+            toast.error("Cannot delete a room with occupied beds");
+            return;
+        }
+
+        const confirm = window.confirm(
+            `Delete room ${room.roomNumber}? This cannot be undone.`
+        );
+
+        if (!confirm) return;
+
+        try {
+            await api.delete(`/rooms/${room._id}`);
+            toast.success("Room deleted");
+            fetchRooms();
+        } catch {
+            toast.error("Failed to delete room");
+        }
+    };
+
+    return (
+        <DashboardLayout>
+            <div className="space-y-10">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                        Rooms & Bed Management
+                    </h1>
+                    <p className="text-gray-500 mt-1">
+                        Manage rooms, capacity, and occupancy
+                    </p>
+                </div>
+
+                {/* ADD ROOM */}
+                <div className="bg-white rounded-2xl border p-6">
+                    <h2 className="text-lg font-semibold mb-4">
+                        Add New Room
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <input
+                            placeholder="Room Number"
+                            className="border rounded-lg p-2"
+                            value={form.roomNumber}
+                            onChange={(e) =>
+                                setForm({ ...form, roomNumber: e.target.value })
+                            }
+                        />
+
+                        <input
+                            type="number"
+                            placeholder="Total Beds"
+                            className="border rounded-lg p-2"
+                            value={form.totalBeds}
+                            onChange={(e) =>
+                                setForm({ ...form, totalBeds: e.target.value })
+                            }
+                        />
+
+                        <input
+                            placeholder="Note (optional)"
+                            className="border rounded-lg p-2"
+                            value={form.note}
+                            onChange={(e) =>
+                                setForm({ ...form, note: e.target.value })
+                            }
+                        />
+
+                        <button
+                            onClick={addRoom}
+                            className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
+                        >
+                            Add Room
+                        </button>
+                    </div>
+                </div>
+
+                {/* ROOMS TABLE */}
+                <div className="bg-white rounded-2xl border p-6">
+                    <h2 className="text-lg font-semibold mb-4">Rooms</h2>
+
+                    {loading ? (
+                        <p className="text-gray-500 text-center">
+                            Loading rooms…
+                        </p>
+                    ) : rooms.length === 0 ? (
+                        <p className="text-gray-500 text-center">
+                            No rooms added yet.
+                        </p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b text-gray-500">
+                                        <th className="p-2 text-left">Room</th>
+                                        <th className="p-2 text-center">
+                                            Total Beds
+                                        </th>
+                                        <th className="p-2 text-center">
+                                            Occupied
+                                        </th>
+                                        <th className="p-2 text-center">
+                                            Available
+                                        </th>
+                                        <th className="p-2 text-center">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rooms.map((r) => {
+                                        const availableBeds =
+                                            r.totalBeds - r.occupiedBeds;
+
+                                        return (
+                                            <tr
+                                                key={r._id}
+                                                className="border-b hover:bg-gray-50"
+                                            >
+                                                <td className="p-2">
+                                                    {r.roomNumber}
+                                                </td>
+                                                <td className="p-2 text-center">
+                                                    {r.totalBeds}
+                                                </td>
+                                                <td className="p-2 text-center">
+                                                    {r.occupiedBeds}
+                                                </td>
+                                                <td className="p-2 text-center font-semibold">
+                                                    {availableBeds}
+                                                </td>
+                                                <td className="p-2 text-center space-x-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedRoom(r);
+                                                            setOccupiedBeds(
+                                                                String(
+                                                                    r.occupiedBeds
+                                                                )
+                                                            );
+                                                        }}
+                                                        className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                                    >
+                                                        Update
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            deleteRoom(r)
+                                                        }
+                                                        className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* OCCUPANCY MODAL */}
+            {selectedRoom && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-6 w-96">
+                        <h3 className="text-lg font-semibold mb-4">
+                            Update Occupancy – Room{" "}
+                            {selectedRoom.roomNumber}
+                        </h3>
+
+                        <input
+                            type="number"
+                            className="w-full border rounded-lg p-2 mb-4"
+                            value={occupiedBeds}
+                            onChange={(e) =>
+                                setOccupiedBeds(e.target.value)
+                            }
+                        />
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setSelectedRoom(null)}
+                                className="px-4 py-2 border rounded-lg"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={updateOccupancy}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </DashboardLayout>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\pages\Login.jsx
+// SIZE: 5280 bytes
+// MODIFIED: 2026-01-31 03:38:27
+// ##########################################
+
+import { useState, useRef } from "react";
+import toast from "react-hot-toast";
+
+import api from "../api/axios";
+import Button from "../components/Button";
+import Card from "../components/Card";
+
+export default function Login() {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    const isSubmitting = useRef(false);
+
+    const validateEmail = (value) =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+    const login = async () => {
+        if (loading || isSubmitting.current) return;
+
+        const newErrors = {};
+
+        if (!email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!validateEmail(email.trim())) {
+            newErrors.email = "Invalid email format";
+        }
+
+        if (!password) {
+            newErrors.password = "Password is required";
+        }
+
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) {
+            toast.error("Please fill in all fields correctly");
+            return;
+        }
+
+        isSubmitting.current = true;
+        setLoading(true);
+
+        try {
+            // ✅ CORRECT ROUTE (NO double /api)
+            const response = await api.post("/auth/login", {
+                email: email.trim().toLowerCase(),
+                password
+            });
+
+            const { token, role } = response.data || {};
+
+            if (!token) {
+                toast.error("Login failed: no token received");
+                return;
+            }
+
+            localStorage.setItem("token", token);
+            if (role) localStorage.setItem("role", role);
+
+            toast.success("Login successful");
+
+            setTimeout(() => {
+                window.location.assign(
+                    role === "admin" ? "/admin" : "/resident"
+                );
+            }, 300);
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message ||
+                "Invalid email or password"
+            );
+            setPassword("");
+            setErrors({});
+        } finally {
+            setLoading(false);
+            setTimeout(() => {
+                isSubmitting.current = false;
+            }, 300);
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-black to-slate-800">
+            <Card>
+                <div className="w-[360px]">
+                    {/* Header */}
+                    <div className="mb-8 text-center">
+                        <h2 className="text-3xl font-bold text-blue-400">
+                            TAGT
+                        </h2>
+                        <p className="text-sm text-gray-400 mt-1">
+                            Property Management System
+                        </p>
+                    </div>
+
+                    {/* Email */}
+                    <div className="mb-4">
+                        <label className="block text-xs font-semibold text-gray-400 mb-1">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            value={email}
+                            disabled={loading}
+                            autoFocus
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="you@example.com"
+                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    {/* Password */}
+                    <div className="mb-6">
+                        <label className="block text-xs font-semibold text-gray-400 mb-1">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            value={password}
+                            disabled={loading}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    {/* Button */}
+                    <Button
+                        onClick={login}
+                        disabled={loading}
+                        className="w-full py-3 text-sm font-semibold tracking-wide"
+                    >
+                        {loading ? "Signing in..." : "Sign In"}
+                    </Button>
+
+                    {/* Footer */}
+                    <p className="mt-6 text-center text-xs text-gray-500">
+                        Secure access for residents & administrators
+                    </p>
+                </div>
+            </Card>
+        </div>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\pages\Payments.jsx
+// SIZE: 6104 bytes
+// MODIFIED: 2026-01-31 20:06:44
+// ##########################################
+
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import DashboardLayout from "../layouts/DashboardLayout";
+import api from "../api/axios";
+
+export default function Payments() {
+    const [payments, setPayments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState("all");
+
+    const isUnpaid = (status) =>
+        ["unpaid", "due", "pending"].includes(
+            String(status).toLowerCase()
+        );
+
+    const fetchPayments = async () => {
+        try {
+            setLoading(true);
+            const res = await api.get("/payments");
+
+            const cleaned = (Array.isArray(res.data) ? res.data : [])
+                .filter(
+                    (p) =>
+                        p &&
+                        p._id &&
+                        Number.isFinite(p.amount) &&
+                        p.amount > 0 &&
+                        p.residentId
+                )
+                .map((p) => ({
+                    ...p,
+                    status: String(p.status || "unpaid").toLowerCase()
+                }));
+
+            setPayments(cleaned);
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to load payments");
+            setPayments([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPayments();
+    }, []);
+
+    const markAsPaid = async (id) => {
+        if (!window.confirm("Mark this payment as paid?")) return;
+
+        try {
+            await api.put(`/payments/${id}/paid`);
+            toast.success("Payment marked as paid");
+            fetchPayments();
+        } catch {
+            toast.error("Failed to update payment");
+        }
+    };
+
+    const filteredPayments =
+        filter === "all"
+            ? payments
+            : filter === "paid"
+                ? payments.filter((p) => p.status === "paid")
+                : payments.filter((p) => isUnpaid(p.status));
+
+    return (
+        <DashboardLayout>
+            <h2 className="text-2xl font-bold mb-6">Payments</h2>
+
+            <div className="mb-4">
+                <select
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    className="bg-black/30 text-gray-100 border border-white/10 rounded px-3 py-2"
+                >
+                    <option value="all">All</option>
+                    <option value="unpaid">Unpaid</option>
+                    <option value="paid">Paid</option>
+                </select>
+            </div>
+
+            {loading ? (
+                <p className="text-center text-gray-400">
+                    Loading payments…
+                </p>
+            ) : filteredPayments.length === 0 ? (
+                <p className="text-center text-gray-400">
+                    No payments found.
+                </p>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-gray-200 border border-white/10 rounded-lg">
+                        <thead className="bg-white/10">
+                            <tr>
+                                <th className="p-3 text-left">Resident</th>
+                                <th className="p-3 text-right">Amount</th>
+                                <th className="p-3 text-left">Description</th>
+                                <th className="p-3 text-center">Status</th>
+                                <th className="p-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredPayments.map((p) => (
+                                <tr
+                                    key={p._id}
+                                    className="border-t border-white/10 hover:bg-white/5"
+                                >
+                                    <td className="p-3">
+                                        {p.residentId?.email}
+                                    </td>
+                                    <td className="p-3 text-right font-semibold">
+                                        ${Number(p.amount).toLocaleString()}
+                                    </td>
+                                    <td className="p-3">
+                                        {p.description || "—"}
+                                    </td>
+                                    <td className="p-3 text-center capitalize">
+                                        {isUnpaid(p.status)
+                                            ? "unpaid"
+                                            : "paid"}
+                                    </td>
+                                    <td className="p-3 text-center">
+                                        {isUnpaid(p.status) ? (
+                                            <button
+                                                disabled={loading}
+                                                onClick={() =>
+                                                    markAsPaid(p._id)
+                                                }
+                                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                                            >
+                                                Mark Paid
+                                            </button>
+                                        ) : (
+                                            <span className="text-gray-500">
+                                                —
+                                            </span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </DashboardLayout>
+    );
+}
+
+
+
+

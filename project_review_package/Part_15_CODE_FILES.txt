@@ -1,0 +1,385 @@
+﻿# CODE REVIEW - PART 15
+Generated: 2026-02-02 13:10:51
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: frontend\src\components\RevenueOptimization.jsx
+// SIZE: 4524 bytes
+// MODIFIED: 2026-02-01 21:38:49
+// ##########################################
+
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { optimizeRevenue } from "../services/analyticsService";
+
+/* =====================================================
+   REVENUE OPTIMIZATION (STEP 5)
+   - AI-style revenue insights
+   - Leak detection
+   - Actionable recommendations
+===================================================== */
+
+export default function RevenueOptimization() {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadInsights();
+    }, []);
+
+    const loadInsights = async () => {
+        try {
+            setLoading(true);
+            const res = await optimizeRevenue();
+            setData(res);
+        } catch (err) {
+            console.error("REVENUE OPTIMIZATION ERROR", err);
+            setData(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const severityColor = (level) => {
+        if (level === "HIGH") return "bg-red-600/20 text-red-400";
+        if (level === "MEDIUM") return "bg-yellow-600/20 text-yellow-400";
+        return "bg-green-600/20 text-green-400";
+    };
+
+    if (loading) {
+        return (
+            <div className="bg-white/10 border border-white/10 rounded-2xl p-6 h-56 animate-pulse" />
+        );
+    }
+
+    if (!data) {
+        return (
+            <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                <p className="text-gray-400 text-center">
+                    Revenue insights unavailable
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/10 border border-white/10 rounded-2xl p-6"
+        >
+            {/* HEADER */}
+            <div className="mb-6">
+                <h2 className="text-lg font-semibold">
+                    Revenue Optimization Insights
+                </h2>
+                <p className="text-sm text-gray-400">
+                    AI-powered recommendations to maximize revenue
+                </p>
+            </div>
+
+            {/* METRICS */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-sm text-gray-400">
+                        Occupancy Rate
+                    </p>
+                    <p className="text-xl font-bold">
+                        {data.metrics.occupancyRate}%
+                    </p>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-sm text-gray-400">
+                        Collection Rate
+                    </p>
+                    <p className="text-xl font-bold">
+                        {data.metrics.collectionRate}%
+                    </p>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-sm text-gray-400">
+                        Estimated Revenue Leak
+                    </p>
+                    <p className="text-xl font-bold text-red-400">
+                        ${data.revenueLeakEstimate}
+                    </p>
+                </div>
+            </div>
+
+            {/* INSIGHTS */}
+            <div className="space-y-4">
+                {data.insights.map((insight, idx) => (
+                    <div
+                        key={idx}
+                        className="flex items-start justify-between gap-4 bg-white/5 p-4 rounded-xl"
+                    >
+                        <div>
+                            <p className="font-medium">
+                                {insight.message}
+                            </p>
+                            <p className="text-sm text-gray-400 mt-1">
+                                {insight.recommendation}
+                            </p>
+                        </div>
+
+                        <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${severityColor(
+                                insight.severity
+                            )}`}
+                        >
+                            {insight.severity}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </motion.div>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\Sidebar.jsx
+// SIZE: 3442 bytes
+// MODIFIED: 2026-02-02 13:06:51
+// ##########################################
+
+import { NavLink } from "react-router-dom";
+
+const base =
+    "block px-4 py-2 rounded hover:bg-gray-700 transition";
+const active =
+    "bg-gray-800 font-semibold";
+
+export default function Sidebar({ open, onClose }) {
+    const role = localStorage.getItem("role");
+
+    return (
+        <>
+            {/* Overlay – mobile only */}
+            {open && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
+
+            <aside
+                className={`
+                    fixed top-0 left-0 z-50
+                    w-64 min-h-screen
+                    bg-gray-900 text-white
+                    transform transition-transform duration-300
+                    ${open ? "translate-x-0" : "-translate-x-full"}
+                    md:translate-x-0
+                `}
+            >
+                <div className="p-4 text-xl font-bold border-b border-gray-700">
+                    TAGT PMS
+                </div>
+
+                <nav className="p-4 space-y-2">
+                    <NavLink
+                        to={role === "admin" ? "/admin/dashboard" : "/resident/dashboard"}
+                        className={({ isActive }) =>
+                            `${base} ${isActive ? active : ""}`
+                        }
+                        onClick={onClose}
+                    >
+                        Dashboard
+                    </NavLink>
+
+                    {role === "admin" && (
+                        <>
+                            <NavLink
+                                to="/admin/requests"
+                                className={({ isActive }) =>
+                                    `${base} ${isActive ? active : ""}`
+                                }
+                                onClick={onClose}
+                            >
+                                Requests
+                            </NavLink>
+
+                            <NavLink
+                                to="/admin/residents"
+                                className={({ isActive }) =>
+                                    `${base} ${isActive ? active : ""}`
+                                }
+                                onClick={onClose}
+                            >
+                                Residents
+                            </NavLink>
+                        </>
+                    )}
+
+                    {role === "resident" && (
+                        <NavLink
+                            to="/resident/requests"
+                            className={({ isActive }) =>
+                                `${base} ${isActive ? active : ""}`
+                            }
+                            onClick={onClose}
+                        >
+                            My Requests
+                        </NavLink>
+                    )}
+
+                    <button
+                        onClick={() => {
+                            localStorage.clear();
+                            window.location.href = "/";
+                        }}
+                        className="mt-6 text-left px-4 py-2 text-red-400 hover:bg-red-500/10 rounded"
+                    >
+                        Logout
+                    </button>
+                </nav>
+            </aside>
+        </>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\StatCard.jsx
+// SIZE: 1657 bytes
+// MODIFIED: 2026-01-30 13:31:53
+// ##########################################
+
+import { motion } from "framer-motion";
+
+/**
+ * STAT CARD (DARK THEME FIXED)
+ * - SaaS grade
+ * - Works on dark glass UI
+ * - No logic changes
+ */
+
+export default function StatCard({
+    title,
+    value,
+    subtitle,
+    icon,
+    accent = "blue"
+}) {
+    const accentMap = {
+        blue: "bg-blue-600/20 text-blue-400",
+        green: "bg-green-600/20 text-green-400",
+        red: "bg-red-600/20 text-red-400",
+        yellow: "bg-yellow-600/20 text-yellow-400"
+    };
+
+    return (
+        <motion.div
+            whileHover={{ y: -4 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className="bg-white/10 border border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-md transition text-gray-100"
+        >
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-medium text-gray-400">
+                        {title}
+                    </p>
+                    <h3 className="text-3xl font-bold mt-2">
+                        {value}
+                    </h3>
+                    {subtitle && (
+                        <p className="text-xs text-gray-400 mt-1">
+                            {subtitle}
+                        </p>
+                    )}
+                </div>
+
+                {icon && (
+                    <div
+                        className={`h-12 w-12 rounded-xl flex items-center justify-center ${accentMap[accent]}`}
+                    >
+                        {icon}
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\components\StatusModal.jsx
+// SIZE: 1847 bytes
+// MODIFIED: 2026-01-27 18:06:20
+// ##########################################
+
+import { useState } from "react";
+
+const FLOW = {
+    Received: ["In-Progress"],
+    "In-Progress": ["On Hold", "Done"],
+    "On Hold": ["In-Progress"]
+};
+
+export default function StatusModal({ request, onClose, onSave }) {
+    const [status, setStatus] = useState("");
+    const [note, setNote] = useState("");
+
+    const allowed = FLOW[request.status] || [];
+
+    const submit = () => {
+        if (!status || !note.trim()) {
+            alert("Status and Admin Note are required");
+            return;
+        }
+        onSave(status, note);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+            <div className="bg-white p-6 rounded w-96">
+                <h3 className="font-bold mb-4">Update Request Status</h3>
+
+                <select
+                    className="w-full border p-2 mb-3"
+                    onChange={(e) => setStatus(e.target.value)}
+                >
+                    <option value="">Select status</option>
+                    {allowed.map((s) => (
+                        <option key={s}>{s}</option>
+                    ))}
+                </select>
+
+                <textarea
+                    className="w-full border p-2 mb-4"
+                    placeholder="Admin note (required)"
+                    onChange={(e) => setNote(e.target.value)}
+                />
+
+                <div className="flex justify-end gap-2">
+                    <button onClick={onClose}>Cancel</button>
+                    <button
+                        onClick={submit}
+                        className="bg-blue-600 text-white px-4 py-2 rounded"
+                    >
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
+
+

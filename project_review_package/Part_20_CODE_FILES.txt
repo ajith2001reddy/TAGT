@@ -1,0 +1,236 @@
+﻿# CODE REVIEW - PART 20
+Generated: 2026-02-02 13:10:51
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: frontend\src\routes\AdminRoute.jsx
+// SIZE: 631 bytes
+// MODIFIED: 2026-01-27 18:41:17
+// ##########################################
+
+import { Navigate } from "react-router-dom";
+
+/**
+ * AdminRoute
+ * Phase 4 – Route Protection
+ *
+ * - Allows access ONLY if user role === "admin"
+ * - Redirects others to login or resident dashboard
+ */
+
+export default function AdminRoute({ children }) {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    // Not logged in
+    if (!token) {
+        return <Navigate to="/" replace />;
+    }
+
+    // Logged in but not admin
+    if (role !== "admin") {
+        return <Navigate to="/resident" replace />;
+    }
+
+    // Admin allowed
+    return children;
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\routes\ResidentRoute.jsx
+// SIZE: 629 bytes
+// MODIFIED: 2026-01-27 18:41:47
+// ##########################################
+
+import { Navigate } from "react-router-dom";
+
+/**
+ * ResidentRoute
+ * Phase 4 – Route Protection
+ *
+ * - Allows access ONLY if user role === "resident"
+ * - Redirects others appropriately
+ */
+
+export default function ResidentRoute({ children }) {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    // Not logged in
+    if (!token) {
+        return <Navigate to="/" replace />;
+    }
+
+    // Logged in but not resident
+    if (role !== "resident") {
+        return <Navigate to="/admin" replace />;
+    }
+
+    // Resident allowed
+    return children;
+}
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\services\adminService.js
+// SIZE: 1447 bytes
+// MODIFIED: 2026-01-27 18:10:28
+// ##########################################
+
+import api from "../api/axios";
+
+/* ================= DASHBOARD STATS ================= */
+export const getAdminStats = async () => {
+    const res = await api.get("/admin/stats");
+    return res.data;
+};
+
+/* ================= REQUESTS ================= */
+export const getAllRequests = async () => {
+    const res = await api.get("/admin/requests");
+    return res.data;
+};
+
+/* alias so AdminDashboard.jsx works */
+export const getRequests = getAllRequests;
+
+/* ==================================================
+   LEGACY STATUS UPDATE (UNCHANGED)
+   - Used by existing UI
+   - No admin note required
+================================================== */
+export const updateRequestStatus = async (id, status) => {
+    await api.put(`/admin/requests/${id}/status`, { status });
+};
+
+/* ==================================================
+   PHASE 1 – ADVANCED WORKFLOW STATUS UPDATE (NEW)
+   - Enforced status flow
+   - Mandatory admin note
+   - Uses NEW backend endpoint
+================================================== */
+export const updateRequestWorkflowStatus = async (
+    id,
+    workflowStatus,
+    note
+) => {
+    await api.put(`/admin/requests/${id}/workflow-status`, {
+        workflowStatus,
+        note
+    });
+};
+
+/* ================= RESIDENTS ================= */
+export const getResidents = async () => {
+    const res = await api.get("/admin/residents");
+    return res.data;
+};
+
+
+
+
+
+// ##########################################
+// FILE: frontend\src\services\analyticsService.js
+// SIZE: 1976 bytes
+// MODIFIED: 2026-02-01 21:38:13
+// ##########################################
+
+import api from "../api/axios";
+
+/* =====================================================
+   ANALYTICS SERVICE (ADVANCED)
+   - Real-time KPIs
+   - Predictive analytics
+   - AI-ready
+===================================================== */
+
+/* =======================
+   REAL-TIME KPIs (STEP 1)
+======================= */
+
+/**
+ * Fetch real-time KPIs
+ * Optional filters:
+ *  - fromDate (ISO)
+ *  - toDate   (ISO)
+ */
+export const getKPIs = async ({ fromDate, toDate } = {}) => {
+    const params = {};
+
+    if (fromDate && toDate) {
+        params.fromDate = fromDate;
+        params.toDate = toDate;
+    }
+
+    const res = await api.get("/analytics/kpis", { params });
+    return res.data?.data;
+};
+
+/* =======================
+   OCCUPANCY FORECAST (STEP 2)
+======================= */
+
+/**
+ * Predict occupancy for next N months
+ */
+export const predictOccupancy = async (months = 6) => {
+    const res = await api.get("/analytics/predict/occupancy", {
+        params: { months }
+    });
+
+    return res.data?.data;
+};
+
+/* =======================
+   MAINTENANCE COST FORECAST (STEP 3)
+======================= */
+
+/**
+ * Predict maintenance costs for next N months
+ */
+export const predictMaintenanceCost = async (months = 6) => {
+    const res = await api.get("/analytics/predict/maintenance", {
+        params: { months }
+    });
+
+    return res.data?.data;
+};
+
+/* =======================
+   CHURN PREDICTION (STEP 4)
+======================= */
+
+/**
+ * Predict resident churn risk
+ */
+export const predictChurn = async () => {
+    const res = await api.get("/analytics/predict/churn");
+    return res.data?.data;
+};
+
+/* =======================
+   REVENUE OPTIMIZATION (STEP 5)
+======================= */
+
+/**
+ * Get AI revenue optimization insights
+ */
+export const optimizeRevenue = async () => {
+    const res = await api.get("/analytics/optimize/revenue");
+    return res.data?.data;
+};
+
+
+
+

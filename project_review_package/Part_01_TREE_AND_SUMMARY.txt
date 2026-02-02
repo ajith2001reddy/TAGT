@@ -1,0 +1,217 @@
+﻿# PROJECT TREE STRUCTURE
+Generated: 2026-02-02 13:10:46
+Project Path: E:\TAGT
+
+```
+TAGT
+├── backend
+│   ├── analytics
+│   │   ├── churnModel.js
+│   │   ├── forecastEngine.js
+│   │   ├── kpiCalculator.js
+│   │   ├── maintenanceForecast.js
+│   │   └── revenueOptimizer.js
+│   ├── config
+│   │   └── db.js
+│   ├── controllers
+│   │   └── adminController.js
+│   ├── middleware
+│   │   ├── auth.js
+│   │   ├── errorHandler.js
+│   │   ├── isAdmin.js
+│   │   └── validate.js
+│   ├── models
+│   │   ├── ActivityLog.js
+│   │   ├── Payment.js
+│   │   ├── Request.js
+│   │   ├── RequestHistory.js
+│   │   ├── Resident.js
+│   │   ├── Room.js
+│   │   └── User.js
+│   ├── routes
+│   │   ├── admin.js
+│   │   ├── analytics.js
+│   │   ├── auth.js
+│   │   ├── payments.js
+│   │   ├── resident.js
+│   │   └── rooms.js
+│   ├── utils
+│   │   ├── emailService.js
+│   │   └── generateToken.js
+│   ├── index.js
+│   ├── package.json
+│   └── package-lock.json
+├── frontend
+│   ├── public
+│   │   ├── favicon.ico
+│   │   ├── index.html
+│   │   ├── logo192.png
+│   │   ├── logo512.png
+│   │   ├── manifest.json
+│   │   └── robots.txt
+│   ├── src
+│   │   ├── animations
+│   │   │   └── pageTransition.js
+│   │   ├── api
+│   │   │   └── axios.js
+│   │   ├── auth
+│   │   │   └── ProtectedRoute.jsx
+│   │   ├── components
+│   │   │   ├── AppLayout.jsx
+│   │   │   ├── Button.jsx
+│   │   │   ├── Card.jsx
+│   │   │   ├── ChurnRiskTable.jsx
+│   │   │   ├── KpiCards.jsx
+│   │   │   ├── Loader.jsx
+│   │   │   ├── MaintenanceCostForecast.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── OccupancyForecast.jsx
+│   │   │   ├── RequestsChart.jsx
+│   │   │   ├── RequestTable.jsx
+│   │   │   ├── RevenueOptimization.jsx
+│   │   │   ├── Sidebar.jsx
+│   │   │   ├── StatCard.jsx
+│   │   │   ├── StatusModal.jsx
+│   │   │   └── ToastProvider.jsx
+│   │   ├── context
+│   │   │   └── AuthContext.jsx
+│   │   ├── hooks
+│   │   │   └── useAdminStats.js
+│   │   ├── layouts
+│   │   │   └── DashboardLayout.jsx
+│   │   ├── pages
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── AdminRequests.jsx
+│   │   │   ├── AdminResidents.jsx
+│   │   │   ├── AdminRooms.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Payments.jsx
+│   │   │   ├── RequestHistory.jsx
+│   │   │   ├── ResidentDashboard.jsx
+│   │   │   ├── ResidentPayments.jsx
+│   │   │   └── Rooms.jsx
+│   │   ├── routes
+│   │   │   ├── AdminRoute.jsx
+│   │   │   └── ResidentRoute.jsx
+│   │   ├── services
+│   │   │   ├── adminService.js
+│   │   │   ├── analyticsService.js
+│   │   │   ├── authService.js
+│   │   │   └── residentService.js
+│   │   ├── App.css
+│   │   ├── App.js
+│   │   ├── index.css
+│   │   └── index.js
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── README.md
+│   └── tailwind.config.js
+├── project_review_package
+└── combine.ps1
+
+```
+
+# PROJECT SUMMARY
+
+## File Statistics
+
+Total Files: 79
+Total Size: 917.68 KB
+
+## File Type Distribution
+
+| Extension | Count |
+|-----------|-------|
+| .js | 38 |
+| .jsx | 31 |
+| .json | 5 |
+| .css | 2 |
+| .txt | 1 |
+| .html | 1 |
+| .md | 1 |
+
+
+## All Files
+
+1. backend\analytics\churnModel.js
+2. backend\analytics\forecastEngine.js
+3. backend\analytics\kpiCalculator.js
+4. backend\analytics\maintenanceForecast.js
+5. backend\analytics\revenueOptimizer.js
+6. backend\config\db.js
+7. backend\controllers\adminController.js
+8. backend\index.js
+9. backend\middleware\auth.js
+10. backend\middleware\errorHandler.js
+11. backend\middleware\isAdmin.js
+12. backend\middleware\validate.js
+13. backend\models\ActivityLog.js
+14. backend\models\Payment.js
+15. backend\models\Request.js
+16. backend\models\RequestHistory.js
+17. backend\models\Resident.js
+18. backend\models\Room.js
+19. backend\models\User.js
+20. backend\package.json
+21. backend\package-lock.json
+22. backend\routes\admin.js
+23. backend\routes\analytics.js
+24. backend\routes\auth.js
+25. backend\routes\payments.js
+26. backend\routes\resident.js
+27. backend\routes\rooms.js
+28. backend\utils\emailService.js
+29. backend\utils\generateToken.js
+30. frontend\package.json
+31. frontend\package-lock.json
+32. frontend\postcss.config.js
+33. frontend\public\index.html
+34. frontend\public\manifest.json
+35. frontend\public\robots.txt
+36. frontend\README.md
+37. frontend\src\animations\pageTransition.js
+38. frontend\src\api\axios.js
+39. frontend\src\App.css
+40. frontend\src\App.js
+41. frontend\src\auth\ProtectedRoute.jsx
+42. frontend\src\components\AppLayout.jsx
+43. frontend\src\components\Button.jsx
+44. frontend\src\components\Card.jsx
+45. frontend\src\components\ChurnRiskTable.jsx
+46. frontend\src\components\KpiCards.jsx
+47. frontend\src\components\Loader.jsx
+48. frontend\src\components\MaintenanceCostForecast.jsx
+49. frontend\src\components\Navbar.jsx
+50. frontend\src\components\OccupancyForecast.jsx
+51. frontend\src\components\RequestsChart.jsx
+52. frontend\src\components\RequestTable.jsx
+53. frontend\src\components\RevenueOptimization.jsx
+54. frontend\src\components\Sidebar.jsx
+55. frontend\src\components\StatCard.jsx
+56. frontend\src\components\StatusModal.jsx
+57. frontend\src\components\ToastProvider.jsx
+58. frontend\src\context\AuthContext.jsx
+59. frontend\src\hooks\useAdminStats.js
+60. frontend\src\index.css
+61. frontend\src\index.js
+62. frontend\src\layouts\DashboardLayout.jsx
+63. frontend\src\pages\AdminDashboard.jsx
+64. frontend\src\pages\AdminRequests.jsx
+65. frontend\src\pages\AdminResidents.jsx
+66. frontend\src\pages\AdminRooms.jsx
+67. frontend\src\pages\Login.jsx
+68. frontend\src\pages\Payments.jsx
+69. frontend\src\pages\RequestHistory.jsx
+70. frontend\src\pages\ResidentDashboard.jsx
+71. frontend\src\pages\ResidentPayments.jsx
+72. frontend\src\pages\Rooms.jsx
+73. frontend\src\routes\AdminRoute.jsx
+74. frontend\src\routes\ResidentRoute.jsx
+75. frontend\src\services\adminService.js
+76. frontend\src\services\analyticsService.js
+77. frontend\src\services\authService.js
+78. frontend\src\services\residentService.js
+79. frontend\tailwind.config.js
+
+

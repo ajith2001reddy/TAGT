@@ -1,0 +1,143 @@
+﻿# CODE REVIEW - PART 4
+Generated: 2026-02-02 13:10:50
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: backend\middleware\auth.js
+// SIZE: 1138 bytes
+// MODIFIED: 2026-02-01 20:30:22
+// ##########################################
+
+const jwt = require("jsonwebtoken");
+
+/**
+ * AUTH MIDDLEWARE
+ * - Verifies JWT token
+ * - Attaches user info to req.user
+ * - Used for ALL protected routes
+ */
+module.exports = (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+
+        // Check header
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({
+                success: false,
+                message: "Authorization token missing"
+            });
+        }
+
+        // Extract token
+        const token = authHeader.split(" ")[1];
+
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        /**
+         * decoded should contain:
+         * {
+         *   id: user._id,
+         *   role: "admin" | "resident"
+         * }
+         */
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
+
+        next();
+    } catch (err) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid or expired token"
+        });
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE: backend\middleware\errorHandler.js
+// SIZE: 225 bytes
+// MODIFIED: 2026-01-27 00:01:57
+// ##########################################
+
+module.exports = (err, req, res, next) => {
+    console.error("❌ ERROR:", err.message);
+
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Server error"
+    });
+};
+
+
+
+
+
+// ##########################################
+// FILE: backend\middleware\isAdmin.js
+// SIZE: 702 bytes
+// MODIFIED: 2026-01-27 19:38:01
+// ##########################################
+
+/**
+ * ADMIN-ONLY MIDDLEWARE
+ * - Must be used AFTER auth.js
+ * - Assumes req.user is already set
+ */
+
+module.exports = (req, res, next) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized"
+            });
+        }
+
+        if (req.user.role !== "admin") {
+            return res.status(403).json({
+                success: false,
+                message: "Admin access only"
+            });
+        }
+
+        next();
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Authorization failed"
+        });
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE: backend\middleware\validate.js
+// SIZE: 243 bytes
+// MODIFIED: 2026-01-27 00:07:04
+// ##########################################
+
+module.exports = (schema) => (req, res, next) => {
+    const { error } = schema.validate(req.body);
+    if (error) {
+        return res.status(400).json({
+            message: error.details[0].message
+        });
+    }
+    next();
+};
+
+
+
+

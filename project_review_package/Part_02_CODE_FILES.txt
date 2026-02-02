@@ -1,0 +1,541 @@
+﻿# CODE REVIEW - PART 2
+Generated: 2026-02-02 13:10:50
+Files in this part: 4
+
+========================================
+
+
+// ##########################################
+// FILE: backend\analytics\churnModel.js
+// SIZE: 3570 bytes
+// MODIFIED: 2026-02-01 21:31:22
+// ##########################################
+
+const Resident = require("../models/Resident");
+const Payment = require("../models/Payment");
+const Request = require("../models/Request");
+
+/* =====================================================
+   RESIDENT CHURN PREDICTION MODEL
+   - Rule-based AI scoring
+   - Explainable & fast
+   - ML-ready later
+===================================================== */
+
+/**
+ * Calculate churn score for a single resident
+ */
+async function calculateResidentChurn(resident) {
+    let score = 0;
+    const reasons = [];
+
+    /* =======================
+       PAYMENT BEHAVIOR
+    ======================= */
+    const payments = await Payment.find({
+        residentId: resident._id
+    }).sort({ createdAt: -1 });
+
+    const unpaid = payments.filter(
+        (p) => p.status === "unpaid"
+    ).length;
+
+    if (unpaid >= 2) {
+        score += 30;
+        reasons.push("Multiple unpaid payments");
+    } else if (unpaid === 1) {
+        score += 15;
+        reasons.push("Recent unpaid payment");
+    }
+
+    /* =======================
+       MAINTENANCE REQUESTS
+    ======================= */
+    const requests = await Request.find({
+        residentId: resident._id
+    }).sort({ createdAt: -1 });
+
+    if (requests.length >= 5) {
+        score += 20;
+        reasons.push("High number of maintenance requests");
+    }
+
+    const recentComplaint = requests.find((r) => {
+        const days =
+            (Date.now() - new Date(r.createdAt)) /
+            (1000 * 60 * 60 * 24);
+        return days <= 30;
+    });
+
+    if (recentComplaint) {
+        score += 10;
+        reasons.push("Recent maintenance complaint");
+    }
+
+    /* =======================
+       ACTIVITY / INACTIVITY
+    ======================= */
+    const lastActivity = resident.updatedAt || resident.createdAt;
+    const inactiveDays =
+        (Date.now() - new Date(lastActivity)) /
+        (1000 * 60 * 60 * 24);
+
+    if (inactiveDays > 90) {
+        score += 15;
+        reasons.push("Inactive for over 90 days");
+    }
+
+    /* =======================
+       TENURE FACTOR
+    ======================= */
+    const tenureDays =
+        (Date.now() - new Date(resident.createdAt)) /
+        (1000 * 60 * 60 * 24);
+
+    if (tenureDays < 60) {
+        score += 10;
+        reasons.push("New resident (low tenure)");
+    }
+
+    /* =======================
+       NORMALIZE SCORE
+    ======================= */
+    score = Math.min(100, score);
+
+    let riskLevel = "LOW";
+    if (score >= 60) riskLevel = "HIGH";
+    else if (score >= 30) riskLevel = "MEDIUM";
+
+    return {
+        residentId: resident._id,
+        name: resident.name,
+        email: resident.email,
+        score,
+        riskLevel,
+        reasons
+    };
+}
+
+/**
+ * Predict churn risk for all residents
+ */
+async function predictChurn() {
+    const residents = await Resident.find();
+    const results = [];
+
+    for (const resident of residents) {
+        const churn = await calculateResidentChurn(resident);
+        results.push(churn);
+    }
+
+    // Sort highest risk first
+    results.sort((a, b) => b.score - a.score);
+
+    return {
+        generatedAt: new Date(),
+        totalResidents: residents.length,
+        highRisk: results.filter((r) => r.riskLevel === "HIGH").length,
+        mediumRisk: results.filter((r) => r.riskLevel === "MEDIUM").length,
+        lowRisk: results.filter((r) => r.riskLevel === "LOW").length,
+        residents: results
+    };
+}
+
+module.exports = {
+    predictChurn
+};
+
+
+
+
+
+// ##########################################
+// FILE: backend\analytics\forecastEngine.js
+// SIZE: 2844 bytes
+// MODIFIED: 2026-02-01 21:09:48
+// ##########################################
+
+const Room = require("../models/Room");
+
+/* =====================================================
+   OCCUPANCY FORECAST ENGINE
+   - Trend-based prediction
+   - Seasonality-ready
+   - AI/ML upgrade friendly
+===================================================== */
+
+/**
+ * Generate historical occupancy snapshots
+ * (monthly resolution)
+ */
+async function getHistoricalOccupancy(months = 6) {
+    const rooms = await Room.find({}, "totalBeds occupiedBeds updatedAt");
+
+    if (rooms.length === 0) return [];
+
+    const now = new Date();
+    const history = [];
+
+    for (let i = months; i > 0; i--) {
+        const pointDate = new Date(
+            now.getFullYear(),
+            now.getMonth() - i,
+            1
+        );
+
+        const totalBeds = rooms.reduce(
+            (sum, r) => sum + (r.totalBeds || 0),
+            0
+        );
+
+        const occupiedBeds = rooms.reduce(
+            (sum, r) => sum + (r.occupiedBeds || 0),
+            0
+        );
+
+        const rate =
+            totalBeds === 0
+                ? 0
+                : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
+
+        history.push({
+            month: pointDate.toISOString().slice(0, 7),
+            occupancyRate: rate
+        });
+    }
+
+    return history;
+}
+
+/**
+ * Simple linear trend calculation
+ */
+function calculateTrend(data) {
+    if (data.length < 2) return 0;
+
+    let totalChange = 0;
+
+    for (let i = 1; i < data.length; i++) {
+        totalChange +=
+            data[i].occupancyRate - data[i - 1].occupancyRate;
+    }
+
+    return totalChange / (data.length - 1);
+}
+
+/**
+ * Predict future occupancy
+ */
+async function predictOccupancy(monthsAhead = 6) {
+    const history = await getHistoricalOccupancy(6);
+
+    if (history.length === 0) {
+        return {
+            history: [],
+            forecast: [],
+            note: "Not enough data to generate forecast"
+        };
+    }
+
+    const trend = calculateTrend(history);
+    const lastRate = history[history.length - 1].occupancyRate;
+
+    const forecast = [];
+    let currentRate = lastRate;
+
+    for (let i = 1; i <= monthsAhead; i++) {
+        currentRate += trend;
+
+        // clamp between 0–100
+        currentRate = Math.max(0, Math.min(100, currentRate));
+
+        const date = new Date();
+        date.setMonth(date.getMonth() + i);
+
+        forecast.push({
+            month: date.toISOString().slice(0, 7),
+            predictedOccupancy: Number(currentRate.toFixed(2))
+        });
+    }
+
+    return {
+        history,
+        forecast,
+        meta: {
+            trend: Number(trend.toFixed(2)),
+            generatedAt: new Date(),
+            model: "Linear Trend + Seasonal Ready"
+        }
+    };
+}
+
+module.exports = {
+    predictOccupancy
+};
+
+
+
+
+
+// ##########################################
+// FILE: backend\analytics\kpiCalculator.js
+// SIZE: 3072 bytes
+// MODIFIED: 2026-02-01 20:47:33
+// ##########################################
+
+const Room = require("../models/Room");
+const Payment = require("../models/Payment");
+const Request = require("../models/Request");
+
+/* =====================================================
+   ADVANCED KPI CALCULATOR
+   - Real-time metrics
+   - Safe fallbacks
+   - Time-range ready (future AI use)
+===================================================== */
+
+async function getKPIs({ fromDate, toDate } = {}) {
+    const dateFilter =
+        fromDate && toDate
+            ? { createdAt: { $gte: fromDate, $lte: toDate } }
+            : {};
+
+    /* =======================
+       OCCUPANCY KPI
+    ======================= */
+    const rooms = await Room.find({}, "totalBeds occupiedBeds");
+
+    const totals = rooms.reduce(
+        (acc, r) => {
+            acc.totalBeds += r.totalBeds || 0;
+            acc.occupiedBeds += r.occupiedBeds || 0;
+            return acc;
+        },
+        { totalBeds: 0, occupiedBeds: 0 }
+    );
+
+    const occupancyRate =
+        totals.totalBeds === 0
+            ? 0
+            : Number(
+                ((totals.occupiedBeds / totals.totalBeds) * 100).toFixed(2)
+            );
+
+    /* =======================
+       PAYMENT COLLECTION KPI
+    ======================= */
+    const payments = await Payment.find(dateFilter, "amount status");
+
+    let totalBilled = 0;
+    let totalCollected = 0;
+
+    for (const p of payments) {
+        totalBilled += p.amount || 0;
+        if (p.status === "paid") {
+            totalCollected += p.amount || 0;
+        }
+    }
+
+    const collectionRate =
+        totalBilled === 0
+            ? 0
+            : Number(((totalCollected / totalBilled) * 100).toFixed(2));
+
+    /* =======================
+       MAINTENANCE KPI
+    ======================= */
+    const resolvedRequests = await Request.find(
+        { status: "resolved", ...dateFilter },
+        "createdAt updatedAt"
+    );
+
+    let totalResolutionHours = 0;
+
+    for (const r of resolvedRequests) {
+        const hours =
+            (new Date(r.updatedAt) - new Date(r.createdAt)) /
+            (1000 * 60 * 60);
+        totalResolutionHours += hours;
+    }
+
+    const avgResolutionTime =
+        resolvedRequests.length === 0
+            ? 0
+            : Number(
+                (totalResolutionHours / resolvedRequests.length).toFixed(2)
+            );
+
+    /* =======================
+       RETURN KPI OBJECT
+    ======================= */
+    return {
+        occupancy: {
+            rate: occupancyRate,
+            occupiedBeds: totals.occupiedBeds,
+            totalBeds: totals.totalBeds
+        },
+
+        payments: {
+            collectionRate,
+            totalBilled,
+            totalCollected
+        },
+
+        maintenance: {
+            avgResolutionTime,
+            resolvedCount: resolvedRequests.length
+        },
+
+        meta: {
+            fromDate: fromDate || null,
+            toDate: toDate || null,
+            generatedAt: new Date()
+        }
+    };
+}
+
+module.exports = {
+    getKPIs
+};
+
+
+
+
+
+// ##########################################
+// FILE: backend\analytics\maintenanceForecast.js
+// SIZE: 3079 bytes
+// MODIFIED: 2026-02-01 21:17:06
+// ##########################################
+
+const Request = require("../models/Request");
+
+/* =====================================================
+   MAINTENANCE COST FORECAST ENGINE
+   - Monthly aggregation
+   - Trend-based prediction
+   - Spike detection
+===================================================== */
+
+/**
+ * Get monthly maintenance cost history
+ */
+async function getMonthlyMaintenanceCosts(months = 6) {
+    const now = new Date();
+    const history = [];
+
+    for (let i = months; i > 0; i--) {
+        const start = new Date(
+            now.getFullYear(),
+            now.getMonth() - i,
+            1
+        );
+        const end = new Date(
+            now.getFullYear(),
+            now.getMonth() - i + 1,
+            0,
+            23,
+            59,
+            59
+        );
+
+        const requests = await Request.find({
+            createdAt: { $gte: start, $lte: end }
+        });
+
+        const totalCost = requests.reduce(
+            (sum, r) => sum + (r.cost || 0),
+            0
+        );
+
+        history.push({
+            month: start.toISOString().slice(0, 7),
+            cost: Number(totalCost.toFixed(2))
+        });
+    }
+
+    return history;
+}
+
+/**
+ * Calculate average monthly cost change (trend)
+ */
+function calculateCostTrend(data) {
+    if (data.length < 2) return 0;
+
+    let change = 0;
+    for (let i = 1; i < data.length; i++) {
+        change += data[i].cost - data[i - 1].cost;
+    }
+
+    return change / (data.length - 1);
+}
+
+/**
+ * Detect spike risk
+ */
+function detectSpikeRisk(history) {
+    if (history.length < 3) return "LOW";
+
+    const avg =
+        history.reduce((s, m) => s + m.cost, 0) / history.length;
+
+    const last = history[history.length - 1].cost;
+
+    if (last > avg * 1.4) return "HIGH";
+    if (last > avg * 1.2) return "MEDIUM";
+    return "LOW";
+}
+
+/**
+ * Predict future maintenance costs
+ */
+async function predictMaintenanceCost(monthsAhead = 6) {
+    const history = await getMonthlyMaintenanceCosts(6);
+
+    if (history.length === 0) {
+        return {
+            history: [],
+            forecast: [],
+            note: "Not enough data to forecast maintenance costs"
+        };
+    }
+
+    const trend = calculateCostTrend(history);
+    const spikeRisk = detectSpikeRisk(history);
+
+    let currentCost = history[history.length - 1].cost;
+    const forecast = [];
+
+    for (let i = 1; i <= monthsAhead; i++) {
+        currentCost += trend;
+        currentCost = Math.max(0, currentCost);
+
+        const date = new Date();
+        date.setMonth(date.getMonth() + i);
+
+        forecast.push({
+            month: date.toISOString().slice(0, 7),
+            predictedCost: Number(currentCost.toFixed(2))
+        });
+    }
+
+    return {
+        history,
+        forecast,
+        meta: {
+            trend: Number(trend.toFixed(2)),
+            spikeRisk,
+            generatedAt: new Date(),
+            model: "Linear Trend + Spike Detection"
+        }
+    };
+}
+
+module.exports = {
+    predictMaintenanceCost
+};
+
+
+
+

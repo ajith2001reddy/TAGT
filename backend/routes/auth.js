@@ -1,7 +1,7 @@
 ﻿const express = require("express");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const generateToken = require("../utils/generateToken");
 
 const router = express.Router();
 
@@ -21,10 +21,10 @@ router.post("/login", async (req, res, next) => {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        if (!user.isActive) {
-            return res.status(403).json({
-                message: "Account is disabled"
-            });
+        if (user.isActive === false) {
+            return res
+                .status(403)
+                .json({ message: "Account is disabled" });
         }
 
         const match = await bcrypt.compare(password, user.password);
@@ -32,15 +32,10 @@ router.post("/login", async (req, res, next) => {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        const token = jwt.sign(
-            { id: user._id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: "1d" }
-        );
+        const token = generateToken(user);
 
         res.json({
             token,
-            role: user.role,
             message: "Login successful"
         });
     } catch (err) {
