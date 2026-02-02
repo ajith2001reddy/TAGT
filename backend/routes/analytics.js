@@ -6,7 +6,8 @@ const { getKPIs } = require("../analytics/kpiCalculator");
 const { predictOccupancy } = require("../analytics/forecastEngine");
 const {
     predictMaintenanceCost
-} = require("../analytics/maintenanceForecast"); // ✅ STEP 3
+} = require("../analytics/maintenanceForecast");
+const { predictChurn } = require("../analytics/churnModel"); // ✅ STEP 4
 
 const router = express.Router();
 
@@ -105,6 +106,32 @@ router.get(
                 success: false,
                 message:
                     "Failed to generate maintenance cost forecast"
+            });
+        }
+    }
+);
+
+/* =====================================================
+   ADMIN → RESIDENT CHURN PREDICTION  [STEP 4]
+===================================================== */
+
+router.get(
+    "/predict/churn",
+    auth,
+    isAdmin,
+    async (req, res) => {
+        try {
+            const churnData = await predictChurn();
+
+            res.json({
+                success: true,
+                data: churnData
+            });
+        } catch (err) {
+            console.error("❌ CHURN PREDICTION ERROR:", err);
+            res.status(500).json({
+                success: false,
+                message: "Failed to generate churn prediction"
             });
         }
     }

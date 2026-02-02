@@ -9,14 +9,19 @@ import Loader from "../components/Loader";
 import RequestsChart from "../components/RequestsChart";
 import KpiCards from "../components/KpiCards";
 import OccupancyForecast from "../components/OccupancyForecast";
-import MaintenanceCostForecast from "../components/MaintenanceCostForecast"; // ✅ STEP 3
+import MaintenanceCostForecast from "../components/MaintenanceCostForecast";
+import ChurnRiskTable from "../components/ChurnRiskTable"; // ✅ STEP 4
 
 import useAdminStats from "../hooks/useAdminStats";
 import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
 /**
- * ADMIN DASHBOARD (ADVANCED + AI READY)
+ * ADMIN DASHBOARD (FULL AI ANALYTICS)
+ * STEP 1 → KPIs
+ * STEP 2 → Occupancy Forecast
+ * STEP 3 → Maintenance Cost Forecast
+ * STEP 4 → Resident Churn Prediction
  */
 
 export default function AdminDashboard() {
@@ -118,11 +123,11 @@ export default function AdminDashboard() {
                         Admin Dashboard
                     </h1>
                     <p className="text-gray-400 mt-1">
-                        Overview of operations, analytics, and performance
+                        AI-powered analytics & operational insights
                     </p>
                 </div>
 
-                {/* 🔥 REAL-TIME KPIs */}
+                {/* 🔥 STEP 1 — REAL-TIME KPIs */}
                 <div>
                     <h2 className="text-xl font-semibold mb-4">
                         Real-Time Analytics
@@ -130,11 +135,14 @@ export default function AdminDashboard() {
                     <KpiCards />
                 </div>
 
-                {/* 📈 OCCUPANCY FORECAST (STEP 2) */}
+                {/* 📈 STEP 2 — OCCUPANCY FORECAST */}
                 <OccupancyForecast />
 
-                {/* 🛠️ MAINTENANCE COST FORECAST (STEP 3) */}
+                {/* 🛠️ STEP 3 — MAINTENANCE COST FORECAST */}
                 <MaintenanceCostForecast />
+
+                {/* 🚦 STEP 4 — RESIDENT CHURN PREDICTION */}
+                <ChurnRiskTable />
 
                 {/* CORE METRICS */}
                 {loading || revenueLoading ? (
