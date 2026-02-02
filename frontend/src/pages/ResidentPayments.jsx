@@ -22,13 +22,7 @@ export default function ResidentPayments() {
             setLoading(true);
 
             const res = await api.get("/payments/my", {
-                headers: {
-                    "Cache-Control": "no-cache",
-                    Pragma: "no-cache"
-                },
-                params: {
-                    _t: Date.now() // 🔥 force fresh request
-                }
+               
             });
 
             const cleaned = (Array.isArray(res.data) ? res.data : []).map(
