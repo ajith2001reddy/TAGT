@@ -8,7 +8,7 @@ import api from "../api/axios";
 ===================================================== */
 
 /* =======================
-   REAL-TIME KPIs
+   REAL-TIME KPIs (STEP 1)
 ======================= */
 
 /**
@@ -35,7 +35,6 @@ export const getKPIs = async ({ fromDate, toDate } = {}) => {
 
 /**
  * Predict occupancy for next N months
- * @param {number} months (default: 6)
  */
 export const predictOccupancy = async (months = 6) => {
     const res = await api.get("/analytics/predict/occupancy", {
@@ -46,14 +45,23 @@ export const predictOccupancy = async (months = 6) => {
 };
 
 /* =======================
-   FUTURE AI MODULES
+   MAINTENANCE COST FORECAST (STEP 3)
 ======================= */
 
-// Predict maintenance cost trends (STEP 3)
-export const predictMaintenanceCost = async () => {
-    const res = await api.get("/analytics/predict/maintenance");
+/**
+ * Predict maintenance costs for next N months
+ */
+export const predictMaintenanceCost = async (months = 6) => {
+    const res = await api.get("/analytics/predict/maintenance", {
+        params: { months }
+    });
+
     return res.data?.data;
 };
+
+/* =======================
+   FUTURE AI MODULES
+======================= */
 
 // Predict resident churn (STEP 4)
 export const predictChurn = async () => {

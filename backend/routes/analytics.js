@@ -4,19 +4,16 @@ const isAdmin = require("../middleware/isAdmin");
 
 const { getKPIs } = require("../analytics/kpiCalculator");
 const { predictOccupancy } = require("../analytics/forecastEngine");
+const {
+    predictMaintenanceCost
+} = require("../analytics/maintenanceForecast"); // ✅ STEP 3
 
 const router = express.Router();
 
 /* =====================================================
-   ADMIN → ANALYTICS DASHBOARD (KPIs)
+   ADMIN → ANALYTICS DASHBOARD (KPIs)  [STEP 1]
 ===================================================== */
 
-/**
- * GET /api/analytics/kpis
- * Optional query params:
- *  - fromDate (ISO string)
- *  - toDate   (ISO string)
- */
 router.get("/kpis", auth, isAdmin, async (req, res) => {
     try {
         const { fromDate, toDate } = req.query;
@@ -52,39 +49,62 @@ router.get("/kpis", auth, isAdmin, async (req, res) => {
 });
 
 /* =====================================================
-   ADMIN → OCCUPANCY FORECAST (STEP 2)
+   ADMIN → OCCUPANCY FORECAST  [STEP 2]
 ===================================================== */
 
-/**
- * GET /api/analytics/predict/occupancy
- * Query params:
- *  - months (optional, default = 6)
- *
- * Example:
- * /api/analytics/predict/occupancy?months=3
- */
+router.get("/predict/occupancy", auth, isAdmin, async (req, res) => {
+    try {
+        const months = Math.min(
+            Number(req.query.months) || 6,
+            12
+        );
+
+        const forecast = await predictOccupancy(months);
+
+        res.json({
+            success: true,
+            data: forecast
+        });
+    } catch (err) {
+        console.error("❌ OCCUPANCY FORECAST ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate occupancy forecast"
+        });
+    }
+});
+
+/* =====================================================
+   ADMIN → MAINTENANCE COST FORECAST  [STEP 3]
+===================================================== */
+
 router.get(
-    "/predict/occupancy",
+    "/predict/maintenance",
     auth,
     isAdmin,
     async (req, res) => {
         try {
             const months = Math.min(
                 Number(req.query.months) || 6,
-                12 // hard limit for safety
+                12
             );
 
-            const forecast = await predictOccupancy(months);
+            const forecast =
+                await predictMaintenanceCost(months);
 
             res.json({
                 success: true,
                 data: forecast
             });
         } catch (err) {
-            console.error("❌ OCCUPANCY FORECAST ERROR:", err);
+            console.error(
+                "❌ MAINTENANCE FORECAST ERROR:",
+                err
+            );
             res.status(500).json({
                 success: false,
-                message: "Failed to generate occupancy forecast"
+                message:
+                    "Failed to generate maintenance cost forecast"
             });
         }
     }

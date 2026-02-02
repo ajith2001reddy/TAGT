@@ -8,7 +8,8 @@ import StatCard from "../components/StatCard";
 import Loader from "../components/Loader";
 import RequestsChart from "../components/RequestsChart";
 import KpiCards from "../components/KpiCards";
-import OccupancyForecast from "../components/OccupancyForecast"; // ✅ ADD THIS
+import OccupancyForecast from "../components/OccupancyForecast";
+import MaintenanceCostForecast from "../components/MaintenanceCostForecast"; // ✅ STEP 3
 
 import useAdminStats from "../hooks/useAdminStats";
 import { getRequests } from "../services/adminService";
@@ -132,6 +133,9 @@ export default function AdminDashboard() {
                 {/* 📈 OCCUPANCY FORECAST (STEP 2) */}
                 <OccupancyForecast />
 
+                {/* 🛠️ MAINTENANCE COST FORECAST (STEP 3) */}
+                <MaintenanceCostForecast />
+
                 {/* CORE METRICS */}
                 {loading || revenueLoading ? (
                     <Loader />
@@ -143,21 +147,18 @@ export default function AdminDashboard() {
                             subtitle="Currently active"
                             accent="blue"
                         />
-
                         <StatCard
                             title="Pending Requests"
                             value={stats.pendingRequests}
                             subtitle="Needs attention"
                             accent="yellow"
                         />
-
                         <StatCard
                             title="Total Revenue"
                             value={`$${totalRevenue}`}
                             subtitle="Collected"
                             accent="green"
                         />
-
                         <StatCard
                             title="Outstanding Balance"
                             value={`$${outstandingBalance}`}
@@ -183,7 +184,6 @@ export default function AdminDashboard() {
                         <h2 className="text-lg font-semibold">
                             Active Maintenance Requests
                         </h2>
-
                         <Link
                             to="/admin/requests"
                             className="text-sm text-blue-400 hover:underline"
