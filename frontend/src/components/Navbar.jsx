@@ -11,6 +11,7 @@ export default function Navbar({ onMenuClick }) {
             className="bg-white shadow px-6 py-4 flex justify-between items-center"
         >
             <div className="flex items-center gap-4">
+                {/* Mobile Hamburger */}
                 <button
                     onClick={onMenuClick}
                     className="md:hidden p-2 rounded hover:bg-gray-100"
