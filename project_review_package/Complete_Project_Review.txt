@@ -33,7 +33,7 @@ TAGT
 │   │   ├── auth.js
 │   │   ├── payments.js
 │   │   ├── resident.js
-│   │   └── roomss.js
+│   │   └── rooms.js
 │   ├── utils
 │   │   ├── emailService.js
 │   │   └── generateToken.js
@@ -87,7 +87,7 @@ TAGT
 │   │   │   ├── RequestHistory.jsx
 │   │   │   ├── ResidentDashboard.jsx
 │   │   │   ├── ResidentPayments.jsx
-│   │   │   └── roomss.jsx
+│   │   │   └── rooms.jsx
 │   │   ├── routes
 │   │   │   ├── AdminRoute.jsx
 │   │   │   ├── ProtectedRoute.jsx
@@ -159,7 +159,7 @@ Total Size: 915.75 KB
 24. backend\routes\auth.js
 25. backend\routes\payments.js
 26. backend\routes\resident.js
-27. backend\routes\roomss.js
+27. backend\routes\rooms.js
 28. backend\utils\emailService.js
 29. backend\utils\generateToken.js
 30. frontend\package.json
@@ -203,7 +203,7 @@ Total Size: 915.75 KB
 68. frontend\src\pages\RequestHistory.jsx
 69. frontend\src\pages\ResidentDashboard.jsx
 70. frontend\src\pages\ResidentPayments.jsx
-71. frontend\src\pages\roomss.jsx
+71. frontend\src\pages\rooms.jsx
 72. frontend\src\routes\AdminRoute.jsx
 73. frontend\src\routes\ProtectedRoute.jsx
 74. frontend\src\routes\ResidentRoute.jsx
@@ -384,9 +384,9 @@ const rooms = require("../models/rooms");
  * (monthly resolution)
  */
 async function getHistoricalOccupancy(months = 6) {
-    const roomss = await rooms.find({}, "totalBeds occupiedBeds updatedAt");
+    const rooms = await rooms.find({}, "totalBeds occupiedBeds updatedAt");
 
-    if (roomss.length === 0) return [];
+    if (rooms.length === 0) return [];
 
     const now = new Date();
     const history = [];
@@ -398,12 +398,12 @@ async function getHistoricalOccupancy(months = 6) {
             1
         );
 
-        const totalBeds = roomss.reduce(
+        const totalBeds = rooms.reduce(
             (sum, r) => sum + (r.totalBeds || 0),
             0
         );
 
-        const occupiedBeds = roomss.reduce(
+        const occupiedBeds = rooms.reduce(
             (sum, r) => sum + (r.occupiedBeds || 0),
             0
         );
@@ -518,9 +518,9 @@ async function getKPIs({ fromDate, toDate } = {}) {
     /* =======================
        OCCUPANCY KPI
     ======================= */
-    const roomss = await rooms.find({}, "totalBeds occupiedBeds");
+    const rooms = await rooms.find({}, "totalBeds occupiedBeds");
 
-    const totals = roomss.reduce(
+    const totals = rooms.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;
@@ -776,9 +776,9 @@ async function optimizeRevenue() {
     /* =======================
        OCCUPANCY ANALYSIS
     ======================= */
-    const roomss = await rooms.find({}, "totalBeds occupiedBeds");
+    const rooms = await rooms.find({}, "totalBeds occupiedBeds");
 
-    const totals = roomss.reduce(
+    const totals = rooms.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;
@@ -1068,7 +1068,7 @@ mongoose
 /* ================= ROUTES ================= */
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/adminRoutes");
-const roomsRoutes = require("./routes/roomss");
+const roomsRoutes = require("./routes/rooms");
 const paymentRoutes = require("./routes/payments");
 const analyticsRoutes = require("./routes/analytics");
 const residentRoutes = require("./routes/resident");
@@ -1086,7 +1086,7 @@ app.get("/api/health", (req, res) => {
 /* ================= API ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/roomss", roomsRoutes);
+app.use("/api/rooms", roomsRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/resident", residentRoutes);
 app.use("/api/analytics", analyticsRoutes); // ✅ NEW
@@ -3603,7 +3603,7 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 27 of 79: backend\routes\roomss.js
+// FILE 27 of 79: backend\routes\rooms.js
 // SIZE: 3960 bytes
 // MODIFIED: 2026-02-01 20:33:16
 // ##########################################
@@ -3652,15 +3652,15 @@ router.post("/", auth, isAdmin, async (req, res) => {
 });
 
 /* =========================================================
-   GET ALL roomsS (ADMIN)
+   GET ALL rooms (ADMIN)
 ========================================================= */
 router.get("/", auth, isAdmin, async (req, res) => {
     try {
-        const roomss = await rooms.find().sort({ roomsNumber: 1 });
-        res.json(roomss);
+        const rooms = await rooms.find().sort({ roomsNumber: 1 });
+        res.json(rooms);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Failed to fetch roomss" });
+        res.status(500).json({ message: "Failed to fetch rooms" });
     }
 });
 
@@ -22251,7 +22251,7 @@ import AdminRequests from "./pages/AdminRequests";
 import RequestHistory from "./pages/RequestHistory";
 import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
-import roomss from "./pages/roomss";
+import rooms from "./pages/rooms";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
@@ -22303,10 +22303,10 @@ function AnimatedRoutes() {
                 />
 
                 <Route
-                    path="/admin/roomss"
+                    path="/admin/rooms"
                     element={
                         <ProtectedRoute role="admin">
-                            <roomss />
+                            <rooms />
                         </ProtectedRoute>
                     }
                 />
@@ -23904,7 +23904,7 @@ export default function DashboardLayout({ children }) {
                                     { to: "/admin/requests", label: "Requests" },
                                     { to: "/admin/history", label: "History" },
                                     { to: "/admin/residents", label: "Residents" },
-                                    { to: "/admin/roomss", label: "roomss" },
+                                    { to: "/admin/rooms", label: "rooms" },
                                     { to: "/payments", label: "Payments" }
                                 ].map((item) => (
                                     <NavLink
@@ -24832,7 +24832,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 export default function Adminroomss() {
-    const [roomss, setroomss] = useState([]);
+    const [rooms, setroomss] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [form, setForm] = useState({
@@ -24844,14 +24844,14 @@ export default function Adminroomss() {
     const [selectedrooms, setSelectedrooms] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH roomsS ================= */
+    /* ================= FETCH rooms ================= */
     const fetchroomss = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await api.get("/roomss");
+            const res = await api.get("/rooms");
             setroomss(Array.isArray(res.data) ? res.data : []);
         } catch {
-            toast.error("Failed to load roomss");
+            toast.error("Failed to load rooms");
             setroomss([]);
         } finally {
             setLoading(false);
@@ -24875,7 +24875,7 @@ export default function Adminroomss() {
         }
 
         try {
-            await api.post("/roomss", {
+            await api.post("/rooms", {
                 roomsNumber: form.roomsNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
@@ -24907,7 +24907,7 @@ export default function Adminroomss() {
 
         try {
             await api.put(
-                `/roomss/${selectedrooms._id}/occupancy`,
+                `/rooms/${selectedrooms._id}/occupancy`,
                 { occupiedBeds: value }
             );
 
@@ -24934,7 +24934,7 @@ export default function Adminroomss() {
         if (!confirm) return;
 
         try {
-            await api.delete(`/roomss/${rooms._id}`);
+            await api.delete(`/rooms/${rooms._id}`);
             toast.success("rooms deleted");
             fetchroomss();
         } catch {
@@ -24947,10 +24947,10 @@ export default function Adminroomss() {
             <div className="space-y-10">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                        roomss & Bed Management
+                        rooms & Bed Management
                     </h1>
                     <p className="text-gray-500 mt-1">
-                        Manage roomss, capacity, and occupancy
+                        Manage rooms, capacity, and occupancy
                     </p>
                 </div>
 
@@ -24998,17 +24998,17 @@ export default function Adminroomss() {
                     </div>
                 </div>
 
-                {/* roomsS TABLE */}
+                {/* rooms TABLE */}
                 <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">roomss</h2>
+                    <h2 className="text-lg font-semibold mb-4">rooms</h2>
 
                     {loading ? (
                         <p className="text-gray-500 text-center">
-                            Loading roomss…
+                            Loading rooms…
                         </p>
-                    ) : roomss.length === 0 ? (
+                    ) : rooms.length === 0 ? (
                         <p className="text-gray-500 text-center">
-                            No roomss added yet.
+                            No rooms added yet.
                         </p>
                     ) : (
                         <div className="overflow-x-auto">
@@ -25031,7 +25031,7 @@ export default function Adminroomss() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {roomss.map((r) => {
+                                    {rooms.map((r) => {
                                         const availableBeds =
                                             r.totalBeds - r.occupiedBeds;
 
@@ -25985,7 +25985,7 @@ export default function ResidentPayments() {
 
 
 // ##########################################
-// FILE 71 of 79: frontend\src\pages\roomss.jsx
+// FILE 71 of 79: frontend\src\pages\rooms.jsx
 // SIZE: 9993 bytes
 // MODIFIED: 2026-01-30 13:20:54
 // ##########################################
@@ -25997,12 +25997,12 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * roomss (DARK THEME FIXED)
+ * rooms (DARK THEME FIXED)
  * Phase 4 – rooms & Bed Management (Admin)
  */
 
-export default function roomss() {
-    const [roomss, setroomss] = useState([]);
+export default function rooms() {
+    const [rooms, setroomss] = useState([]);
     const [loading, setLoading] = useState(true);
 
     /* ===== ADD rooms FORM ===== */
@@ -26016,15 +26016,15 @@ export default function roomss() {
     const [selectedrooms, setSelectedrooms] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH roomsS ================= */
+    /* ================= FETCH rooms ================= */
     const fetchroomss = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/roomss");
+            const res = await api.get("/rooms");
             setroomss(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error(err);
-            toast.error("Failed to load roomss");
+            toast.error("Failed to load rooms");
             setroomss([]);
         } finally {
             setLoading(false);
@@ -26043,7 +26043,7 @@ export default function roomss() {
         }
 
         try {
-            await api.post("/roomss", {
+            await api.post("/rooms", {
                 roomsNumber: form.roomsNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
@@ -26067,7 +26067,7 @@ export default function roomss() {
 
         try {
             await api.put(
-                `/roomss/${selectedrooms._id}/occupancy`,
+                `/rooms/${selectedrooms._id}/occupancy`,
                 { occupiedBeds: Number(occupiedBeds) }
             );
 
@@ -26091,7 +26091,7 @@ export default function roomss() {
             return;
 
         try {
-            await api.delete(`/roomss/${rooms._id}`);
+            await api.delete(`/rooms/${rooms._id}`);
             toast.success("rooms deleted");
             fetchroomss();
         } catch (err) {
@@ -26103,7 +26103,7 @@ export default function roomss() {
     return (
         <DashboardLayout>
             <h2 className="text-2xl font-bold mb-6">
-                roomss & Bed Management
+                rooms & Bed Management
             </h2>
 
             {/* ADD rooms */}
@@ -26153,14 +26153,14 @@ export default function roomss() {
                 </button>
             </div>
 
-            {/* roomsS TABLE */}
+            {/* rooms TABLE */}
             {loading ? (
                 <p className="text-center text-gray-400">
                     Loading…
                 </p>
-            ) : roomss.length === 0 ? (
+            ) : rooms.length === 0 ? (
                 <p className="text-center text-gray-400">
-                    No roomss added yet.
+                    No rooms added yet.
                 </p>
             ) : (
                 <div className="overflow-x-auto">
@@ -26176,7 +26176,7 @@ export default function roomss() {
                         </thead>
 
                         <tbody>
-                            {roomss.map((r) => (
+                            {rooms.map((r) => (
                                 <tr
                                     key={r._id}
                                     className="border-t border-white/10 text-center hover:bg-white/5"

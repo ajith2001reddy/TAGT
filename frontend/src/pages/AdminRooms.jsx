@@ -4,7 +4,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 export default function Adminroomss() {
-    const [roomss, setroomss] = useState([]);
+    const [rooms, setroomss] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [form, setForm] = useState({
@@ -16,14 +16,14 @@ export default function Adminroomss() {
     const [selectedrooms, setSelectedrooms] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH roomsS ================= */
+    /* ================= FETCH rooms ================= */
     const fetchroomss = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await api.get("/roomss");
+            const res = await api.get("/rooms");
             setroomss(Array.isArray(res.data) ? res.data : []);
         } catch {
-            toast.error("Failed to load roomss");
+            toast.error("Failed to load rooms");
             setroomss([]);
         } finally {
             setLoading(false);
@@ -47,7 +47,7 @@ export default function Adminroomss() {
         }
 
         try {
-            await api.post("/roomss", {
+            await api.post("/rooms", {
                 roomsNumber: form.roomsNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
@@ -79,7 +79,7 @@ export default function Adminroomss() {
 
         try {
             await api.put(
-                `/roomss/${selectedrooms._id}/occupancy`,
+                `/rooms/${selectedrooms._id}/occupancy`,
                 { occupiedBeds: value }
             );
 
@@ -106,7 +106,7 @@ export default function Adminroomss() {
         if (!confirm) return;
 
         try {
-            await api.delete(`/roomss/${rooms._id}`);
+            await api.delete(`/rooms/${rooms._id}`);
             toast.success("rooms deleted");
             fetchroomss();
         } catch {
@@ -119,10 +119,10 @@ export default function Adminroomss() {
             <div className="space-y-10">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                        roomss & Bed Management
+                        rooms & Bed Management
                     </h1>
                     <p className="text-gray-500 mt-1">
-                        Manage roomss, capacity, and occupancy
+                        Manage rooms, capacity, and occupancy
                     </p>
                 </div>
 
@@ -170,17 +170,17 @@ export default function Adminroomss() {
                     </div>
                 </div>
 
-                {/* roomsS TABLE */}
+                {/* rooms TABLE */}
                 <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">roomss</h2>
+                    <h2 className="text-lg font-semibold mb-4">rooms</h2>
 
                     {loading ? (
                         <p className="text-gray-500 text-center">
-                            Loading roomss…
+                            Loading rooms…
                         </p>
-                    ) : roomss.length === 0 ? (
+                    ) : rooms.length === 0 ? (
                         <p className="text-gray-500 text-center">
-                            No roomss added yet.
+                            No rooms added yet.
                         </p>
                     ) : (
                         <div className="overflow-x-auto">
@@ -203,7 +203,7 @@ export default function Adminroomss() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {roomss.map((r) => {
+                                    {rooms.map((r) => {
                                         const availableBeds =
                                             r.totalBeds - r.occupiedBeds;
 

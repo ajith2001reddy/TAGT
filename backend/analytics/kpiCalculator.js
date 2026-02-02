@@ -15,9 +15,9 @@ async function getKPIs({ fromDate, toDate } = {}) {
     /* =======================
        OCCUPANCY KPI
     ======================= */
-    const roomss = await rooms.find({}, "totalBeds occupiedBeds");
+    const rooms = await rooms.find({}, "totalBeds occupiedBeds");
 
-    const totals = roomss.reduce(
+    const totals = rooms.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;

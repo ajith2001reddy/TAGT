@@ -45,4 +45,4 @@ roomsSchema.virtual("availableBeds").get(function () {
     return this.totalBeds - this.occupiedBeds;
 });
 
-module.exports = mongoose.model("roomss", roomsSchema);
+module.exports = mongoose.model("rooms", roomsSchema);

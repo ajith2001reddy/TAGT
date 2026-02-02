@@ -1,21 +1,21 @@
 const rooms = require("../models/rooms");
 
 /* ============================
-   GET ALL roomsS
+   GET ALL rooms
    ============================ */
 exports.getAllroomss = async (req, res) => {
     try {
-        const roomss = await rooms.find().sort({ createdAt: -1 });
+        const rooms = await rooms.find().sort({ createdAt: -1 });
 
         res.json({
             success: true,
-            roomss
+            rooms
         });
     } catch (err) {
-        console.error("GET roomsS ERROR:", err);
+        console.error("GET rooms ERROR:", err);
         res.status(500).json({
             success: false,
-            message: "Failed to fetch roomss"
+            message: "Failed to fetch rooms"
         });
     }
 };

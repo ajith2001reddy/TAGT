@@ -10,9 +10,9 @@ async function optimizeRevenue() {
     /* =======================
        OCCUPANCY ANALYSIS
     ======================= */
-    const roomss = await rooms.find({}, "totalBeds occupiedBeds rent");
+    const rooms = await rooms.find({}, "totalBeds occupiedBeds rent");
 
-    const totals = roomss.reduce(
+    const totals = rooms.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;

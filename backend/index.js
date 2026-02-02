@@ -69,7 +69,7 @@ app.get("/api/health", (req, res) => {
 /* ================= API ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/roomss", roomsRoutes);
+app.use("/api/rooms", roomsRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/resident", residentRoutes);
 app.use("/api/analytics", analyticsRoutes);

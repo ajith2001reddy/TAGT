@@ -5,9 +5,9 @@ const rooms = require("../models/rooms");
 ===================================================== */
 
 async function getHistoricalOccupancy(months = 6) {
-    const roomss = await rooms.find({}, "totalBeds occupiedBeds");
+    const rooms = await rooms.find({}, "totalBeds occupiedBeds");
 
-    if (roomss.length === 0) return [];
+    if (rooms.length === 0) return [];
 
     const now = new Date();
     const history = [];
@@ -19,12 +19,12 @@ async function getHistoricalOccupancy(months = 6) {
             1
         );
 
-        const totalBeds = roomss.reduce(
+        const totalBeds = rooms.reduce(
             (sum, r) => sum + (r.totalBeds || 0),
             0
         );
 
-        const occupiedBeds = roomss.reduce(
+        const occupiedBeds = rooms.reduce(
             (sum, r) => sum + (r.occupiedBeds || 0),
             0
         );
