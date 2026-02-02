@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
     LineChart,
     Line,
@@ -19,15 +19,10 @@ import { predictOccupancy } from "../services/analyticsService";
 
 export default function OccupancyForecast() {
     const [months, setMonths] = useState(6);
-    const [data, setData] = useState(null);
+    const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadForecast();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [months]);
-
-    const loadForecast = async () => {
+    const loadForecast = useCallback(async () => {
         try {
             setLoading(true);
             const res = await predictOccupancy(months);
@@ -53,7 +48,11 @@ export default function OccupancyForecast() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [months]);
+
+    useEffect(() => {
+        loadForecast();
+    }, [loadForecast]);
 
     return (
         <motion.div
@@ -92,7 +91,7 @@ export default function OccupancyForecast() {
             {/* CHART */}
             {loading ? (
                 <div className="h-64 animate-pulse bg-white/5 rounded-xl" />
-            ) : !data || data.length === 0 ? (
+            ) : data.length === 0 ? (
                 <p className="text-gray-400 text-center py-10">
                     Not enough data to generate forecast
                 </p>
@@ -115,7 +114,6 @@ export default function OccupancyForecast() {
                                 }}
                                 formatter={(value) => [`${value}%`, "Occupancy"]}
                             />
-
                             <Line
                                 type="monotone"
                                 dataKey="occupancy"
