@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+﻿import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const base =
@@ -11,19 +11,25 @@ export default function Sidebar({ open, onClose }) {
 
     return (
         <>
-            {/* Overlay */}
+            {/* Overlay (mobile only) */}
             {open && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40"
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
                     onClick={onClose}
                 />
             )}
 
             <motion.aside
                 initial={false}
-                animate={{ x: open ? 0 : -260 }}
-                transition={{ duration: 0.25 }}
-                className="fixed top-0 left-0 z-50 w-64 min-h-screen bg-gray-900 text-white"
+                animate={{ x: open ? 0 : 0 }}
+                className="
+                    fixed md:static
+                    top-0 left-0 z-50
+                    w-64 min-h-screen
+                    bg-gray-900 text-white
+                    -translate-x-full md:translate-x-0
+                    transition-transform
+                "
             >
                 <div className="p-4 text-xl font-bold border-b border-gray-700">
                     TAGT PMS
@@ -31,15 +37,11 @@ export default function Sidebar({ open, onClose }) {
 
                 <nav className="p-4 space-y-2">
                     <NavLink
-                        to={
-                            role === "admin"
-                                ? "/admin/dashboard"
-                                : "/resident/dashboard"
-                        }
-                        onClick={onClose}
+                        to={role === "admin" ? "/admin/dashboard" : "/resident/dashboard"}
                         className={({ isActive }) =>
                             `${base} ${isActive ? active : ""}`
                         }
+                        onClick={onClose}
                     >
                         Dashboard
                     </NavLink>
@@ -48,19 +50,20 @@ export default function Sidebar({ open, onClose }) {
                         <>
                             <NavLink
                                 to="/admin/requests"
-                                onClick={onClose}
                                 className={({ isActive }) =>
                                     `${base} ${isActive ? active : ""}`
                                 }
+                                onClick={onClose}
                             >
                                 Requests
                             </NavLink>
+
                             <NavLink
                                 to="/admin/residents"
-                                onClick={onClose}
                                 className={({ isActive }) =>
                                     `${base} ${isActive ? active : ""}`
                                 }
+                                onClick={onClose}
                             >
                                 Residents
                             </NavLink>
@@ -70,10 +73,10 @@ export default function Sidebar({ open, onClose }) {
                     {role === "resident" && (
                         <NavLink
                             to="/resident/requests"
-                            onClick={onClose}
                             className={({ isActive }) =>
                                 `${base} ${isActive ? active : ""}`
                             }
+                            onClick={onClose}
                         >
                             My Requests
                         </NavLink>

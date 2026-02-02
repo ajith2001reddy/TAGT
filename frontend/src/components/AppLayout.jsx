@@ -7,14 +7,11 @@ export default function AppLayout({ children }) {
 
     return (
         <div className="flex min-h-screen bg-gray-950">
-            {/* Sidebar (overlay only) */}
-            <Sidebar
-                open={open}
-                onClose={() => setOpen(false)}
-            />
+            {/* Sidebar */}
+            <Sidebar open={open} onClose={() => setOpen(false)} />
 
-            {/* Main content */}
-            <div className="flex flex-col flex-1">
+            {/* Main Content */}
+            <div className="flex flex-col flex-1 md:ml-64">
                 <Navbar onMenuClick={() => setOpen(true)} />
 
                 <main className="flex-1 p-6">
