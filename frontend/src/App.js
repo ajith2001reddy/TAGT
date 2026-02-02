@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+﻿import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 import Login from "./pages/Login";
@@ -11,8 +11,7 @@ import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
 import Rooms from "./pages/Rooms";
 
-import AdminRoute from "./routes/AdminRoute";
-import ResidentRoute from "./routes/ResidentRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
 
 function AnimatedRoutes() {
@@ -22,85 +21,84 @@ function AnimatedRoutes() {
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
                 {/* PUBLIC */}
-                <Route path="/" element={<Login />} />
                 <Route path="/login" element={<Login />} />
 
                 {/* ADMIN */}
                 <Route
-                    path="/admin"
+                    path="/admin/dashboard"
                     element={
-                        <AdminRoute>
+                        <ProtectedRoute role="admin">
                             <AdminDashboard />
-                        </AdminRoute>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/admin/requests"
                     element={
-                        <AdminRoute>
+                        <ProtectedRoute role="admin">
                             <AdminRequests />
-                        </AdminRoute>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/admin/history"
                     element={
-                        <AdminRoute>
+                        <ProtectedRoute role="admin">
                             <RequestHistory />
-                        </AdminRoute>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/admin/residents"
                     element={
-                        <AdminRoute>
+                        <ProtectedRoute role="admin">
                             <AdminResidents />
-                        </AdminRoute>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/admin/rooms"
                     element={
-                        <AdminRoute>
+                        <ProtectedRoute role="admin">
                             <Rooms />
-                        </AdminRoute>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/payments"
                     element={
-                        <AdminRoute>
+                        <ProtectedRoute role="admin">
                             <Payments />
-                        </AdminRoute>
+                        </ProtectedRoute>
                     }
                 />
 
                 {/* RESIDENT */}
                 <Route
-                    path="/resident"
+                    path="/resident/dashboard"
                     element={
-                        <ResidentRoute>
+                        <ProtectedRoute role="resident">
                             <ResidentDashboard />
-                        </ResidentRoute>
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/resident/payments"
                     element={
-                        <ResidentRoute>
+                        <ProtectedRoute role="resident">
                             <ResidentPayments />
-                        </ResidentRoute>
+                        </ProtectedRoute>
                     }
                 />
 
-                {/* FALLBACK */}
-                <Route path="*" element={<Login />} />
+                {/* DEFAULT */}
+                <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
         </AnimatePresence>
     );
