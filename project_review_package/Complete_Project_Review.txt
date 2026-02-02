@@ -1,5 +1,5 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-02 16:08:24
+Generated: 2026-02-02 16:52:29
 Project Path: E:\TAGT
 ```
 TAGT
@@ -107,27 +107,6 @@ TAGT
 │   ├── README.md
 │   └── tailwind.config.js
 ├── project_review_package
-│   ├── Part_01_TREE_AND_SUMMARY.txt
-│   ├── Part_02_CODE_FILES.txt
-│   ├── Part_03_CODE_FILES.txt
-│   ├── Part_04_CODE_FILES.txt
-│   ├── Part_05_CODE_FILES.txt
-│   ├── Part_06_CODE_FILES.txt
-│   ├── Part_07_CODE_FILES.txt
-│   ├── Part_08_CODE_FILES.txt
-│   ├── Part_09_CODE_FILES.txt
-│   ├── Part_10_CODE_FILES.txt
-│   ├── Part_11_CODE_FILES.txt
-│   ├── Part_12_CODE_FILES.txt
-│   ├── Part_13_CODE_FILES.txt
-│   ├── Part_14_CODE_FILES.txt
-│   ├── Part_15_CODE_FILES.txt
-│   ├── Part_16_CODE_FILES.txt
-│   ├── Part_17_CODE_FILES.txt
-│   ├── Part_18_CODE_FILES.txt
-│   ├── Part_19_CODE_FILES.txt
-│   ├── Part_20_CODE_FILES.txt
-│   └── Part_21_CODE_FILES.txt
 └── combine.ps1
 
 ```
@@ -137,7 +116,7 @@ TAGT
 ## File Statistics
 
 Total Files: 79
-Total Size: 915.28 KB
+Total Size: 915.75 KB
 
 ## File Type Distribution
 
@@ -940,57 +919,88 @@ module.exports = connectDB;
 
 // ##########################################
 // FILE 7 of 79: backend\controllers\adminController.js
-// SIZE: 1397 bytes
-// MODIFIED: 2026-02-02 14:56:05
+// SIZE: 2339 bytes
+// MODIFIED: 2026-02-02 16:35:00
 // ##########################################
 
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 
-/* GET ALL RESIDENTS */
+/* ============================
+   GET ALL RESIDENTS (ADMIN)
+   ============================ */
 exports.getAllResidents = async (req, res) => {
     try {
-        const residents = await User.find({ role: "resident" })
+        // ✅ Case-insensitive role match (fixes empty list issue)
+        const residents = await User.find({
+            role: { $regex: /^resident$/i }
+        })
             .select("-password")
             .sort({ createdAt: -1 });
 
         res.json(residents);
     } catch (err) {
-        res.status(500).json({ message: "Failed to fetch residents" });
+        console.error("GET RESIDENTS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch residents"
+        });
     }
 };
 
-/* ADD RESIDENT */
+/* ============================
+   ADD NEW RESIDENT (ADMIN)
+   ============================ */
 exports.addResident = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, room, rent } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ message: "All fields required" });
+            return res.status(400).json({
+                success: false,
+                message: "Name, email, and password are required"
+            });
         }
 
-        const exists = await User.findOne({ email });
+        const exists = await User.findOne({
+            email: email.toLowerCase()
+        });
+
         if (exists) {
-            return res.status(400).json({ message: "Email already exists" });
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists"
+            });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const resident = await User.create({
             name,
-            email,
+            email: email.toLowerCase(),
             password: hashedPassword,
-            role: "resident"
+            role: "resident", // ✅ always normalized
+            room: room || null,
+            rent: rent || null
         });
 
         res.status(201).json({
-            _id: resident._id,
-            name: resident.name,
-            email: resident.email,
-            role: resident.role
+            success: true,
+            resident: {
+                _id: resident._id,
+                name: resident.name,
+                email: resident.email,
+                role: resident.role,
+                room: resident.room,
+                rent: resident.rent
+            }
         });
     } catch (err) {
-        res.status(500).json({ message: "Failed to add resident" });
+        console.error("ADD RESIDENT ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to add resident"
+        });
     }
 };
 
@@ -24514,8 +24524,8 @@ export default function AdminRequests() {
 
 // ##########################################
 // FILE 64 of 79: frontend\src\pages\AdminResidents.jsx
-// SIZE: 12181 bytes
-// MODIFIED: 2026-02-01 19:47:57
+// SIZE: 11447 bytes
+// MODIFIED: 2026-02-02 16:50:53
 // ##########################################
 
 import { useEffect, useState, useCallback } from "react";
@@ -24598,16 +24608,14 @@ export default function AdminResidents() {
             fetchResidents();
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data || "Failed to add resident");
+            toast.error("Failed to add resident");
         }
     };
 
-    /* ================= SEND BILL (FINAL & HARDENED) ================= */
+    /* ================= SEND BILL ================= */
     const sendBill = async () => {
-        const userId = billingTarget?.userId?._id;
-
-        if (!userId || typeof userId !== "string") {
-            toast.error("Invalid resident selected. Please refresh the page.");
+        if (!billingTarget?._id) {
+            toast.error("Invalid resident selected");
             return;
         }
 
@@ -24619,21 +24627,19 @@ export default function AdminResidents() {
 
         try {
             await api.post("/payments", {
-                residentId: userId,                 // ✅ ALWAYS User._id
+                residentId: billingTarget._id, // ✅ User._id
                 amount,
-                description: billDescription?.trim() || "Direct charge",
+                description: billDescription || "Direct charge",
                 type: "manual"
             });
 
             toast.success("Bill sent successfully");
-
-            // reset modal state
             setBillingTarget(null);
             setBillAmount("");
             setBillDescription("");
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data || "Failed to send bill");
+            toast.error("Failed to send bill");
         }
     };
 
@@ -24652,7 +24658,6 @@ export default function AdminResidents() {
     return (
         <DashboardLayout>
             <div className="space-y-10 text-gray-100">
-                {/* HEADER */}
                 <div>
                     <h1 className="text-3xl font-bold">Residents</h1>
                     <p className="text-gray-400 mt-1">
@@ -24660,8 +24665,8 @@ export default function AdminResidents() {
                     </p>
                 </div>
 
-                {/* ================= ADD RESIDENT ================= */}
-                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
+                {/* ADD RESIDENT */}
+                <div className="rounded-2xl bg-white/10 border border-white/10 p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Add New Resident
                     </h2>
@@ -24679,7 +24684,7 @@ export default function AdminResidents() {
                                                 : "text"
                                     }
                                     placeholder={field.toUpperCase()}
-                                    className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm text-white"
+                                    className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm"
                                     value={form[field]}
                                     onChange={(e) =>
                                         setForm({
@@ -24693,15 +24698,15 @@ export default function AdminResidents() {
 
                         <MotionButton
                             onClick={addResident}
-                            className="md:col-span-5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                            className="md:col-span-5 bg-blue-600 text-white px-4 py-2 rounded-lg"
                         >
                             Add Resident
                         </MotionButton>
                     </div>
                 </div>
 
-                {/* ================= RESIDENT LIST ================= */}
-                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6">
+                {/* RESIDENT LIST */}
+                <div className="rounded-2xl bg-white/10 border border-white/10 p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Resident List
                     </h2>
@@ -24729,26 +24734,22 @@ export default function AdminResidents() {
                                 {residents.map((r) => (
                                     <tr
                                         key={r._id}
-                                        className="border-b border-white/5 hover:bg-white/5"
+                                        className="border-b border-white/5"
                                     >
-                                        <td className="p-2">
-                                            {r.userId?.name}
-                                        </td>
-                                        <td className="p-2">
-                                            {r.userId?.email}
+                                        <td className="p-2">{r.name}</td>
+                                        <td className="p-2">{r.email}</td>
+                                        <td className="p-2 text-center">
+                                            {r.room || "-"}
                                         </td>
                                         <td className="p-2 text-center">
-                                            {r.room}
-                                        </td>
-                                        <td className="p-2 text-center">
-                                            {r.rent}
+                                            {r.rent || "-"}
                                         </td>
                                         <td className="p-2 text-center">
                                             <MotionButton
                                                 onClick={() =>
                                                     setBillingTarget(r)
                                                 }
-                                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg"
+                                                className="bg-green-600 text-white px-3 py-1 rounded-lg"
                                             >
                                                 Send Bill
                                             </MotionButton>
@@ -24761,17 +24762,16 @@ export default function AdminResidents() {
                 </div>
             </div>
 
-            {/* ================= BILL MODAL ================= */}
+            {/* BILL MODAL */}
             {billingTarget && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
+                        className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
                     >
                         <h3 className="text-lg font-semibold mb-4">
-                            Send Bill to{" "}
-                            {billingTarget.userId?.email}
+                            Send Bill to {billingTarget.email}
                         </h3>
 
                         <input
@@ -24785,7 +24785,7 @@ export default function AdminResidents() {
                         />
 
                         <textarea
-                            placeholder="Description (optional)"
+                            placeholder="Description"
                             className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-4"
                             rows={3}
                             value={billDescription}
@@ -24797,14 +24797,14 @@ export default function AdminResidents() {
                         <div className="flex justify-end gap-3">
                             <MotionButton
                                 onClick={() => setBillingTarget(null)}
-                                className="px-4 py-2 rounded-lg border border-white/10"
+                                className="px-4 py-2 border border-white/10 rounded-lg"
                             >
                                 Cancel
                             </MotionButton>
 
                             <MotionButton
                                 onClick={sendBill}
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                                className="bg-green-600 text-white px-4 py-2 rounded-lg"
                             >
                                 Send Bill
                             </MotionButton>
@@ -25131,16 +25131,18 @@ export default function AdminRooms() {
 
 // ##########################################
 // FILE 66 of 79: frontend\src\pages\Login.jsx
-// SIZE: 5280 bytes
-// MODIFIED: 2026-01-31 03:38:27
+// SIZE: 5550 bytes
+// MODIFIED: 2026-02-02 16:26:51
 // ##########################################
 
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import api from "../api/axios";
 import Button from "../components/Button";
 import Card from "../components/Card";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -25149,11 +25151,13 @@ export default function Login() {
     const [errors, setErrors] = useState({});
 
     const isSubmitting = useRef(false);
+    const navigate = useNavigate();
+    const { login } = useAuth(); // ✅ IMPORTANT
 
     const validateEmail = (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-    const login = async () => {
+    const handleLogin = async () => {
         if (loading || isSubmitting.current) return;
 
         const newErrors = {};
@@ -25179,29 +25183,31 @@ export default function Login() {
         setLoading(true);
 
         try {
-            // ✅ CORRECT ROUTE (NO double /api)
-            const response = await api.post("/auth/login", {
+            const res = await api.post("/auth/login", {
                 email: email.trim().toLowerCase(),
                 password
             });
 
-            const { token, role } = response.data || {};
+            const { token } = res.data || {};
 
             if (!token) {
                 toast.error("Login failed: no token received");
                 return;
             }
 
-            localStorage.setItem("token", token);
-            if (role) localStorage.setItem("role", role);
+            // ✅ Update AuthContext (single source of truth)
+            login(token);
+
+            const payload = JSON.parse(atob(token.split(".")[1]));
 
             toast.success("Login successful");
 
-            setTimeout(() => {
-                window.location.assign(
-                    role === "admin" ? "/admin" : "/resident"
-                );
-            }, 300);
+            // ✅ Correct dashboard redirect
+            if (payload.role === "admin") {
+                navigate("/admin/dashboard", { replace: true });
+            } else {
+                navigate("/resident/dashboard", { replace: true });
+            }
         } catch (err) {
             toast.error(
                 err.response?.data?.message ||
@@ -25264,7 +25270,7 @@ export default function Login() {
 
                     {/* Button */}
                     <Button
-                        onClick={login}
+                        onClick={handleLogin}
                         disabled={loading}
                         className="w-full py-3 text-sm font-semibold tracking-wide"
                     >
@@ -26361,7 +26367,7 @@ export default function ResidentRoute({ children }) {
 // ##########################################
 // FILE 75 of 79: frontend\src\services\adminService.js
 // SIZE: 1447 bytes
-// MODIFIED: 2026-01-27 18:10:28
+// MODIFIED: 2026-02-02 16:51:26
 // ##########################################
 
 import api from "../api/axios";

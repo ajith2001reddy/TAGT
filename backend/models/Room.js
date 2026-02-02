@@ -8,6 +8,12 @@ const roomSchema = new mongoose.Schema(
             unique: true
         },
 
+        rent: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+
         totalBeds: {
             type: Number,
             required: true,

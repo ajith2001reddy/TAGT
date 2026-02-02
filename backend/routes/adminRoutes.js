@@ -55,7 +55,7 @@ router.get("/requests/history", auth, isAdmin, async (req, res, next) => {
 router.get("/stats", auth, isAdmin, async (req, res, next) => {
     try {
         const totalResidents = await User.countDocuments({
-            role: "resident"
+            role: { $regex: /^resident$/i }
         });
 
         const pendingRequests = await Request.countDocuments({

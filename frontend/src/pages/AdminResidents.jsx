@@ -14,8 +14,7 @@ export default function AdminResidents() {
         name: "",
         email: "",
         password: "",
-        room: "",
-        rent: ""
+        roomId: ""
     });
 
     /* ===== BILLING ===== */
@@ -44,16 +43,10 @@ export default function AdminResidents() {
 
     /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
-        const { name, email, password, room, rent } = form;
+        const { name, email, password, roomId } = form;
 
-        if (!name || !email || !password || !room || !rent) {
-            toast.error("All fields are required");
-            return;
-        }
-
-        const rentValue = Number(rent);
-        if (!Number.isFinite(rentValue) || rentValue <= 0) {
-            toast.error("Rent must be greater than 0");
+        if (!name || !email || !password) {
+            toast.error("Name, email, and password are required");
             return;
         }
 
@@ -62,8 +55,7 @@ export default function AdminResidents() {
                 name,
                 email,
                 password,
-                room,
-                rent: rentValue
+                roomId: roomId || null
             });
 
             toast.success("Resident added successfully");
@@ -71,8 +63,7 @@ export default function AdminResidents() {
                 name: "",
                 email: "",
                 password: "",
-                room: "",
-                rent: ""
+                roomId: ""
             });
 
             fetchResidents();
@@ -97,7 +88,7 @@ export default function AdminResidents() {
 
         try {
             await api.post("/payments", {
-                residentId: billingTarget._id, // ✅ User._id
+                residentId: billingTarget._id,
                 amount,
                 description: billDescription || "Direct charge",
                 type: "manual"
@@ -141,17 +132,15 @@ export default function AdminResidents() {
                         Add New Resident
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        {["name", "email", "password", "room", "rent"].map(
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        {["name", "email", "password", "roomId"].map(
                             (field) => (
                                 <input
                                     key={field}
                                     type={
                                         field === "password"
                                             ? "password"
-                                            : field === "rent"
-                                                ? "number"
-                                                : "text"
+                                            : "text"
                                     }
                                     placeholder={field.toUpperCase()}
                                     className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm"
@@ -168,7 +157,7 @@ export default function AdminResidents() {
 
                         <MotionButton
                             onClick={addResident}
-                            className="md:col-span-5 bg-blue-600 text-white px-4 py-2 rounded-lg"
+                            className="md:col-span-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
                         >
                             Add Resident
                         </MotionButton>
@@ -196,7 +185,6 @@ export default function AdminResidents() {
                                     <th className="p-2 text-left">Name</th>
                                     <th className="p-2 text-left">Email</th>
                                     <th className="p-2 text-center">Room</th>
-                                    <th className="p-2 text-center">Rent</th>
                                     <th className="p-2 text-center">Action</th>
                                 </tr>
                             </thead>
@@ -209,10 +197,7 @@ export default function AdminResidents() {
                                         <td className="p-2">{r.name}</td>
                                         <td className="p-2">{r.email}</td>
                                         <td className="p-2 text-center">
-                                            {r.room || "-"}
-                                        </td>
-                                        <td className="p-2 text-center">
-                                            {r.rent || "-"}
+                                            {r.roomId?.roomNumber || "-"}
                                         </td>
                                         <td className="p-2 text-center">
                                             <MotionButton

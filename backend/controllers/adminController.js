@@ -1,4 +1,5 @@
 ﻿const User = require("../models/User");
+const Room = require("../models/Room");
 const bcrypt = require("bcryptjs");
 
 /* ============================
@@ -6,10 +7,10 @@ const bcrypt = require("bcryptjs");
    ============================ */
 exports.getAllResidents = async (req, res) => {
     try {
-        // ✅ Case-insensitive role match (fixes empty list issue)
         const residents = await User.find({
             role: { $regex: /^resident$/i }
         })
+            .populate("roomId", "roomNumber")
             .select("-password")
             .sort({ createdAt: -1 });
 
@@ -28,7 +29,7 @@ exports.getAllResidents = async (req, res) => {
    ============================ */
 exports.addResident = async (req, res) => {
     try {
-        const { name, email, password, room, rent } = req.body;
+        const { name, email, password, roomId } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({
@@ -48,27 +49,31 @@ exports.addResident = async (req, res) => {
             });
         }
 
+        // ✅ Validate roomId (if provided)
+        let room = null;
+        if (roomId) {
+            room = await Room.findById(roomId);
+            if (!room) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid room selected"
+                });
+            }
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const resident = await User.create({
             name,
             email: email.toLowerCase(),
             password: hashedPassword,
-            role: "resident", // ✅ always normalized
-            room: room || null,
-            rent: rent || null
+            role: "resident",
+            roomId: room ? room._id : null
         });
 
         res.status(201).json({
             success: true,
-            resident: {
-                _id: resident._id,
-                name: resident.name,
-                email: resident.email,
-                role: resident.role,
-                room: resident.room,
-                rent: resident.rent
-            }
+            resident
         });
     } catch (err) {
         console.error("ADD RESIDENT ERROR:", err);
