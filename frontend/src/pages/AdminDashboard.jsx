@@ -16,16 +16,8 @@ import useAdminStats from "../hooks/useAdminStats";
 import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
-/**
- * ADMIN DASHBOARD (FULL AI ANALYTICS)
- * STEP 1 → KPIs
- * STEP 2 → Occupancy Forecast
- * STEP 3 → Maintenance Cost Forecast
- * STEP 4 → Resident Churn Prediction
- */
-
 export default function AdminDashboard() {
-    const { stats, loading } = useAdminStats();
+    const { stats = {}, loading } = useAdminStats(); // ✅ SAFE DEFAULT
 
     const [allRequests, setAllRequests] = useState([]);
     const [activeRequests, setActiveRequests] = useState([]);
@@ -127,16 +119,10 @@ export default function AdminDashboard() {
                     </p>
                 </div>
 
-                {/* STEP 1 — KPIs */}
+                {/* AI ANALYTICS */}
                 <KpiCards />
-
-                {/* STEP 2 */}
                 <OccupancyForecast />
-
-                {/* STEP 3 */}
                 <MaintenanceCostForecast />
-
-                {/* STEP 4 */}
                 <ChurnRiskTable />
 
                 {/* CORE METRICS */}
@@ -146,12 +132,12 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <StatCard
                             title="Total Residents"
-                            value={stats.totalResidents}
+                            value={stats.totalResidents || 0}
                             accent="blue"
                         />
                         <StatCard
                             title="Pending Requests"
-                            value={stats.pendingRequests}
+                            value={stats.pendingRequests || 0}
                             accent="yellow"
                         />
                         <StatCard
