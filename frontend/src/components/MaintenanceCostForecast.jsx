@@ -13,8 +13,6 @@ import { predictMaintenanceCost } from "../services/analyticsService";
 
 /* =====================================================
    MAINTENANCE COST FORECAST (STEP 3)
-   - Monthly cost trend
-   - 3 / 6 / 12 month prediction
 ===================================================== */
 
 export default function MaintenanceCostForecast() {
@@ -31,15 +29,13 @@ export default function MaintenanceCostForecast() {
             const history =
                 res?.history?.map((h) => ({
                     month: h.month,
-                    cost: h.cost,
-                    type: "History"
+                    cost: h.cost
                 })) || [];
 
             const forecast =
                 res?.forecast?.map((f) => ({
                     month: f.month,
-                    cost: f.predictedCost,
-                    type: "Forecast"
+                    cost: f.predictedCost
                 })) || [];
 
             setMeta(res?.meta || null);
@@ -80,11 +76,10 @@ export default function MaintenanceCostForecast() {
                         <button
                             key={m}
                             onClick={() => setMonths(m)}
-                            className={`px-3 py-1 rounded text-sm ${
-                                months === m
+                            className={`px-3 py-1 rounded text-sm ${months === m
                                     ? "bg-amber-600 text-white"
                                     : "bg-white/10 text-gray-300 hover:bg-white/20"
-                            }`}
+                                }`}
                         >
                             {m}M
                         </button>
@@ -92,7 +87,7 @@ export default function MaintenanceCostForecast() {
                 </div>
             </div>
 
-            {/* META INFO */}
+            {/* META */}
             {meta && (
                 <div className="mb-4 text-sm text-gray-400 flex gap-6 flex-wrap">
                     <span>
@@ -104,13 +99,13 @@ export default function MaintenanceCostForecast() {
                     <span>
                         Spike Risk:{" "}
                         <strong
-                            className={`${
+                            className={
                                 meta.spikeRisk === "HIGH"
                                     ? "text-red-400"
                                     : meta.spikeRisk === "MEDIUM"
-                                    ? "text-yellow-400"
-                                    : "text-green-400"
-                            }`}
+                                        ? "text-yellow-400"
+                                        : "text-green-400"
+                            }
                         >
                             {meta.spikeRisk}
                         </strong>
@@ -126,8 +121,8 @@ export default function MaintenanceCostForecast() {
                     Not enough data to generate forecast
                 </p>
             ) : (
-                <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="w-full min-h-[260px] h-[260px]">
+                    <ResponsiveContainer>
                         <LineChart data={data}>
                             <CartesianGrid
                                 strokeDasharray="3 3"
@@ -147,12 +142,8 @@ export default function MaintenanceCostForecast() {
                                     border: "1px solid #334155",
                                     borderRadius: "8px"
                                 }}
-                                formatter={(v) => [
-                                    `$${v}`,
-                                    "Cost"
-                                ]}
+                                formatter={(v) => [`$${v}`, "Cost"]}
                             />
-
                             <Line
                                 type="monotone"
                                 dataKey="cost"

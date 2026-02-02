@@ -13,8 +13,6 @@ import { predictOccupancy } from "../services/analyticsService";
 
 /* =====================================================
    OCCUPANCY FORECAST (STEP 2)
-   - History + Prediction
-   - 3 / 6 / 12 month toggle
 ===================================================== */
 
 export default function OccupancyForecast() {
@@ -30,15 +28,13 @@ export default function OccupancyForecast() {
             const history =
                 res?.history?.map((h) => ({
                     month: h.month,
-                    occupancy: h.occupancyRate,
-                    type: "History"
+                    occupancy: h.occupancyRate
                 })) || [];
 
             const forecast =
                 res?.forecast?.map((f) => ({
                     month: f.month,
-                    occupancy: f.predictedOccupancy,
-                    type: "Forecast"
+                    occupancy: f.predictedOccupancy
                 })) || [];
 
             setData([...history, ...forecast]);
@@ -96,11 +92,17 @@ export default function OccupancyForecast() {
                     Not enough data to generate forecast
                 </p>
             ) : (
-                <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="w-full min-h-[260px] h-[260px]">
+                    <ResponsiveContainer>
                         <LineChart data={data}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                            <XAxis dataKey="month" stroke="#94a3b8" />
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#334155"
+                            />
+                            <XAxis
+                                dataKey="month"
+                                stroke="#94a3b8"
+                            />
                             <YAxis
                                 stroke="#94a3b8"
                                 domain={[0, 100]}
@@ -112,7 +114,7 @@ export default function OccupancyForecast() {
                                     border: "1px solid #334155",
                                     borderRadius: "8px"
                                 }}
-                                formatter={(value) => [`${value}%`, "Occupancy"]}
+                                formatter={(v) => [`${v}%`, "Occupancy"]}
                             />
                             <Line
                                 type="monotone"
