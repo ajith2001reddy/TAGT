@@ -1,16 +1,15 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * ResidentPayments (FINAL)
+ * ResidentPayments (FINAL – CACHE SAFE)
  *
- * - Shows only logged-in resident payments
+ * - Shows logged-in resident payments
  * - Uses /api/payments/my
- * - Safe number + status handling
- * - Dark-theme friendly
+ * - Cache-busting to avoid 304 issues
  */
 
 export default function ResidentPayments() {
@@ -21,7 +20,16 @@ export default function ResidentPayments() {
     const fetchPayments = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/payments/my");
+
+            const res = await api.get("/payments/my", {
+                headers: {
+                    "Cache-Control": "no-cache",
+                    Pragma: "no-cache"
+                },
+                params: {
+                    _t: Date.now() // 🔥 force fresh request
+                }
+            });
 
             const cleaned = (Array.isArray(res.data) ? res.data : []).map(
                 (p) => ({
@@ -33,7 +41,7 @@ export default function ResidentPayments() {
 
             setPayments(cleaned);
         } catch (err) {
-            console.error(err);
+            console.error("RESIDENT PAYMENTS ERROR:", err);
             toast.error("Failed to load payments");
             setPayments([]);
         } finally {
@@ -53,7 +61,7 @@ export default function ResidentPayments() {
 
             {loading ? (
                 <p className="text-center text-gray-400">
-                    Loading payments�
+                    Loading payments…
                 </p>
             ) : payments.length === 0 ? (
                 <div className="flex items-center justify-center min-h-[200px] text-gray-400">
@@ -82,7 +90,7 @@ export default function ResidentPayments() {
                                     </td>
 
                                     <td className="p-3">
-                                        {p.description || "�"}
+                                        {p.description || "—"}
                                     </td>
 
                                     <td
@@ -99,7 +107,7 @@ export default function ResidentPayments() {
                                             ? new Date(
                                                 p.createdAt
                                             ).toLocaleDateString()
-                                            : "�"}
+                                            : "—"}
                                     </td>
                                 </tr>
                             ))}
