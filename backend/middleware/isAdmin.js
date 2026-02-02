@@ -1,9 +1,7 @@
 /**
  * ADMIN-ONLY MIDDLEWARE
  * - Must be used AFTER auth.js
- * - Assumes req.user is already set
  */
-
 module.exports = (req, res, next) => {
     try {
         if (!req.user) {
@@ -22,6 +20,7 @@ module.exports = (req, res, next) => {
 
         next();
     } catch (err) {
+        console.error("IS ADMIN ERROR:", err);
         return res.status(500).json({
             success: false,
             message: "Authorization failed"

@@ -5,64 +5,64 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * Rooms (DARK THEME FIXED)
- * Phase 4 – Room & Bed Management (Admin)
+ * roomss (DARK THEME FIXED)
+ * Phase 4 – rooms & Bed Management (Admin)
  */
 
-export default function Rooms() {
-    const [rooms, setRooms] = useState([]);
+export default function roomss() {
+    const [roomss, setroomss] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    /* ===== ADD ROOM FORM ===== */
+    /* ===== ADD rooms FORM ===== */
     const [form, setForm] = useState({
-        roomNumber: "",
+        roomsNumber: "",
         totalBeds: "",
         note: ""
     });
 
     /* ===== OCCUPANCY MODAL ===== */
-    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [selectedrooms, setSelectedrooms] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH ROOMS ================= */
-    const fetchRooms = async () => {
+    /* ================= FETCH roomsS ================= */
+    const fetchroomss = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/rooms");
-            setRooms(Array.isArray(res.data) ? res.data : []);
+            const res = await api.get("/roomss");
+            setroomss(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error(err);
-            toast.error("Failed to load rooms");
-            setRooms([]);
+            toast.error("Failed to load roomss");
+            setroomss([]);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchRooms();
+        fetchroomss();
     }, []);
 
-    /* ================= ADD ROOM ================= */
-    const addRoom = async () => {
-        if (!form.roomNumber || !form.totalBeds) {
-            toast.error("Room number and total beds are required");
+    /* ================= ADD rooms ================= */
+    const addrooms = async () => {
+        if (!form.roomsNumber || !form.totalBeds) {
+            toast.error("rooms number and total beds are required");
             return;
         }
 
         try {
-            await api.post("/rooms", {
-                roomNumber: form.roomNumber,
+            await api.post("/roomss", {
+                roomsNumber: form.roomsNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
             });
 
-            toast.success("Room added");
-            setForm({ roomNumber: "", totalBeds: "", note: "" });
-            fetchRooms();
+            toast.success("rooms added");
+            setForm({ roomsNumber: "", totalBeds: "", note: "" });
+            fetchroomss();
         } catch (err) {
             console.error(err);
-            toast.error("Failed to add room");
+            toast.error("Failed to add rooms");
         }
     };
 
@@ -75,55 +75,55 @@ export default function Rooms() {
 
         try {
             await api.put(
-                `/rooms/${selectedRoom._id}/occupancy`,
+                `/roomss/${selectedrooms._id}/occupancy`,
                 { occupiedBeds: Number(occupiedBeds) }
             );
 
             toast.success("Occupancy updated");
-            setSelectedRoom(null);
+            setSelectedrooms(null);
             setOccupiedBeds("");
-            fetchRooms();
+            fetchroomss();
         } catch (err) {
             console.error(err);
             toast.error("Failed to update occupancy");
         }
     };
 
-    /* ================= DELETE ROOM ================= */
-    const deleteRoom = async (room) => {
+    /* ================= DELETE rooms ================= */
+    const deleterooms = async (rooms) => {
         if (
             !window.confirm(
-                `Delete room ${room.roomNumber}? This cannot be undone.`
+                `Delete rooms ${rooms.roomsNumber}? This cannot be undone.`
             )
         )
             return;
 
         try {
-            await api.delete(`/rooms/${room._id}`);
-            toast.success("Room deleted");
-            fetchRooms();
+            await api.delete(`/roomss/${rooms._id}`);
+            toast.success("rooms deleted");
+            fetchroomss();
         } catch (err) {
             console.error(err);
-            toast.error("Failed to delete room");
+            toast.error("Failed to delete rooms");
         }
     };
 
     return (
         <DashboardLayout>
             <h2 className="text-2xl font-bold mb-6">
-                Rooms & Bed Management
+                roomss & Bed Management
             </h2>
 
-            {/* ADD ROOM */}
+            {/* ADD rooms */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
                 <input
-                    placeholder="Room Number"
+                    placeholder="rooms Number"
                     className="bg-black/30 text-gray-100 border border-white/10 p-2 rounded focus:outline-none"
-                    value={form.roomNumber}
+                    value={form.roomsNumber}
                     onChange={(e) =>
                         setForm({
                             ...form,
-                            roomNumber: e.target.value
+                            roomsNumber: e.target.value
                         })
                     }
                 />
@@ -154,28 +154,28 @@ export default function Rooms() {
                 />
 
                 <button
-                    onClick={addRoom}
+                    onClick={addrooms}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                 >
-                    Add Room
+                    Add rooms
                 </button>
             </div>
 
-            {/* ROOMS TABLE */}
+            {/* roomsS TABLE */}
             {loading ? (
                 <p className="text-center text-gray-400">
                     Loading…
                 </p>
-            ) : rooms.length === 0 ? (
+            ) : roomss.length === 0 ? (
                 <p className="text-center text-gray-400">
-                    No rooms added yet.
+                    No roomss added yet.
                 </p>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-gray-200 border border-white/10 rounded-lg">
                         <thead className="bg-white/10">
                             <tr>
-                                <th className="p-3">Room</th>
+                                <th className="p-3">rooms</th>
                                 <th className="p-3">Total Beds</th>
                                 <th className="p-3">Occupied</th>
                                 <th className="p-3">Available</th>
@@ -184,12 +184,12 @@ export default function Rooms() {
                         </thead>
 
                         <tbody>
-                            {rooms.map((r) => (
+                            {roomss.map((r) => (
                                 <tr
                                     key={r._id}
                                     className="border-t border-white/10 text-center hover:bg-white/5"
                                 >
-                                    <td className="p-3">{r.roomNumber}</td>
+                                    <td className="p-3">{r.roomsNumber}</td>
                                     <td className="p-3">{r.totalBeds}</td>
                                     <td className="p-3">{r.occupiedBeds}</td>
                                     <td className="p-3 font-semibold">
@@ -198,7 +198,7 @@ export default function Rooms() {
                                     <td className="p-3 space-x-2">
                                         <button
                                             onClick={() => {
-                                                setSelectedRoom(r);
+                                                setSelectedrooms(r);
                                                 setOccupiedBeds(
                                                     r.occupiedBeds
                                                 );
@@ -209,7 +209,7 @@ export default function Rooms() {
                                         </button>
 
                                         <button
-                                            onClick={() => deleteRoom(r)}
+                                            onClick={() => deleterooms(r)}
                                             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
                                         >
                                             Delete
@@ -223,12 +223,12 @@ export default function Rooms() {
             )}
 
             {/* OCCUPANCY MODAL */}
-            {selectedRoom && (
+            {selectedrooms && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-xl w-96">
                         <h3 className="font-bold mb-3">
-                            Update Occupancy – Room{" "}
-                            {selectedRoom.roomNumber}
+                            Update Occupancy – rooms{" "}
+                            {selectedrooms.roomsNumber}
                         </h3>
 
                         <input
@@ -243,7 +243,7 @@ export default function Rooms() {
                         <div className="flex justify-end gap-2">
                             <button
                                 onClick={() =>
-                                    setSelectedRoom(null)
+                                    setSelectedrooms(null)
                                 }
                                 className="text-gray-400 hover:text-gray-200"
                             >

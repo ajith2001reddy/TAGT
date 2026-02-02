@@ -5,7 +5,7 @@ const Request = require("../models/Request");
 const auth = require("../middleware/auth");
 
 /* ================= CREATE REQUEST ================= */
-router.post("/request", auth, async (req, res, next) => {
+router.post("/request", auth, async (req, res) => {
     try {
         const { message } = req.body;
 
@@ -29,12 +29,16 @@ router.post("/request", auth, async (req, res, next) => {
             request
         });
     } catch (err) {
-        next(err);
+        console.error("CREATE REQUEST ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create request"
+        });
     }
 });
 
 /* ================= GET MY REQUESTS ================= */
-router.get("/requests", auth, async (req, res, next) => {
+router.get("/requests", auth, async (req, res) => {
     try {
         const requests = await Request.find({
             residentId: req.user.id
@@ -42,14 +46,21 @@ router.get("/requests", auth, async (req, res, next) => {
             .sort({ createdAt: -1 })
             .lean();
 
-        res.json(requests);
+        res.json({
+            success: true,
+            requests
+        });
     } catch (err) {
-        next(err);
+        console.error("GET MY REQUESTS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch requests"
+        });
     }
 });
 
 /* ================= DELETE REQUEST ================= */
-router.delete("/request/:id", auth, async (req, res, next) => {
+router.delete("/request/:id", auth, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -72,7 +83,11 @@ router.delete("/request/:id", auth, async (req, res, next) => {
             message: "Request deleted"
         });
     } catch (err) {
-        next(err);
+        console.error("DELETE REQUEST ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete request"
+        });
     }
 });
 

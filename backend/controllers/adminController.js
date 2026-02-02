@@ -1,5 +1,5 @@
 ﻿const User = require("../models/User");
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 const bcrypt = require("bcryptjs");
 
 /* ============================
@@ -10,7 +10,7 @@ exports.getAllResidents = async (req, res) => {
         const residents = await User.find({
             role: { $regex: /^resident$/i }
         })
-            .populate("roomId", "roomNumber")
+            .populate("roomsId", "roomsNumber totalBeds occupiedBeds")
             .select("-password")
             .sort({ createdAt: -1 });
 
@@ -29,7 +29,7 @@ exports.getAllResidents = async (req, res) => {
    ============================ */
 exports.addResident = async (req, res) => {
     try {
-        const { name, email, password, roomId } = req.body;
+        const { name, email, password, roomsId } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({
@@ -49,14 +49,23 @@ exports.addResident = async (req, res) => {
             });
         }
 
-        // ✅ Validate roomId (if provided)
-        let room = null;
-        if (roomId) {
-            room = await Room.findById(roomId);
-            if (!room) {
+        let rooms = null;
+
+        // ✅ Validate rooms & availability
+        if (roomsId) {
+            rooms = await rooms.findById(roomsId);
+
+            if (!rooms) {
                 return res.status(400).json({
                     success: false,
-                    message: "Invalid room selected"
+                    message: "Invalid rooms selected"
+                });
+            }
+
+            if (rooms.occupiedBeds >= rooms.totalBeds) {
+                return res.status(400).json({
+                    success: false,
+                    message: "No beds available in this rooms"
                 });
             }
         }
@@ -68,8 +77,14 @@ exports.addResident = async (req, res) => {
             email: email.toLowerCase(),
             password: hashedPassword,
             role: "resident",
-            roomId: room ? room._id : null
+            roomsId: rooms ? rooms._id : null
         });
+
+        // ✅ Increase occupied beds AFTER resident creation
+        if (rooms) {
+            rooms.occupiedBeds += 1;
+            await rooms.save();
+        }
 
         res.status(201).json({
             success: true,

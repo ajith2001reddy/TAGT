@@ -9,7 +9,7 @@ import AdminRequests from "./pages/AdminRequests";
 import RequestHistory from "./pages/RequestHistory";
 import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
-import Rooms from "./pages/Rooms";
+import roomss from "./pages/roomss";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
@@ -61,10 +61,10 @@ function AnimatedRoutes() {
                 />
 
                 <Route
-                    path="/admin/rooms"
+                    path="/admin/roomss"
                     element={
                         <ProtectedRoute role="admin">
-                            <Rooms />
+                            <roomss />
                         </ProtectedRoute>
                     }
                 />

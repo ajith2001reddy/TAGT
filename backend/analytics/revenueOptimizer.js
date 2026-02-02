@@ -1,33 +1,36 @@
-﻿const Room = require("../models/Room");
+﻿const rooms = require("../models/rooms");
 const Payment = require("../models/Payment");
 const { predictChurn } = require("./churnModel");
 
 /* =====================================================
    REVENUE OPTIMIZATION ENGINE
-   - Explainable AI logic
-   - Business-focused insights
-   - ML-ready for future
 ===================================================== */
 
 async function optimizeRevenue() {
     /* =======================
        OCCUPANCY ANALYSIS
     ======================= */
-    const rooms = await Room.find({}, "totalBeds occupiedBeds");
+    const roomss = await rooms.find({}, "totalBeds occupiedBeds rent");
 
-    const totals = rooms.reduce(
+    const totals = roomss.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;
+            acc.totalRent += (r.rent || 0) * (r.totalBeds || 0);
             return acc;
         },
-        { totalBeds: 0, occupiedBeds: 0 }
+        { totalBeds: 0, occupiedBeds: 0, totalRent: 0 }
     );
 
     const occupancyRate =
         totals.totalBeds === 0
             ? 0
             : (totals.occupiedBeds / totals.totalBeds) * 100;
+
+    const avgRent =
+        totals.totalBeds === 0
+            ? 0
+            : totals.totalRent / totals.totalBeds;
 
     /* =======================
        PAYMENT COLLECTION
@@ -58,11 +61,8 @@ async function optimizeRevenue() {
     const insights = [];
     let revenueLeakEstimate = 0;
 
-    // 🔻 Low occupancy
     if (occupancyRate < 70) {
         const emptyBeds = totals.totalBeds - totals.occupiedBeds;
-        const avgRent = 600; // configurable later
-
         revenueLeakEstimate += emptyBeds * avgRent;
 
         insights.push({
@@ -70,11 +70,10 @@ async function optimizeRevenue() {
             severity: "HIGH",
             message: "Low occupancy detected",
             recommendation:
-                "Consider promotional pricing or short-term discounts to improve occupancy."
+                "Offer promotions or flexible pricing to increase occupancy."
         });
     }
 
-    // 💸 Poor collection
     if (collectionRate < 85) {
         revenueLeakEstimate += totalBilled - collected;
 
@@ -83,22 +82,20 @@ async function optimizeRevenue() {
             severity: "MEDIUM",
             message: "Low payment collection rate",
             recommendation:
-                "Enable automated reminders and enforce late fees to improve cash flow."
+                "Enable reminders, enforce deadlines, or automate billing."
         });
     }
 
-    // 🚨 Churn risk
     if (highRiskResidents > 0) {
         insights.push({
             type: "CHURN",
             severity: "HIGH",
             message: `${highRiskResidents} residents at high churn risk`,
             recommendation:
-                "Offer retention incentives or proactive support to prevent revenue loss."
+                "Proactively engage residents and offer retention incentives."
         });
     }
 
-    // ✅ Healthy state
     if (insights.length === 0) {
         insights.push({
             type: "HEALTHY",
@@ -114,6 +111,7 @@ async function optimizeRevenue() {
         metrics: {
             occupancyRate: Number(occupancyRate.toFixed(2)),
             collectionRate: Number(collectionRate.toFixed(2)),
+            avgRent: Number(avgRent.toFixed(2)),
             totalBeds: totals.totalBeds,
             occupiedBeds: totals.occupiedBeds
         },

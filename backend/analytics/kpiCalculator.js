@@ -1,12 +1,9 @@
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 const Payment = require("../models/Payment");
 const Request = require("../models/Request");
 
 /* =====================================================
    ADVANCED KPI CALCULATOR
-   - Real-time metrics
-   - Safe fallbacks
-   - Time-range ready (future AI use)
 ===================================================== */
 
 async function getKPIs({ fromDate, toDate } = {}) {
@@ -18,9 +15,9 @@ async function getKPIs({ fromDate, toDate } = {}) {
     /* =======================
        OCCUPANCY KPI
     ======================= */
-    const rooms = await Room.find({}, "totalBeds occupiedBeds");
+    const roomss = await rooms.find({}, "totalBeds occupiedBeds");
 
-    const totals = rooms.reduce(
+    const totals = roomss.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;
@@ -80,27 +77,21 @@ async function getKPIs({ fromDate, toDate } = {}) {
                 (totalResolutionHours / resolvedRequests.length).toFixed(2)
             );
 
-    /* =======================
-       RETURN KPI OBJECT
-    ======================= */
     return {
         occupancy: {
             rate: occupancyRate,
             occupiedBeds: totals.occupiedBeds,
             totalBeds: totals.totalBeds
         },
-
         payments: {
             collectionRate,
             totalBilled,
             totalCollected
         },
-
         maintenance: {
             avgResolutionTime,
             resolvedCount: resolvedRequests.length
         },
-
         meta: {
             fromDate: fromDate || null,
             toDate: toDate || null,

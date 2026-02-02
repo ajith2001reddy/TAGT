@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema(
     {
         name: {
             type: String,
+            required: true,
             trim: true
         },
 
@@ -27,9 +28,9 @@ const userSchema = new mongoose.Schema(
             default: "resident"
         },
 
-        roomId: {
+        roomsId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Room",
+            ref: "rooms",
             default: null
         },
 

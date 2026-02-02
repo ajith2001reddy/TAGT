@@ -25,37 +25,52 @@ router.post("/residents", auth, isAdmin, addResident);
 /* ================= REQUESTS ================= */
 
 // GET all maintenance requests
-router.get("/requests", auth, isAdmin, async (req, res, next) => {
+router.get("/requests", auth, isAdmin, async (req, res) => {
     try {
         const requests = await Request.find()
             .populate("residentId", "name email")
             .sort({ createdAt: -1 });
 
-        res.json(requests);
+        res.json({
+            success: true,
+            requests
+        });
     } catch (err) {
-        next(err);
+        console.error("GET REQUESTS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch requests"
+        });
     }
 });
 
 // GET request history (archived)
-router.get("/requests/history", auth, isAdmin, async (req, res, next) => {
+router.get("/requests/history", auth, isAdmin, async (req, res) => {
     try {
         const history = await RequestHistory.find()
             .populate("residentId", "name email")
             .sort({ createdAt: -1 });
 
-        res.json(history);
+        res.json({
+            success: true,
+            history
+        });
     } catch (err) {
-        next(err);
+        console.error("GET REQUEST HISTORY ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch request history"
+        });
     }
 });
 
 /* ================= ADMIN DASHBOARD STATS ================= */
 
-router.get("/stats", auth, isAdmin, async (req, res, next) => {
+router.get("/stats", auth, isAdmin, async (req, res) => {
     try {
         const totalResidents = await User.countDocuments({
-            role: { $regex: /^resident$/i }
+            role: { $regex: /^resident$/i },
+            isActive: true
         });
 
         const pendingRequests = await Request.countDocuments({
@@ -73,13 +88,20 @@ router.get("/stats", auth, isAdmin, async (req, res, next) => {
             .reduce((sum, p) => sum + p.amount, 0);
 
         res.json({
-            totalResidents,
-            pendingRequests,
-            totalRevenue,
-            outstandingBalance
+            success: true,
+            stats: {
+                totalResidents,
+                pendingRequests,
+                totalRevenue,
+                outstandingBalance
+            }
         });
     } catch (err) {
-        next(err);
+        console.error("ADMIN STATS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch admin stats"
+        });
     }
 });
 

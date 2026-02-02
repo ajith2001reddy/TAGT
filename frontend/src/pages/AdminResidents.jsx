@@ -14,7 +14,7 @@ export default function AdminResidents() {
         name: "",
         email: "",
         password: "",
-        roomId: ""
+        roomsId: ""
     });
 
     /* ===== BILLING ===== */
@@ -43,7 +43,7 @@ export default function AdminResidents() {
 
     /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
-        const { name, email, password, roomId } = form;
+        const { name, email, password, roomsId } = form;
 
         if (!name || !email || !password) {
             toast.error("Name, email, and password are required");
@@ -55,7 +55,7 @@ export default function AdminResidents() {
                 name,
                 email,
                 password,
-                roomId: roomId || null
+                roomsId: roomsId || null
             });
 
             toast.success("Resident added successfully");
@@ -63,7 +63,7 @@ export default function AdminResidents() {
                 name: "",
                 email: "",
                 password: "",
-                roomId: ""
+                roomsId: ""
             });
 
             fetchResidents();
@@ -133,7 +133,7 @@ export default function AdminResidents() {
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        {["name", "email", "password", "roomId"].map(
+                        {["name", "email", "password", "roomsId"].map(
                             (field) => (
                                 <input
                                     key={field}
@@ -184,7 +184,7 @@ export default function AdminResidents() {
                                 <tr className="text-gray-400 border-b border-white/10">
                                     <th className="p-2 text-left">Name</th>
                                     <th className="p-2 text-left">Email</th>
-                                    <th className="p-2 text-center">Room</th>
+                                    <th className="p-2 text-center">rooms</th>
                                     <th className="p-2 text-center">Action</th>
                                 </tr>
                             </thead>
@@ -197,7 +197,7 @@ export default function AdminResidents() {
                                         <td className="p-2">{r.name}</td>
                                         <td className="p-2">{r.email}</td>
                                         <td className="p-2 text-center">
-                                            {r.roomId?.roomNumber || "-"}
+                                            {r.roomsId?.roomsNumber || "-"}
                                         </td>
                                         <td className="p-2 text-center">
                                             <MotionButton

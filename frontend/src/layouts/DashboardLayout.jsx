@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }) {
                                     { to: "/admin/requests", label: "Requests" },
                                     { to: "/admin/history", label: "History" },
                                     { to: "/admin/residents", label: "Residents" },
-                                    { to: "/admin/rooms", label: "Rooms" },
+                                    { to: "/admin/roomss", label: "roomss" },
                                     { to: "/payments", label: "Payments" }
                                 ].map((item) => (
                                     <NavLink

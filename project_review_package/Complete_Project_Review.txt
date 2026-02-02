@@ -25,7 +25,7 @@ TAGT
 │   │   ├── Request.js
 │   │   ├── RequestHistory.js
 │   │   ├── Resident.js
-│   │   ├── Room.js
+│   │   ├── rooms.js
 │   │   └── User.js
 │   ├── routes
 │   │   ├── adminRoutes.js
@@ -33,7 +33,7 @@ TAGT
 │   │   ├── auth.js
 │   │   ├── payments.js
 │   │   ├── resident.js
-│   │   └── rooms.js
+│   │   └── roomss.js
 │   ├── utils
 │   │   ├── emailService.js
 │   │   └── generateToken.js
@@ -81,13 +81,13 @@ TAGT
 │   │   │   ├── AdminDashboard.jsx
 │   │   │   ├── AdminRequests.jsx
 │   │   │   ├── AdminResidents.jsx
-│   │   │   ├── AdminRooms.jsx
+│   │   │   ├── Adminroomss.jsx
 │   │   │   ├── Login.jsx
 │   │   │   ├── Payments.jsx
 │   │   │   ├── RequestHistory.jsx
 │   │   │   ├── ResidentDashboard.jsx
 │   │   │   ├── ResidentPayments.jsx
-│   │   │   └── Rooms.jsx
+│   │   │   └── roomss.jsx
 │   │   ├── routes
 │   │   │   ├── AdminRoute.jsx
 │   │   │   ├── ProtectedRoute.jsx
@@ -150,7 +150,7 @@ Total Size: 915.75 KB
 15. backend\models\Request.js
 16. backend\models\RequestHistory.js
 17. backend\models\Resident.js
-18. backend\models\Room.js
+18. backend\models\rooms.js
 19. backend\models\User.js
 20. backend\package.json
 21. backend\package-lock.json
@@ -159,7 +159,7 @@ Total Size: 915.75 KB
 24. backend\routes\auth.js
 25. backend\routes\payments.js
 26. backend\routes\resident.js
-27. backend\routes\rooms.js
+27. backend\routes\roomss.js
 28. backend\utils\emailService.js
 29. backend\utils\generateToken.js
 30. frontend\package.json
@@ -197,13 +197,13 @@ Total Size: 915.75 KB
 62. frontend\src\pages\AdminDashboard.jsx
 63. frontend\src\pages\AdminRequests.jsx
 64. frontend\src\pages\AdminResidents.jsx
-65. frontend\src\pages\AdminRooms.jsx
+65. frontend\src\pages\Adminroomss.jsx
 66. frontend\src\pages\Login.jsx
 67. frontend\src\pages\Payments.jsx
 68. frontend\src\pages\RequestHistory.jsx
 69. frontend\src\pages\ResidentDashboard.jsx
 70. frontend\src\pages\ResidentPayments.jsx
-71. frontend\src\pages\Rooms.jsx
+71. frontend\src\pages\roomss.jsx
 72. frontend\src\routes\AdminRoute.jsx
 73. frontend\src\routes\ProtectedRoute.jsx
 74. frontend\src\routes\ResidentRoute.jsx
@@ -370,7 +370,7 @@ module.exports = {
 // MODIFIED: 2026-02-01 21:09:48
 // ##########################################
 
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 
 /* =====================================================
    OCCUPANCY FORECAST ENGINE
@@ -384,9 +384,9 @@ const Room = require("../models/Room");
  * (monthly resolution)
  */
 async function getHistoricalOccupancy(months = 6) {
-    const rooms = await Room.find({}, "totalBeds occupiedBeds updatedAt");
+    const roomss = await rooms.find({}, "totalBeds occupiedBeds updatedAt");
 
-    if (rooms.length === 0) return [];
+    if (roomss.length === 0) return [];
 
     const now = new Date();
     const history = [];
@@ -398,12 +398,12 @@ async function getHistoricalOccupancy(months = 6) {
             1
         );
 
-        const totalBeds = rooms.reduce(
+        const totalBeds = roomss.reduce(
             (sum, r) => sum + (r.totalBeds || 0),
             0
         );
 
-        const occupiedBeds = rooms.reduce(
+        const occupiedBeds = roomss.reduce(
             (sum, r) => sum + (r.occupiedBeds || 0),
             0
         );
@@ -498,7 +498,7 @@ module.exports = {
 // MODIFIED: 2026-02-01 20:47:33
 // ##########################################
 
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 const Payment = require("../models/Payment");
 const Request = require("../models/Request");
 
@@ -518,9 +518,9 @@ async function getKPIs({ fromDate, toDate } = {}) {
     /* =======================
        OCCUPANCY KPI
     ======================= */
-    const rooms = await Room.find({}, "totalBeds occupiedBeds");
+    const roomss = await rooms.find({}, "totalBeds occupiedBeds");
 
-    const totals = rooms.reduce(
+    const totals = roomss.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;
@@ -761,7 +761,7 @@ module.exports = {
 // MODIFIED: 2026-02-01 21:37:03
 // ##########################################
 
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 const Payment = require("../models/Payment");
 const { predictChurn } = require("./churnModel");
 
@@ -776,9 +776,9 @@ async function optimizeRevenue() {
     /* =======================
        OCCUPANCY ANALYSIS
     ======================= */
-    const rooms = await Room.find({}, "totalBeds occupiedBeds");
+    const roomss = await rooms.find({}, "totalBeds occupiedBeds");
 
-    const totals = rooms.reduce(
+    const totals = roomss.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;
@@ -953,7 +953,7 @@ exports.getAllResidents = async (req, res) => {
    ============================ */
 exports.addResident = async (req, res) => {
     try {
-        const { name, email, password, room, rent } = req.body;
+        const { name, email, password, rooms, rent } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({
@@ -980,7 +980,7 @@ exports.addResident = async (req, res) => {
             email: email.toLowerCase(),
             password: hashedPassword,
             role: "resident", // ✅ always normalized
-            room: room || null,
+            rooms: rooms || null,
             rent: rent || null
         });
 
@@ -991,7 +991,7 @@ exports.addResident = async (req, res) => {
                 name: resident.name,
                 email: resident.email,
                 role: resident.role,
-                room: resident.room,
+                rooms: resident.rooms,
                 rent: resident.rent
             }
         });
@@ -1068,7 +1068,7 @@ mongoose
 /* ================= ROUTES ================= */
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/adminRoutes");
-const roomRoutes = require("./routes/rooms");
+const roomsRoutes = require("./routes/roomss");
 const paymentRoutes = require("./routes/payments");
 const analyticsRoutes = require("./routes/analytics");
 const residentRoutes = require("./routes/resident");
@@ -1086,7 +1086,7 @@ app.get("/api/health", (req, res) => {
 /* ================= API ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/rooms", roomRoutes);
+app.use("/api/roomss", roomsRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/resident", residentRoutes);
 app.use("/api/analytics", analyticsRoutes); // ✅ NEW
@@ -1552,7 +1552,7 @@ const residentSchema = new mongoose.Schema(
             ref: "User",
             required: true
         },
-        room: {
+        rooms: {
             type: String,
             required: true
         },
@@ -1571,16 +1571,16 @@ module.exports = mongoose.model("Resident", residentSchema);
 
 
 // ##########################################
-// FILE 18 of 79: backend\models\Room.js
+// FILE 18 of 79: backend\models\rooms.js
 // SIZE: 619 bytes
 // MODIFIED: 2026-02-01 20:29:37
 // ##########################################
 
 const mongoose = require("mongoose");
 
-const roomSchema = new mongoose.Schema(
+const roomsSchema = new mongoose.Schema(
     {
-        roomNumber: {
+        roomsNumber: {
             type: String,
             required: true,
             unique: true
@@ -1608,7 +1608,7 @@ const roomSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Room", roomSchema);
+module.exports = mongoose.model("rooms", roomsSchema);
 
 
 
@@ -1649,9 +1649,9 @@ const userSchema = new mongoose.Schema(
             default: "resident"
         },
 
-        roomId: {
+        roomsId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Room",
+            ref: "rooms",
             default: null
         },
 
@@ -3603,7 +3603,7 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 27 of 79: backend\routes\rooms.js
+// FILE 27 of 79: backend\routes\roomss.js
 // SIZE: 3960 bytes
 // MODIFIED: 2026-02-01 20:33:16
 // ##########################################
@@ -3614,53 +3614,53 @@ const router = express.Router();
 
 const auth = require("../middleware/auth");
 const isAdmin = require("../middleware/isAdmin");
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 
 /* =========================================================
-   CREATE ROOM (ADMIN)
+   CREATE rooms (ADMIN)
 ========================================================= */
 router.post("/", auth, isAdmin, async (req, res) => {
     try {
-        const { roomNumber, note } = req.body;
+        const { roomsNumber, note } = req.body;
         const totalBeds = Number(req.body.totalBeds);
 
-        if (!roomNumber || !Number.isInteger(totalBeds) || totalBeds <= 0) {
+        if (!roomsNumber || !Number.isInteger(totalBeds) || totalBeds <= 0) {
             return res.status(400).json({
-                message: "Room number and valid total beds are required"
+                message: "rooms number and valid total beds are required"
             });
         }
 
-        const exists = await Room.findOne({ roomNumber });
+        const exists = await rooms.findOne({ roomsNumber });
         if (exists) {
             return res.status(400).json({
-                message: "Room already exists"
+                message: "rooms already exists"
             });
         }
 
-        const room = await Room.create({
-            roomNumber,
+        const rooms = await rooms.create({
+            roomsNumber,
             totalBeds,
             occupiedBeds: 0,
             note: note || ""
         });
 
-        res.status(201).json(room);
+        res.status(201).json(rooms);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Failed to create room" });
+        res.status(500).json({ message: "Failed to create rooms" });
     }
 });
 
 /* =========================================================
-   GET ALL ROOMS (ADMIN)
+   GET ALL roomsS (ADMIN)
 ========================================================= */
 router.get("/", auth, isAdmin, async (req, res) => {
     try {
-        const rooms = await Room.find().sort({ roomNumber: 1 });
-        res.json(rooms);
+        const roomss = await rooms.find().sort({ roomsNumber: 1 });
+        res.json(roomss);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Failed to fetch rooms" });
+        res.status(500).json({ message: "Failed to fetch roomss" });
     }
 });
 
@@ -3670,7 +3670,7 @@ router.get("/", auth, isAdmin, async (req, res) => {
 router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid room ID" });
+            return res.status(400).json({ message: "Invalid rooms ID" });
         }
 
         const occupiedBeds = Number(req.body.occupiedBeds);
@@ -3680,21 +3680,21 @@ router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
             });
         }
 
-        const room = await Room.findById(req.params.id);
-        if (!room) {
-            return res.status(404).json({ message: "Room not found" });
+        const rooms = await rooms.findById(req.params.id);
+        if (!rooms) {
+            return res.status(404).json({ message: "rooms not found" });
         }
 
-        if (occupiedBeds > room.totalBeds) {
+        if (occupiedBeds > rooms.totalBeds) {
             return res.status(400).json({
                 message: "Occupied beds cannot exceed total beds"
             });
         }
 
-        room.occupiedBeds = occupiedBeds;
-        await room.save();
+        rooms.occupiedBeds = occupiedBeds;
+        await rooms.save();
 
-        res.json(room);
+        res.json(rooms);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Failed to update occupancy" });
@@ -3702,30 +3702,30 @@ router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
 });
 
 /* =========================================================
-   DELETE ROOM (ADMIN)
+   DELETE rooms (ADMIN)
 ========================================================= */
 router.delete("/:id", auth, isAdmin, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid room ID" });
+            return res.status(400).json({ message: "Invalid rooms ID" });
         }
 
-        const room = await Room.findById(req.params.id);
-        if (!room) {
-            return res.status(404).json({ message: "Room not found" });
+        const rooms = await rooms.findById(req.params.id);
+        if (!rooms) {
+            return res.status(404).json({ message: "rooms not found" });
         }
 
-        if (room.occupiedBeds > 0) {
+        if (rooms.occupiedBeds > 0) {
             return res.status(400).json({
-                message: "Cannot delete room with occupied beds"
+                message: "Cannot delete rooms with occupied beds"
             });
         }
 
-        await room.deleteOne();
-        res.json({ message: "Room deleted" });
+        await rooms.deleteOne();
+        res.json({ message: "rooms deleted" });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Failed to delete room" });
+        res.status(500).json({ message: "Failed to delete rooms" });
     }
 });
 
@@ -21936,7 +21936,7 @@ module.exports = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#2563eb" />
     <meta name="description"
-          content="TAGT Property Management System - Manage tenants, maintenance requests, billing, and room assignments efficiently." />
+          content="TAGT Property Management System - Manage tenants, maintenance requests, billing, and rooms assignments efficiently." />
     <meta name="keywords" content="property management, tenant management, billing, maintenance requests, TAGT" />
     <meta name="author" content="TAGT" />
     <meta name="robots" content="noindex, nofollow" />
@@ -21944,7 +21944,7 @@ module.exports = {
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="TAGT - Property Management System" />
-    <meta property="og:description" content="Manage tenants, maintenance requests, billing, and room assignments efficiently." />
+    <meta property="og:description" content="Manage tenants, maintenance requests, billing, and rooms assignments efficiently." />
 
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
@@ -22251,7 +22251,7 @@ import AdminRequests from "./pages/AdminRequests";
 import RequestHistory from "./pages/RequestHistory";
 import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
-import Rooms from "./pages/Rooms";
+import roomss from "./pages/roomss";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
@@ -22303,10 +22303,10 @@ function AnimatedRoutes() {
                 />
 
                 <Route
-                    path="/admin/rooms"
+                    path="/admin/roomss"
                     element={
                         <ProtectedRoute role="admin">
-                            <Rooms />
+                            <roomss />
                         </ProtectedRoute>
                     }
                 />
@@ -23904,7 +23904,7 @@ export default function DashboardLayout({ children }) {
                                     { to: "/admin/requests", label: "Requests" },
                                     { to: "/admin/history", label: "History" },
                                     { to: "/admin/residents", label: "Residents" },
-                                    { to: "/admin/rooms", label: "Rooms" },
+                                    { to: "/admin/roomss", label: "roomss" },
                                     { to: "/payments", label: "Payments" }
                                 ].map((item) => (
                                     <NavLink
@@ -24544,7 +24544,7 @@ export default function AdminResidents() {
         name: "",
         email: "",
         password: "",
-        room: "",
+        rooms: "",
         rent: ""
     });
 
@@ -24574,9 +24574,9 @@ export default function AdminResidents() {
 
     /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
-        const { name, email, password, room, rent } = form;
+        const { name, email, password, rooms, rent } = form;
 
-        if (!name || !email || !password || !room || !rent) {
+        if (!name || !email || !password || !rooms || !rent) {
             toast.error("All fields are required");
             return;
         }
@@ -24592,7 +24592,7 @@ export default function AdminResidents() {
                 name,
                 email,
                 password,
-                room,
+                rooms,
                 rent: rentValue
             });
 
@@ -24601,7 +24601,7 @@ export default function AdminResidents() {
                 name: "",
                 email: "",
                 password: "",
-                room: "",
+                rooms: "",
                 rent: ""
             });
 
@@ -24672,7 +24672,7 @@ export default function AdminResidents() {
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        {["name", "email", "password", "room", "rent"].map(
+                        {["name", "email", "password", "rooms", "rent"].map(
                             (field) => (
                                 <input
                                     key={field}
@@ -24725,7 +24725,7 @@ export default function AdminResidents() {
                                 <tr className="text-gray-400 border-b border-white/10">
                                     <th className="p-2 text-left">Name</th>
                                     <th className="p-2 text-left">Email</th>
-                                    <th className="p-2 text-center">Room</th>
+                                    <th className="p-2 text-center">rooms</th>
                                     <th className="p-2 text-center">Rent</th>
                                     <th className="p-2 text-center">Action</th>
                                 </tr>
@@ -24739,7 +24739,7 @@ export default function AdminResidents() {
                                         <td className="p-2">{r.name}</td>
                                         <td className="p-2">{r.email}</td>
                                         <td className="p-2 text-center">
-                                            {r.room || "-"}
+                                            {r.rooms || "-"}
                                         </td>
                                         <td className="p-2 text-center">
                                             {r.rent || "-"}
@@ -24821,7 +24821,7 @@ export default function AdminResidents() {
 
 
 // ##########################################
-// FILE 65 of 79: frontend\src\pages\AdminRooms.jsx
+// FILE 65 of 79: frontend\src\pages\Adminroomss.jsx
 // SIZE: 12403 bytes
 // MODIFIED: 2026-01-31 20:06:08
 // ##########################################
@@ -24831,41 +24831,41 @@ import toast from "react-hot-toast";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
-export default function AdminRooms() {
-    const [rooms, setRooms] = useState([]);
+export default function Adminroomss() {
+    const [roomss, setroomss] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [form, setForm] = useState({
-        roomNumber: "",
+        roomsNumber: "",
         totalBeds: "",
         note: ""
     });
 
-    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [selectedrooms, setSelectedrooms] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH ROOMS ================= */
-    const fetchRooms = useCallback(async () => {
+    /* ================= FETCH roomsS ================= */
+    const fetchroomss = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await api.get("/rooms");
-            setRooms(Array.isArray(res.data) ? res.data : []);
+            const res = await api.get("/roomss");
+            setroomss(Array.isArray(res.data) ? res.data : []);
         } catch {
-            toast.error("Failed to load rooms");
-            setRooms([]);
+            toast.error("Failed to load roomss");
+            setroomss([]);
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchRooms();
-    }, [fetchRooms]);
+        fetchroomss();
+    }, [fetchroomss]);
 
-    /* ================= ADD ROOM ================= */
-    const addRoom = async () => {
-        if (!form.roomNumber || !form.totalBeds) {
-            toast.error("Room number and total beds are required");
+    /* ================= ADD rooms ================= */
+    const addrooms = async () => {
+        if (!form.roomsNumber || !form.totalBeds) {
+            toast.error("rooms number and total beds are required");
             return;
         }
 
@@ -24875,23 +24875,23 @@ export default function AdminRooms() {
         }
 
         try {
-            await api.post("/rooms", {
-                roomNumber: form.roomNumber,
+            await api.post("/roomss", {
+                roomsNumber: form.roomsNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
             });
 
-            toast.success("Room added successfully");
-            setForm({ roomNumber: "", totalBeds: "", note: "" });
-            fetchRooms();
+            toast.success("rooms added successfully");
+            setForm({ roomsNumber: "", totalBeds: "", note: "" });
+            fetchroomss();
         } catch {
-            toast.error("Failed to add room");
+            toast.error("Failed to add rooms");
         }
     };
 
     /* ================= UPDATE OCCUPANCY ================= */
     const updateOccupancy = async () => {
-        if (!selectedRoom) return;
+        if (!selectedrooms) return;
 
         const value = Number(occupiedBeds);
 
@@ -24900,45 +24900,45 @@ export default function AdminRooms() {
             return;
         }
 
-        if (value > selectedRoom.totalBeds) {
+        if (value > selectedrooms.totalBeds) {
             toast.error("Occupied beds cannot exceed total beds");
             return;
         }
 
         try {
             await api.put(
-                `/rooms/${selectedRoom._id}/occupancy`,
+                `/roomss/${selectedrooms._id}/occupancy`,
                 { occupiedBeds: value }
             );
 
             toast.success("Occupancy updated");
-            setSelectedRoom(null);
+            setSelectedrooms(null);
             setOccupiedBeds("");
-            fetchRooms();
+            fetchroomss();
         } catch {
             toast.error("Failed to update occupancy");
         }
     };
 
-    /* ================= DELETE ROOM ================= */
-    const deleteRoom = async (room) => {
-        if (room.occupiedBeds > 0) {
-            toast.error("Cannot delete a room with occupied beds");
+    /* ================= DELETE rooms ================= */
+    const deleterooms = async (rooms) => {
+        if (rooms.occupiedBeds > 0) {
+            toast.error("Cannot delete a rooms with occupied beds");
             return;
         }
 
         const confirm = window.confirm(
-            `Delete room ${room.roomNumber}? This cannot be undone.`
+            `Delete rooms ${rooms.roomsNumber}? This cannot be undone.`
         );
 
         if (!confirm) return;
 
         try {
-            await api.delete(`/rooms/${room._id}`);
-            toast.success("Room deleted");
-            fetchRooms();
+            await api.delete(`/roomss/${rooms._id}`);
+            toast.success("rooms deleted");
+            fetchroomss();
         } catch {
-            toast.error("Failed to delete room");
+            toast.error("Failed to delete rooms");
         }
     };
 
@@ -24947,26 +24947,26 @@ export default function AdminRooms() {
             <div className="space-y-10">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                        Rooms & Bed Management
+                        roomss & Bed Management
                     </h1>
                     <p className="text-gray-500 mt-1">
-                        Manage rooms, capacity, and occupancy
+                        Manage roomss, capacity, and occupancy
                     </p>
                 </div>
 
-                {/* ADD ROOM */}
+                {/* ADD rooms */}
                 <div className="bg-white rounded-2xl border p-6">
                     <h2 className="text-lg font-semibold mb-4">
-                        Add New Room
+                        Add New rooms
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <input
-                            placeholder="Room Number"
+                            placeholder="rooms Number"
                             className="border rounded-lg p-2"
-                            value={form.roomNumber}
+                            value={form.roomsNumber}
                             onChange={(e) =>
-                                setForm({ ...form, roomNumber: e.target.value })
+                                setForm({ ...form, roomsNumber: e.target.value })
                             }
                         />
 
@@ -24990,32 +24990,32 @@ export default function AdminRooms() {
                         />
 
                         <button
-                            onClick={addRoom}
+                            onClick={addrooms}
                             className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
                         >
-                            Add Room
+                            Add rooms
                         </button>
                     </div>
                 </div>
 
-                {/* ROOMS TABLE */}
+                {/* roomsS TABLE */}
                 <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">Rooms</h2>
+                    <h2 className="text-lg font-semibold mb-4">roomss</h2>
 
                     {loading ? (
                         <p className="text-gray-500 text-center">
-                            Loading rooms…
+                            Loading roomss…
                         </p>
-                    ) : rooms.length === 0 ? (
+                    ) : roomss.length === 0 ? (
                         <p className="text-gray-500 text-center">
-                            No rooms added yet.
+                            No roomss added yet.
                         </p>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b text-gray-500">
-                                        <th className="p-2 text-left">Room</th>
+                                        <th className="p-2 text-left">rooms</th>
                                         <th className="p-2 text-center">
                                             Total Beds
                                         </th>
@@ -25031,7 +25031,7 @@ export default function AdminRooms() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {rooms.map((r) => {
+                                    {roomss.map((r) => {
                                         const availableBeds =
                                             r.totalBeds - r.occupiedBeds;
 
@@ -25041,7 +25041,7 @@ export default function AdminRooms() {
                                                 className="border-b hover:bg-gray-50"
                                             >
                                                 <td className="p-2">
-                                                    {r.roomNumber}
+                                                    {r.roomsNumber}
                                                 </td>
                                                 <td className="p-2 text-center">
                                                     {r.totalBeds}
@@ -25055,7 +25055,7 @@ export default function AdminRooms() {
                                                 <td className="p-2 text-center space-x-2">
                                                     <button
                                                         onClick={() => {
-                                                            setSelectedRoom(r);
+                                                            setSelectedrooms(r);
                                                             setOccupiedBeds(
                                                                 String(
                                                                     r.occupiedBeds
@@ -25068,7 +25068,7 @@ export default function AdminRooms() {
                                                     </button>
                                                     <button
                                                         onClick={() =>
-                                                            deleteRoom(r)
+                                                            deleterooms(r)
                                                         }
                                                         className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
                                                     >
@@ -25086,12 +25086,12 @@ export default function AdminRooms() {
             </div>
 
             {/* OCCUPANCY MODAL */}
-            {selectedRoom && (
+            {selectedrooms && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl p-6 w-96">
                         <h3 className="text-lg font-semibold mb-4">
-                            Update Occupancy – Room{" "}
-                            {selectedRoom.roomNumber}
+                            Update Occupancy – rooms{" "}
+                            {selectedrooms.roomsNumber}
                         </h3>
 
                         <input
@@ -25105,7 +25105,7 @@ export default function AdminRooms() {
 
                         <div className="flex justify-end gap-3">
                             <button
-                                onClick={() => setSelectedRoom(null)}
+                                onClick={() => setSelectedrooms(null)}
                                 className="px-4 py-2 border rounded-lg"
                             >
                                 Cancel
@@ -25985,7 +25985,7 @@ export default function ResidentPayments() {
 
 
 // ##########################################
-// FILE 71 of 79: frontend\src\pages\Rooms.jsx
+// FILE 71 of 79: frontend\src\pages\roomss.jsx
 // SIZE: 9993 bytes
 // MODIFIED: 2026-01-30 13:20:54
 // ##########################################
@@ -25997,64 +25997,64 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * Rooms (DARK THEME FIXED)
- * Phase 4 – Room & Bed Management (Admin)
+ * roomss (DARK THEME FIXED)
+ * Phase 4 – rooms & Bed Management (Admin)
  */
 
-export default function Rooms() {
-    const [rooms, setRooms] = useState([]);
+export default function roomss() {
+    const [roomss, setroomss] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    /* ===== ADD ROOM FORM ===== */
+    /* ===== ADD rooms FORM ===== */
     const [form, setForm] = useState({
-        roomNumber: "",
+        roomsNumber: "",
         totalBeds: "",
         note: ""
     });
 
     /* ===== OCCUPANCY MODAL ===== */
-    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [selectedrooms, setSelectedrooms] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH ROOMS ================= */
-    const fetchRooms = async () => {
+    /* ================= FETCH roomsS ================= */
+    const fetchroomss = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/rooms");
-            setRooms(Array.isArray(res.data) ? res.data : []);
+            const res = await api.get("/roomss");
+            setroomss(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error(err);
-            toast.error("Failed to load rooms");
-            setRooms([]);
+            toast.error("Failed to load roomss");
+            setroomss([]);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchRooms();
+        fetchroomss();
     }, []);
 
-    /* ================= ADD ROOM ================= */
-    const addRoom = async () => {
-        if (!form.roomNumber || !form.totalBeds) {
-            toast.error("Room number and total beds are required");
+    /* ================= ADD rooms ================= */
+    const addrooms = async () => {
+        if (!form.roomsNumber || !form.totalBeds) {
+            toast.error("rooms number and total beds are required");
             return;
         }
 
         try {
-            await api.post("/rooms", {
-                roomNumber: form.roomNumber,
+            await api.post("/roomss", {
+                roomsNumber: form.roomsNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
             });
 
-            toast.success("Room added");
-            setForm({ roomNumber: "", totalBeds: "", note: "" });
-            fetchRooms();
+            toast.success("rooms added");
+            setForm({ roomsNumber: "", totalBeds: "", note: "" });
+            fetchroomss();
         } catch (err) {
             console.error(err);
-            toast.error("Failed to add room");
+            toast.error("Failed to add rooms");
         }
     };
 
@@ -26067,55 +26067,55 @@ export default function Rooms() {
 
         try {
             await api.put(
-                `/rooms/${selectedRoom._id}/occupancy`,
+                `/roomss/${selectedrooms._id}/occupancy`,
                 { occupiedBeds: Number(occupiedBeds) }
             );
 
             toast.success("Occupancy updated");
-            setSelectedRoom(null);
+            setSelectedrooms(null);
             setOccupiedBeds("");
-            fetchRooms();
+            fetchroomss();
         } catch (err) {
             console.error(err);
             toast.error("Failed to update occupancy");
         }
     };
 
-    /* ================= DELETE ROOM ================= */
-    const deleteRoom = async (room) => {
+    /* ================= DELETE rooms ================= */
+    const deleterooms = async (rooms) => {
         if (
             !window.confirm(
-                `Delete room ${room.roomNumber}? This cannot be undone.`
+                `Delete rooms ${rooms.roomsNumber}? This cannot be undone.`
             )
         )
             return;
 
         try {
-            await api.delete(`/rooms/${room._id}`);
-            toast.success("Room deleted");
-            fetchRooms();
+            await api.delete(`/roomss/${rooms._id}`);
+            toast.success("rooms deleted");
+            fetchroomss();
         } catch (err) {
             console.error(err);
-            toast.error("Failed to delete room");
+            toast.error("Failed to delete rooms");
         }
     };
 
     return (
         <DashboardLayout>
             <h2 className="text-2xl font-bold mb-6">
-                Rooms & Bed Management
+                roomss & Bed Management
             </h2>
 
-            {/* ADD ROOM */}
+            {/* ADD rooms */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
                 <input
-                    placeholder="Room Number"
+                    placeholder="rooms Number"
                     className="bg-black/30 text-gray-100 border border-white/10 p-2 rounded focus:outline-none"
-                    value={form.roomNumber}
+                    value={form.roomsNumber}
                     onChange={(e) =>
                         setForm({
                             ...form,
-                            roomNumber: e.target.value
+                            roomsNumber: e.target.value
                         })
                     }
                 />
@@ -26146,28 +26146,28 @@ export default function Rooms() {
                 />
 
                 <button
-                    onClick={addRoom}
+                    onClick={addrooms}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                 >
-                    Add Room
+                    Add rooms
                 </button>
             </div>
 
-            {/* ROOMS TABLE */}
+            {/* roomsS TABLE */}
             {loading ? (
                 <p className="text-center text-gray-400">
                     Loading…
                 </p>
-            ) : rooms.length === 0 ? (
+            ) : roomss.length === 0 ? (
                 <p className="text-center text-gray-400">
-                    No rooms added yet.
+                    No roomss added yet.
                 </p>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-gray-200 border border-white/10 rounded-lg">
                         <thead className="bg-white/10">
                             <tr>
-                                <th className="p-3">Room</th>
+                                <th className="p-3">rooms</th>
                                 <th className="p-3">Total Beds</th>
                                 <th className="p-3">Occupied</th>
                                 <th className="p-3">Available</th>
@@ -26176,12 +26176,12 @@ export default function Rooms() {
                         </thead>
 
                         <tbody>
-                            {rooms.map((r) => (
+                            {roomss.map((r) => (
                                 <tr
                                     key={r._id}
                                     className="border-t border-white/10 text-center hover:bg-white/5"
                                 >
-                                    <td className="p-3">{r.roomNumber}</td>
+                                    <td className="p-3">{r.roomsNumber}</td>
                                     <td className="p-3">{r.totalBeds}</td>
                                     <td className="p-3">{r.occupiedBeds}</td>
                                     <td className="p-3 font-semibold">
@@ -26190,7 +26190,7 @@ export default function Rooms() {
                                     <td className="p-3 space-x-2">
                                         <button
                                             onClick={() => {
-                                                setSelectedRoom(r);
+                                                setSelectedrooms(r);
                                                 setOccupiedBeds(
                                                     r.occupiedBeds
                                                 );
@@ -26201,7 +26201,7 @@ export default function Rooms() {
                                         </button>
 
                                         <button
-                                            onClick={() => deleteRoom(r)}
+                                            onClick={() => deleterooms(r)}
                                             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
                                         >
                                             Delete
@@ -26215,12 +26215,12 @@ export default function Rooms() {
             )}
 
             {/* OCCUPANCY MODAL */}
-            {selectedRoom && (
+            {selectedrooms && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-xl w-96">
                         <h3 className="font-bold mb-3">
-                            Update Occupancy – Room{" "}
-                            {selectedRoom.roomNumber}
+                            Update Occupancy – rooms{" "}
+                            {selectedrooms.roomsNumber}
                         </h3>
 
                         <input
@@ -26235,7 +26235,7 @@ export default function Rooms() {
                         <div className="flex justify-end gap-2">
                             <button
                                 onClick={() =>
-                                    setSelectedRoom(null)
+                                    setSelectedrooms(null)
                                 }
                                 className="text-gray-400 hover:text-gray-200"
                             >

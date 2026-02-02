@@ -4,53 +4,75 @@ const router = express.Router();
 
 const auth = require("../middleware/auth");
 const isAdmin = require("../middleware/isAdmin");
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 
 /* =========================================================
-   CREATE ROOM (ADMIN)
+   CREATE rooms (ADMIN)
 ========================================================= */
 router.post("/", auth, isAdmin, async (req, res) => {
     try {
-        const { roomNumber, note } = req.body;
+        const { roomsNumber, note } = req.body;
         const totalBeds = Number(req.body.totalBeds);
+        const rent = Number(req.body.rent);
 
-        if (!roomNumber || !Number.isInteger(totalBeds) || totalBeds <= 0) {
+        if (
+            !roomsNumber ||
+            !Number.isInteger(totalBeds) ||
+            totalBeds <= 0 ||
+            !Number.isFinite(rent) ||
+            rent <= 0
+        ) {
             return res.status(400).json({
-                message: "Room number and valid total beds are required"
+                success: false,
+                message: "rooms number, valid rent, and valid total beds are required"
             });
         }
 
-        const exists = await Room.findOne({ roomNumber });
+        const exists = await rooms.findOne({ roomsNumber });
         if (exists) {
             return res.status(400).json({
-                message: "Room already exists"
+                success: false,
+                message: "rooms already exists"
             });
         }
 
-        const room = await Room.create({
-            roomNumber,
+        const rooms = await rooms.create({
+            roomsNumber,
+            rent,
             totalBeds,
             occupiedBeds: 0,
             note: note || ""
         });
 
-        res.status(201).json(room);
+        res.status(201).json({
+            success: true,
+            rooms
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to create room" });
+        console.error("CREATE rooms ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create rooms"
+        });
     }
 });
 
 /* =========================================================
-   GET ALL ROOMS (ADMIN)
+   GET ALL roomsS (ADMIN)
 ========================================================= */
 router.get("/", auth, isAdmin, async (req, res) => {
     try {
-        const rooms = await Room.find().sort({ roomNumber: 1 });
-        res.json(rooms);
+        const roomss = await rooms.find().sort({ roomsNumber: 1 });
+        res.json({
+            success: true,
+            roomss
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to fetch rooms" });
+        console.error("GET roomsS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch roomss"
+        });
     }
 });
 
@@ -60,62 +82,90 @@ router.get("/", auth, isAdmin, async (req, res) => {
 router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid room ID" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid rooms ID"
+            });
         }
 
         const occupiedBeds = Number(req.body.occupiedBeds);
         if (!Number.isInteger(occupiedBeds) || occupiedBeds < 0) {
             return res.status(400).json({
+                success: false,
                 message: "Invalid occupied beds value"
             });
         }
 
-        const room = await Room.findById(req.params.id);
-        if (!room) {
-            return res.status(404).json({ message: "Room not found" });
+        const rooms = await rooms.findById(req.params.id);
+        if (!rooms) {
+            return res.status(404).json({
+                success: false,
+                message: "rooms not found"
+            });
         }
 
-        if (occupiedBeds > room.totalBeds) {
+        if (occupiedBeds > rooms.totalBeds) {
             return res.status(400).json({
+                success: false,
                 message: "Occupied beds cannot exceed total beds"
             });
         }
 
-        room.occupiedBeds = occupiedBeds;
-        await room.save();
+        rooms.occupiedBeds = occupiedBeds;
+        await rooms.save();
 
-        res.json(room);
+        res.json({
+            success: true,
+            rooms
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to update occupancy" });
+        console.error("UPDATE OCCUPANCY ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to update occupancy"
+        });
     }
 });
 
 /* =========================================================
-   DELETE ROOM (ADMIN)
+   DELETE rooms (ADMIN)
 ========================================================= */
 router.delete("/:id", auth, isAdmin, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid room ID" });
-        }
-
-        const room = await Room.findById(req.params.id);
-        if (!room) {
-            return res.status(404).json({ message: "Room not found" });
-        }
-
-        if (room.occupiedBeds > 0) {
             return res.status(400).json({
-                message: "Cannot delete room with occupied beds"
+                success: false,
+                message: "Invalid rooms ID"
             });
         }
 
-        await room.deleteOne();
-        res.json({ message: "Room deleted" });
+        const rooms = await rooms.findById(req.params.id);
+        if (!rooms) {
+            return res.status(404).json({
+                success: false,
+                message: "rooms not found"
+            });
+        }
+
+        if (rooms.occupiedBeds > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete rooms with occupied beds"
+            });
+        }
+
+        await rooms.deleteOne();
+
+        res.json({
+            success: true,
+            message: "rooms deleted"
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to delete room" });
+        console.error("DELETE rooms ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete rooms"
+        });
     }
 });
 

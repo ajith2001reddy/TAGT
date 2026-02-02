@@ -5,17 +5,20 @@ const paymentSchema = new mongoose.Schema(
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true
         },
 
         amount: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
 
         description: {
             type: String,
-            default: ""
+            default: "",
+            trim: true
         },
 
         type: {
@@ -25,13 +28,15 @@ const paymentSchema = new mongoose.Schema(
 
         month: {
             type: String,
-            default: null
+            default: null,
+            index: true
         },
 
         status: {
             type: String,
             enum: ["unpaid", "paid"],
-            default: "unpaid"
+            default: "unpaid",
+            index: true
         },
 
         adminNote: {
@@ -53,5 +58,7 @@ const paymentSchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+paymentSchema.index({ residentId: 1, status: 1 });
 
 module.exports = mongoose.model("Payment", paymentSchema);

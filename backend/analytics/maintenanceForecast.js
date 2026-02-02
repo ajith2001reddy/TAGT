@@ -2,14 +2,8 @@ const Request = require("../models/Request");
 
 /* =====================================================
    MAINTENANCE COST FORECAST ENGINE
-   - Monthly aggregation
-   - Trend-based prediction
-   - Spike detection
 ===================================================== */
 
-/**
- * Get monthly maintenance cost history
- */
 async function getMonthlyMaintenanceCosts(months = 6) {
     const now = new Date();
     const history = [];
@@ -47,9 +41,6 @@ async function getMonthlyMaintenanceCosts(months = 6) {
     return history;
 }
 
-/**
- * Calculate average monthly cost change (trend)
- */
 function calculateCostTrend(data) {
     if (data.length < 2) return 0;
 
@@ -61,9 +52,6 @@ function calculateCostTrend(data) {
     return change / (data.length - 1);
 }
 
-/**
- * Detect spike risk
- */
 function detectSpikeRisk(history) {
     if (history.length < 3) return "LOW";
 
@@ -77,9 +65,6 @@ function detectSpikeRisk(history) {
     return "LOW";
 }
 
-/**
- * Predict future maintenance costs
- */
 async function predictMaintenanceCost(monthsAhead = 6) {
     const history = await getMonthlyMaintenanceCosts(6);
 

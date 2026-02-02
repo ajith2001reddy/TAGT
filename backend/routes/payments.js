@@ -16,11 +16,17 @@ router.post("/", auth, isAdmin, async (req, res) => {
         const amount = Number(req.body.amount);
 
         if (!residentId || !mongoose.Types.ObjectId.isValid(residentId)) {
-            return res.status(400).json({ message: "Invalid resident" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid resident"
+            });
         }
 
         if (!Number.isFinite(amount) || amount <= 0) {
-            return res.status(400).json({ message: "Invalid amount" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid amount"
+            });
         }
 
         const resident = await User.findOne({
@@ -30,9 +36,10 @@ router.post("/", auth, isAdmin, async (req, res) => {
         });
 
         if (!resident) {
-            return res
-                .status(400)
-                .json({ message: "Resident not found or inactive" });
+            return res.status(400).json({
+                success: false,
+                message: "Resident not found or inactive"
+            });
         }
 
         const payment = await Payment.create({
@@ -46,10 +53,16 @@ router.post("/", auth, isAdmin, async (req, res) => {
             createdBy: req.user.id
         });
 
-        res.status(201).json(payment);
+        res.status(201).json({
+            success: true,
+            payment
+        });
     } catch (err) {
         console.error("CREATE PAYMENT ERROR:", err);
-        res.status(500).json({ message: "Failed to create payment" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to create payment"
+        });
     }
 });
 
@@ -62,10 +75,16 @@ router.get("/", auth, isAdmin, async (req, res) => {
             .populate("residentId", "email name")
             .sort({ createdAt: -1 });
 
-        res.json(payments);
+        res.json({
+            success: true,
+            payments
+        });
     } catch (err) {
         console.error("FETCH PAYMENTS ERROR:", err);
-        res.status(500).json({ message: "Failed to fetch payments" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch payments"
+        });
     }
 });
 
@@ -84,10 +103,16 @@ router.get("/my", auth, async (req, res) => {
             residentId: req.user.id
         }).sort({ createdAt: -1 });
 
-        res.json(payments);
+        res.json({
+            success: true,
+            payments
+        });
     } catch (err) {
         console.error("FETCH MY PAYMENTS ERROR:", err);
-        res.status(500).json({ message: "Failed to fetch payments" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch payments"
+        });
     }
 });
 
@@ -97,26 +122,41 @@ router.get("/my", auth, async (req, res) => {
 router.put("/:id/paid", auth, isAdmin, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid payment ID" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid payment ID"
+            });
         }
 
         const payment = await Payment.findById(req.params.id);
         if (!payment) {
-            return res.status(404).json({ message: "Payment not found" });
+            return res.status(404).json({
+                success: false,
+                message: "Payment not found"
+            });
         }
 
         if (payment.status === "paid") {
-            return res.json({ message: "Payment already marked as paid" });
+            return res.json({
+                success: true,
+                message: "Payment already marked as paid"
+            });
         }
 
         payment.status = "paid";
         payment.paidAt = new Date();
         await payment.save();
 
-        res.json({ message: "Payment marked as paid" });
+        res.json({
+            success: true,
+            message: "Payment marked as paid"
+        });
     } catch (err) {
         console.error("MARK PAID ERROR:", err);
-        res.status(500).json({ message: "Failed to mark payment as paid" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to mark payment as paid"
+        });
     }
 });
 

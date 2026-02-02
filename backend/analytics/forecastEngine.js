@@ -1,20 +1,13 @@
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 
 /* =====================================================
    OCCUPANCY FORECAST ENGINE
-   - Trend-based prediction
-   - Seasonality-ready
-   - AI/ML upgrade friendly
 ===================================================== */
 
-/**
- * Generate historical occupancy snapshots
- * (monthly resolution)
- */
 async function getHistoricalOccupancy(months = 6) {
-    const rooms = await Room.find({}, "totalBeds occupiedBeds updatedAt");
+    const roomss = await rooms.find({}, "totalBeds occupiedBeds");
 
-    if (rooms.length === 0) return [];
+    if (roomss.length === 0) return [];
 
     const now = new Date();
     const history = [];
@@ -26,12 +19,12 @@ async function getHistoricalOccupancy(months = 6) {
             1
         );
 
-        const totalBeds = rooms.reduce(
+        const totalBeds = roomss.reduce(
             (sum, r) => sum + (r.totalBeds || 0),
             0
         );
 
-        const occupiedBeds = rooms.reduce(
+        const occupiedBeds = roomss.reduce(
             (sum, r) => sum + (r.occupiedBeds || 0),
             0
         );
@@ -50,9 +43,6 @@ async function getHistoricalOccupancy(months = 6) {
     return history;
 }
 
-/**
- * Simple linear trend calculation
- */
 function calculateTrend(data) {
     if (data.length < 2) return 0;
 
@@ -66,9 +56,6 @@ function calculateTrend(data) {
     return totalChange / (data.length - 1);
 }
 
-/**
- * Predict future occupancy
- */
 async function predictOccupancy(monthsAhead = 6) {
     const history = await getHistoricalOccupancy(6);
 
@@ -88,8 +75,6 @@ async function predictOccupancy(monthsAhead = 6) {
 
     for (let i = 1; i <= monthsAhead; i++) {
         currentRate += trend;
-
-        // clamp between 0–100
         currentRate = Math.max(0, Math.min(100, currentRate));
 
         const date = new Date();
@@ -107,7 +92,7 @@ async function predictOccupancy(monthsAhead = 6) {
         meta: {
             trend: Number(trend.toFixed(2)),
             generatedAt: new Date(),
-            model: "Linear Trend + Seasonal Ready"
+            model: "Linear Trend"
         }
     };
 }

@@ -1,17 +1,11 @@
-const Resident = require("../models/Resident");
+const User = require("../models/User");
 const Payment = require("../models/Payment");
 const Request = require("../models/Request");
 
 /* =====================================================
    RESIDENT CHURN PREDICTION MODEL
-   - Rule-based AI scoring
-   - Explainable & fast
-   - ML-ready later
 ===================================================== */
 
-/**
- * Calculate churn score for a single resident
- */
 async function calculateResidentChurn(resident) {
     let score = 0;
     const reasons = [];
@@ -84,9 +78,6 @@ async function calculateResidentChurn(resident) {
         reasons.push("New resident (low tenure)");
     }
 
-    /* =======================
-       NORMALIZE SCORE
-    ======================= */
     score = Math.min(100, score);
 
     let riskLevel = "LOW";
@@ -103,11 +94,12 @@ async function calculateResidentChurn(resident) {
     };
 }
 
-/**
- * Predict churn risk for all residents
- */
 async function predictChurn() {
-    const residents = await Resident.find();
+    const residents = await User.find({
+        role: "resident",
+        isActive: true
+    });
+
     const results = [];
 
     for (const resident of residents) {
@@ -115,7 +107,6 @@ async function predictChurn() {
         results.push(churn);
     }
 
-    // Sort highest risk first
     results.sort((a, b) => b.score - a.score);
 
     return {

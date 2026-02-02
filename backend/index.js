@@ -5,7 +5,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 
 /* ================= APP INIT ================= */
-const app = express(); // MUST be before routes
+const app = express();
 const PORT = process.env.PORT || 5000;
 
 /* ================= CORS ================= */
@@ -52,11 +52,10 @@ mongoose
 /* ================= ROUTES ================= */
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/adminRoutes");
-const roomRoutes = require("./routes/rooms");
+const roomsRoutes = require("./routes/rooms");
 const paymentRoutes = require("./routes/payments");
 const analyticsRoutes = require("./routes/analytics");
 const residentRoutes = require("./routes/resident");
-// ✅ NEW
 
 /* ================= HEALTH ================= */
 app.get("/api/health", (req, res) => {
@@ -70,10 +69,10 @@ app.get("/api/health", (req, res) => {
 /* ================= API ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/rooms", roomRoutes);
+app.use("/api/roomss", roomsRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/resident", residentRoutes);
-app.use("/api/analytics", analyticsRoutes); // ✅ NEW
+app.use("/api/analytics", analyticsRoutes);
 
 /* ================= 404 HANDLER ================= */
 app.use((req, res) => {

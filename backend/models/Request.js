@@ -2,39 +2,38 @@ const mongoose = require("mongoose");
 
 const RequestSchema = new mongoose.Schema(
     {
-        /* ================= EXISTING FIELDS (UNCHANGED) ================= */
-
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
-            index: true // Speeds up "find my requests" queries
+            index: true
         },
 
         message: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
-        // OLD STATUS SYSTEM (KEPT FOR BACKWARD COMPATIBILITY)
         status: {
             type: String,
             enum: ["pending", "in-progress", "resolved"],
             default: "pending",
-            index: true // Speeds up dashboard counts and filtering
+            index: true
         },
 
         statusHistory: [
             {
-                status: String,
+                status: {
+                    type: String,
+                    required: true
+                },
                 changedAt: {
                     type: Date,
                     default: Date.now
                 }
             }
         ],
-
-        /* ================= PHASE 1 ADDITIONS (SAFE) ================= */
 
         adminNotes: [
             {
@@ -60,7 +59,7 @@ const RequestSchema = new mongoose.Schema(
             type: String,
             enum: ["Received", "In-Progress", "On Hold", "Done"],
             default: "Received",
-            index: true // Speeds up workflow filtering
+            index: true
         }
     },
     {
@@ -70,15 +69,9 @@ const RequestSchema = new mongoose.Schema(
     }
 );
 
-/* ================= PERFORMANCE INDEXES ================= */
-
-// Compound index for common query: "find active requests for this resident"
+/* ================= INDEXES ================= */
 RequestSchema.index({ residentId: 1, status: 1 });
-
-// Compound index for admin dashboard: "pending requests sorted by date"
 RequestSchema.index({ status: 1, createdAt: -1 });
-
-// Compound index for workflow queries
 RequestSchema.index({ workflowStatus: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Request", RequestSchema);

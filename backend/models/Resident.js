@@ -7,7 +7,7 @@ const residentSchema = new mongoose.Schema(
             ref: "User",
             required: true
         },
-        room: {
+        rooms: {
             type: String,
             required: true
         },
