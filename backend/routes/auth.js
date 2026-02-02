@@ -10,7 +10,6 @@ router.post("/login", async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        // Input validation
         if (!email || !password) {
             return res
                 .status(400)
@@ -20,6 +19,12 @@ router.post("/login", async (req, res, next) => {
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        if (!user.isActive) {
+            return res.status(403).json({
+                message: "Account is disabled"
+            });
         }
 
         const match = await bcrypt.compare(password, user.password);

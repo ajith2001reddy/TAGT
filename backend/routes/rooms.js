@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 
 const auth = require("../middleware/auth");
@@ -14,14 +15,16 @@ router.post("/", auth, isAdmin, async (req, res) => {
         const totalBeds = Number(req.body.totalBeds);
 
         if (!roomNumber || !Number.isInteger(totalBeds) || totalBeds <= 0) {
-            return res
-                .status(400)
-                .json("Room number and valid total beds are required");
+            return res.status(400).json({
+                message: "Room number and valid total beds are required"
+            });
         }
 
         const exists = await Room.findOne({ roomNumber });
         if (exists) {
-            return res.status(400).json("Room already exists");
+            return res.status(400).json({
+                message: "Room already exists"
+            });
         }
 
         const room = await Room.create({
@@ -34,7 +37,7 @@ router.post("/", auth, isAdmin, async (req, res) => {
         res.status(201).json(room);
     } catch (err) {
         console.error(err);
-        res.status(500).json("Failed to create room");
+        res.status(500).json({ message: "Failed to create room" });
     }
 });
 
@@ -47,7 +50,7 @@ router.get("/", auth, isAdmin, async (req, res) => {
         res.json(rooms);
     } catch (err) {
         console.error(err);
-        res.status(500).json("Failed to fetch rooms");
+        res.status(500).json({ message: "Failed to fetch rooms" });
     }
 });
 
@@ -56,21 +59,26 @@ router.get("/", auth, isAdmin, async (req, res) => {
 ========================================================= */
 router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
     try {
-        const occupiedBeds = Number(req.body.occupiedBeds);
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid room ID" });
+        }
 
+        const occupiedBeds = Number(req.body.occupiedBeds);
         if (!Number.isInteger(occupiedBeds) || occupiedBeds < 0) {
-            return res.status(400).json("Invalid occupied beds value");
+            return res.status(400).json({
+                message: "Invalid occupied beds value"
+            });
         }
 
         const room = await Room.findById(req.params.id);
         if (!room) {
-            return res.status(404).json("Room not found");
+            return res.status(404).json({ message: "Room not found" });
         }
 
         if (occupiedBeds > room.totalBeds) {
-            return res
-                .status(400)
-                .json("Occupied beds cannot exceed total beds");
+            return res.status(400).json({
+                message: "Occupied beds cannot exceed total beds"
+            });
         }
 
         room.occupiedBeds = occupiedBeds;
@@ -79,7 +87,7 @@ router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
         res.json(room);
     } catch (err) {
         console.error(err);
-        res.status(500).json("Failed to update occupancy");
+        res.status(500).json({ message: "Failed to update occupancy" });
     }
 });
 
@@ -88,22 +96,26 @@ router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
 ========================================================= */
 router.delete("/:id", auth, isAdmin, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid room ID" });
+        }
+
         const room = await Room.findById(req.params.id);
         if (!room) {
-            return res.status(404).json("Room not found");
+            return res.status(404).json({ message: "Room not found" });
         }
 
         if (room.occupiedBeds > 0) {
-            return res
-                .status(400)
-                .json("Cannot delete room with occupied beds");
+            return res.status(400).json({
+                message: "Cannot delete room with occupied beds"
+            });
         }
 
         await room.deleteOne();
-        res.json("Room deleted");
+        res.json({ message: "Room deleted" });
     } catch (err) {
         console.error(err);
-        res.status(500).json("Failed to delete room");
+        res.status(500).json({ message: "Failed to delete room" });
     }
 });
 

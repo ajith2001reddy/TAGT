@@ -6,7 +6,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ResidentDashboard from "./pages/ResidentDashboard";
 import AdminResidents from "./pages/AdminResidents";
 import AdminRequests from "./pages/AdminRequests";
-import RequestHistory from "./pages/RequestHistory"; // ✅ ADD THIS
+import RequestHistory from "./pages/RequestHistory";
 import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
 import Rooms from "./pages/Rooms";
@@ -23,6 +23,7 @@ function AnimatedRoutes() {
             <Routes location={location} key={location.pathname}>
                 {/* PUBLIC */}
                 <Route path="/" element={<Login />} />
+                <Route path="/login" element={<Login />} />
 
                 {/* ADMIN */}
                 <Route
@@ -97,12 +98,15 @@ function AnimatedRoutes() {
                         </ResidentRoute>
                     }
                 />
+
+                {/* FALLBACK */}
+                <Route path="*" element={<Login />} />
             </Routes>
         </AnimatePresence>
     );
 }
 
-export default function App() { 
+export default function App() {
     return (
         <BrowserRouter>
             <ToastProvider />

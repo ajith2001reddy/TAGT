@@ -1,15 +1,6 @@
 const mongoose = require("mongoose");
 
-/**
- * Room
- * Phase 4 – Room & Bed Management
- *
- * - Tracks total beds
- * - Tracks occupied beds
- * - Availability is calculated (not stored)
- */
-
-const RoomSchema = new mongoose.Schema(
+const roomSchema = new mongoose.Schema(
     {
         roomNumber: {
             type: String,
@@ -29,23 +20,14 @@ const RoomSchema = new mongoose.Schema(
             min: 0
         },
 
-        // Optional notes (maintenance, blocked beds, etc.)
         note: {
-            type: String
+            type: String,
+            default: ""
         }
     },
-    { timestamps: true }
+    {
+        timestamps: true
+    }
 );
 
-/* ================= VIRTUAL FIELD =================
-   Available beds = totalBeds - occupiedBeds
-================================================== */
-RoomSchema.virtual("availableBeds").get(function () {
-    return this.totalBeds - this.occupiedBeds;
-});
-
-// Ensure virtuals show up in JSON
-RoomSchema.set("toJSON", { virtuals: true });
-RoomSchema.set("toObject", { virtuals: true });
-
-module.exports = mongoose.model("Room", RoomSchema);
+module.exports = mongoose.model("Room", roomSchema);
