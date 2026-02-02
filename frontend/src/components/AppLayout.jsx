@@ -7,10 +7,8 @@ export default function AppLayout({ children }) {
 
     return (
         <div className="flex min-h-screen bg-gray-950">
-            {/* Sidebar */}
             <Sidebar open={open} onClose={() => setOpen(false)} />
 
-            {/* Main Content */}
             <div className="flex flex-col flex-1 md:ml-64">
                 <Navbar onMenuClick={() => setOpen(true)} />
 
