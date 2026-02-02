@@ -9,7 +9,7 @@ import AdminRequests from "./pages/AdminRequests";
 import RequestHistory from "./pages/RequestHistory";
 import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
-import rooms from "./pages/rooms";
+import AdminRooms from "./pages/AdminRooms"; // ✅ FIXED
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
@@ -64,7 +64,7 @@ function AnimatedRoutes() {
                     path="/admin/rooms"
                     element={
                         <ProtectedRoute role="admin">
-                            <rooms />
+                            <AdminRooms /> {/* ✅ FIXED */}
                         </ProtectedRoute>
                     }
                 />
@@ -77,6 +77,7 @@ function AnimatedRoutes() {
                         </ProtectedRoute>
                     }
                 />
+
                 {/* ADMIN ROOT REDIRECT */}
                 <Route
                     path="/admin"
@@ -96,7 +97,6 @@ function AnimatedRoutes() {
                         </ProtectedRoute>
                     }
                 />
-
 
                 {/* RESIDENT */}
                 <Route

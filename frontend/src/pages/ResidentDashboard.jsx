@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { createRequest, getMyRequests } from "../services/residentService";
+import {
+    createRequest,
+    getMyRequests
+} from "../services/residentService";
 
 /**
- * RESIDENT DASHBOARD (FINAL FIX)
- * - Correctly reflects admin-updated request status
- * - Handles status + workflowStatus
- * - No stale "pending" state
+ * RESIDENT DASHBOARD
+ * - Correct status handling
+ * - Syncs with admin updates
+ * - Stable resolved / active separation
  */
 
 export default function ResidentDashboard() {
@@ -51,47 +54,47 @@ export default function ResidentDashboard() {
         loadRequests();
     }, []);
 
-    /* ================= RESOLUTION LOGIC (FIX) ================= */
+    /* ================= RESOLUTION LOGIC ================= */
     const isResolved = (r) =>
         r.status === "resolved" ||
-        r.workflowStatus === "Done" ||
-        r.workflowStatus === "Resolved";
+        r.workflowStatus === "Done";
 
-    const activeRequests = requests.filter(
-        (r) => !isResolved(r)
-    );
-
-    const resolvedRequests = requests.filter(
-        (r) => isResolved(r)
-    );
+    const activeRequests = requests.filter((r) => !isResolved(r));
+    const resolvedRequests = requests.filter((r) => isResolved(r));
 
     /* ================= STATUS BADGE ================= */
     const StatusBadge = ({ status }) => {
         const base =
             "inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded";
 
-        if (status === "pending")
-            return (
-                <span className={`${base} bg-yellow-600/20 text-yellow-400`}>
-                    Pending
-                </span>
-            );
-
-        if (status === "in-progress")
-            return (
-                <span className={`${base} bg-blue-600/20 text-blue-400`}>
-                    In Progress
-                </span>
-            );
-
-        if (status === "resolved")
-            return (
-                <span className={`${base} bg-green-600/20 text-green-400`}>
-                    Resolved
-                </span>
-            );
-
-        return null;
+        switch (status) {
+            case "pending":
+                return (
+                    <span
+                        className={`${base} bg-yellow-600/20 text-yellow-400`}
+                    >
+                        Pending
+                    </span>
+                );
+            case "in-progress":
+                return (
+                    <span
+                        className={`${base} bg-blue-600/20 text-blue-400`}
+                    >
+                        In Progress
+                    </span>
+                );
+            case "resolved":
+                return (
+                    <span
+                        className={`${base} bg-green-600/20 text-green-400`}
+                    >
+                        Resolved
+                    </span>
+                );
+            default:
+                return null;
+        }
     };
 
     return (
@@ -116,7 +119,7 @@ export default function ResidentDashboard() {
                     <textarea
                         className="w-full bg-black/30 text-gray-100 placeholder-gray-400 p-4 border border-white/10 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         rows={4}
-                        placeholder="Describe the issue in detail (e.g., water leakage, electrical problem)…"
+                        placeholder="Describe the issue in detail…"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                     />
@@ -150,12 +153,14 @@ export default function ResidentDashboard() {
                             {activeRequests.map((r) => (
                                 <li
                                     key={r._id}
-                                    className="py-3 flex items-start justify-between"
+                                    className="py-3 flex justify-between items-start"
                                 >
                                     <p className="text-gray-200">
                                         {r.message}
                                     </p>
-                                    <StatusBadge status={r.status || "pending"} />
+                                    <StatusBadge
+                                        status={r.status || "pending"}
+                                    />
                                 </li>
                             ))}
                         </ul>
@@ -178,7 +183,9 @@ export default function ResidentDashboard() {
                                 const isOpen = expandedId === r._id;
                                 const lastNote =
                                     r.adminNotes?.length > 0
-                                        ? r.adminNotes[r.adminNotes.length - 1]
+                                        ? r.adminNotes[
+                                        r.adminNotes.length - 1
+                                        ]
                                         : null;
 
                                 return (

@@ -7,6 +7,7 @@ import api from "../api/axios";
 
 export default function AdminResidents() {
     const [residents, setResidents] = useState([]);
+    const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
 
     /* ===== ADD RESIDENT FORM ===== */
@@ -14,7 +15,7 @@ export default function AdminResidents() {
         name: "",
         email: "",
         password: "",
-        roomsId: ""
+        roomId: ""
     });
 
     /* ===== BILLING ===== */
@@ -25,28 +26,44 @@ export default function AdminResidents() {
     /* ================= FETCH RESIDENTS ================= */
     const fetchResidents = useCallback(async () => {
         try {
-            setLoading(true);
             const res = await api.get("/admin/residents");
-            setResidents(Array.isArray(res.data) ? res.data : []);
-        } catch (err) {
-            console.error(err);
+            setResidents(res.data || []);
+        } catch {
             toast.error("Failed to load residents");
             setResidents([]);
-        } finally {
-            setLoading(false);
+        }
+    }, []);
+
+    /* ================= FETCH ROOMS ================= */
+    const fetchRooms = useCallback(async () => {
+        try {
+            const res = await api.get("/rooms");
+            setRooms(res.data?.rooms || res.data || []);
+        } catch {
+            toast.error("Failed to load rooms");
+            setRooms([]);
         }
     }, []);
 
     useEffect(() => {
-        fetchResidents();
-    }, [fetchResidents]);
+        setLoading(true);
+        Promise.all([fetchResidents(), fetchRooms()]).finally(() =>
+            setLoading(false)
+        );
+    }, [fetchResidents, fetchRooms]);
 
     /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
-        const { name, email, password, roomsId } = form;
+        const { name, email, password, roomId } = form;
 
         if (!name || !email || !password) {
             toast.error("Name, email, and password are required");
+            return;
+        }
+
+        const selectedRoom = rooms.find((r) => r._id === roomId);
+        if (selectedRoom && selectedRoom.availableBeds <= 0) {
+            toast.error("Selected room has no available beds");
             return;
         }
 
@@ -55,20 +72,15 @@ export default function AdminResidents() {
                 name,
                 email,
                 password,
-                roomsId: roomsId || null
+                roomId: roomId || null
             });
 
             toast.success("Resident added successfully");
-            setForm({
-                name: "",
-                email: "",
-                password: "",
-                roomsId: ""
-            });
+            setForm({ name: "", email: "", password: "", roomId: "" });
 
             fetchResidents();
-        } catch (err) {
-            console.error(err);
+            fetchRooms(); // 🔥 refresh availability
+        } catch {
             toast.error("Failed to add resident");
         }
     };
@@ -98,8 +110,7 @@ export default function AdminResidents() {
             setBillingTarget(null);
             setBillAmount("");
             setBillDescription("");
-        } catch (err) {
-            console.error(err);
+        } catch {
             toast.error("Failed to send bill");
         }
     };
@@ -118,46 +129,72 @@ export default function AdminResidents() {
 
     return (
         <DashboardLayout>
-            <div className="space-y-10 text-gray-100">
+            <div className="space-y-10">
                 <div>
                     <h1 className="text-3xl font-bold">Residents</h1>
-                    <p className="text-gray-400 mt-1">
-                        Manage residents and send direct bills
+                    <p className="text-gray-500 mt-1">
+                        Manage residents and room assignments
                     </p>
                 </div>
 
                 {/* ADD RESIDENT */}
-                <div className="rounded-2xl bg-white/10 border border-white/10 p-6">
+                <div className="bg-white rounded-2xl border p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Add New Resident
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        {["name", "email", "password", "roomsId"].map(
-                            (field) => (
-                                <input
-                                    key={field}
-                                    type={
-                                        field === "password"
-                                            ? "password"
-                                            : "text"
-                                    }
-                                    placeholder={field.toUpperCase()}
-                                    className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm"
-                                    value={form[field]}
-                                    onChange={(e) =>
-                                        setForm({
-                                            ...form,
-                                            [field]: e.target.value
-                                        })
-                                    }
-                                />
-                            )
-                        )}
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        <input
+                            placeholder="Name"
+                            className="border rounded-lg p-2"
+                            value={form.name}
+                            onChange={(e) =>
+                                setForm({ ...form, name: e.target.value })
+                            }
+                        />
+
+                        <input
+                            placeholder="Email"
+                            className="border rounded-lg p-2"
+                            value={form.email}
+                            onChange={(e) =>
+                                setForm({ ...form, email: e.target.value })
+                            }
+                        />
+
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            className="border rounded-lg p-2"
+                            value={form.password}
+                            onChange={(e) =>
+                                setForm({ ...form, password: e.target.value })
+                            }
+                        />
+
+                        {/* ROOM SELECT */}
+                        <select
+                            className="border rounded-lg p-2"
+                            value={form.roomId}
+                            onChange={(e) =>
+                                setForm({ ...form, roomId: e.target.value })
+                            }
+                        >
+                            <option value="">No Room</option>
+                            {rooms.map((r) => (
+                                <option
+                                    key={r._id}
+                                    value={r._id}
+                                    disabled={r.availableBeds <= 0}
+                                >
+                                    Room {r.roomNumber} — {r.availableBeds} beds
+                                </option>
+                            ))}
+                        </select>
 
                         <MotionButton
                             onClick={addResident}
-                            className="md:col-span-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
                         >
                             Add Resident
                         </MotionButton>
@@ -165,39 +202,36 @@ export default function AdminResidents() {
                 </div>
 
                 {/* RESIDENT LIST */}
-                <div className="rounded-2xl bg-white/10 border border-white/10 p-6">
+                <div className="bg-white rounded-2xl border p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Resident List
                     </h2>
 
                     {loading ? (
-                        <p className="text-center text-gray-400">
+                        <p className="text-center text-gray-500">
                             Loading residents…
                         </p>
                     ) : residents.length === 0 ? (
-                        <p className="text-center text-gray-400">
+                        <p className="text-center text-gray-500">
                             No residents found.
                         </p>
                     ) : (
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="text-gray-400 border-b border-white/10">
+                                <tr className="border-b text-gray-500">
                                     <th className="p-2 text-left">Name</th>
                                     <th className="p-2 text-left">Email</th>
-                                    <th className="p-2 text-center">rooms</th>
+                                    <th className="p-2 text-center">Room</th>
                                     <th className="p-2 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {residents.map((r) => (
-                                    <tr
-                                        key={r._id}
-                                        className="border-b border-white/5"
-                                    >
+                                    <tr key={r._id} className="border-b">
                                         <td className="p-2">{r.name}</td>
                                         <td className="p-2">{r.email}</td>
                                         <td className="p-2 text-center">
-                                            {r.roomsId?.roomsNumber || "-"}
+                                            {r.roomId?.roomNumber || "-"}
                                         </td>
                                         <td className="p-2 text-center">
                                             <MotionButton
@@ -219,11 +253,11 @@ export default function AdminResidents() {
 
             {/* BILL MODAL */}
             {billingTarget && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
+                        className="bg-white rounded-2xl p-6 w-96"
                     >
                         <h3 className="text-lg font-semibold mb-4">
                             Send Bill to {billingTarget.email}
@@ -232,7 +266,7 @@ export default function AdminResidents() {
                         <input
                             type="number"
                             placeholder="Amount"
-                            className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-3"
+                            className="w-full border rounded-lg p-2 mb-3"
                             value={billAmount}
                             onChange={(e) =>
                                 setBillAmount(e.target.value)
@@ -241,7 +275,7 @@ export default function AdminResidents() {
 
                         <textarea
                             placeholder="Description"
-                            className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-4"
+                            className="w-full border rounded-lg p-2 mb-4"
                             rows={3}
                             value={billDescription}
                             onChange={(e) =>
@@ -250,19 +284,19 @@ export default function AdminResidents() {
                         />
 
                         <div className="flex justify-end gap-3">
-                            <MotionButton
+                            <button
                                 onClick={() => setBillingTarget(null)}
-                                className="px-4 py-2 border border-white/10 rounded-lg"
+                                className="px-4 py-2 border rounded-lg"
                             >
                                 Cancel
-                            </MotionButton>
+                            </button>
 
-                            <MotionButton
+                            <button
                                 onClick={sendBill}
                                 className="bg-green-600 text-white px-4 py-2 rounded-lg"
                             >
                                 Send Bill
-                            </MotionButton>
+                            </button>
                         </div>
                     </motion.div>
                 </div>

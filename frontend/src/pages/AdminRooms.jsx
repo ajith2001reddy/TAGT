@@ -3,41 +3,41 @@ import toast from "react-hot-toast";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
-export default function Adminroomss() {
-    const [rooms, setroomss] = useState([]);
+export default function AdminRooms() {
+    const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [form, setForm] = useState({
-        roomsNumber: "",
+        roomNumber: "",
         totalBeds: "",
         note: ""
     });
 
-    const [selectedrooms, setSelectedrooms] = useState(null);
+    const [selectedRoom, setSelectedRoom] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH rooms ================= */
-    const fetchroomss = useCallback(async () => {
+    /* ================= FETCH ROOMS ================= */
+    const fetchRooms = useCallback(async () => {
         try {
             setLoading(true);
             const res = await api.get("/rooms");
-            setroomss(Array.isArray(res.data) ? res.data : []);
+            setRooms(res.data?.rooms || res.data || []);
         } catch {
             toast.error("Failed to load rooms");
-            setroomss([]);
+            setRooms([]);
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchroomss();
-    }, [fetchroomss]);
+        fetchRooms();
+    }, [fetchRooms]);
 
-    /* ================= ADD rooms ================= */
-    const addrooms = async () => {
-        if (!form.roomsNumber || !form.totalBeds) {
-            toast.error("rooms number and total beds are required");
+    /* ================= ADD ROOM ================= */
+    const addRoom = async () => {
+        if (!form.roomNumber || !form.totalBeds) {
+            toast.error("Room number and total beds are required");
             return;
         }
 
@@ -48,22 +48,22 @@ export default function Adminroomss() {
 
         try {
             await api.post("/rooms", {
-                roomsNumber: form.roomsNumber,
+                roomNumber: form.roomNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
             });
 
-            toast.success("rooms added successfully");
-            setForm({ roomsNumber: "", totalBeds: "", note: "" });
-            fetchroomss();
+            toast.success("Room added successfully");
+            setForm({ roomNumber: "", totalBeds: "", note: "" });
+            fetchRooms();
         } catch {
-            toast.error("Failed to add rooms");
+            toast.error("Failed to add room");
         }
     };
 
     /* ================= UPDATE OCCUPANCY ================= */
     const updateOccupancy = async () => {
-        if (!selectedrooms) return;
+        if (!selectedRoom) return;
 
         const value = Number(occupiedBeds);
 
@@ -72,45 +72,45 @@ export default function Adminroomss() {
             return;
         }
 
-        if (value > selectedrooms.totalBeds) {
+        if (value > selectedRoom.totalBeds) {
             toast.error("Occupied beds cannot exceed total beds");
             return;
         }
 
         try {
             await api.put(
-                `/rooms/${selectedrooms._id}/occupancy`,
+                `/rooms/${selectedRoom._id}/occupancy`,
                 { occupiedBeds: value }
             );
 
             toast.success("Occupancy updated");
-            setSelectedrooms(null);
+            setSelectedRoom(null);
             setOccupiedBeds("");
-            fetchroomss();
+            fetchRooms();
         } catch {
             toast.error("Failed to update occupancy");
         }
     };
 
-    /* ================= DELETE rooms ================= */
-    const deleterooms = async (rooms) => {
-        if (rooms.occupiedBeds > 0) {
-            toast.error("Cannot delete a rooms with occupied beds");
+    /* ================= DELETE ROOM ================= */
+    const deleteRoom = async (room) => {
+        if (room.occupiedBeds > 0) {
+            toast.error("Cannot delete a room with occupied beds");
             return;
         }
 
         const confirm = window.confirm(
-            `Delete rooms ${rooms.roomsNumber}? This cannot be undone.`
+            `Delete room ${room.roomNumber}? This cannot be undone.`
         );
 
         if (!confirm) return;
 
         try {
-            await api.delete(`/rooms/${rooms._id}`);
-            toast.success("rooms deleted");
-            fetchroomss();
+            await api.delete(`/rooms/${room._id}`);
+            toast.success("Room deleted");
+            fetchRooms();
         } catch {
-            toast.error("Failed to delete rooms");
+            toast.error("Failed to delete room");
         }
     };
 
@@ -119,26 +119,26 @@ export default function Adminroomss() {
             <div className="space-y-10">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                        rooms & Bed Management
+                        Rooms & Bed Management
                     </h1>
                     <p className="text-gray-500 mt-1">
                         Manage rooms, capacity, and occupancy
                     </p>
                 </div>
 
-                {/* ADD rooms */}
+                {/* ADD ROOM */}
                 <div className="bg-white rounded-2xl border p-6">
                     <h2 className="text-lg font-semibold mb-4">
-                        Add New rooms
+                        Add New Room
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <input
-                            placeholder="rooms Number"
+                            placeholder="Room Number"
                             className="border rounded-lg p-2"
-                            value={form.roomsNumber}
+                            value={form.roomNumber}
                             onChange={(e) =>
-                                setForm({ ...form, roomsNumber: e.target.value })
+                                setForm({ ...form, roomNumber: e.target.value })
                             }
                         />
 
@@ -162,17 +162,17 @@ export default function Adminroomss() {
                         />
 
                         <button
-                            onClick={addrooms}
+                            onClick={addRoom}
                             className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
                         >
-                            Add rooms
+                            Add Room
                         </button>
                     </div>
                 </div>
 
-                {/* rooms TABLE */}
+                {/* ROOMS TABLE */}
                 <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">rooms</h2>
+                    <h2 className="text-lg font-semibold mb-4">Rooms</h2>
 
                     {loading ? (
                         <p className="text-gray-500 text-center">
@@ -187,7 +187,7 @@ export default function Adminroomss() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b text-gray-500">
-                                        <th className="p-2 text-left">rooms</th>
+                                        <th className="p-2 text-left">Room</th>
                                         <th className="p-2 text-center">
                                             Total Beds
                                         </th>
@@ -213,7 +213,7 @@ export default function Adminroomss() {
                                                 className="border-b hover:bg-gray-50"
                                             >
                                                 <td className="p-2">
-                                                    {r.roomsNumber}
+                                                    {r.roomNumber}
                                                 </td>
                                                 <td className="p-2 text-center">
                                                     {r.totalBeds}
@@ -227,7 +227,7 @@ export default function Adminroomss() {
                                                 <td className="p-2 text-center space-x-2">
                                                     <button
                                                         onClick={() => {
-                                                            setSelectedrooms(r);
+                                                            setSelectedRoom(r);
                                                             setOccupiedBeds(
                                                                 String(
                                                                     r.occupiedBeds
@@ -240,7 +240,7 @@ export default function Adminroomss() {
                                                     </button>
                                                     <button
                                                         onClick={() =>
-                                                            deleterooms(r)
+                                                            deleteRoom(r)
                                                         }
                                                         className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
                                                     >
@@ -258,12 +258,12 @@ export default function Adminroomss() {
             </div>
 
             {/* OCCUPANCY MODAL */}
-            {selectedrooms && (
+            {selectedRoom && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl p-6 w-96">
                         <h3 className="text-lg font-semibold mb-4">
-                            Update Occupancy – rooms{" "}
-                            {selectedrooms.roomsNumber}
+                            Update Occupancy – Room{" "}
+                            {selectedRoom.roomNumber}
                         </h3>
 
                         <input
@@ -277,7 +277,7 @@ export default function Adminroomss() {
 
                         <div className="flex justify-end gap-3">
                             <button
-                                onClick={() => setSelectedrooms(null)}
+                                onClick={() => setSelectedRoom(null)}
                                 className="px-4 py-2 border rounded-lg"
                             >
                                 Cancel

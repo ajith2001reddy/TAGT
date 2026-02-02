@@ -1,5 +1,5 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-02 16:52:29
+Generated: 2026-02-02 18:00:52
 Project Path: E:\TAGT
 ```
 TAGT
@@ -13,7 +13,8 @@ TAGT
 │   ├── config
 │   │   └── db.js
 │   ├── controllers
-│   │   └── adminController.js
+│   │   ├── adminController.js
+│   │   └── roomController.js
 │   ├── middleware
 │   │   ├── auth.js
 │   │   ├── errorHandler.js
@@ -38,6 +39,7 @@ TAGT
 │   │   ├── emailService.js
 │   │   └── generateToken.js
 │   ├── index.js
+│   ├── NewFile
 │   ├── package.json
 │   └── package-lock.json
 ├── frontend
@@ -81,13 +83,13 @@ TAGT
 │   │   │   ├── AdminDashboard.jsx
 │   │   │   ├── AdminRequests.jsx
 │   │   │   ├── AdminResidents.jsx
-│   │   │   ├── Adminroomss.jsx
+│   │   │   ├── AdminRooms.jsx
 │   │   │   ├── Login.jsx
 │   │   │   ├── Payments.jsx
 │   │   │   ├── RequestHistory.jsx
 │   │   │   ├── ResidentDashboard.jsx
 │   │   │   ├── ResidentPayments.jsx
-│   │   │   └── rooms.jsx
+│   │   │   └── Rooms.jsx
 │   │   ├── routes
 │   │   │   ├── AdminRoute.jsx
 │   │   │   ├── ProtectedRoute.jsx
@@ -107,6 +109,7 @@ TAGT
 │   ├── README.md
 │   └── tailwind.config.js
 ├── project_review_package
+│   └── Complete_Project_Review.txt
 └── combine.ps1
 
 ```
@@ -115,14 +118,14 @@ TAGT
 
 ## File Statistics
 
-Total Files: 79
-Total Size: 915.75 KB
+Total Files: 80
+Total Size: 920.45 KB
 
 ## File Type Distribution
 
 | Extension | Count |
 |-----------|-------|
-| .js | 38 |
+| .js | 39 |
 | .jsx | 31 |
 | .json | 5 |
 | .css | 2 |
@@ -140,78 +143,79 @@ Total Size: 915.75 KB
 5. backend\analytics\revenueOptimizer.js
 6. backend\config\db.js
 7. backend\controllers\adminController.js
-8. backend\index.js
-9. backend\middleware\auth.js
-10. backend\middleware\errorHandler.js
-11. backend\middleware\isAdmin.js
-12. backend\middleware\validate.js
-13. backend\models\ActivityLog.js
-14. backend\models\Payment.js
-15. backend\models\Request.js
-16. backend\models\RequestHistory.js
-17. backend\models\Resident.js
-18. backend\models\rooms.js
-19. backend\models\User.js
-20. backend\package.json
-21. backend\package-lock.json
-22. backend\routes\adminRoutes.js
-23. backend\routes\analytics.js
-24. backend\routes\auth.js
-25. backend\routes\payments.js
-26. backend\routes\resident.js
-27. backend\routes\rooms.js
-28. backend\utils\emailService.js
-29. backend\utils\generateToken.js
-30. frontend\package.json
-31. frontend\package-lock.json
-32. frontend\postcss.config.js
-33. frontend\public\index.html
-34. frontend\public\manifest.json
-35. frontend\public\robots.txt
-36. frontend\README.md
-37. frontend\src\animations\pageTransition.js
-38. frontend\src\api\axios.js
-39. frontend\src\App.css
-40. frontend\src\App.js
-41. frontend\src\components\AppLayout.jsx
-42. frontend\src\components\Button.jsx
-43. frontend\src\components\Card.jsx
-44. frontend\src\components\ChurnRiskTable.jsx
-45. frontend\src\components\KpiCards.jsx
-46. frontend\src\components\Loader.jsx
-47. frontend\src\components\MaintenanceCostForecast.jsx
-48. frontend\src\components\Navbar.jsx
-49. frontend\src\components\OccupancyForecast.jsx
-50. frontend\src\components\RequestsChart.jsx
-51. frontend\src\components\RequestTable.jsx
-52. frontend\src\components\RevenueOptimization.jsx
-53. frontend\src\components\Sidebar.jsx
-54. frontend\src\components\StatCard.jsx
-55. frontend\src\components\StatusModal.jsx
-56. frontend\src\components\ToastProvider.jsx
-57. frontend\src\context\AuthContext.jsx
-58. frontend\src\hooks\useAdminStats.js
-59. frontend\src\index.css
-60. frontend\src\index.js
-61. frontend\src\layouts\DashboardLayout.jsx
-62. frontend\src\pages\AdminDashboard.jsx
-63. frontend\src\pages\AdminRequests.jsx
-64. frontend\src\pages\AdminResidents.jsx
-65. frontend\src\pages\Adminroomss.jsx
-66. frontend\src\pages\Login.jsx
-67. frontend\src\pages\Payments.jsx
-68. frontend\src\pages\RequestHistory.jsx
-69. frontend\src\pages\ResidentDashboard.jsx
-70. frontend\src\pages\ResidentPayments.jsx
-71. frontend\src\pages\rooms.jsx
-72. frontend\src\routes\AdminRoute.jsx
-73. frontend\src\routes\ProtectedRoute.jsx
-74. frontend\src\routes\ResidentRoute.jsx
-75. frontend\src\services\adminService.js
-76. frontend\src\services\analyticsService.js
-77. frontend\src\services\authService.js
-78. frontend\src\services\residentService.js
-79. frontend\tailwind.config.js
+8. backend\controllers\roomController.js
+9. backend\index.js
+10. backend\middleware\auth.js
+11. backend\middleware\errorHandler.js
+12. backend\middleware\isAdmin.js
+13. backend\middleware\validate.js
+14. backend\models\ActivityLog.js
+15. backend\models\Payment.js
+16. backend\models\Request.js
+17. backend\models\RequestHistory.js
+18. backend\models\Resident.js
+19. backend\models\rooms.js
+20. backend\models\User.js
+21. backend\package.json
+22. backend\package-lock.json
+23. backend\routes\adminRoutes.js
+24. backend\routes\analytics.js
+25. backend\routes\auth.js
+26. backend\routes\payments.js
+27. backend\routes\resident.js
+28. backend\routes\rooms.js
+29. backend\utils\emailService.js
+30. backend\utils\generateToken.js
+31. frontend\package.json
+32. frontend\package-lock.json
+33. frontend\postcss.config.js
+34. frontend\public\index.html
+35. frontend\public\manifest.json
+36. frontend\public\robots.txt
+37. frontend\README.md
+38. frontend\src\animations\pageTransition.js
+39. frontend\src\api\axios.js
+40. frontend\src\App.css
+41. frontend\src\App.js
+42. frontend\src\components\AppLayout.jsx
+43. frontend\src\components\Button.jsx
+44. frontend\src\components\Card.jsx
+45. frontend\src\components\ChurnRiskTable.jsx
+46. frontend\src\components\KpiCards.jsx
+47. frontend\src\components\Loader.jsx
+48. frontend\src\components\MaintenanceCostForecast.jsx
+49. frontend\src\components\Navbar.jsx
+50. frontend\src\components\OccupancyForecast.jsx
+51. frontend\src\components\RequestsChart.jsx
+52. frontend\src\components\RequestTable.jsx
+53. frontend\src\components\RevenueOptimization.jsx
+54. frontend\src\components\Sidebar.jsx
+55. frontend\src\components\StatCard.jsx
+56. frontend\src\components\StatusModal.jsx
+57. frontend\src\components\ToastProvider.jsx
+58. frontend\src\context\AuthContext.jsx
+59. frontend\src\hooks\useAdminStats.js
+60. frontend\src\index.css
+61. frontend\src\index.js
+62. frontend\src\layouts\DashboardLayout.jsx
+63. frontend\src\pages\AdminDashboard.jsx
+64. frontend\src\pages\AdminRequests.jsx
+65. frontend\src\pages\AdminResidents.jsx
+66. frontend\src\pages\AdminRooms.jsx
+67. frontend\src\pages\Login.jsx
+68. frontend\src\pages\Payments.jsx
+69. frontend\src\pages\RequestHistory.jsx
+70. frontend\src\pages\ResidentDashboard.jsx
+71. frontend\src\pages\ResidentPayments.jsx
+72. frontend\src\pages\Rooms.jsx
+73. frontend\src\routes\AdminRoute.jsx
+74. frontend\src\routes\ProtectedRoute.jsx
+75. frontend\src\routes\ResidentRoute.jsx
+76. frontend\src\services\adminService.js
+77. frontend\src\services\analyticsService.js
+78. frontend\src\services\authService.js
+79. frontend\src\services\residentService.js
+80. frontend\tailwind.config.js
 
 
 
@@ -221,25 +225,19 @@ Total Size: 915.75 KB
 
 
 // ##########################################
-// FILE 1 of 79: backend\analytics\churnModel.js
-// SIZE: 3570 bytes
-// MODIFIED: 2026-02-01 21:31:22
+// FILE 1 of 80: backend\analytics\churnModel.js
+// SIZE: 3316 bytes
+// MODIFIED: 2026-02-02 17:27:56
 // ##########################################
 
-const Resident = require("../models/Resident");
+const User = require("../models/User");
 const Payment = require("../models/Payment");
 const Request = require("../models/Request");
 
 /* =====================================================
    RESIDENT CHURN PREDICTION MODEL
-   - Rule-based AI scoring
-   - Explainable & fast
-   - ML-ready later
 ===================================================== */
 
-/**
- * Calculate churn score for a single resident
- */
 async function calculateResidentChurn(resident) {
     let score = 0;
     const reasons = [];
@@ -312,9 +310,6 @@ async function calculateResidentChurn(resident) {
         reasons.push("New resident (low tenure)");
     }
 
-    /* =======================
-       NORMALIZE SCORE
-    ======================= */
     score = Math.min(100, score);
 
     let riskLevel = "LOW";
@@ -331,11 +326,12 @@ async function calculateResidentChurn(resident) {
     };
 }
 
-/**
- * Predict churn risk for all residents
- */
 async function predictChurn() {
-    const residents = await Resident.find();
+    const residents = await User.find({
+        role: "resident",
+        isActive: true
+    });
+
     const results = [];
 
     for (const resident of residents) {
@@ -343,7 +339,6 @@ async function predictChurn() {
         results.push(churn);
     }
 
-    // Sort highest risk first
     results.sort((a, b) => b.score - a.score);
 
     return {
@@ -365,26 +360,19 @@ module.exports = {
 
 
 // ##########################################
-// FILE 2 of 79: backend\analytics\forecastEngine.js
-// SIZE: 2844 bytes
-// MODIFIED: 2026-02-01 21:09:48
+// FILE 2 of 80: backend\analytics\forecastEngine.js
+// SIZE: 2540 bytes
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 const rooms = require("../models/rooms");
 
 /* =====================================================
    OCCUPANCY FORECAST ENGINE
-   - Trend-based prediction
-   - Seasonality-ready
-   - AI/ML upgrade friendly
 ===================================================== */
 
-/**
- * Generate historical occupancy snapshots
- * (monthly resolution)
- */
 async function getHistoricalOccupancy(months = 6) {
-    const rooms = await rooms.find({}, "totalBeds occupiedBeds updatedAt");
+    const rooms = await rooms.find({}, "totalBeds occupiedBeds");
 
     if (rooms.length === 0) return [];
 
@@ -422,9 +410,6 @@ async function getHistoricalOccupancy(months = 6) {
     return history;
 }
 
-/**
- * Simple linear trend calculation
- */
 function calculateTrend(data) {
     if (data.length < 2) return 0;
 
@@ -438,9 +423,6 @@ function calculateTrend(data) {
     return totalChange / (data.length - 1);
 }
 
-/**
- * Predict future occupancy
- */
 async function predictOccupancy(monthsAhead = 6) {
     const history = await getHistoricalOccupancy(6);
 
@@ -460,8 +442,6 @@ async function predictOccupancy(monthsAhead = 6) {
 
     for (let i = 1; i <= monthsAhead; i++) {
         currentRate += trend;
-
-        // clamp between 0–100
         currentRate = Math.max(0, Math.min(100, currentRate));
 
         const date = new Date();
@@ -479,7 +459,7 @@ async function predictOccupancy(monthsAhead = 6) {
         meta: {
             trend: Number(trend.toFixed(2)),
             generatedAt: new Date(),
-            model: "Linear Trend + Seasonal Ready"
+            model: "Linear Trend"
         }
     };
 }
@@ -493,9 +473,9 @@ module.exports = {
 
 
 // ##########################################
-// FILE 3 of 79: backend\analytics\kpiCalculator.js
-// SIZE: 3072 bytes
-// MODIFIED: 2026-02-01 20:47:33
+// FILE 3 of 80: backend\analytics\kpiCalculator.js
+// SIZE: 2895 bytes
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 const rooms = require("../models/rooms");
@@ -504,9 +484,6 @@ const Request = require("../models/Request");
 
 /* =====================================================
    ADVANCED KPI CALCULATOR
-   - Real-time metrics
-   - Safe fallbacks
-   - Time-range ready (future AI use)
 ===================================================== */
 
 async function getKPIs({ fromDate, toDate } = {}) {
@@ -580,27 +557,21 @@ async function getKPIs({ fromDate, toDate } = {}) {
                 (totalResolutionHours / resolvedRequests.length).toFixed(2)
             );
 
-    /* =======================
-       RETURN KPI OBJECT
-    ======================= */
     return {
         occupancy: {
             rate: occupancyRate,
             occupiedBeds: totals.occupiedBeds,
             totalBeds: totals.totalBeds
         },
-
         payments: {
             collectionRate,
             totalBilled,
             totalCollected
         },
-
         maintenance: {
             avgResolutionTime,
             resolvedCount: resolvedRequests.length
         },
-
         meta: {
             fromDate: fromDate || null,
             toDate: toDate || null,
@@ -618,23 +589,17 @@ module.exports = {
 
 
 // ##########################################
-// FILE 4 of 79: backend\analytics\maintenanceForecast.js
-// SIZE: 3079 bytes
-// MODIFIED: 2026-02-01 21:17:06
+// FILE 4 of 80: backend\analytics\maintenanceForecast.js
+// SIZE: 2812 bytes
+// MODIFIED: 2026-02-02 17:27:25
 // ##########################################
 
 const Request = require("../models/Request");
 
 /* =====================================================
    MAINTENANCE COST FORECAST ENGINE
-   - Monthly aggregation
-   - Trend-based prediction
-   - Spike detection
 ===================================================== */
 
-/**
- * Get monthly maintenance cost history
- */
 async function getMonthlyMaintenanceCosts(months = 6) {
     const now = new Date();
     const history = [];
@@ -672,9 +637,6 @@ async function getMonthlyMaintenanceCosts(months = 6) {
     return history;
 }
 
-/**
- * Calculate average monthly cost change (trend)
- */
 function calculateCostTrend(data) {
     if (data.length < 2) return 0;
 
@@ -686,9 +648,6 @@ function calculateCostTrend(data) {
     return change / (data.length - 1);
 }
 
-/**
- * Detect spike risk
- */
 function detectSpikeRisk(history) {
     if (history.length < 3) return "LOW";
 
@@ -702,9 +661,6 @@ function detectSpikeRisk(history) {
     return "LOW";
 }
 
-/**
- * Predict future maintenance costs
- */
 async function predictMaintenanceCost(monthsAhead = 6) {
     const history = await getMonthlyMaintenanceCosts(6);
 
@@ -756,9 +712,9 @@ module.exports = {
 
 
 // ##########################################
-// FILE 5 of 79: backend\analytics\revenueOptimizer.js
-// SIZE: 3807 bytes
-// MODIFIED: 2026-02-01 21:37:03
+// FILE 5 of 80: backend\analytics\revenueOptimizer.js
+// SIZE: 3784 bytes
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 const rooms = require("../models/rooms");
@@ -767,30 +723,33 @@ const { predictChurn } = require("./churnModel");
 
 /* =====================================================
    REVENUE OPTIMIZATION ENGINE
-   - Explainable AI logic
-   - Business-focused insights
-   - ML-ready for future
 ===================================================== */
 
 async function optimizeRevenue() {
     /* =======================
        OCCUPANCY ANALYSIS
     ======================= */
-    const rooms = await rooms.find({}, "totalBeds occupiedBeds");
+    const rooms = await rooms.find({}, "totalBeds occupiedBeds rent");
 
     const totals = rooms.reduce(
         (acc, r) => {
             acc.totalBeds += r.totalBeds || 0;
             acc.occupiedBeds += r.occupiedBeds || 0;
+            acc.totalRent += (r.rent || 0) * (r.totalBeds || 0);
             return acc;
         },
-        { totalBeds: 0, occupiedBeds: 0 }
+        { totalBeds: 0, occupiedBeds: 0, totalRent: 0 }
     );
 
     const occupancyRate =
         totals.totalBeds === 0
             ? 0
             : (totals.occupiedBeds / totals.totalBeds) * 100;
+
+    const avgRent =
+        totals.totalBeds === 0
+            ? 0
+            : totals.totalRent / totals.totalBeds;
 
     /* =======================
        PAYMENT COLLECTION
@@ -821,11 +780,8 @@ async function optimizeRevenue() {
     const insights = [];
     let revenueLeakEstimate = 0;
 
-    // 🔻 Low occupancy
     if (occupancyRate < 70) {
         const emptyBeds = totals.totalBeds - totals.occupiedBeds;
-        const avgRent = 600; // configurable later
-
         revenueLeakEstimate += emptyBeds * avgRent;
 
         insights.push({
@@ -833,11 +789,10 @@ async function optimizeRevenue() {
             severity: "HIGH",
             message: "Low occupancy detected",
             recommendation:
-                "Consider promotional pricing or short-term discounts to improve occupancy."
+                "Offer promotions or flexible pricing to increase occupancy."
         });
     }
 
-    // 💸 Poor collection
     if (collectionRate < 85) {
         revenueLeakEstimate += totalBilled - collected;
 
@@ -846,22 +801,20 @@ async function optimizeRevenue() {
             severity: "MEDIUM",
             message: "Low payment collection rate",
             recommendation:
-                "Enable automated reminders and enforce late fees to improve cash flow."
+                "Enable reminders, enforce deadlines, or automate billing."
         });
     }
 
-    // 🚨 Churn risk
     if (highRiskResidents > 0) {
         insights.push({
             type: "CHURN",
             severity: "HIGH",
             message: `${highRiskResidents} residents at high churn risk`,
             recommendation:
-                "Offer retention incentives or proactive support to prevent revenue loss."
+                "Proactively engage residents and offer retention incentives."
         });
     }
 
-    // ✅ Healthy state
     if (insights.length === 0) {
         insights.push({
             type: "HEALTHY",
@@ -877,6 +830,7 @@ async function optimizeRevenue() {
         metrics: {
             occupancyRate: Number(occupancyRate.toFixed(2)),
             collectionRate: Number(collectionRate.toFixed(2)),
+            avgRent: Number(avgRent.toFixed(2)),
             totalBeds: totals.totalBeds,
             occupiedBeds: totals.occupiedBeds
         },
@@ -894,7 +848,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 6 of 79: backend\config\db.js
+// FILE 6 of 80: backend\config\db.js
 // SIZE: 339 bytes
 // MODIFIED: 2026-01-27 00:01:28
 // ##########################################
@@ -918,12 +872,13 @@ module.exports = connectDB;
 
 
 // ##########################################
-// FILE 7 of 79: backend\controllers\adminController.js
-// SIZE: 2339 bytes
-// MODIFIED: 2026-02-02 16:35:00
+// FILE 7 of 80: backend\controllers\adminController.js
+// SIZE: 2875 bytes
+// MODIFIED: 2026-02-02 17:38:54
 // ##########################################
 
 const User = require("../models/User");
+const rooms = require("../models/rooms");
 const bcrypt = require("bcryptjs");
 
 /* ============================
@@ -931,10 +886,10 @@ const bcrypt = require("bcryptjs");
    ============================ */
 exports.getAllResidents = async (req, res) => {
     try {
-        // ✅ Case-insensitive role match (fixes empty list issue)
         const residents = await User.find({
             role: { $regex: /^resident$/i }
         })
+            .populate("roomsId", "roomsNumber totalBeds occupiedBeds")
             .select("-password")
             .sort({ createdAt: -1 });
 
@@ -953,7 +908,7 @@ exports.getAllResidents = async (req, res) => {
    ============================ */
 exports.addResident = async (req, res) => {
     try {
-        const { name, email, password, rooms, rent } = req.body;
+        const { name, email, password, roomsId } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({
@@ -973,27 +928,46 @@ exports.addResident = async (req, res) => {
             });
         }
 
+        let rooms = null;
+
+        // ✅ Validate rooms & availability
+        if (roomsId) {
+            rooms = await rooms.findById(roomsId);
+
+            if (!rooms) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid rooms selected"
+                });
+            }
+
+            if (rooms.occupiedBeds >= rooms.totalBeds) {
+                return res.status(400).json({
+                    success: false,
+                    message: "No beds available in this rooms"
+                });
+            }
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const resident = await User.create({
             name,
             email: email.toLowerCase(),
             password: hashedPassword,
-            role: "resident", // ✅ always normalized
-            rooms: rooms || null,
-            rent: rent || null
+            role: "resident",
+            roomsId: rooms ? rooms._id : null
         });
+
+        // ✅ Increase occupied beds AFTER resident creation
+        if (rooms) {
+            rooms.occupiedBeds += 1;
+            await rooms.save();
+        }
 
         res.status(201).json({
             success: true,
-            resident: {
-                _id: resident._id,
-                name: resident.name,
-                email: resident.email,
-                role: resident.role,
-                rooms: resident.rooms,
-                rent: resident.rent
-            }
+            resident
         });
     } catch (err) {
         console.error("ADD RESIDENT ERROR:", err);
@@ -1009,9 +983,121 @@ exports.addResident = async (req, res) => {
 
 
 // ##########################################
-// FILE 8 of 79: backend\index.js
-// SIZE: 2817 bytes
-// MODIFIED: 2026-02-02 15:42:46
+// FILE 8 of 80: backend\controllers\roomController.js
+// SIZE: 2674 bytes
+// MODIFIED: 2026-02-02 17:55:58
+// ##########################################
+
+const rooms = require("../models/rooms");
+
+/* ============================
+   GET ALL rooms
+   ============================ */
+exports.getAllroomss = async (req, res) => {
+    try {
+        const rooms = await rooms.find().sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            rooms
+        });
+    } catch (err) {
+        console.error("GET rooms ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch rooms"
+        });
+    }
+};
+
+/* ============================
+   ADD NEW rooms
+   ============================ */
+exports.addrooms = async (req, res) => {
+    try {
+        const { roomsNumber, rent, totalBeds, note } = req.body;
+
+        if (!roomsNumber || !rent || !totalBeds) {
+            return res.status(400).json({
+                success: false,
+                message: "rooms number, rent, and total beds are required"
+            });
+        }
+
+        const exists = await rooms.findOne({ roomsNumber });
+        if (exists) {
+            return res.status(400).json({
+                success: false,
+                message: "rooms number already exists"
+            });
+        }
+
+        const rooms = await rooms.create({
+            roomsNumber,
+            rent,
+            totalBeds,
+            occupiedBeds: 0,
+            note: note || ""
+        });
+
+        res.status(201).json({
+            success: true,
+            rooms
+        });
+    } catch (err) {
+        console.error("ADD rooms ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to add rooms"
+        });
+    }
+};
+
+/* ============================
+   DELETE rooms
+   ============================ */
+exports.deleterooms = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const rooms = await rooms.findById(id);
+        if (!rooms) {
+            return res.status(404).json({
+                success: false,
+                message: "rooms not found"
+            });
+        }
+
+        if (rooms.occupiedBeds > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete rooms with residents"
+            });
+        }
+
+        await rooms.deleteOne();
+
+        res.json({
+            success: true,
+            message: "rooms deleted successfully"
+        });
+    } catch (err) {
+        console.error("DELETE rooms ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete rooms"
+        });
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE 9 of 80: backend\index.js
+// SIZE: 2771 bytes
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 require("dotenv").config();
@@ -1021,7 +1107,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 
 /* ================= APP INIT ================= */
-const app = express(); // MUST be before routes
+const app = express();
 const PORT = process.env.PORT || 5000;
 
 /* ================= CORS ================= */
@@ -1072,7 +1158,6 @@ const roomsRoutes = require("./routes/rooms");
 const paymentRoutes = require("./routes/payments");
 const analyticsRoutes = require("./routes/analytics");
 const residentRoutes = require("./routes/resident");
-// ✅ NEW
 
 /* ================= HEALTH ================= */
 app.get("/api/health", (req, res) => {
@@ -1089,7 +1174,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/rooms", roomsRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/resident", residentRoutes);
-app.use("/api/analytics", analyticsRoutes); // ✅ NEW
+app.use("/api/analytics", analyticsRoutes);
 
 /* ================= 404 HANDLER ================= */
 app.use((req, res) => {
@@ -1118,9 +1203,9 @@ app.listen(PORT, () => {
 
 
 // ##########################################
-// FILE 9 of 79: backend\middleware\auth.js
-// SIZE: 1138 bytes
-// MODIFIED: 2026-02-01 20:30:22
+// FILE 10 of 80: backend\middleware\auth.js
+// SIZE: 911 bytes
+// MODIFIED: 2026-02-02 17:19:51
 // ##########################################
 
 const jwt = require("jsonwebtoken");
@@ -1129,13 +1214,11 @@ const jwt = require("jsonwebtoken");
  * AUTH MIDDLEWARE
  * - Verifies JWT token
  * - Attaches user info to req.user
- * - Used for ALL protected routes
  */
 module.exports = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
 
-        // Check header
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({
                 success: false,
@@ -1143,19 +1226,10 @@ module.exports = (req, res, next) => {
             });
         }
 
-        // Extract token
         const token = authHeader.split(" ")[1];
 
-        // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        /**
-         * decoded should contain:
-         * {
-         *   id: user._id,
-         *   role: "admin" | "resident"
-         * }
-         */
         req.user = {
             id: decoded.id,
             role: decoded.role
@@ -1163,6 +1237,7 @@ module.exports = (req, res, next) => {
 
         next();
     } catch (err) {
+        console.error("AUTH ERROR:", err);
         return res.status(401).json({
             success: false,
             message: "Invalid or expired token"
@@ -1175,7 +1250,7 @@ module.exports = (req, res, next) => {
 
 
 // ##########################################
-// FILE 10 of 79: backend\middleware\errorHandler.js
+// FILE 11 of 80: backend\middleware\errorHandler.js
 // SIZE: 225 bytes
 // MODIFIED: 2026-01-27 00:01:57
 // ##########################################
@@ -1194,17 +1269,15 @@ module.exports = (err, req, res, next) => {
 
 
 // ##########################################
-// FILE 11 of 79: backend\middleware\isAdmin.js
-// SIZE: 702 bytes
-// MODIFIED: 2026-01-27 19:38:01
+// FILE 12 of 80: backend\middleware\isAdmin.js
+// SIZE: 710 bytes
+// MODIFIED: 2026-02-02 17:20:25
 // ##########################################
 
 /**
  * ADMIN-ONLY MIDDLEWARE
  * - Must be used AFTER auth.js
- * - Assumes req.user is already set
  */
-
 module.exports = (req, res, next) => {
     try {
         if (!req.user) {
@@ -1223,6 +1296,7 @@ module.exports = (req, res, next) => {
 
         next();
     } catch (err) {
+        console.error("IS ADMIN ERROR:", err);
         return res.status(500).json({
             success: false,
             message: "Authorization failed"
@@ -1235,7 +1309,7 @@ module.exports = (req, res, next) => {
 
 
 // ##########################################
-// FILE 12 of 79: backend\middleware\validate.js
+// FILE 13 of 80: backend\middleware\validate.js
 // SIZE: 243 bytes
 // MODIFIED: 2026-01-27 00:07:04
 // ##########################################
@@ -1255,7 +1329,7 @@ module.exports = (schema) => (req, res, next) => {
 
 
 // ##########################################
-// FILE 13 of 79: backend\models\ActivityLog.js
+// FILE 14 of 80: backend\models\ActivityLog.js
 // SIZE: 540 bytes
 // MODIFIED: 2026-01-27 00:05:41
 // ##########################################
@@ -1289,9 +1363,9 @@ module.exports = mongoose.model("ActivityLog", ActivityLogSchema);
 
 
 // ##########################################
-// FILE 14 of 79: backend\models\Payment.js
-// SIZE: 1113 bytes
-// MODIFIED: 2026-02-01 20:26:52
+// FILE 15 of 80: backend\models\Payment.js
+// SIZE: 1291 bytes
+// MODIFIED: 2026-02-02 17:42:47
 // ##########################################
 
 const mongoose = require("mongoose");
@@ -1301,17 +1375,20 @@ const paymentSchema = new mongoose.Schema(
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true
         },
 
         amount: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
 
         description: {
             type: String,
-            default: ""
+            default: "",
+            trim: true
         },
 
         type: {
@@ -1321,13 +1398,15 @@ const paymentSchema = new mongoose.Schema(
 
         month: {
             type: String,
-            default: null
+            default: null,
+            index: true
         },
 
         status: {
             type: String,
             enum: ["unpaid", "paid"],
-            default: "unpaid"
+            default: "unpaid",
+            index: true
         },
 
         adminNote: {
@@ -1350,6 +1429,8 @@ const paymentSchema = new mongoose.Schema(
     }
 );
 
+paymentSchema.index({ residentId: 1, status: 1 });
+
 module.exports = mongoose.model("Payment", paymentSchema);
 
 
@@ -1357,48 +1438,47 @@ module.exports = mongoose.model("Payment", paymentSchema);
 
 
 // ##########################################
-// FILE 15 of 79: backend\models\Request.js
-// SIZE: 2420 bytes
-// MODIFIED: 2026-01-28 16:01:17
+// FILE 16 of 80: backend\models\Request.js
+// SIZE: 1983 bytes
+// MODIFIED: 2026-02-02 17:42:47
 // ##########################################
 
 const mongoose = require("mongoose");
 
 const RequestSchema = new mongoose.Schema(
     {
-        /* ================= EXISTING FIELDS (UNCHANGED) ================= */
-
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
-            index: true // Speeds up "find my requests" queries
+            index: true
         },
 
         message: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
-        // OLD STATUS SYSTEM (KEPT FOR BACKWARD COMPATIBILITY)
         status: {
             type: String,
             enum: ["pending", "in-progress", "resolved"],
             default: "pending",
-            index: true // Speeds up dashboard counts and filtering
+            index: true
         },
 
         statusHistory: [
             {
-                status: String,
+                status: {
+                    type: String,
+                    required: true
+                },
                 changedAt: {
                     type: Date,
                     default: Date.now
                 }
             }
         ],
-
-        /* ================= PHASE 1 ADDITIONS (SAFE) ================= */
 
         adminNotes: [
             {
@@ -1424,7 +1504,7 @@ const RequestSchema = new mongoose.Schema(
             type: String,
             enum: ["Received", "In-Progress", "On Hold", "Done"],
             default: "Received",
-            index: true // Speeds up workflow filtering
+            index: true
         }
     },
     {
@@ -1434,15 +1514,9 @@ const RequestSchema = new mongoose.Schema(
     }
 );
 
-/* ================= PERFORMANCE INDEXES ================= */
-
-// Compound index for common query: "find active requests for this resident"
+/* ================= INDEXES ================= */
 RequestSchema.index({ residentId: 1, status: 1 });
-
-// Compound index for admin dashboard: "pending requests sorted by date"
 RequestSchema.index({ status: 1, createdAt: -1 });
-
-// Compound index for workflow queries
 RequestSchema.index({ workflowStatus: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Request", RequestSchema);
@@ -1450,10 +1524,11 @@ module.exports = mongoose.model("Request", RequestSchema);
 
 
 
+
 // ##########################################
-// FILE 16 of 79: backend\models\RequestHistory.js
-// SIZE: 1807 bytes
-// MODIFIED: 2026-01-27 18:15:21
+// FILE 17 of 80: backend\models\RequestHistory.js
+// SIZE: 1607 bytes
+// MODIFIED: 2026-02-02 17:23:38
 // ##########################################
 
 const mongoose = require("mongoose");
@@ -1461,45 +1536,43 @@ const mongoose = require("mongoose");
 /**
  * RequestHistory
  * Phase 2 Archive Model
- *
- * Purpose:
- * - Store CLOSED / DONE maintenance requests
- * - Keep audit trail permanently
- * - Requests are MOVED here (not deleted blindly)
  */
 
 const RequestHistorySchema = new mongoose.Schema(
     {
-        // Original request reference (optional but useful)
         requestId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Request"
+            ref: "Request",
+            index: true
         },
 
-        // Resident who created the request
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true
         },
 
-        // Original request message
         originalMessage: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
-        // Final resolution entered by admin (REQUIRED)
         finalResolution: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
-        // Timeline copied from Request.adminNotes
         timeline: [
             {
-                status: String,
-                note: String,
+                status: {
+                    type: String
+                },
+                note: {
+                    type: String
+                },
                 adminId: {
                     type: mongoose.Schema.Types.ObjectId,
                     ref: "User"
@@ -1510,17 +1583,16 @@ const RequestHistorySchema = new mongoose.Schema(
             }
         ],
 
-        // Admin who closed the request
         resolvedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true
         },
 
-        // When it was resolved
         resolvedAt: {
             type: Date,
-            default: Date.now
+            default: Date.now,
+            index: true
         }
     },
     {
@@ -1528,19 +1600,18 @@ const RequestHistorySchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model(
-    "RequestHistory",
-    RequestHistorySchema
-);
+RequestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
+
+module.exports = mongoose.model("RequestHistory", RequestHistorySchema);
 
 
 
 
 
 // ##########################################
-// FILE 17 of 79: backend\models\Resident.js
-// SIZE: 498 bytes
-// MODIFIED: 2026-01-27 17:34:33
+// FILE 18 of 80: backend\models\Resident.js
+// SIZE: 499 bytes
+// MODIFIED: 2026-02-02 17:38:54
 // ##########################################
 
 const mongoose = require("mongoose");
@@ -1571,9 +1642,9 @@ module.exports = mongoose.model("Resident", residentSchema);
 
 
 // ##########################################
-// FILE 18 of 79: backend\models\rooms.js
-// SIZE: 619 bytes
-// MODIFIED: 2026-02-01 20:29:37
+// FILE 19 of 80: backend\models\rooms.js
+// SIZE: 1014 bytes
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 const mongoose = require("mongoose");
@@ -1584,6 +1655,12 @@ const roomsSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true
+        },
+
+        rent: {
+            type: Number,
+            required: true,
+            min: 1
         },
 
         totalBeds: {
@@ -1604,9 +1681,18 @@ const roomsSchema = new mongoose.Schema(
         }
     },
     {
-        timestamps: true
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
     }
 );
+
+/* ============================
+   VIRTUAL: AVAILABLE BEDS
+   ============================ */
+roomsSchema.virtual("availableBeds").get(function () {
+    return this.totalBeds - this.occupiedBeds;
+});
 
 module.exports = mongoose.model("rooms", roomsSchema);
 
@@ -1615,9 +1701,9 @@ module.exports = mongoose.model("rooms", roomsSchema);
 
 
 // ##########################################
-// FILE 19 of 79: backend\models\User.js
-// SIZE: 1044 bytes
-// MODIFIED: 2026-02-01 20:28:06
+// FILE 20 of 80: backend\models\User.js
+// SIZE: 1075 bytes
+// MODIFIED: 2026-02-02 17:38:54
 // ##########################################
 
 const mongoose = require("mongoose");
@@ -1626,6 +1712,7 @@ const userSchema = new mongoose.Schema(
     {
         name: {
             type: String,
+            required: true,
             trim: true
         },
 
@@ -1676,7 +1763,7 @@ module.exports = mongoose.model("User", userSchema);
 
 
 // ##########################################
-// FILE 20 of 79: backend\package.json
+// FILE 21 of 80: backend\package.json
 // SIZE: 402 bytes
 // MODIFIED: 2026-01-31 03:21:15
 // ##########################################
@@ -1707,7 +1794,7 @@ module.exports = mongoose.model("User", userSchema);
 
 
 // ##########################################
-// FILE 21 of 79: backend\package-lock.json
+// FILE 22 of 80: backend\package-lock.json
 // SIZE: 49472 bytes
 // MODIFIED: 2026-01-31 03:22:38
 // ##########################################
@@ -3069,9 +3156,9 @@ module.exports = mongoose.model("User", userSchema);
 
 
 // ##########################################
-// FILE 22 of 79: backend\routes\adminRoutes.js
-// SIZE: 2373 bytes
-// MODIFIED: 2026-02-02 16:05:26
+// FILE 23 of 80: backend\routes\adminRoutes.js
+// SIZE: 3069 bytes
+// MODIFIED: 2026-02-02 17:15:11
 // ##########################################
 
 const express = require("express");
@@ -3101,37 +3188,52 @@ router.post("/residents", auth, isAdmin, addResident);
 /* ================= REQUESTS ================= */
 
 // GET all maintenance requests
-router.get("/requests", auth, isAdmin, async (req, res, next) => {
+router.get("/requests", auth, isAdmin, async (req, res) => {
     try {
         const requests = await Request.find()
             .populate("residentId", "name email")
             .sort({ createdAt: -1 });
 
-        res.json(requests);
+        res.json({
+            success: true,
+            requests
+        });
     } catch (err) {
-        next(err);
+        console.error("GET REQUESTS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch requests"
+        });
     }
 });
 
 // GET request history (archived)
-router.get("/requests/history", auth, isAdmin, async (req, res, next) => {
+router.get("/requests/history", auth, isAdmin, async (req, res) => {
     try {
         const history = await RequestHistory.find()
             .populate("residentId", "name email")
             .sort({ createdAt: -1 });
 
-        res.json(history);
+        res.json({
+            success: true,
+            history
+        });
     } catch (err) {
-        next(err);
+        console.error("GET REQUEST HISTORY ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch request history"
+        });
     }
 });
 
 /* ================= ADMIN DASHBOARD STATS ================= */
 
-router.get("/stats", auth, isAdmin, async (req, res, next) => {
+router.get("/stats", auth, isAdmin, async (req, res) => {
     try {
         const totalResidents = await User.countDocuments({
-            role: "resident"
+            role: { $regex: /^resident$/i },
+            isActive: true
         });
 
         const pendingRequests = await Request.countDocuments({
@@ -3149,13 +3251,20 @@ router.get("/stats", auth, isAdmin, async (req, res, next) => {
             .reduce((sum, p) => sum + p.amount, 0);
 
         res.json({
-            totalResidents,
-            pendingRequests,
-            totalRevenue,
-            outstandingBalance
+            success: true,
+            stats: {
+                totalResidents,
+                pendingRequests,
+                totalRevenue,
+                outstandingBalance
+            }
         });
     } catch (err) {
-        next(err);
+        console.error("ADMIN STATS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch admin stats"
+        });
     }
 });
 
@@ -3166,9 +3275,9 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 23 of 79: backend\routes\analytics.js
-// SIZE: 4460 bytes
-// MODIFIED: 2026-02-01 21:37:45
+// FILE 24 of 80: backend\routes\analytics.js
+// SIZE: 4249 bytes
+// MODIFIED: 2026-02-02 17:25:17
 // ##########################################
 
 const express = require("express");
@@ -3179,12 +3288,12 @@ const { getKPIs } = require("../analytics/kpiCalculator");
 const { predictOccupancy } = require("../analytics/forecastEngine");
 const { predictMaintenanceCost } = require("../analytics/maintenanceForecast");
 const { predictChurn } = require("../analytics/churnModel");
-const { optimizeRevenue } = require("../analytics/revenueOptimizer"); // ✅ STEP 5
+const { optimizeRevenue } = require("../analytics/revenueOptimizer");
 
 const router = express.Router();
 
 /* =====================================================
-   ADMIN → ANALYTICS DASHBOARD (KPIs)  [STEP 1]
+   ADMIN → ANALYTICS DASHBOARD (KPIs)
 ===================================================== */
 router.get("/kpis", auth, isAdmin, async (req, res) => {
     try {
@@ -3192,17 +3301,18 @@ router.get("/kpis", auth, isAdmin, async (req, res) => {
         const filters = {};
 
         if (fromDate && toDate) {
-            filters.fromDate = new Date(fromDate);
-            filters.toDate = new Date(toDate);
+            const from = new Date(fromDate);
+            const to = new Date(toDate);
 
-            if (
-                isNaN(filters.fromDate.getTime()) ||
-                isNaN(filters.toDate.getTime())
-            ) {
+            if (isNaN(from.getTime()) || isNaN(to.getTime())) {
                 return res.status(400).json({
+                    success: false,
                     message: "Invalid date range"
                 });
             }
+
+            filters.fromDate = from;
+            filters.toDate = to;
         }
 
         const kpis = await getKPIs(filters);
@@ -3212,7 +3322,7 @@ router.get("/kpis", auth, isAdmin, async (req, res) => {
             data: kpis
         });
     } catch (err) {
-        console.error("❌ ANALYTICS KPI ERROR:", err);
+        console.error("ANALYTICS KPI ERROR:", err);
         res.status(500).json({
             success: false,
             message: "Failed to load analytics KPIs"
@@ -3221,14 +3331,11 @@ router.get("/kpis", auth, isAdmin, async (req, res) => {
 });
 
 /* =====================================================
-   ADMIN → OCCUPANCY FORECAST  [STEP 2]
+   ADMIN → OCCUPANCY FORECAST
 ===================================================== */
 router.get("/predict/occupancy", auth, isAdmin, async (req, res) => {
     try {
-        const months = Math.min(
-            Number(req.query.months) || 6,
-            12
-        );
+        const months = Math.min(Number(req.query.months) || 6, 12);
 
         const forecast = await predictOccupancy(months);
 
@@ -3237,7 +3344,7 @@ router.get("/predict/occupancy", auth, isAdmin, async (req, res) => {
             data: forecast
         });
     } catch (err) {
-        console.error("❌ OCCUPANCY FORECAST ERROR:", err);
+        console.error("OCCUPANCY FORECAST ERROR:", err);
         res.status(500).json({
             success: false,
             message: "Failed to generate occupancy forecast"
@@ -3246,14 +3353,11 @@ router.get("/predict/occupancy", auth, isAdmin, async (req, res) => {
 });
 
 /* =====================================================
-   ADMIN → MAINTENANCE COST FORECAST  [STEP 3]
+   ADMIN → MAINTENANCE COST FORECAST
 ===================================================== */
 router.get("/predict/maintenance", auth, isAdmin, async (req, res) => {
     try {
-        const months = Math.min(
-            Number(req.query.months) || 6,
-            12
-        );
+        const months = Math.min(Number(req.query.months) || 6, 12);
 
         const forecast = await predictMaintenanceCost(months);
 
@@ -3262,7 +3366,7 @@ router.get("/predict/maintenance", auth, isAdmin, async (req, res) => {
             data: forecast
         });
     } catch (err) {
-        console.error("❌ MAINTENANCE FORECAST ERROR:", err);
+        console.error("MAINTENANCE FORECAST ERROR:", err);
         res.status(500).json({
             success: false,
             message: "Failed to generate maintenance cost forecast"
@@ -3271,7 +3375,7 @@ router.get("/predict/maintenance", auth, isAdmin, async (req, res) => {
 });
 
 /* =====================================================
-   ADMIN → RESIDENT CHURN PREDICTION  [STEP 4]
+   ADMIN → RESIDENT CHURN PREDICTION
 ===================================================== */
 router.get("/predict/churn", auth, isAdmin, async (req, res) => {
     try {
@@ -3282,7 +3386,7 @@ router.get("/predict/churn", auth, isAdmin, async (req, res) => {
             data: churnData
         });
     } catch (err) {
-        console.error("❌ CHURN PREDICTION ERROR:", err);
+        console.error("CHURN PREDICTION ERROR:", err);
         res.status(500).json({
             success: false,
             message: "Failed to generate churn prediction"
@@ -3291,29 +3395,24 @@ router.get("/predict/churn", auth, isAdmin, async (req, res) => {
 });
 
 /* =====================================================
-   ADMIN → REVENUE OPTIMIZATION  [STEP 5]
+   ADMIN → REVENUE OPTIMIZATION
 ===================================================== */
-router.get(
-    "/optimize/revenue",
-    auth,
-    isAdmin,
-    async (req, res) => {
-        try {
-            const insights = await optimizeRevenue();
+router.get("/optimize/revenue", auth, isAdmin, async (req, res) => {
+    try {
+        const insights = await optimizeRevenue();
 
-            res.json({
-                success: true,
-                data: insights
-            });
-        } catch (err) {
-            console.error("❌ REVENUE OPTIMIZATION ERROR:", err);
-            res.status(500).json({
-                success: false,
-                message: "Failed to generate revenue optimization insights"
-            });
-        }
+        res.json({
+            success: true,
+            data: insights
+        });
+    } catch (err) {
+        console.error("REVENUE OPTIMIZATION ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate revenue optimization insights"
+        });
     }
-);
+});
 
 module.exports = router;
 
@@ -3322,9 +3421,9 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 24 of 79: backend\routes\auth.js
-// SIZE: 1287 bytes
-// MODIFIED: 2026-02-02 14:55:56
+// FILE 25 of 80: backend\routes\auth.js
+// SIZE: 1815 bytes
+// MODIFIED: 2026-02-02 17:38:54
 // ##########################################
 
 const express = require("express");
@@ -3335,40 +3434,59 @@ const generateToken = require("../utils/generateToken");
 const router = express.Router();
 
 /* ================= LOGIN ================= */
-router.post("/login", async (req, res, next) => {
+router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res
-                .status(400)
-                .json({ message: "Email and password are required" });
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required"
+            });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
-            return res.status(401).json({ message: "Invalid credentials" });
+            return res.status(401).json({
+                success: false,
+                message: "Invalid credentials"
+            });
         }
 
         if (user.isActive === false) {
-            return res
-                .status(403)
-                .json({ message: "Account is disabled" });
+            return res.status(403).json({
+                success: false,
+                message: "Account is disabled"
+            });
         }
 
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
-            return res.status(401).json({ message: "Invalid credentials" });
+            return res.status(401).json({
+                success: false,
+                message: "Invalid credentials"
+            });
         }
 
         const token = generateToken(user);
 
         res.json({
+            success: true,
             token,
-            message: "Login successful"
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                roomsId: user.roomsId
+            }
         });
     } catch (err) {
-        next(err);
+        console.error("LOGIN ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Login failed"
+        });
     }
 });
 
@@ -3379,9 +3497,9 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 25 of 79: backend\routes\payments.js
-// SIZE: 4102 bytes
-// MODIFIED: 2026-02-01 20:32:48
+// FILE 26 of 80: backend\routes\payments.js
+// SIZE: 4859 bytes
+// MODIFIED: 2026-02-02 17:24:18
 // ##########################################
 
 const express = require("express");
@@ -3402,11 +3520,17 @@ router.post("/", auth, isAdmin, async (req, res) => {
         const amount = Number(req.body.amount);
 
         if (!residentId || !mongoose.Types.ObjectId.isValid(residentId)) {
-            return res.status(400).json({ message: "Invalid resident" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid resident"
+            });
         }
 
         if (!Number.isFinite(amount) || amount <= 0) {
-            return res.status(400).json({ message: "Invalid amount" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid amount"
+            });
         }
 
         const resident = await User.findOne({
@@ -3416,9 +3540,10 @@ router.post("/", auth, isAdmin, async (req, res) => {
         });
 
         if (!resident) {
-            return res
-                .status(400)
-                .json({ message: "Resident not found or inactive" });
+            return res.status(400).json({
+                success: false,
+                message: "Resident not found or inactive"
+            });
         }
 
         const payment = await Payment.create({
@@ -3432,10 +3557,16 @@ router.post("/", auth, isAdmin, async (req, res) => {
             createdBy: req.user.id
         });
 
-        res.status(201).json(payment);
+        res.status(201).json({
+            success: true,
+            payment
+        });
     } catch (err) {
         console.error("CREATE PAYMENT ERROR:", err);
-        res.status(500).json({ message: "Failed to create payment" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to create payment"
+        });
     }
 });
 
@@ -3448,10 +3579,16 @@ router.get("/", auth, isAdmin, async (req, res) => {
             .populate("residentId", "email name")
             .sort({ createdAt: -1 });
 
-        res.json(payments);
+        res.json({
+            success: true,
+            payments
+        });
     } catch (err) {
         console.error("FETCH PAYMENTS ERROR:", err);
-        res.status(500).json({ message: "Failed to fetch payments" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch payments"
+        });
     }
 });
 
@@ -3470,10 +3607,16 @@ router.get("/my", auth, async (req, res) => {
             residentId: req.user.id
         }).sort({ createdAt: -1 });
 
-        res.json(payments);
+        res.json({
+            success: true,
+            payments
+        });
     } catch (err) {
         console.error("FETCH MY PAYMENTS ERROR:", err);
-        res.status(500).json({ message: "Failed to fetch payments" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch payments"
+        });
     }
 });
 
@@ -3483,26 +3626,41 @@ router.get("/my", auth, async (req, res) => {
 router.put("/:id/paid", auth, isAdmin, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid payment ID" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid payment ID"
+            });
         }
 
         const payment = await Payment.findById(req.params.id);
         if (!payment) {
-            return res.status(404).json({ message: "Payment not found" });
+            return res.status(404).json({
+                success: false,
+                message: "Payment not found"
+            });
         }
 
         if (payment.status === "paid") {
-            return res.json({ message: "Payment already marked as paid" });
+            return res.json({
+                success: true,
+                message: "Payment already marked as paid"
+            });
         }
 
         payment.status = "paid";
         payment.paidAt = new Date();
         await payment.save();
 
-        res.json({ message: "Payment marked as paid" });
+        res.json({
+            success: true,
+            message: "Payment marked as paid"
+        });
     } catch (err) {
         console.error("MARK PAID ERROR:", err);
-        res.status(500).json({ message: "Failed to mark payment as paid" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to mark payment as paid"
+        });
     }
 });
 
@@ -3513,9 +3671,9 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 26 of 79: backend\routes\resident.js
-// SIZE: 2010 bytes
-// MODIFIED: 2026-02-02 15:42:27
+// FILE 27 of 80: backend\routes\resident.js
+// SIZE: 2518 bytes
+// MODIFIED: 2026-02-02 17:42:47
 // ##########################################
 
 const express = require("express");
@@ -3525,7 +3683,7 @@ const Request = require("../models/Request");
 const auth = require("../middleware/auth");
 
 /* ================= CREATE REQUEST ================= */
-router.post("/request", auth, async (req, res, next) => {
+router.post("/request", auth, async (req, res) => {
     try {
         const { message } = req.body;
 
@@ -3549,12 +3707,16 @@ router.post("/request", auth, async (req, res, next) => {
             request
         });
     } catch (err) {
-        next(err);
+        console.error("CREATE REQUEST ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create request"
+        });
     }
 });
 
 /* ================= GET MY REQUESTS ================= */
-router.get("/requests", auth, async (req, res, next) => {
+router.get("/requests", auth, async (req, res) => {
     try {
         const requests = await Request.find({
             residentId: req.user.id
@@ -3562,14 +3724,21 @@ router.get("/requests", auth, async (req, res, next) => {
             .sort({ createdAt: -1 })
             .lean();
 
-        res.json(requests);
+        res.json({
+            success: true,
+            requests
+        });
     } catch (err) {
-        next(err);
+        console.error("GET MY REQUESTS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch requests"
+        });
     }
 });
 
 /* ================= DELETE REQUEST ================= */
-router.delete("/request/:id", auth, async (req, res, next) => {
+router.delete("/request/:id", auth, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -3592,7 +3761,11 @@ router.delete("/request/:id", auth, async (req, res, next) => {
             message: "Request deleted"
         });
     } catch (err) {
-        next(err);
+        console.error("DELETE REQUEST ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete request"
+        });
     }
 });
 
@@ -3603,9 +3776,9 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 27 of 79: backend\routes\rooms.js
-// SIZE: 3960 bytes
-// MODIFIED: 2026-02-01 20:33:16
+// FILE 28 of 80: backend\routes\rooms.js
+// SIZE: 5116 bytes
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 const express = require("express");
@@ -3623,31 +3796,47 @@ router.post("/", auth, isAdmin, async (req, res) => {
     try {
         const { roomsNumber, note } = req.body;
         const totalBeds = Number(req.body.totalBeds);
+        const rent = Number(req.body.rent);
 
-        if (!roomsNumber || !Number.isInteger(totalBeds) || totalBeds <= 0) {
+        if (
+            !roomsNumber ||
+            !Number.isInteger(totalBeds) ||
+            totalBeds <= 0 ||
+            !Number.isFinite(rent) ||
+            rent <= 0
+        ) {
             return res.status(400).json({
-                message: "rooms number and valid total beds are required"
+                success: false,
+                message: "rooms number, valid rent, and valid total beds are required"
             });
         }
 
         const exists = await rooms.findOne({ roomsNumber });
         if (exists) {
             return res.status(400).json({
+                success: false,
                 message: "rooms already exists"
             });
         }
 
         const rooms = await rooms.create({
             roomsNumber,
+            rent,
             totalBeds,
             occupiedBeds: 0,
             note: note || ""
         });
 
-        res.status(201).json(rooms);
+        res.status(201).json({
+            success: true,
+            rooms
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to create rooms" });
+        console.error("CREATE rooms ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create rooms"
+        });
     }
 });
 
@@ -3657,10 +3846,16 @@ router.post("/", auth, isAdmin, async (req, res) => {
 router.get("/", auth, isAdmin, async (req, res) => {
     try {
         const rooms = await rooms.find().sort({ roomsNumber: 1 });
-        res.json(rooms);
+        res.json({
+            success: true,
+            rooms
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to fetch rooms" });
+        console.error("GET rooms ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch rooms"
+        });
     }
 });
 
@@ -3670,23 +3865,31 @@ router.get("/", auth, isAdmin, async (req, res) => {
 router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid rooms ID" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid rooms ID"
+            });
         }
 
         const occupiedBeds = Number(req.body.occupiedBeds);
         if (!Number.isInteger(occupiedBeds) || occupiedBeds < 0) {
             return res.status(400).json({
+                success: false,
                 message: "Invalid occupied beds value"
             });
         }
 
         const rooms = await rooms.findById(req.params.id);
         if (!rooms) {
-            return res.status(404).json({ message: "rooms not found" });
+            return res.status(404).json({
+                success: false,
+                message: "rooms not found"
+            });
         }
 
         if (occupiedBeds > rooms.totalBeds) {
             return res.status(400).json({
+                success: false,
                 message: "Occupied beds cannot exceed total beds"
             });
         }
@@ -3694,10 +3897,16 @@ router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
         rooms.occupiedBeds = occupiedBeds;
         await rooms.save();
 
-        res.json(rooms);
+        res.json({
+            success: true,
+            rooms
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to update occupancy" });
+        console.error("UPDATE OCCUPANCY ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to update occupancy"
+        });
     }
 });
 
@@ -3707,25 +3916,39 @@ router.put("/:id/occupancy", auth, isAdmin, async (req, res) => {
 router.delete("/:id", auth, isAdmin, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid rooms ID" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid rooms ID"
+            });
         }
 
         const rooms = await rooms.findById(req.params.id);
         if (!rooms) {
-            return res.status(404).json({ message: "rooms not found" });
+            return res.status(404).json({
+                success: false,
+                message: "rooms not found"
+            });
         }
 
         if (rooms.occupiedBeds > 0) {
             return res.status(400).json({
+                success: false,
                 message: "Cannot delete rooms with occupied beds"
             });
         }
 
         await rooms.deleteOne();
-        res.json({ message: "rooms deleted" });
+
+        res.json({
+            success: true,
+            message: "rooms deleted"
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to delete rooms" });
+        console.error("DELETE rooms ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete rooms"
+        });
     }
 });
 
@@ -3736,7 +3959,7 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 28 of 79: backend\utils\emailService.js
+// FILE 29 of 80: backend\utils\emailService.js
 // SIZE: 3730 bytes
 // MODIFIED: 2026-01-28 16:18:33
 // ##########################################
@@ -3819,9 +4042,9 @@ exports.sendPaymentReminder = (email, name, amount, dueDate) => {
 
 
 // ##########################################
-// FILE 29 of 79: backend\utils\generateToken.js
-// SIZE: 281 bytes
-// MODIFIED: 2026-02-02 14:55:50
+// FILE 30 of 80: backend\utils\generateToken.js
+// SIZE: 303 bytes
+// MODIFIED: 2026-02-02 17:42:47
 // ##########################################
 
 const jwt = require("jsonwebtoken");
@@ -3833,7 +4056,9 @@ function generateToken(user) {
             role: user.role
         },
         process.env.JWT_SECRET,
-        { expiresIn: "7d" }
+        {
+            expiresIn: "7d"
+        }
     );
 }
 
@@ -3844,7 +4069,7 @@ module.exports = generateToken;
 
 
 // ##########################################
-// FILE 30 of 79: frontend\package.json
+// FILE 31 of 80: frontend\package.json
 // SIZE: 1115 bytes
 // MODIFIED: 2026-01-27 13:43:16
 // ##########################################
@@ -3904,7 +4129,7 @@ module.exports = generateToken;
 
 
 // ##########################################
-// FILE 31 of 79: frontend\package-lock.json
+// FILE 32 of 80: frontend\package-lock.json
 // SIZE: 679187 bytes
 // MODIFIED: 2026-01-30 12:27:05
 // ##########################################
@@ -21906,7 +22131,7 @@ module.exports = generateToken;
 
 
 // ##########################################
-// FILE 32 of 79: frontend\postcss.config.js
+// FILE 33 of 80: frontend\postcss.config.js
 // SIZE: 99 bytes
 // MODIFIED: 2026-01-27 00:41:10
 // ##########################################
@@ -21923,9 +22148,9 @@ module.exports = {
 
 
 // ##########################################
-// FILE 33 of 79: frontend\public\index.html
-// SIZE: 1443 bytes
-// MODIFIED: 2026-01-28 16:03:57
+// FILE 34 of 80: frontend\public\index.html
+// SIZE: 1445 bytes
+// MODIFIED: 2026-02-02 17:38:54
 // ##########################################
 
 <!DOCTYPE html>
@@ -21965,7 +22190,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 34 of 79: frontend\public\manifest.json
+// FILE 35 of 80: frontend\public\manifest.json
 // SIZE: 492 bytes
 // MODIFIED: 2026-01-27 16:34:59
 // ##########################################
@@ -22001,7 +22226,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 35 of 79: frontend\public\robots.txt
+// FILE 36 of 80: frontend\public\robots.txt
 // SIZE: 67 bytes
 // MODIFIED: 2026-01-22 18:14:44
 // ##########################################
@@ -22015,7 +22240,7 @@ Disallow:
 
 
 // ##########################################
-// FILE 36 of 79: frontend\README.md
+// FILE 37 of 80: frontend\README.md
 // SIZE: 3359 bytes
 // MODIFIED: 2026-01-22 18:14:42
 // ##########################################
@@ -22096,7 +22321,7 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 
 // ##########################################
-// FILE 37 of 79: frontend\src\animations\pageTransition.js
+// FILE 38 of 80: frontend\src\animations\pageTransition.js
 // SIZE: 394 bytes
 // MODIFIED: 2026-01-27 00:22:58
 // ##########################################
@@ -22129,7 +22354,7 @@ export const pageVariants = {
 
 
 // ##########################################
-// FILE 38 of 79: frontend\src\api\axios.js
+// FILE 39 of 80: frontend\src\api\axios.js
 // SIZE: 1114 bytes
 // MODIFIED: 2026-02-02 15:00:37
 // ##########################################
@@ -22186,7 +22411,7 @@ export default api;
 
 
 // ##########################################
-// FILE 39 of 79: frontend\src\App.css
+// FILE 40 of 80: frontend\src\App.css
 // SIZE: 564 bytes
 // MODIFIED: 2026-01-22 18:14:23
 // ##########################################
@@ -22235,9 +22460,9 @@ export default api;
 
 
 // ##########################################
-// FILE 40 of 79: frontend\src\App.js
+// FILE 41 of 80: frontend\src\App.js
 // SIZE: 4293 bytes
-// MODIFIED: 2026-02-02 15:55:33
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -22380,7 +22605,7 @@ export default function App() {
 
 
 // ##########################################
-// FILE 41 of 79: frontend\src\components\AppLayout.jsx
+// FILE 42 of 80: frontend\src\components\AppLayout.jsx
 // SIZE: 619 bytes
 // MODIFIED: 2026-02-02 13:06:59
 // ##########################################
@@ -22412,7 +22637,7 @@ export default function AppLayout({ children }) {
 
 
 // ##########################################
-// FILE 42 of 79: frontend\src\components\Button.jsx
+// FILE 43 of 80: frontend\src\components\Button.jsx
 // SIZE: 306 bytes
 // MODIFIED: 2026-01-27 00:19:50
 // ##########################################
@@ -22433,7 +22658,7 @@ export default function Button({ children, className = "", ...props }) {
 
 
 // ##########################################
-// FILE 43 of 79: frontend\src\components\Card.jsx
+// FILE 44 of 80: frontend\src\components\Card.jsx
 // SIZE: 169 bytes
 // MODIFIED: 2026-01-27 00:19:57
 // ##########################################
@@ -22451,7 +22676,7 @@ export default function Card({ children }) {
 
 
 // ##########################################
-// FILE 44 of 79: frontend\src\components\ChurnRiskTable.jsx
+// FILE 45 of 80: frontend\src\components\ChurnRiskTable.jsx
 // SIZE: 5989 bytes
 // MODIFIED: 2026-02-01 21:33:14
 // ##########################################
@@ -22616,7 +22841,7 @@ export default function ChurnRiskTable() {
 
 
 // ##########################################
-// FILE 45 of 79: frontend\src\components\KpiCards.jsx
+// FILE 46 of 80: frontend\src\components\KpiCards.jsx
 // SIZE: 2897 bytes
 // MODIFIED: 2026-02-01 20:52:06
 // ##########################################
@@ -22722,7 +22947,7 @@ export default function KpiCards() {
 
 
 // ##########################################
-// FILE 46 of 79: frontend\src\components\Loader.jsx
+// FILE 47 of 80: frontend\src\components\Loader.jsx
 // SIZE: 246 bytes
 // MODIFIED: 2026-01-27 00:20:04
 // ##########################################
@@ -22740,7 +22965,7 @@ export default function Loader() {
 
 
 // ##########################################
-// FILE 47 of 79: frontend\src\components\MaintenanceCostForecast.jsx
+// FILE 48 of 80: frontend\src\components\MaintenanceCostForecast.jsx
 // SIZE: 5884 bytes
 // MODIFIED: 2026-02-02 16:01:54
 // ##########################################
@@ -22911,7 +23136,7 @@ export default function MaintenanceCostForecast() {
 
 
 // ##########################################
-// FILE 48 of 79: frontend\src\components\Navbar.jsx
+// FILE 49 of 80: frontend\src\components\Navbar.jsx
 // SIZE: 1288 bytes
 // MODIFIED: 2026-02-02 12:57:15
 // ##########################################
@@ -22958,7 +23183,7 @@ export default function Navbar({ onMenuClick }) {
 
 
 // ##########################################
-// FILE 49 of 79: frontend\src\components\OccupancyForecast.jsx
+// FILE 50 of 80: frontend\src\components\OccupancyForecast.jsx
 // SIZE: 4799 bytes
 // MODIFIED: 2026-02-02 16:02:01
 // ##########################################
@@ -23101,7 +23326,7 @@ export default function OccupancyForecast() {
 
 
 // ##########################################
-// FILE 50 of 79: frontend\src\components\RequestsChart.jsx
+// FILE 51 of 80: frontend\src\components\RequestsChart.jsx
 // SIZE: 1034 bytes
 // MODIFIED: 2026-02-02 16:02:08
 // ##########################################
@@ -23146,7 +23371,7 @@ export default function RequestsChart({ data }) {
 
 
 // ##########################################
-// FILE 51 of 79: frontend\src\components\RequestTable.jsx
+// FILE 52 of 80: frontend\src\components\RequestTable.jsx
 // SIZE: 1204 bytes
 // MODIFIED: 2026-01-27 14:36:34
 // ##########################################
@@ -23191,7 +23416,7 @@ export default function RequestTable({ requests, refresh }) {
 
 
 // ##########################################
-// FILE 52 of 79: frontend\src\components\RevenueOptimization.jsx
+// FILE 53 of 80: frontend\src\components\RevenueOptimization.jsx
 // SIZE: 4524 bytes
 // MODIFIED: 2026-02-01 21:38:49
 // ##########################################
@@ -23331,7 +23556,7 @@ export default function RevenueOptimization() {
 
 
 // ##########################################
-// FILE 53 of 79: frontend\src\components\Sidebar.jsx
+// FILE 54 of 80: frontend\src\components\Sidebar.jsx
 // SIZE: 3662 bytes
 // MODIFIED: 2026-02-02 15:05:27
 // ##########################################
@@ -23444,7 +23669,7 @@ export default function Sidebar({ open, onClose }) {
 
 
 // ##########################################
-// FILE 54 of 79: frontend\src\components\StatCard.jsx
+// FILE 55 of 80: frontend\src\components\StatCard.jsx
 // SIZE: 1657 bytes
 // MODIFIED: 2026-01-30 13:31:53
 // ##########################################
@@ -23510,7 +23735,7 @@ export default function StatCard({
 
 
 // ##########################################
-// FILE 55 of 79: frontend\src\components\StatusModal.jsx
+// FILE 56 of 80: frontend\src\components\StatusModal.jsx
 // SIZE: 1847 bytes
 // MODIFIED: 2026-01-27 18:06:20
 // ##########################################
@@ -23577,7 +23802,7 @@ export default function StatusModal({ request, onClose, onSave }) {
 
 
 // ##########################################
-// FILE 56 of 79: frontend\src\components\ToastProvider.jsx
+// FILE 57 of 80: frontend\src\components\ToastProvider.jsx
 // SIZE: 390 bytes
 // MODIFIED: 2026-01-27 00:23:05
 // ##########################################
@@ -23604,7 +23829,7 @@ export default function ToastProvider() {
 
 
 // ##########################################
-// FILE 57 of 79: frontend\src\context\AuthContext.jsx
+// FILE 58 of 80: frontend\src\context\AuthContext.jsx
 // SIZE: 1754 bytes
 // MODIFIED: 2026-02-02 15:03:57
 // ##########################################
@@ -23685,7 +23910,7 @@ export const useAuth = () => useContext(AuthContext);
 
 
 // ##########################################
-// FILE 58 of 79: frontend\src\hooks\useAdminStats.js
+// FILE 59 of 80: frontend\src\hooks\useAdminStats.js
 // SIZE: 1546 bytes
 // MODIFIED: 2026-01-30 12:55:34
 // ##########################################
@@ -23746,7 +23971,7 @@ export default function useAdminStats() {
 
 
 // ##########################################
-// FILE 59 of 79: frontend\src\index.css
+// FILE 60 of 80: frontend\src\index.css
 // SIZE: 1089 bytes
 // MODIFIED: 2026-01-28 23:49:00
 // ##########################################
@@ -23801,7 +24026,7 @@ code {
 
 
 // ##########################################
-// FILE 60 of 79: frontend\src\index.js
+// FILE 61 of 80: frontend\src\index.js
 // SIZE: 420 bytes
 // MODIFIED: 2026-02-02 15:57:34
 // ##########################################
@@ -23828,9 +24053,9 @@ root.render(
 
 
 // ##########################################
-// FILE 61 of 79: frontend\src\layouts\DashboardLayout.jsx
+// FILE 62 of 80: frontend\src\layouts\DashboardLayout.jsx
 // SIZE: 4856 bytes
-// MODIFIED: 2026-01-30 13:38:02
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 import { NavLink } from "react-router-dom";
@@ -23959,7 +24184,7 @@ export default function DashboardLayout({ children }) {
 
 
 // ##########################################
-// FILE 62 of 79: frontend\src\pages\AdminDashboard.jsx
+// FILE 63 of 80: frontend\src\pages\AdminDashboard.jsx
 // SIZE: 7900 bytes
 // MODIFIED: 2026-02-02 12:46:27
 // ##########################################
@@ -24188,7 +24413,7 @@ export default function AdminDashboard() {
 
 
 // ##########################################
-// FILE 63 of 79: frontend\src\pages\AdminRequests.jsx
+// FILE 64 of 80: frontend\src\pages\AdminRequests.jsx
 // SIZE: 14289 bytes
 // MODIFIED: 2026-01-30 13:52:04
 // ##########################################
@@ -24523,9 +24748,9 @@ export default function AdminRequests() {
 
 
 // ##########################################
-// FILE 64 of 79: frontend\src\pages\AdminResidents.jsx
-// SIZE: 11447 bytes
-// MODIFIED: 2026-02-02 16:50:53
+// FILE 65 of 80: frontend\src\pages\AdminResidents.jsx
+// SIZE: 10800 bytes
+// MODIFIED: 2026-02-02 17:38:54
 // ##########################################
 
 import { useEffect, useState, useCallback } from "react";
@@ -24544,8 +24769,7 @@ export default function AdminResidents() {
         name: "",
         email: "",
         password: "",
-        rooms: "",
-        rent: ""
+        roomsId: ""
     });
 
     /* ===== BILLING ===== */
@@ -24574,16 +24798,10 @@ export default function AdminResidents() {
 
     /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
-        const { name, email, password, rooms, rent } = form;
+        const { name, email, password, roomsId } = form;
 
-        if (!name || !email || !password || !rooms || !rent) {
-            toast.error("All fields are required");
-            return;
-        }
-
-        const rentValue = Number(rent);
-        if (!Number.isFinite(rentValue) || rentValue <= 0) {
-            toast.error("Rent must be greater than 0");
+        if (!name || !email || !password) {
+            toast.error("Name, email, and password are required");
             return;
         }
 
@@ -24592,8 +24810,7 @@ export default function AdminResidents() {
                 name,
                 email,
                 password,
-                rooms,
-                rent: rentValue
+                roomsId: roomsId || null
             });
 
             toast.success("Resident added successfully");
@@ -24601,8 +24818,7 @@ export default function AdminResidents() {
                 name: "",
                 email: "",
                 password: "",
-                rooms: "",
-                rent: ""
+                roomsId: ""
             });
 
             fetchResidents();
@@ -24627,7 +24843,7 @@ export default function AdminResidents() {
 
         try {
             await api.post("/payments", {
-                residentId: billingTarget._id, // ✅ User._id
+                residentId: billingTarget._id,
                 amount,
                 description: billDescription || "Direct charge",
                 type: "manual"
@@ -24671,17 +24887,15 @@ export default function AdminResidents() {
                         Add New Resident
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        {["name", "email", "password", "rooms", "rent"].map(
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        {["name", "email", "password", "roomsId"].map(
                             (field) => (
                                 <input
                                     key={field}
                                     type={
                                         field === "password"
                                             ? "password"
-                                            : field === "rent"
-                                                ? "number"
-                                                : "text"
+                                            : "text"
                                     }
                                     placeholder={field.toUpperCase()}
                                     className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm"
@@ -24698,7 +24912,7 @@ export default function AdminResidents() {
 
                         <MotionButton
                             onClick={addResident}
-                            className="md:col-span-5 bg-blue-600 text-white px-4 py-2 rounded-lg"
+                            className="md:col-span-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
                         >
                             Add Resident
                         </MotionButton>
@@ -24726,7 +24940,6 @@ export default function AdminResidents() {
                                     <th className="p-2 text-left">Name</th>
                                     <th className="p-2 text-left">Email</th>
                                     <th className="p-2 text-center">rooms</th>
-                                    <th className="p-2 text-center">Rent</th>
                                     <th className="p-2 text-center">Action</th>
                                 </tr>
                             </thead>
@@ -24739,10 +24952,7 @@ export default function AdminResidents() {
                                         <td className="p-2">{r.name}</td>
                                         <td className="p-2">{r.email}</td>
                                         <td className="p-2 text-center">
-                                            {r.rooms || "-"}
-                                        </td>
-                                        <td className="p-2 text-center">
-                                            {r.rent || "-"}
+                                            {r.roomsId?.roomsNumber || "-"}
                                         </td>
                                         <td className="p-2 text-center">
                                             <MotionButton
@@ -24821,9 +25031,9 @@ export default function AdminResidents() {
 
 
 // ##########################################
-// FILE 65 of 79: frontend\src\pages\Adminroomss.jsx
-// SIZE: 12403 bytes
-// MODIFIED: 2026-01-31 20:06:08
+// FILE 66 of 80: frontend\src\pages\AdminRooms.jsx
+// SIZE: 12456 bytes
+// MODIFIED: 2026-02-02 17:55:58
 // ##########################################
 
 import { useEffect, useState, useCallback } from "react";
@@ -25130,7 +25340,7 @@ export default function Adminroomss() {
 
 
 // ##########################################
-// FILE 66 of 79: frontend\src\pages\Login.jsx
+// FILE 67 of 80: frontend\src\pages\Login.jsx
 // SIZE: 5550 bytes
 // MODIFIED: 2026-02-02 16:26:51
 // ##########################################
@@ -25292,7 +25502,7 @@ export default function Login() {
 
 
 // ##########################################
-// FILE 67 of 79: frontend\src\pages\Payments.jsx
+// FILE 68 of 80: frontend\src\pages\Payments.jsx
 // SIZE: 6104 bytes
 // MODIFIED: 2026-01-31 20:06:44
 // ##########################################
@@ -25452,7 +25662,7 @@ export default function Payments() {
 
 
 // ##########################################
-// FILE 68 of 79: frontend\src\pages\RequestHistory.jsx
+// FILE 69 of 80: frontend\src\pages\RequestHistory.jsx
 // SIZE: 6532 bytes
 // MODIFIED: 2026-01-30 13:17:26
 // ##########################################
@@ -25607,7 +25817,7 @@ export default function RequestHistory() {
 
 
 // ##########################################
-// FILE 69 of 79: frontend\src\pages\ResidentDashboard.jsx
+// FILE 70 of 80: frontend\src\pages\ResidentDashboard.jsx
 // SIZE: 10183 bytes
 // MODIFIED: 2026-02-01 22:59:50
 // ##########################################
@@ -25860,7 +26070,7 @@ export default function ResidentDashboard() {
 
 
 // ##########################################
-// FILE 70 of 79: frontend\src\pages\ResidentPayments.jsx
+// FILE 71 of 80: frontend\src\pages\ResidentPayments.jsx
 // SIZE: 4343 bytes
 // MODIFIED: 2026-02-01 20:00:10
 // ##########################################
@@ -25985,9 +26195,9 @@ export default function ResidentPayments() {
 
 
 // ##########################################
-// FILE 71 of 79: frontend\src\pages\rooms.jsx
-// SIZE: 9993 bytes
-// MODIFIED: 2026-01-30 13:20:54
+// FILE 72 of 80: frontend\src\pages\Rooms.jsx
+// SIZE: 10055 bytes
+// MODIFIED: 2026-02-02 17:38:52
 // ##########################################
 
 import { useEffect, useState } from "react";
@@ -25997,12 +26207,12 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * rooms (DARK THEME FIXED)
+ * roomss (DARK THEME FIXED)
  * Phase 4 – rooms & Bed Management (Admin)
  */
 
-export default function rooms() {
-    const [rooms, setroomss] = useState([]);
+export default function roomss() {
+    const [roomss, setroomss] = useState([]);
     const [loading, setLoading] = useState(true);
 
     /* ===== ADD rooms FORM ===== */
@@ -26016,15 +26226,15 @@ export default function rooms() {
     const [selectedrooms, setSelectedrooms] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH rooms ================= */
+    /* ================= FETCH roomsS ================= */
     const fetchroomss = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/rooms");
+            const res = await api.get("/roomss");
             setroomss(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error(err);
-            toast.error("Failed to load rooms");
+            toast.error("Failed to load roomss");
             setroomss([]);
         } finally {
             setLoading(false);
@@ -26043,7 +26253,7 @@ export default function rooms() {
         }
 
         try {
-            await api.post("/rooms", {
+            await api.post("/roomss", {
                 roomsNumber: form.roomsNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
@@ -26067,7 +26277,7 @@ export default function rooms() {
 
         try {
             await api.put(
-                `/rooms/${selectedrooms._id}/occupancy`,
+                `/roomss/${selectedrooms._id}/occupancy`,
                 { occupiedBeds: Number(occupiedBeds) }
             );
 
@@ -26091,7 +26301,7 @@ export default function rooms() {
             return;
 
         try {
-            await api.delete(`/rooms/${rooms._id}`);
+            await api.delete(`/roomss/${rooms._id}`);
             toast.success("rooms deleted");
             fetchroomss();
         } catch (err) {
@@ -26103,7 +26313,7 @@ export default function rooms() {
     return (
         <DashboardLayout>
             <h2 className="text-2xl font-bold mb-6">
-                rooms & Bed Management
+                roomss & Bed Management
             </h2>
 
             {/* ADD rooms */}
@@ -26153,14 +26363,14 @@ export default function rooms() {
                 </button>
             </div>
 
-            {/* rooms TABLE */}
+            {/* roomsS TABLE */}
             {loading ? (
                 <p className="text-center text-gray-400">
                     Loading…
                 </p>
-            ) : rooms.length === 0 ? (
+            ) : roomss.length === 0 ? (
                 <p className="text-center text-gray-400">
-                    No rooms added yet.
+                    No roomss added yet.
                 </p>
             ) : (
                 <div className="overflow-x-auto">
@@ -26176,7 +26386,7 @@ export default function rooms() {
                         </thead>
 
                         <tbody>
-                            {rooms.map((r) => (
+                            {roomss.map((r) => (
                                 <tr
                                     key={r._id}
                                     className="border-t border-white/10 text-center hover:bg-white/5"
@@ -26260,7 +26470,7 @@ export default function rooms() {
 
 
 // ##########################################
-// FILE 72 of 79: frontend\src\routes\AdminRoute.jsx
+// FILE 73 of 80: frontend\src\routes\AdminRoute.jsx
 // SIZE: 631 bytes
 // MODIFIED: 2026-01-27 18:41:17
 // ##########################################
@@ -26298,7 +26508,7 @@ export default function AdminRoute({ children }) {
 
 
 // ##########################################
-// FILE 73 of 79: frontend\src\routes\ProtectedRoute.jsx
+// FILE 74 of 80: frontend\src\routes\ProtectedRoute.jsx
 // SIZE: 433 bytes
 // MODIFIED: 2026-02-02 15:04:16
 // ##########################################
@@ -26327,7 +26537,7 @@ export default function ProtectedRoute({ children, role }) {
 
 
 // ##########################################
-// FILE 74 of 79: frontend\src\routes\ResidentRoute.jsx
+// FILE 75 of 80: frontend\src\routes\ResidentRoute.jsx
 // SIZE: 629 bytes
 // MODIFIED: 2026-01-27 18:41:47
 // ##########################################
@@ -26365,7 +26575,7 @@ export default function ResidentRoute({ children }) {
 
 
 // ##########################################
-// FILE 75 of 79: frontend\src\services\adminService.js
+// FILE 76 of 80: frontend\src\services\adminService.js
 // SIZE: 1447 bytes
 // MODIFIED: 2026-02-02 16:51:26
 // ##########################################
@@ -26424,7 +26634,7 @@ export const getResidents = async () => {
 
 
 // ##########################################
-// FILE 76 of 79: frontend\src\services\analyticsService.js
+// FILE 77 of 80: frontend\src\services\analyticsService.js
 // SIZE: 1976 bytes
 // MODIFIED: 2026-02-01 21:38:13
 // ##########################################
@@ -26519,7 +26729,7 @@ export const optimizeRevenue = async () => {
 
 
 // ##########################################
-// FILE 77 of 79: frontend\src\services\authService.js
+// FILE 78 of 80: frontend\src\services\authService.js
 // SIZE: 0 bytes
 // MODIFIED: 2026-01-26 12:54:26
 // ##########################################
@@ -26529,7 +26739,7 @@ export const optimizeRevenue = async () => {
 
 
 // ##########################################
-// FILE 78 of 79: frontend\src\services\residentService.js
+// FILE 79 of 80: frontend\src\services\residentService.js
 // SIZE: 1033 bytes
 // MODIFIED: 2026-01-28 23:13:29
 // ##########################################
@@ -26576,7 +26786,7 @@ export const deleteRequest = async (id) => {
 
 
 // ##########################################
-// FILE 79 of 79: frontend\tailwind.config.js
+// FILE 80 of 80: frontend\tailwind.config.js
 // SIZE: 236 bytes
 // MODIFIED: 2026-01-28 15:49:48
 // ##########################################
