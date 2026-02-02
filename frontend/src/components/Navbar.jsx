@@ -1,63 +1,92 @@
-﻿import { motion } from "framer-motion";
+﻿import { NavLink } from "react-router-dom";
+import { motion } from "framer-motion";
 
-/**
- * Navbar
- * - Shared for Admin & Resident
- * - Hamburger menu support
- * - Keeps existing design & animation
- */
+const baseLink =
+    "block px-4 py-2 rounded transition hover:bg-gray-700";
 
-export default function Navbar({ onMenuClick }) {
+const activeLink =
+    "bg-gray-800 font-semibold";
+
+export default function Sidebar({ open, onClose }) {
     const role = localStorage.getItem("role");
 
-    const logout = () => {
-        localStorage.clear();
-        window.location.href = "/";
-    };
-
     return (
-        <motion.nav
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white shadow-md px-6 py-4 flex justify-between items-center"
-        >
-            {/* LEFT */}
-            <div className="flex items-center gap-4">
-                {/* 🍔 Hamburger (mobile only) */}
-                <button
-                    onClick={onMenuClick}
-                    className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
-                >
-                    <div className="space-y-1">
-                        <span className="block w-6 h-0.5 bg-gray-800" />
-                        <span className="block w-6 h-0.5 bg-gray-800" />
-                        <span className="block w-6 h-0.5 bg-gray-800" />
-                    </div>
-                </button>
+        <>
+            {/* Overlay (mobile only) */}
+            {open && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
 
-                {/* Logo / Title */}
-                <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-600 rounded-full" />
-                    <h1 className="text-xl font-bold text-gray-800">
-                        TAGT Dashboard
-                    </h1>
+            {/* Sidebar */}
+            <motion.aside
+                initial={false}
+                animate={{
+                    x: open ? 0 : -260
+                }}
+                transition={{ duration: 0.25 }}
+                className="
+                    fixed md:static
+                    top-0 left-0 z-50
+                    w-64 min-h-screen
+                    bg-gray-900 text-white
+                    md:translate-x-0
+                "
+            >
+                <div className="p-4 text-xl font-bold border-b border-gray-700">
+                    TAGT PMS
                 </div>
-            </div>
 
-            {/* RIGHT */}
-            <div className="flex items-center gap-6">
-                <span className="text-sm text-gray-600 capitalize">
-                    {role}
-                </span>
+                <nav className="p-4 space-y-2">
+                    <NavLink
+                        to={role === "admin" ? "/admin" : "/resident"}
+                        onClick={onClose}
+                        className={({ isActive }) =>
+                            `${baseLink} ${isActive ? activeLink : ""}`
+                        }
+                    >
+                        Dashboard
+                    </NavLink>
 
-                <button
-                    onClick={logout}
-                    className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm hover:bg-red-600 transition"
-                >
-                    Logout
-                </button>
-            </div>
-        </motion.nav>
+                    {role === "admin" && (
+                        <>
+                            <NavLink to="/admin/requests" onClick={onClose}
+                                className={({ isActive }) =>
+                                    `${baseLink} ${isActive ? activeLink : ""}`
+                                }>
+                                Requests
+                            </NavLink>
+                            <NavLink to="/admin/residents" onClick={onClose}
+                                className={({ isActive }) =>
+                                    `${baseLink} ${isActive ? activeLink : ""}`
+                                }>
+                                Residents
+                            </NavLink>
+                        </>
+                    )}
+
+                    {role === "resident" && (
+                        <NavLink to="/resident/requests" onClick={onClose}
+                            className={({ isActive }) =>
+                                `${baseLink} ${isActive ? activeLink : ""}`
+                            }>
+                            My Requests
+                        </NavLink>
+                    )}
+
+                    <button
+                        onClick={() => {
+                            localStorage.clear();
+                            window.location.href = "/";
+                        }}
+                        className="mt-6 w-full text-left px-4 py-2 rounded text-red-400 hover:bg-red-500/10"
+                    >
+                        Logout
+                    </button>
+                </nav>
+            </motion.aside>
+        </>
     );
 }
