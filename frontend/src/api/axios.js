@@ -29,13 +29,15 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Global auth handling
+// Global auth handling (SAFE)
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            // Only clear token
             localStorage.removeItem("token");
-            localStorage.removeItem("role");
+            // DO NOT navigate here
+            // DO NOT manage role here
         }
         return Promise.reject(error);
     }
