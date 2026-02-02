@@ -1,9 +1,11 @@
 ﻿import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import api from "../api/axios";
 import Button from "../components/Button";
 import Card from "../components/Card";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -12,11 +14,13 @@ export default function Login() {
     const [errors, setErrors] = useState({});
 
     const isSubmitting = useRef(false);
+    const navigate = useNavigate();
+    const { login } = useAuth(); // ✅ IMPORTANT
 
     const validateEmail = (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-    const login = async () => {
+    const handleLogin = async () => {
         if (loading || isSubmitting.current) return;
 
         const newErrors = {};
@@ -42,29 +46,31 @@ export default function Login() {
         setLoading(true);
 
         try {
-            // ✅ CORRECT ROUTE (NO double /api)
-            const response = await api.post("/auth/login", {
+            const res = await api.post("/auth/login", {
                 email: email.trim().toLowerCase(),
                 password
             });
 
-            const { token, role } = response.data || {};
+            const { token } = res.data || {};
 
             if (!token) {
                 toast.error("Login failed: no token received");
                 return;
             }
 
-            localStorage.setItem("token", token);
-            if (role) localStorage.setItem("role", role);
+            // ✅ Update AuthContext (single source of truth)
+            login(token);
+
+            const payload = JSON.parse(atob(token.split(".")[1]));
 
             toast.success("Login successful");
 
-            setTimeout(() => {
-                window.location.assign(
-                    role === "admin" ? "/admin" : "/resident"
-                );
-            }, 300);
+            // ✅ Correct dashboard redirect
+            if (payload.role === "admin") {
+                navigate("/admin/dashboard", { replace: true });
+            } else {
+                navigate("/resident/dashboard", { replace: true });
+            }
         } catch (err) {
             toast.error(
                 err.response?.data?.message ||
@@ -127,7 +133,7 @@ export default function Login() {
 
                     {/* Button */}
                     <Button
-                        onClick={login}
+                        onClick={handleLogin}
                         disabled={loading}
                         className="w-full py-3 text-sm font-semibold tracking-wide"
                     >

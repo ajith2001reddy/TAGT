@@ -1,6 +1,6 @@
 ﻿# ============================================
 # PROJECT CODE BUNDLER FOR REVIEW
-# Creates 25 organized text files with project tree
+# Creates 1 organized text file with project tree and all code
 # ============================================
 
 Write-Host "========================================" -ForegroundColor Cyan
@@ -9,8 +9,8 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Configuration
-$totalParts = 24  # 24 files for code (file 1 is for tree + summary)
 $outputFolder = "project_review_package"
+$outputFile = "Complete_Project_Review.txt"
 
 # Create output folder
 if (!(Test-Path $outputFolder)) {
@@ -59,7 +59,6 @@ $treeOutput = @"
 # PROJECT TREE STRUCTURE
 Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Project Path: $((Get-Location).Path)
-
 ``````
 $(Split-Path -Leaf (Get-Location))
 $(Get-DirectoryTree -Path "." | Out-String)
@@ -81,7 +80,7 @@ $allFiles = Get-ChildItem -Recurse -File | Where-Object {
 Write-Host "✓ Found $($allFiles.Count) code files" -ForegroundColor Green
 
 # ============================================
-# PART 3: Create Summary File
+# PART 3: Create Summary
 # ============================================
 Write-Host "Creating project summary..." -ForegroundColor Yellow
 
@@ -109,72 +108,66 @@ $($allFiles | ForEach-Object { $i = 0 } { $i++; "$i. $($_.FullName.Replace((Get-
 
 "@
 
-# Write Part 1: Tree + Summary
-$part1File = Join-Path $outputFolder "Part_01_TREE_AND_SUMMARY.txt"
-$treeOutput + $summaryOutput | Out-File $part1File -Encoding UTF8
-Write-Host "✓ Created Part_01_TREE_AND_SUMMARY.txt" -ForegroundColor Green
-
 # ============================================
-# PART 4: Bundle Code Files into Parts
+# PART 4: Create Single Combined File
 # ============================================
 Write-Host ""
-Write-Host "Bundling code files into $totalParts parts..." -ForegroundColor Yellow
+Write-Host "Creating combined review file..." -ForegroundColor Yellow
 
-$filesPerPart = [Math]::Ceiling($allFiles.Count / $totalParts)
+$fullOutputPath = Join-Path $outputFolder $outputFile
 
-for ($i = 0; $i -lt $totalParts; $i++) {
-    $partNum = $i + 2  # Start from 2 (Part 1 is tree)
-    $batch = $allFiles | Select-Object -Skip ($i * $filesPerPart) -First $filesPerPart
-    $outFile = Join-Path $outputFolder ("Part_{0:D2}_CODE_FILES.txt" -f $partNum)
-    
-    if ($batch) {
-        $partContent = @"
-# CODE REVIEW - PART $partNum
-Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-Files in this part: $($batch.Count)
+# Write header sections
+$treeOutput + $summaryOutput | Out-File $fullOutputPath -Encoding UTF8
+
+# Add separator before code files
+@"
 
 ========================================
+# ALL CODE FILES
+========================================
 
-"@
-        $partContent | Out-File $outFile -Encoding UTF8
-        
-        foreach ($file in $batch) {
-            $relativePath = $file.FullName.Replace((Get-Location).Path + '\', '')
-            
-            @"
+"@ | Out-File $fullOutputPath -Append -Encoding UTF8
+
+# Write all code files
+$fileCount = 0
+foreach ($file in $allFiles) {
+    $fileCount++
+    $relativePath = $file.FullName.Replace((Get-Location).Path + '\', '')
+    
+    Write-Host "  Processing: $relativePath ($fileCount/$($allFiles.Count))" -ForegroundColor Gray
+    
+    @"
 
 // ##########################################
-// FILE: $relativePath
+// FILE $fileCount of $($allFiles.Count): $relativePath
 // SIZE: $($file.Length) bytes
 // MODIFIED: $($file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"))
 // ##########################################
 
-"@ | Out-File $outFile -Append -Encoding UTF8
-            
-            try {
-                Get-Content $file.FullName -Raw -ErrorAction Stop | Out-File $outFile -Append -Encoding UTF8
-            } catch {
-                "[Error reading file: $_]" | Out-File $outFile -Append -Encoding UTF8
-            }
-            
-            "`n`n" | Out-File $outFile -Append -Encoding UTF8
-        }
-        
-        Write-Host "  ✓ Created Part_$($partNum.ToString('D2'))_CODE_FILES.txt ($($batch.Count) files)" -ForegroundColor Green
+"@ | Out-File $fullOutputPath -Append -Encoding UTF8
+    
+    try {
+        Get-Content $file.FullName -Raw -ErrorAction Stop | Out-File $fullOutputPath -Append -Encoding UTF8
+    } catch {
+        "[Error reading file: $_]" | Out-File $fullOutputPath -Append -Encoding UTF8
     }
+    
+    "`n`n" | Out-File $fullOutputPath -Append -Encoding UTF8
 }
 
 # ============================================
 # FINAL SUMMARY
 # ============================================
+$finalSize = [math]::Round((Get-Item $fullOutputPath).Length / 1MB, 2)
+
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "✓ BUNDLING COMPLETE!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Output Location: $((Join-Path (Get-Location) $outputFolder))" -ForegroundColor White
-Write-Host "Total Files Created: $((Get-ChildItem $outputFolder).Count)" -ForegroundColor White
+Write-Host "Output Location: $fullOutputPath" -ForegroundColor White
 Write-Host "Total Code Files Bundled: $($allFiles.Count)" -ForegroundColor White
+Write-Host "Combined File Size: $finalSize MB" -ForegroundColor White
 Write-Host ""
 Write-Host "Ready to send for review! 🚀" -ForegroundColor Green
 Write-Host ""
