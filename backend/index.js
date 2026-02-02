@@ -51,11 +51,12 @@ mongoose
 
 /* ================= ROUTES ================= */
 const authRoutes = require("./routes/auth");
-const adminRoutes = require("./routes/admin");
+const adminRoutes = require("./routes/adminRoutes");
 const roomRoutes = require("./routes/rooms");
 const paymentRoutes = require("./routes/payments");
+const analyticsRoutes = require("./routes/analytics");
 const residentRoutes = require("./routes/resident");
-const analyticsRoutes = require("./routes/analytics"); // ✅ NEW
+// ✅ NEW
 
 /* ================= HEALTH ================= */
 app.get("/api/health", (req, res) => {

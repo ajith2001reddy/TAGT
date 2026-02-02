@@ -1,41 +1,32 @@
 ﻿# CODE REVIEW - PART 20
-Generated: 2026-02-02 13:10:51
+Generated: 2026-02-02 15:17:37
 Files in this part: 4
 
 ========================================
 
 
 // ##########################################
-// FILE: frontend\src\routes\AdminRoute.jsx
-// SIZE: 631 bytes
-// MODIFIED: 2026-01-27 18:41:17
+// FILE: frontend\src\routes\ProtectedRoute.jsx
+// SIZE: 433 bytes
+// MODIFIED: 2026-02-02 15:04:16
 // ##########################################
 
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-/**
- * AdminRoute
- * Phase 4 – Route Protection
- *
- * - Allows access ONLY if user role === "admin"
- * - Redirects others to login or resident dashboard
- */
+export default function ProtectedRoute({ children, role }) {
+    const { user, loading } = useAuth();
 
-export default function AdminRoute({ children }) {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
+    if (loading) return null;
 
-    // Not logged in
-    if (!token) {
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (role && user.role !== role) {
         return <Navigate to="/" replace />;
     }
 
-    // Logged in but not admin
-    if (role !== "admin") {
-        return <Navigate to="/resident" replace />;
-    }
-
-    // Admin allowed
     return children;
 }
 

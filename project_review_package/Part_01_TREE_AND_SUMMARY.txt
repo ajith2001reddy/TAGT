@@ -1,5 +1,5 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-02 13:10:46
+Generated: 2026-02-02 15:17:07
 Project Path: E:\TAGT
 
 ```
@@ -29,11 +29,10 @@ TAGT
 │   │   ├── Room.js
 │   │   └── User.js
 │   ├── routes
-│   │   ├── admin.js
+│   │   ├── adminRoutes.js
 │   │   ├── analytics.js
 │   │   ├── auth.js
 │   │   ├── payments.js
-│   │   ├── resident.js
 │   │   └── rooms.js
 │   ├── utils
 │   │   ├── emailService.js
@@ -92,6 +91,7 @@ TAGT
 │   │   │   └── Rooms.jsx
 │   │   ├── routes
 │   │   │   ├── AdminRoute.jsx
+│   │   │   ├── ProtectedRoute.jsx
 │   │   │   └── ResidentRoute.jsx
 │   │   ├── services
 │   │   │   ├── adminService.js
@@ -117,14 +117,14 @@ TAGT
 ## File Statistics
 
 Total Files: 79
-Total Size: 917.68 KB
+Total Size: 911.36 KB
 
 ## File Type Distribution
 
 | Extension | Count |
 |-----------|-------|
-| .js | 38 |
-| .jsx | 31 |
+| .js | 37 |
+| .jsx | 32 |
 | .json | 5 |
 | .css | 2 |
 | .txt | 1 |
@@ -155,58 +155,58 @@ Total Size: 917.68 KB
 19. backend\models\User.js
 20. backend\package.json
 21. backend\package-lock.json
-22. backend\routes\admin.js
+22. backend\routes\adminRoutes.js
 23. backend\routes\analytics.js
 24. backend\routes\auth.js
 25. backend\routes\payments.js
-26. backend\routes\resident.js
-27. backend\routes\rooms.js
-28. backend\utils\emailService.js
-29. backend\utils\generateToken.js
-30. frontend\package.json
-31. frontend\package-lock.json
-32. frontend\postcss.config.js
-33. frontend\public\index.html
-34. frontend\public\manifest.json
-35. frontend\public\robots.txt
-36. frontend\README.md
-37. frontend\src\animations\pageTransition.js
-38. frontend\src\api\axios.js
-39. frontend\src\App.css
-40. frontend\src\App.js
-41. frontend\src\auth\ProtectedRoute.jsx
-42. frontend\src\components\AppLayout.jsx
-43. frontend\src\components\Button.jsx
-44. frontend\src\components\Card.jsx
-45. frontend\src\components\ChurnRiskTable.jsx
-46. frontend\src\components\KpiCards.jsx
-47. frontend\src\components\Loader.jsx
-48. frontend\src\components\MaintenanceCostForecast.jsx
-49. frontend\src\components\Navbar.jsx
-50. frontend\src\components\OccupancyForecast.jsx
-51. frontend\src\components\RequestsChart.jsx
-52. frontend\src\components\RequestTable.jsx
-53. frontend\src\components\RevenueOptimization.jsx
-54. frontend\src\components\Sidebar.jsx
-55. frontend\src\components\StatCard.jsx
-56. frontend\src\components\StatusModal.jsx
-57. frontend\src\components\ToastProvider.jsx
-58. frontend\src\context\AuthContext.jsx
-59. frontend\src\hooks\useAdminStats.js
-60. frontend\src\index.css
-61. frontend\src\index.js
-62. frontend\src\layouts\DashboardLayout.jsx
-63. frontend\src\pages\AdminDashboard.jsx
-64. frontend\src\pages\AdminRequests.jsx
-65. frontend\src\pages\AdminResidents.jsx
-66. frontend\src\pages\AdminRooms.jsx
-67. frontend\src\pages\Login.jsx
-68. frontend\src\pages\Payments.jsx
-69. frontend\src\pages\RequestHistory.jsx
-70. frontend\src\pages\ResidentDashboard.jsx
-71. frontend\src\pages\ResidentPayments.jsx
-72. frontend\src\pages\Rooms.jsx
-73. frontend\src\routes\AdminRoute.jsx
+26. backend\routes\rooms.js
+27. backend\utils\emailService.js
+28. backend\utils\generateToken.js
+29. frontend\package.json
+30. frontend\package-lock.json
+31. frontend\postcss.config.js
+32. frontend\public\index.html
+33. frontend\public\manifest.json
+34. frontend\public\robots.txt
+35. frontend\README.md
+36. frontend\src\animations\pageTransition.js
+37. frontend\src\api\axios.js
+38. frontend\src\App.css
+39. frontend\src\App.js
+40. frontend\src\auth\ProtectedRoute.jsx
+41. frontend\src\components\AppLayout.jsx
+42. frontend\src\components\Button.jsx
+43. frontend\src\components\Card.jsx
+44. frontend\src\components\ChurnRiskTable.jsx
+45. frontend\src\components\KpiCards.jsx
+46. frontend\src\components\Loader.jsx
+47. frontend\src\components\MaintenanceCostForecast.jsx
+48. frontend\src\components\Navbar.jsx
+49. frontend\src\components\OccupancyForecast.jsx
+50. frontend\src\components\RequestsChart.jsx
+51. frontend\src\components\RequestTable.jsx
+52. frontend\src\components\RevenueOptimization.jsx
+53. frontend\src\components\Sidebar.jsx
+54. frontend\src\components\StatCard.jsx
+55. frontend\src\components\StatusModal.jsx
+56. frontend\src\components\ToastProvider.jsx
+57. frontend\src\context\AuthContext.jsx
+58. frontend\src\hooks\useAdminStats.js
+59. frontend\src\index.css
+60. frontend\src\index.js
+61. frontend\src\layouts\DashboardLayout.jsx
+62. frontend\src\pages\AdminDashboard.jsx
+63. frontend\src\pages\AdminRequests.jsx
+64. frontend\src\pages\AdminResidents.jsx
+65. frontend\src\pages\AdminRooms.jsx
+66. frontend\src\pages\Login.jsx
+67. frontend\src\pages\Payments.jsx
+68. frontend\src\pages\RequestHistory.jsx
+69. frontend\src\pages\ResidentDashboard.jsx
+70. frontend\src\pages\ResidentPayments.jsx
+71. frontend\src\pages\Rooms.jsx
+72. frontend\src\routes\AdminRoute.jsx
+73. frontend\src\routes\ProtectedRoute.jsx
 74. frontend\src\routes\ResidentRoute.jsx
 75. frontend\src\services\adminService.js
 76. frontend\src\services\analyticsService.js
