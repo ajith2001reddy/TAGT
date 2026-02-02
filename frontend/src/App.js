@@ -77,6 +77,26 @@ function AnimatedRoutes() {
                         </ProtectedRoute>
                     }
                 />
+                {/* ADMIN ROOT REDIRECT */}
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <Navigate to="/admin/dashboard" replace />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* RESIDENT ROOT REDIRECT */}
+                <Route
+                    path="/resident"
+                    element={
+                        <ProtectedRoute role="resident">
+                            <Navigate to="/resident/dashboard" replace />
+                        </ProtectedRoute>
+                    }
+                />
+
 
                 {/* RESIDENT */}
                 <Route
