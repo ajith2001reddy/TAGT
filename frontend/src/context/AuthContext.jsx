@@ -1,60 +1,65 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 /**
- * Auth Context
- * - Stores token & role
- * - Persists login across refresh
- * - Used across entire app
+ * Auth Context (SAFE VERSION)
+ * - JWT is the single source of truth
+ * - No localStorage.role
+ * - Prevents infinite redirects
  */
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [token, setToken] = useState(null);
-    const [role, setRole] = useState(null);
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Load auth state on app start
+    // Load auth state once on app start
     useEffect(() => {
-        const storedToken = localStorage.getItem("token");
-        const storedRole = localStorage.getItem("role");
+        const token = localStorage.getItem("token");
 
-        if (storedToken && storedRole) {
-            setToken(storedToken);
-            setRole(storedRole);
+        if (!token) {
+            setLoading(false);
+            return;
         }
 
-        setLoading(false);
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            setUser({
+                id: payload.id,
+                role: payload.role
+            });
+        } catch (err) {
+            localStorage.removeItem("token");
+            setUser(null);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    // Login handler
-    const login = (token, role) => {
+    const login = (token) => {
         localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
 
-        setToken(token);
-        setRole(role);
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setUser({
+            id: payload.id,
+            role: payload.role
+        });
     };
 
-    // Logout handler
     const logout = () => {
         localStorage.removeItem("token");
-        localStorage.removeItem("role");
-
-        setToken(null);
-        setRole(null);
+        setUser(null);
     };
 
     return (
         <AuthContext.Provider
             value={{
-                token,
-                role,
-                isAuthenticated: !!token,
-                isAdmin: role === "admin",
+                user,
+                isAuthenticated: !!user,
+                isAdmin: user?.role === "admin",
+                loading,
                 login,
-                logout,
-                loading
+                logout
             }}
         >
             {children}
@@ -62,7 +67,4 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-// Hook for easy usage
-export const useAuth = () => {
-    return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
