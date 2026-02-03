@@ -1,72 +1,36 @@
-import express from "express";
-import cors from "cors";
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import residentRoutes from './routes/resident.js'; // Example route
+import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { swaggerSpec, swaggerUi } from './swagger.js'; // Import Swagger
 
-import { connectDB } from "./config/db.js";
-import { errorHandler, notFound } from "./middleware/errorHandler.js";
-import routes from "./routes/index.js";
-
-/* ======================
-   APP INITIALIZATION
-====================== */
 const app = express();
 
-/* ======================
-   DATABASE
-====================== */
-await connectDB();
+// Security Headers
+app.use(helmet());
+app.use(cors());
 
-/* ======================
-   CORS CONFIG
-====================== */
-const allowedOrigins = [
-    "https://tagt.website",
-    "https://www.tagt.website",
-    "http://localhost:3000"
-];
-
-app.use(
-    cors({
-        origin(origin, callback) {
-            if (!origin) return callback(null, true);
-
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-
-            return callback(
-                new Error(`CORS blocked: ${origin}`),
-                false
-            );
-        },
-        credentials: true
-    })
-);
-
-/* ======================
-   MIDDLEWARE
-====================== */
-app.use(express.json({ limit: "10kb" }));
-
-/* ======================
-   HEALTH CHECK
-====================== */
-app.get("/api/health", (req, res) => {
-    res.status(200).json({
-        status: "OK",
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || "development",
-        timestamp: new Date().toISOString()
-    });
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per window
+    message: "Too many requests, please try again later."
 });
+app.use(limiter);
 
-/* ======================
-   ROUTES
-====================== */
-app.use("/api", routes);
+// Middleware for parsing JSON and urlencoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-/* ======================
-   ERROR HANDLING
-====================== */
+// Routes Setup
+app.use('/api/residents', residentRoutes); // Integrate resident routes
+
+// Swagger UI Route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Error Handling Middleware
 app.use(notFound);
 app.use(errorHandler);
 

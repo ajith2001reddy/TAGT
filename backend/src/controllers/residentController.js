@@ -1,9 +1,10 @@
-﻿import bcrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import Room from "../models/rooms.js";
+import { logger } from "../utils/logger.js"; // Assuming a logger utility like winston is set up
 
 /* ============================
-   GET ALL RESIDENTS (ADMIN)
+   GET ALL RESIDENTS
 ============================ */
 export const getAllResidents = async (req, res, next) => {
     try {
@@ -16,19 +17,18 @@ export const getAllResidents = async (req, res, next) => {
             residents
         });
     } catch (error) {
-        console.error("GET RESIDENTS ERROR:", error.message);
+        logger.error("GET RESIDENTS ERROR:", error.message);
         next(error);
     }
 };
 
 /* ============================
-   ADD NEW RESIDENT (ADMIN)
+   ADD NEW RESIDENT
 ============================ */
 export const addResident = async (req, res, next) => {
     try {
         const { name, email, password, roomId } = req.body;
 
-        // Validation for required fields
         if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -36,10 +36,10 @@ export const addResident = async (req, res, next) => {
             });
         }
 
-        // Normalize email and check for uniqueness
         const normalizedEmail = email.toLowerCase().trim();
-        const existingUser = await User.findOne({ email: normalizedEmail });
 
+        // Check for existing email
+        const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
             return res.status(400).json({
                 success: false,
@@ -47,11 +47,10 @@ export const addResident = async (req, res, next) => {
             });
         }
 
-        // Validate room & availability
+        // Room validation before creation
         let room = null;
         if (roomId) {
             room = await Room.findById(roomId);
-
             if (!room) {
                 return res.status(400).json({
                     success: false,
@@ -59,7 +58,6 @@ export const addResident = async (req, res, next) => {
                 });
             }
 
-            // Check room availability before creating the resident
             if (room.occupiedBeds >= room.totalBeds) {
                 return res.status(400).json({
                     success: false,
@@ -68,10 +66,10 @@ export const addResident = async (req, res, next) => {
             }
         }
 
-        // Use User model's pre-save method for password hashing
+        // Hashing password using User model pre-save hook
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create the resident
+        // Create resident
         const resident = await User.create({
             name,
             email: normalizedEmail,
@@ -80,18 +78,56 @@ export const addResident = async (req, res, next) => {
             roomId: room ? room._id : null
         });
 
-        // Update the room after creating the resident
+        // Update room occupancy after resident creation
         if (room) {
             room.occupiedBeds += 1;
             await room.save();
         }
 
+        logger.info(`Resident added: ${name}, Room: ${room ? room.roomNumber : 'None'}`);
         res.status(201).json({
             success: true,
             resident
         });
     } catch (error) {
-        console.error("ADD RESIDENT ERROR:", error.message);
+        logger.error("ADD RESIDENT ERROR:", error.message);
+        next(error);
+    }
+};
+
+/* ============================
+   DELETE RESIDENT
+============================ */
+export const deleteResident = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        // Find resident
+        const resident = await User.findById(id);
+        if (!resident) {
+            return res.status(404).json({
+                success: false,
+                message: "Resident not found"
+            });
+        }
+
+        // Update room occupancy
+        const room = await Room.findById(resident.roomId);
+        if (room) {
+            room.occupiedBeds -= 1;
+            await room.save();
+        }
+
+        // Delete resident
+        await resident.deleteOne();
+
+        logger.info(`Resident deleted: ${resident.name}`);
+        res.json({
+            success: true,
+            message: "Resident deleted successfully"
+        });
+    } catch (error) {
+        logger.error("DELETE RESIDENT ERROR:", error.message);
         next(error);
     }
 };

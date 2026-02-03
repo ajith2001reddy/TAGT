@@ -1,45 +1,47 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-02 20:43:54
+Generated: 2026-02-02 22:42:56
 Project Path: E:\TAGT
 ```
 TAGT
 ├── backend
-│   ├── analytics
-│   │   ├── churnModel.js
-│   │   ├── forecastEngine.js
-│   │   ├── kpiCalculator.js
-│   │   ├── maintenanceForecast.js
-│   │   └── revenueOptimizer.js
-│   ├── config
-│   │   └── db.js
-│   ├── controllers
-│   │   ├── adminController.js
-│   │   └── roomController.js
-│   ├── middleware
-│   │   ├── auth.js
-│   │   ├── errorHandler.js
-│   │   ├── isAdmin.js
-│   │   └── validate.js
-│   ├── models
-│   │   ├── ActivityLog.js
-│   │   ├── Payment.js
-│   │   ├── Request.js
-│   │   ├── RequestHistory.js
-│   │   ├── Resident.js
-│   │   ├── rooms.js
-│   │   └── User.js
-│   ├── routes
-│   │   ├── adminRoutes.js
-│   │   ├── analytics.js
-│   │   ├── auth.js
-│   │   ├── payments.js
-│   │   ├── resident.js
-│   │   └── rooms.js
-│   ├── utils
-│   │   ├── emailService.js
-│   │   └── generateToken.js
-│   ├── index.js
-│   ├── NewFile
+│   ├── src
+│   │   ├── analytics
+│   │   │   ├── churnModel.js
+│   │   │   ├── forecastEngine.js
+│   │   │   ├── kpiCalculator.js
+│   │   │   ├── maintenanceForecast.js
+│   │   │   └── revenueOptimizer.js
+│   │   ├── config
+│   │   │   └── db.js
+│   │   ├── controllers
+│   │   │   ├── adminController.js
+│   │   │   └── roomController.js
+│   │   ├── middleware
+│   │   │   ├── auth.js
+│   │   │   ├── errorHandler.js
+│   │   │   ├── isAdmin.js
+│   │   │   └── validate.js
+│   │   ├── models
+│   │   │   ├── ActivityLog.js
+│   │   │   ├── Payment.js
+│   │   │   ├── Request.js
+│   │   │   ├── RequestHistory.js
+│   │   │   ├── resident.js
+│   │   │   ├── rooms.js
+│   │   │   └── User.js
+│   │   ├── routes
+│   │   │   ├── adminRoutes.js
+│   │   │   ├── analytics.js
+│   │   │   ├── auth.js
+│   │   │   ├── index.js
+│   │   │   ├── payments.js
+│   │   │   ├── resident.js
+│   │   │   └── rooms.js
+│   │   ├── utils
+│   │   │   ├── emailService.js
+│   │   │   └── generateToken.js
+│   │   ├── app.js
+│   │   └── server.js
 │   ├── package.json
 │   └── package-lock.json
 ├── frontend
@@ -120,14 +122,14 @@ TAGT
 
 ## File Statistics
 
-Total Files: 82
-Total Size: 938.44 KB
+Total Files: 84
+Total Size: 933.66 KB
 
 ## File Type Distribution
 
 | Extension | Count |
 |-----------|-------|
-| .js | 39 |
+| .js | 41 |
 | .jsx | 32 |
 | .json | 6 |
 | .css | 2 |
@@ -138,88 +140,90 @@ Total Size: 938.44 KB
 
 ## All Files
 
-1. backend\analytics\churnModel.js
-2. backend\analytics\forecastEngine.js
-3. backend\analytics\kpiCalculator.js
-4. backend\analytics\maintenanceForecast.js
-5. backend\analytics\revenueOptimizer.js
-6. backend\config\db.js
-7. backend\controllers\adminController.js
-8. backend\controllers\roomController.js
-9. backend\index.js
-10. backend\middleware\auth.js
-11. backend\middleware\errorHandler.js
-12. backend\middleware\isAdmin.js
-13. backend\middleware\validate.js
-14. backend\models\ActivityLog.js
-15. backend\models\Payment.js
-16. backend\models\Request.js
-17. backend\models\RequestHistory.js
-18. backend\models\Resident.js
-19. backend\models\rooms.js
-20. backend\models\User.js
-21. backend\package.json
-22. backend\package-lock.json
-23. backend\routes\adminRoutes.js
-24. backend\routes\analytics.js
-25. backend\routes\auth.js
-26. backend\routes\payments.js
-27. backend\routes\resident.js
-28. backend\routes\rooms.js
-29. backend\utils\emailService.js
-30. backend\utils\generateToken.js
-31. frontend\package.json
-32. frontend\package-lock.json
-33. frontend\postcss.config.js
-34. frontend\public\index.html
-35. frontend\public\manifest.json
-36. frontend\public\robots.txt
-37. frontend\README.md
-38. frontend\src\animations\pageTransition.js
-39. frontend\src\api\axios.js
-40. frontend\src\App.css
-41. frontend\src\App.js
-42. frontend\src\components\AppLayout.jsx
-43. frontend\src\components\Button.jsx
-44. frontend\src\components\Card.jsx
-45. frontend\src\components\ChurnRiskTable.jsx
-46. frontend\src\components\KpiCards.jsx
-47. frontend\src\components\Loader.jsx
-48. frontend\src\components\MaintenanceCostForecast.jsx
-49. frontend\src\components\Navbar.jsx
-50. frontend\src\components\OccupancyForecast.jsx
-51. frontend\src\components\ProtectedRoute.jsx
-52. frontend\src\components\RequestsChart.jsx
-53. frontend\src\components\RequestTable.jsx
-54. frontend\src\components\RevenueOptimization.jsx
-55. frontend\src\components\Sidebar.jsx
-56. frontend\src\components\StatCard.jsx
-57. frontend\src\components\StatusModal.jsx
-58. frontend\src\components\ToastProvider.jsx
-59. frontend\src\context\AuthContext.jsx
-60. frontend\src\hooks\useAdminStats.js
-61. frontend\src\index.css
-62. frontend\src\index.js
-63. frontend\src\layouts\DashboardLayout.jsx
-64. frontend\src\pages\AdminDashboard.jsx
-65. frontend\src\pages\AdminRequests.jsx
-66. frontend\src\pages\AdminResidents.jsx
-67. frontend\src\pages\AdminRooms.jsx
-68. frontend\src\pages\Login.jsx
-69. frontend\src\pages\Payments.jsx
-70. frontend\src\pages\RequestHistory.jsx
-71. frontend\src\pages\ResidentDashboard.jsx
-72. frontend\src\pages\ResidentPayments.jsx
-73. frontend\src\pages\Rooms.jsx
-74. frontend\src\routes\AdminRoute.jsx
-75. frontend\src\routes\ProtectedRoute.jsx
-76. frontend\src\routes\ResidentRoute.jsx
-77. frontend\src\services\adminService.js
-78. frontend\src\services\analyticsService.js
-79. frontend\src\services\authService.js
-80. frontend\src\services\residentService.js
-81. frontend\tailwind.config.js
-82. package-lock.json
+1. backend\package.json
+2. backend\package-lock.json
+3. backend\src\analytics\churnModel.js
+4. backend\src\analytics\forecastEngine.js
+5. backend\src\analytics\kpiCalculator.js
+6. backend\src\analytics\maintenanceForecast.js
+7. backend\src\analytics\revenueOptimizer.js
+8. backend\src\app.js
+9. backend\src\config\db.js
+10. backend\src\controllers\adminController.js
+11. backend\src\controllers\roomController.js
+12. backend\src\middleware\auth.js
+13. backend\src\middleware\errorHandler.js
+14. backend\src\middleware\isAdmin.js
+15. backend\src\middleware\validate.js
+16. backend\src\models\ActivityLog.js
+17. backend\src\models\Payment.js
+18. backend\src\models\Request.js
+19. backend\src\models\RequestHistory.js
+20. backend\src\models\resident.js
+21. backend\src\models\rooms.js
+22. backend\src\models\User.js
+23. backend\src\routes\adminRoutes.js
+24. backend\src\routes\analytics.js
+25. backend\src\routes\auth.js
+26. backend\src\routes\index.js
+27. backend\src\routes\payments.js
+28. backend\src\routes\resident.js
+29. backend\src\routes\rooms.js
+30. backend\src\server.js
+31. backend\src\utils\emailService.js
+32. backend\src\utils\generateToken.js
+33. frontend\package.json
+34. frontend\package-lock.json
+35. frontend\postcss.config.js
+36. frontend\public\index.html
+37. frontend\public\manifest.json
+38. frontend\public\robots.txt
+39. frontend\README.md
+40. frontend\src\animations\pageTransition.js
+41. frontend\src\api\axios.js
+42. frontend\src\App.css
+43. frontend\src\App.js
+44. frontend\src\components\AppLayout.jsx
+45. frontend\src\components\Button.jsx
+46. frontend\src\components\Card.jsx
+47. frontend\src\components\ChurnRiskTable.jsx
+48. frontend\src\components\KpiCards.jsx
+49. frontend\src\components\Loader.jsx
+50. frontend\src\components\MaintenanceCostForecast.jsx
+51. frontend\src\components\Navbar.jsx
+52. frontend\src\components\OccupancyForecast.jsx
+53. frontend\src\components\ProtectedRoute.jsx
+54. frontend\src\components\RequestsChart.jsx
+55. frontend\src\components\RequestTable.jsx
+56. frontend\src\components\RevenueOptimization.jsx
+57. frontend\src\components\Sidebar.jsx
+58. frontend\src\components\StatCard.jsx
+59. frontend\src\components\StatusModal.jsx
+60. frontend\src\components\ToastProvider.jsx
+61. frontend\src\context\AuthContext.jsx
+62. frontend\src\hooks\useAdminStats.js
+63. frontend\src\index.css
+64. frontend\src\index.js
+65. frontend\src\layouts\DashboardLayout.jsx
+66. frontend\src\pages\AdminDashboard.jsx
+67. frontend\src\pages\AdminRequests.jsx
+68. frontend\src\pages\AdminResidents.jsx
+69. frontend\src\pages\AdminRooms.jsx
+70. frontend\src\pages\Login.jsx
+71. frontend\src\pages\Payments.jsx
+72. frontend\src\pages\RequestHistory.jsx
+73. frontend\src\pages\ResidentDashboard.jsx
+74. frontend\src\pages\ResidentPayments.jsx
+75. frontend\src\pages\Rooms.jsx
+76. frontend\src\routes\AdminRoute.jsx
+77. frontend\src\routes\ProtectedRoute.jsx
+78. frontend\src\routes\ResidentRoute.jsx
+79. frontend\src\services\adminService.js
+80. frontend\src\services\analyticsService.js
+81. frontend\src\services\authService.js
+82. frontend\src\services\residentService.js
+83. frontend\tailwind.config.js
+84. package-lock.json
 
 
 
@@ -229,1580 +233,23 @@ Total Size: 938.44 KB
 
 
 // ##########################################
-// FILE 1 of 82: backend\analytics\churnModel.js
-// SIZE: 3316 bytes
-// MODIFIED: 2026-02-02 17:27:56
-// ##########################################
-
-const User = require("../models/User");
-const Payment = require("../models/Payment");
-const Request = require("../models/Request");
-
-/* =====================================================
-   RESIDENT CHURN PREDICTION MODEL
-===================================================== */
-
-async function calculateResidentChurn(resident) {
-    let score = 0;
-    const reasons = [];
-
-    /* =======================
-       PAYMENT BEHAVIOR
-    ======================= */
-    const payments = await Payment.find({
-        residentId: resident._id
-    }).sort({ createdAt: -1 });
-
-    const unpaid = payments.filter(
-        (p) => p.status === "unpaid"
-    ).length;
-
-    if (unpaid >= 2) {
-        score += 30;
-        reasons.push("Multiple unpaid payments");
-    } else if (unpaid === 1) {
-        score += 15;
-        reasons.push("Recent unpaid payment");
-    }
-
-    /* =======================
-       MAINTENANCE REQUESTS
-    ======================= */
-    const requests = await Request.find({
-        residentId: resident._id
-    }).sort({ createdAt: -1 });
-
-    if (requests.length >= 5) {
-        score += 20;
-        reasons.push("High number of maintenance requests");
-    }
-
-    const recentComplaint = requests.find((r) => {
-        const days =
-            (Date.now() - new Date(r.createdAt)) /
-            (1000 * 60 * 60 * 24);
-        return days <= 30;
-    });
-
-    if (recentComplaint) {
-        score += 10;
-        reasons.push("Recent maintenance complaint");
-    }
-
-    /* =======================
-       ACTIVITY / INACTIVITY
-    ======================= */
-    const lastActivity = resident.updatedAt || resident.createdAt;
-    const inactiveDays =
-        (Date.now() - new Date(lastActivity)) /
-        (1000 * 60 * 60 * 24);
-
-    if (inactiveDays > 90) {
-        score += 15;
-        reasons.push("Inactive for over 90 days");
-    }
-
-    /* =======================
-       TENURE FACTOR
-    ======================= */
-    const tenureDays =
-        (Date.now() - new Date(resident.createdAt)) /
-        (1000 * 60 * 60 * 24);
-
-    if (tenureDays < 60) {
-        score += 10;
-        reasons.push("New resident (low tenure)");
-    }
-
-    score = Math.min(100, score);
-
-    let riskLevel = "LOW";
-    if (score >= 60) riskLevel = "HIGH";
-    else if (score >= 30) riskLevel = "MEDIUM";
-
-    return {
-        residentId: resident._id,
-        name: resident.name,
-        email: resident.email,
-        score,
-        riskLevel,
-        reasons
-    };
-}
-
-async function predictChurn() {
-    const residents = await User.find({
-        role: "resident",
-        isActive: true
-    });
-
-    const results = [];
-
-    for (const resident of residents) {
-        const churn = await calculateResidentChurn(resident);
-        results.push(churn);
-    }
-
-    results.sort((a, b) => b.score - a.score);
-
-    return {
-        generatedAt: new Date(),
-        totalResidents: residents.length,
-        highRisk: results.filter((r) => r.riskLevel === "HIGH").length,
-        mediumRisk: results.filter((r) => r.riskLevel === "MEDIUM").length,
-        lowRisk: results.filter((r) => r.riskLevel === "LOW").length,
-        residents: results
-    };
-}
-
-module.exports = {
-    predictChurn
-};
-
-
-
-
-
-// ##########################################
-// FILE 2 of 82: backend\analytics\forecastEngine.js
-// SIZE: 2314 bytes
-// MODIFIED: 2026-02-02 20:10:07
-// ##########################################
-
-const Room = require("../models/rooms");
-
-/* =====================================================
-   OCCUPANCY FORECAST ENGINE (HONEST VERSION)
-===================================================== */
-
-/**
- * Get current occupancy snapshot
- * (Used as baseline, not fake history)
- */
-async function getCurrentOccupancy() {
-    const rooms = await Room.find({}, "totalBeds occupiedBeds");
-
-    if (!rooms.length) {
-        return {
-            totalBeds: 0,
-            occupiedBeds: 0,
-            occupancyRate: 0
-        };
-    }
-
-    const totalBeds = rooms.reduce(
-        (sum, r) => sum + (r.totalBeds || 0),
-        0
-    );
-
-    const occupiedBeds = rooms.reduce(
-        (sum, r) => sum + (r.occupiedBeds || 0),
-        0
-    );
-
-    const occupancyRate =
-        totalBeds === 0
-            ? 0
-            : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
-
-    return { totalBeds, occupiedBeds, occupancyRate };
-}
-
-/**
- * Predict occupancy using flat projection
- * (No fake trends without historical data)
- */
-async function predictOccupancy(monthsAhead = 6) {
-    const snapshot = await getCurrentOccupancy();
-
-    if (snapshot.totalBeds === 0) {
-        return {
-            history: [],
-            forecast: [],
-            meta: {
-                note: "No room data available",
-                generatedAt: new Date()
-            }
-        };
-    }
-
-    const now = new Date();
-
-    // Represent "history" as a single baseline point
-    const history = [
-        {
-            month: now.toISOString().slice(0, 7),
-            occupancyRate: snapshot.occupancyRate
-        }
-    ];
-
-    const forecast = [];
-
-    for (let i = 1; i <= monthsAhead; i++) {
-        const date = new Date(now);
-        date.setMonth(now.getMonth() + i);
-
-        forecast.push({
-            month: date.toISOString().slice(0, 7),
-            predictedOccupancy: snapshot.occupancyRate
-        });
-    }
-
-    return {
-        history,
-        forecast,
-        meta: {
-            model: "Flat baseline (no historical data)",
-            generatedAt: new Date(),
-            totalBeds: snapshot.totalBeds,
-            occupiedBeds: snapshot.occupiedBeds
-        }
-    };
-}
-
-module.exports = {
-    predictOccupancy
-};
-
-
-
-
-
-// ##########################################
-// FILE 3 of 82: backend\analytics\kpiCalculator.js
-// SIZE: 2977 bytes
-// MODIFIED: 2026-02-02 20:09:44
-// ##########################################
-
-const Room = require("../models/rooms");
-const Payment = require("../models/Payment");
-const Request = require("../models/Request");
-
-/* =====================================================
-   KPI CALCULATOR (SNAPSHOT-BASED)
-===================================================== */
-
-async function getKPIs({ fromDate, toDate } = {}) {
-    const dateFilter =
-        fromDate && toDate
-            ? { createdAt: { $gte: fromDate, $lte: toDate } }
-            : {};
-
-    /* =======================
-       OCCUPANCY KPI
-    ======================= */
-    const roomDocs = await Room.find({}, "totalBeds occupiedBeds");
-
-    const totals = roomDocs.reduce(
-        (acc, room) => {
-            acc.totalBeds += room.totalBeds || 0;
-            acc.occupiedBeds += room.occupiedBeds || 0;
-            return acc;
-        },
-        { totalBeds: 0, occupiedBeds: 0 }
-    );
-
-    const occupancyRate =
-        totals.totalBeds === 0
-            ? 0
-            : Number(
-                ((totals.occupiedBeds / totals.totalBeds) * 100).toFixed(2)
-            );
-
-    /* =======================
-       PAYMENT COLLECTION KPI
-    ======================= */
-    const payments = await Payment.find(dateFilter, "amount status");
-
-    let totalBilled = 0;
-    let totalCollected = 0;
-
-    for (const payment of payments) {
-        totalBilled += payment.amount || 0;
-        if (payment.status === "paid") {
-            totalCollected += payment.amount || 0;
-        }
-    }
-
-    const collectionRate =
-        totalBilled === 0
-            ? 0
-            : Number(((totalCollected / totalBilled) * 100).toFixed(2));
-
-    /* =======================
-       MAINTENANCE KPI
-    ======================= */
-    const resolvedRequests = await Request.find(
-        { status: "resolved", ...dateFilter },
-        "createdAt updatedAt"
-    );
-
-    let totalResolutionHours = 0;
-
-    for (const req of resolvedRequests) {
-        const hours =
-            (new Date(req.updatedAt) - new Date(req.createdAt)) /
-            (1000 * 60 * 60);
-        totalResolutionHours += hours;
-    }
-
-    const avgResolutionTime =
-        resolvedRequests.length === 0
-            ? 0
-            : Number(
-                (totalResolutionHours / resolvedRequests.length).toFixed(2)
-            );
-
-    return {
-        occupancy: {
-            rate: occupancyRate,
-            occupiedBeds: totals.occupiedBeds,
-            totalBeds: totals.totalBeds
-        },
-        payments: {
-            collectionRate,
-            totalBilled,
-            totalCollected
-        },
-        maintenance: {
-            avgResolutionTime,
-            resolvedCount: resolvedRequests.length
-        },
-        meta: {
-            mode: "snapshot",
-            fromDate: fromDate || null,
-            toDate: toDate || null,
-            generatedAt: new Date()
-        }
-    };
-}
-
-module.exports = {
-    getKPIs
-};
-
-
-
-
-
-// ##########################################
-// FILE 4 of 82: backend\analytics\maintenanceForecast.js
-// SIZE: 2812 bytes
-// MODIFIED: 2026-02-02 17:27:25
-// ##########################################
-
-const Request = require("../models/Request");
-
-/* =====================================================
-   MAINTENANCE COST FORECAST ENGINE
-===================================================== */
-
-async function getMonthlyMaintenanceCosts(months = 6) {
-    const now = new Date();
-    const history = [];
-
-    for (let i = months; i > 0; i--) {
-        const start = new Date(
-            now.getFullYear(),
-            now.getMonth() - i,
-            1
-        );
-        const end = new Date(
-            now.getFullYear(),
-            now.getMonth() - i + 1,
-            0,
-            23,
-            59,
-            59
-        );
-
-        const requests = await Request.find({
-            createdAt: { $gte: start, $lte: end }
-        });
-
-        const totalCost = requests.reduce(
-            (sum, r) => sum + (r.cost || 0),
-            0
-        );
-
-        history.push({
-            month: start.toISOString().slice(0, 7),
-            cost: Number(totalCost.toFixed(2))
-        });
-    }
-
-    return history;
-}
-
-function calculateCostTrend(data) {
-    if (data.length < 2) return 0;
-
-    let change = 0;
-    for (let i = 1; i < data.length; i++) {
-        change += data[i].cost - data[i - 1].cost;
-    }
-
-    return change / (data.length - 1);
-}
-
-function detectSpikeRisk(history) {
-    if (history.length < 3) return "LOW";
-
-    const avg =
-        history.reduce((s, m) => s + m.cost, 0) / history.length;
-
-    const last = history[history.length - 1].cost;
-
-    if (last > avg * 1.4) return "HIGH";
-    if (last > avg * 1.2) return "MEDIUM";
-    return "LOW";
-}
-
-async function predictMaintenanceCost(monthsAhead = 6) {
-    const history = await getMonthlyMaintenanceCosts(6);
-
-    if (history.length === 0) {
-        return {
-            history: [],
-            forecast: [],
-            note: "Not enough data to forecast maintenance costs"
-        };
-    }
-
-    const trend = calculateCostTrend(history);
-    const spikeRisk = detectSpikeRisk(history);
-
-    let currentCost = history[history.length - 1].cost;
-    const forecast = [];
-
-    for (let i = 1; i <= monthsAhead; i++) {
-        currentCost += trend;
-        currentCost = Math.max(0, currentCost);
-
-        const date = new Date();
-        date.setMonth(date.getMonth() + i);
-
-        forecast.push({
-            month: date.toISOString().slice(0, 7),
-            predictedCost: Number(currentCost.toFixed(2))
-        });
-    }
-
-    return {
-        history,
-        forecast,
-        meta: {
-            trend: Number(trend.toFixed(2)),
-            spikeRisk,
-            generatedAt: new Date(),
-            model: "Linear Trend + Spike Detection"
-        }
-    };
-}
-
-module.exports = {
-    predictMaintenanceCost
-};
-
-
-
-
-
-// ##########################################
-// FILE 5 of 82: backend\analytics\revenueOptimizer.js
-// SIZE: 4069 bytes
-// MODIFIED: 2026-02-02 20:09:57
-// ##########################################
-
-const Room = require("../models/rooms");
-const Payment = require("../models/Payment");
-const { predictChurn } = require("./churnModel");
-
-/* =====================================================
-   REVENUE OPTIMIZATION ENGINE (SNAPSHOT-BASED)
-===================================================== */
-
-async function optimizeRevenue() {
-    /* =======================
-       OCCUPANCY ANALYSIS
-    ======================= */
-    const roomDocs = await Room.find({}, "totalBeds occupiedBeds rent");
-
-    const totals = roomDocs.reduce(
-        (acc, room) => {
-            acc.totalBeds += room.totalBeds || 0;
-            acc.occupiedBeds += room.occupiedBeds || 0;
-            acc.totalRent += (room.rent || 0) * (room.totalBeds || 0);
-            return acc;
-        },
-        { totalBeds: 0, occupiedBeds: 0, totalRent: 0 }
-    );
-
-    const occupancyRate =
-        totals.totalBeds === 0
-            ? 0
-            : (totals.occupiedBeds / totals.totalBeds) * 100;
-
-    const avgRent =
-        totals.totalBeds === 0
-            ? 0
-            : totals.totalRent / totals.totalBeds;
-
-    /* =======================
-       PAYMENT COLLECTION
-    ======================= */
-    const payments = await Payment.find({}, "amount status");
-
-    const totalBilled = payments.reduce(
-        (sum, p) => sum + (p.amount || 0),
-        0
-    );
-
-    const collected = payments
-        .filter((p) => p.status === "paid")
-        .reduce((sum, p) => sum + (p.amount || 0), 0);
-
-    const collectionRate =
-        totalBilled === 0 ? 0 : (collected / totalBilled) * 100;
-
-    /* =======================
-       CHURN IMPACT
-    ======================= */
-    let highRiskResidents = 0;
-
-    try {
-        const churnData = await predictChurn();
-        highRiskResidents = churnData?.highRisk || 0;
-    } catch (err) {
-        console.warn("CHURN MODEL ERROR:", err.message);
-    }
-
-    /* =======================
-       INSIGHTS GENERATION
-    ======================= */
-    const insights = [];
-    let revenueLeakEstimate = 0;
-
-    if (occupancyRate < 70) {
-        const emptyBeds = totals.totalBeds - totals.occupiedBeds;
-        revenueLeakEstimate += emptyBeds * avgRent;
-
-        insights.push({
-            type: "OCCUPANCY",
-            severity: "HIGH",
-            message: "Low occupancy detected",
-            recommendation:
-                "Offer promotions, flexible pricing, or partnerships to increase occupancy."
-        });
-    }
-
-    if (collectionRate < 85) {
-        revenueLeakEstimate += totalBilled - collected;
-
-        insights.push({
-            type: "PAYMENTS",
-            severity: "MEDIUM",
-            message: "Low payment collection rate",
-            recommendation:
-                "Enable automated reminders, enforce deadlines, or introduce incentives."
-        });
-    }
-
-    if (highRiskResidents > 0) {
-        insights.push({
-            type: "CHURN",
-            severity: "HIGH",
-            message: `${highRiskResidents} residents at high churn risk`,
-            recommendation:
-                "Proactively engage residents and offer retention incentives."
-        });
-    }
-
-    if (insights.length === 0) {
-        insights.push({
-            type: "HEALTHY",
-            severity: "LOW",
-            message: "Revenue performance is healthy",
-            recommendation:
-                "Maintain current pricing and operational strategy."
-        });
-    }
-
-    return {
-        generatedAt: new Date(),
-        metrics: {
-            occupancyRate: Number(occupancyRate.toFixed(2)),
-            collectionRate: Number(collectionRate.toFixed(2)),
-            avgRent: Number(avgRent.toFixed(2)),
-            totalBeds: totals.totalBeds,
-            occupiedBeds: totals.occupiedBeds
-        },
-        revenueLeakEstimate: Math.round(revenueLeakEstimate),
-        insights,
-        meta: {
-            mode: "snapshot"
-        }
-    };
-}
-
-module.exports = {
-    optimizeRevenue
-};
-
-
-
-
-
-// ##########################################
-// FILE 6 of 82: backend\config\db.js
-// SIZE: 567 bytes
-// MODIFIED: 2026-02-02 18:43:29
-// ##########################################
-
-const mongoose = require("mongoose");
-
-const connectDB = async () => {
-    if (!process.env.MONGO_URI) {
-        console.error("❌ MONGO_URI is not defined");
-        process.exit(1);
-    }
-
-    try {
-        await mongoose.connect(process.env.MONGO_URI, {
-            autoIndex: true,
-            serverSelectionTimeoutMS: 5000
-        });
-
-        console.log("✅ MongoDB connected");
-    } catch (err) {
-        console.error("❌ MongoDB connection failed:", err.message);
-        process.exit(1);
-    }
-};
-
-module.exports = connectDB;
-
-
-
-
-
-// ##########################################
-// FILE 7 of 82: backend\controllers\adminController.js
-// SIZE: 2895 bytes
-// MODIFIED: 2026-02-02 20:00:53
-// ##########################################
-
-const User = require("../models/User");
-const rooms = require("../models/rooms");
-const bcrypt = require("bcryptjs");
-
-/* ============================
-   GET ALL RESIDENTS (ADMIN)
-============================ */
-exports.getAllResidents = async (req, res) => {
-    try {
-        const residents = await User.find({ role: "resident" })
-            .populate("roomId", "roomNumber totalBeds occupiedBeds")
-            .sort({ createdAt: -1 });
-
-        return res.json({
-            success: true,
-            residents
-        });
-    } catch (err) {
-        console.error("GET RESIDENTS ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch residents"
-        });
-    }
-};
-
-/* ============================
-   ADD NEW RESIDENT (ADMIN)
-============================ */
-exports.addResident = async (req, res) => {
-    try {
-        const { name, email, password, roomId } = req.body;
-
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "Name, email, and password are required"
-            });
-        }
-
-        const existingUser = await User.findOne({
-            email: email.toLowerCase().trim()
-        });
-
-        if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: "Email already exists"
-            });
-        }
-
-        let room = null;
-
-        // Validate room & availability
-        if (roomId) {
-            room = await rooms.findById(roomId);
-
-            if (!room) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid room selected"
-                });
-            }
-
-            if (room.occupiedBeds >= room.totalBeds) {
-                return res.status(400).json({
-                    success: false,
-                    message: "No beds available in this room"
-                });
-            }
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const resident = await User.create({
-            name,
-            email: email.toLowerCase().trim(),
-            password: hashedPassword,
-            role: "resident",
-            roomId: room ? room._id : null
-        });
-
-        // Increase occupied beds AFTER resident creation
-        if (room) {
-            room.occupiedBeds += 1;
-            await room.save();
-        }
-
-        return res.status(201).json({
-            success: true,
-            resident
-        });
-    } catch (err) {
-        console.error("ADD RESIDENT ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to add resident"
-        });
-    }
-};
-
-
-
-
-
-// ##########################################
-// FILE 8 of 82: backend\controllers\roomController.js
-// SIZE: 2711 bytes
-// MODIFIED: 2026-02-02 20:07:01
-// ##########################################
-
-const Room = require("../models/rooms");
-
-/* ============================
-   GET ALL ROOMS
-   ============================ */
-exports.getAllRooms = async (req, res) => {
-    try {
-        const rooms = await Room.find().sort({ createdAt: -1 });
-
-        return res.json({
-            success: true,
-            rooms
-        });
-    } catch (err) {
-        console.error("GET ROOMS ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch rooms"
-        });
-    }
-};
-
-/* ============================
-   ADD NEW ROOM
-   ============================ */
-exports.addRoom = async (req, res) => {
-    try {
-        const { roomNumber, rent, totalBeds, note } = req.body;
-
-        if (!roomNumber || !rent || !totalBeds) {
-            return res.status(400).json({
-                success: false,
-                message: "Room number, rent, and total beds are required"
-            });
-        }
-
-        const exists = await Room.findOne({ roomNumber });
-        if (exists) {
-            return res.status(400).json({
-                success: false,
-                message: "Room number already exists"
-            });
-        }
-
-        const room = await Room.create({
-            roomNumber,
-            rent,
-            totalBeds,
-            occupiedBeds: 0,
-            note: note || ""
-        });
-
-        return res.status(201).json({
-            success: true,
-            room
-        });
-    } catch (err) {
-        console.error("ADD ROOM ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to add room"
-        });
-    }
-};
-
-/* ============================
-   DELETE ROOM
-   ============================ */
-exports.deleteRoom = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const room = await Room.findById(id);
-        if (!room) {
-            return res.status(404).json({
-                success: false,
-                message: "Room not found"
-            });
-        }
-
-        if (room.occupiedBeds > 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Cannot delete room with residents"
-            });
-        }
-
-        await room.deleteOne();
-
-        return res.json({
-            success: true,
-            message: "Room deleted successfully"
-        });
-    } catch (err) {
-        console.error("DELETE ROOM ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to delete room"
-        });
-    }
-};
-
-
-
-
-
-// ##########################################
-// FILE 9 of 82: backend\index.js
-// SIZE: 2495 bytes
-// MODIFIED: 2026-02-02 19:19:13
-// ##########################################
-
-require("dotenv").config();
-
-const express = require("express");
-const cors = require("cors");
-
-/* ================= APP INIT ================= */
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-/* ================= DB ================= */
-const connectDB = require("./config/db");
-connectDB();
-
-/* ================= CORS ================= */
-const allowedOrigins = [
-    "https://tagt.website",
-    "https://www.tagt.website",
-    "http://localhost:3000"
-];
-
-app.use(
-    cors({
-        origin: function (origin, callback) {
-            if (!origin) return callback(null, true);
-
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-
-            return callback(
-                new Error("CORS not allowed for origin: " + origin),
-                false
-            );
-        },
-        credentials: true
-    })
-);
-
-/* ================= MIDDLEWARE ================= */
-app.use(express.json());
-
-/* ================= ROUTES ================= */
-const authRoutes = require("./routes/auth");
-const adminRoutes = require("./routes/adminRoutes"); // ✅ FIXED
-const roomsRoutes = require("./routes/rooms");
-const paymentRoutes = require("./routes/payments");
-const analyticsRoutes = require("./routes/analytics");
-const residentRoutes = require("./routes/resident");
-
-/* ================= HEALTH ================= */
-app.get("/api/health", (req, res) => {
-    res.json({
-        status: "OK",
-        uptime: process.uptime(),
-        timestamp: new Date()
-    });
-});
-
-/* ================= API ROUTES ================= */
-app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/rooms", roomsRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/resident", residentRoutes);
-app.use("/api/analytics", analyticsRoutes);
-
-/* ================= 404 HANDLER ================= */
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: "Route not found"
-    });
-});
-
-/* ================= ERROR HANDLER ================= */
-app.use((err, req, res, next) => {
-    console.error("❌ ERROR:", err.message);
-    res.status(err.status || 500).json({
-        success: false,
-        message: err.message || "Server error"
-    });
-});
-
-/* ================= START SERVER ================= */
-app.listen(PORT, () => {
-    console.log(`✅ Backend running on port ${PORT}`);
-});
-
-
-
-
-
-// ##########################################
-// FILE 10 of 82: backend\middleware\auth.js
-// SIZE: 1191 bytes
-// MODIFIED: 2026-02-02 18:40:43
-// ##########################################
-
-const jwt = require("jsonwebtoken");
-
-/**
- * Authentication middleware
- * - Verifies JWT token
- * - Attaches user info to req.user
- */
-function authMiddleware(req, res, next) {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({
-            success: false,
-            message: "Authorization token missing"
-        });
-    }
-
-    if (!process.env.JWT_SECRET) {
-        console.error("JWT_SECRET is not defined");
-        return res.status(500).json({
-            success: false,
-            message: "Server configuration error"
-        });
-    }
-
-    try {
-        const token = authHeader.slice(7).trim(); // remove "Bearer "
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        req.user = {
-            id: decoded.id,
-            role: decoded.role
-        };
-
-        next();
-    } catch (err) {
-        console.warn("AUTH FAILED:", err.message);
-        return res.status(401).json({
-            success: false,
-            message: "Invalid or expired token"
-        });
-    }
-}
-
-module.exports = authMiddleware;
-
-
-
-
-
-// ##########################################
-// FILE 11 of 82: backend\middleware\errorHandler.js
-// SIZE: 225 bytes
-// MODIFIED: 2026-01-27 00:01:57
-// ##########################################
-
-module.exports = (err, req, res, next) => {
-    console.error("❌ ERROR:", err.message);
-
-    res.status(err.status || 500).json({
-        success: false,
-        message: err.message || "Server error"
-    });
-};
-
-
-
-
-
-// ##########################################
-// FILE 12 of 82: backend\middleware\isAdmin.js
-// SIZE: 755 bytes
-// MODIFIED: 2026-02-02 18:47:35
-// ##########################################
-
-/**
- * Admin-only middleware
- * Must be used AFTER auth middleware
- */
-function isAdmin(req, res, next) {
-    try {
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized"
-            });
-        }
-
-        if (req.user.role !== "admin") {
-            return res.status(403).json({
-                success: false,
-                message: "Admin access only"
-            });
-        }
-
-        return next();
-    } catch (err) {
-        console.error("IS ADMIN ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Authorization failed"
-        });
-    }
-}
-
-module.exports = isAdmin;
-
-
-
-
-
-// ##########################################
-// FILE 13 of 82: backend\middleware\validate.js
-// SIZE: 243 bytes
-// MODIFIED: 2026-01-27 00:07:04
-// ##########################################
-
-module.exports = (schema) => (req, res, next) => {
-    const { error } = schema.validate(req.body);
-    if (error) {
-        return res.status(400).json({
-            message: error.details[0].message
-        });
-    }
-    next();
-};
-
-
-
-
-
-// ##########################################
-// FILE 14 of 82: backend\models\ActivityLog.js
-// SIZE: 540 bytes
-// MODIFIED: 2026-01-27 00:05:41
-// ##########################################
-
-const mongoose = require("mongoose");
-
-const ActivityLogSchema = new mongoose.Schema(
-    {
-        action: {
-            type: String,
-            required: true
-        },
-        performedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true
-        },
-        role: {
-            type: String,
-            required: true
-        },
-        ipAddress: String,
-        route: String
-    },
-    { timestamps: true }
-);
-
-module.exports = mongoose.model("ActivityLog", ActivityLogSchema);
-
-
-
-
-
-// ##########################################
-// FILE 15 of 82: backend\models\Payment.js
-// SIZE: 1291 bytes
-// MODIFIED: 2026-02-02 17:42:47
-// ##########################################
-
-const mongoose = require("mongoose");
-
-const paymentSchema = new mongoose.Schema(
-    {
-        residentId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true
-        },
-
-        amount: {
-            type: Number,
-            required: true,
-            min: 0
-        },
-
-        description: {
-            type: String,
-            default: "",
-            trim: true
-        },
-
-        type: {
-            type: String,
-            default: "manual"
-        },
-
-        month: {
-            type: String,
-            default: null,
-            index: true
-        },
-
-        status: {
-            type: String,
-            enum: ["unpaid", "paid"],
-            default: "unpaid",
-            index: true
-        },
-
-        adminNote: {
-            type: String,
-            default: ""
-        },
-
-        paidAt: {
-            type: Date,
-            default: null
-        },
-
-        createdBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
-        }
-    },
-    {
-        timestamps: true
-    }
-);
-
-paymentSchema.index({ residentId: 1, status: 1 });
-
-module.exports = mongoose.model("Payment", paymentSchema);
-
-
-
-
-
-// ##########################################
-// FILE 16 of 82: backend\models\Request.js
-// SIZE: 1983 bytes
-// MODIFIED: 2026-02-02 17:42:47
-// ##########################################
-
-const mongoose = require("mongoose");
-
-const RequestSchema = new mongoose.Schema(
-    {
-        residentId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true
-        },
-
-        message: {
-            type: String,
-            required: true,
-            trim: true
-        },
-
-        status: {
-            type: String,
-            enum: ["pending", "in-progress", "resolved"],
-            default: "pending",
-            index: true
-        },
-
-        statusHistory: [
-            {
-                status: {
-                    type: String,
-                    required: true
-                },
-                changedAt: {
-                    type: Date,
-                    default: Date.now
-                }
-            }
-        ],
-
-        adminNotes: [
-            {
-                note: {
-                    type: String,
-                    required: true
-                },
-                status: {
-                    type: String
-                },
-                adminId: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "User"
-                },
-                createdAt: {
-                    type: Date,
-                    default: Date.now
-                }
-            }
-        ],
-
-        workflowStatus: {
-            type: String,
-            enum: ["Received", "In-Progress", "On Hold", "Done"],
-            default: "Received",
-            index: true
-        }
-    },
-    {
-        timestamps: true,
-        toJSON: { virtuals: true },
-        toObject: { virtuals: true }
-    }
-);
-
-/* ================= INDEXES ================= */
-RequestSchema.index({ residentId: 1, status: 1 });
-RequestSchema.index({ status: 1, createdAt: -1 });
-RequestSchema.index({ workflowStatus: 1, createdAt: -1 });
-
-module.exports = mongoose.model("Request", RequestSchema);
-
-
-
-
-
-// ##########################################
-// FILE 17 of 82: backend\models\RequestHistory.js
-// SIZE: 1607 bytes
-// MODIFIED: 2026-02-02 17:23:38
-// ##########################################
-
-const mongoose = require("mongoose");
-
-/**
- * RequestHistory
- * Phase 2 Archive Model
- */
-
-const RequestHistorySchema = new mongoose.Schema(
-    {
-        requestId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Request",
-            index: true
-        },
-
-        residentId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true
-        },
-
-        originalMessage: {
-            type: String,
-            required: true,
-            trim: true
-        },
-
-        finalResolution: {
-            type: String,
-            required: true,
-            trim: true
-        },
-
-        timeline: [
-            {
-                status: {
-                    type: String
-                },
-                note: {
-                    type: String
-                },
-                adminId: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "User"
-                },
-                createdAt: {
-                    type: Date
-                }
-            }
-        ],
-
-        resolvedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true
-        },
-
-        resolvedAt: {
-            type: Date,
-            default: Date.now,
-            index: true
-        }
-    },
-    {
-        timestamps: true
-    }
-);
-
-RequestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
-
-module.exports = mongoose.model("RequestHistory", RequestHistorySchema);
-
-
-
-
-
-// ##########################################
-// FILE 18 of 82: backend\models\Resident.js
-// SIZE: 499 bytes
-// MODIFIED: 2026-02-02 17:38:54
-// ##########################################
-
-const mongoose = require("mongoose");
-
-const residentSchema = new mongoose.Schema(
-    {
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true
-        },
-        rooms: {
-            type: String,
-            required: true
-        },
-        rent: {
-            type: Number,
-            required: true
-        }
-    },
-    { timestamps: true }
-);
-
-module.exports = mongoose.model("Resident", residentSchema);
-
-
-
-
-
-// ##########################################
-// FILE 19 of 82: backend\models\rooms.js
-// SIZE: 1288 bytes
-// MODIFIED: 2026-02-02 18:42:13
-// ##########################################
-
-const mongoose = require("mongoose");
-
-const roomSchema = new mongoose.Schema(
-    {
-        roomNumber: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
-            index: true
-        },
-
-        rent: {
-            type: Number,
-            required: true,
-            min: 1
-        },
-
-        totalBeds: {
-            type: Number,
-            required: true,
-            min: 1
-        },
-
-        occupiedBeds: {
-            type: Number,
-            default: 0,
-            min: 0,
-            validate: {
-                validator: function (value) {
-                    return value <= this.totalBeds;
-                },
-                message: "Occupied beds cannot exceed total beds"
-            }
-        },
-
-        note: {
-            type: String,
-            default: ""
-        }
-    },
-    {
-        timestamps: true,
-        toJSON: { virtuals: true },
-        toObject: { virtuals: true }
-    }
-);
-
-/* ============================
-   VIRTUAL: AVAILABLE BEDS
-   ============================ */
-roomSchema.virtual("availableBeds").get(function () {
-    return this.totalBeds - this.occupiedBeds;
-});
-
-module.exports = mongoose.model("Room", roomSchema);
-
-
-
-
-
-// ##########################################
-// FILE 20 of 82: backend\models\User.js
-// SIZE: 1190 bytes
-// MODIFIED: 2026-02-02 18:41:15
-// ##########################################
-
-const mongoose = require("mongoose");
-
-const userSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true,
-            trim: true
-        },
-
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            index: true,
-            lowercase: true,
-            trim: true
-        },
-
-        password: {
-            type: String,
-            required: true,
-            minlength: 6,
-            select: false // never return password by default
-        },
-
-        role: {
-            type: String,
-            enum: ["admin", "resident"],
-            default: "resident"
-        },
-
-        roomId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Room",
-            default: null
-        },
-
-        isActive: {
-            type: Boolean,
-            default: true
-        }
-    },
-    {
-        timestamps: true,
-        toJSON: { virtuals: true },
-        toObject: { virtuals: true }
-    }
-);
-
-// Useful compound index
-userSchema.index({ role: 1, isActive: 1 });
-
-module.exports = mongoose.model("User", userSchema);
-
-
-
-
-
-// ##########################################
-// FILE 21 of 82: backend\package.json
-// SIZE: 402 bytes
-// MODIFIED: 2026-01-31 03:21:15
+// FILE 1 of 84: backend\package.json
+// SIZE: 516 bytes
+// MODIFIED: 2026-02-02 20:53:35
 // ##########################################
 
 {
   "name": "tagt-backend",
   "version": "1.0.0",
   "private": true,
-  "main": "index.js",
+  "type": "module",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "express": "^4.22.1",
@@ -1813,7 +260,7 @@ module.exports = mongoose.model("User", userSchema);
     "jsonwebtoken": "^9.0.3",
     "helmet": "^8.1.0",
     "express-rate-limit": "^8.2.1",
-    "joi": "^18.0.2"
+    "zod": "^3.23.8"
   }
 }
 
@@ -1822,9 +269,9 @@ module.exports = mongoose.model("User", userSchema);
 
 
 // ##########################################
-// FILE 22 of 82: backend\package-lock.json
-// SIZE: 49472 bytes
-// MODIFIED: 2026-01-31 03:22:38
+// FILE 2 of 84: backend\package-lock.json
+// SIZE: 46945 bytes
+// MODIFIED: 2026-02-02 20:53:55
 // ##########################################
 
 {
@@ -1843,57 +290,12 @@ module.exports = mongoose.model("User", userSchema);
         "express": "^4.22.1",
         "express-rate-limit": "^8.2.1",
         "helmet": "^8.1.0",
-        "joi": "^18.0.2",
         "jsonwebtoken": "^9.0.3",
-        "mongoose": "^9.1.5"
-      }
-    },
-    "node_modules/@hapi/address": {
-      "version": "5.1.1",
-      "resolved": "https://registry.npmjs.org/@hapi/address/-/address-5.1.1.tgz",
-      "integrity": "sha512-A+po2d/dVoY7cYajycYI43ZbYMXukuopIsqCjh5QzsBCipDtdofHntljDlpccMjIfTy6UOkg+5KPriwYch2bXA==",
-      "license": "BSD-3-Clause",
-      "dependencies": {
-        "@hapi/hoek": "^11.0.2"
+        "mongoose": "^9.1.5",
+        "zod": "^3.23.8"
       },
       "engines": {
-        "node": ">=14.0.0"
-      }
-    },
-    "node_modules/@hapi/formula": {
-      "version": "3.0.2",
-      "resolved": "https://registry.npmjs.org/@hapi/formula/-/formula-3.0.2.tgz",
-      "integrity": "sha512-hY5YPNXzw1He7s0iqkRQi+uMGh383CGdyyIGYtB+W5N3KHPXoqychklvHhKCC9M3Xtv0OCs/IHw+r4dcHtBYWw==",
-      "license": "BSD-3-Clause"
-    },
-    "node_modules/@hapi/hoek": {
-      "version": "11.0.7",
-      "resolved": "https://registry.npmjs.org/@hapi/hoek/-/hoek-11.0.7.tgz",
-      "integrity": "sha512-HV5undWkKzcB4RZUusqOpcgxOaq6VOAH7zhhIr2g3G8NF/MlFO75SjOr2NfuSx0Mh40+1FqCkagKLJRykUWoFQ==",
-      "license": "BSD-3-Clause"
-    },
-    "node_modules/@hapi/pinpoint": {
-      "version": "2.0.1",
-      "resolved": "https://registry.npmjs.org/@hapi/pinpoint/-/pinpoint-2.0.1.tgz",
-      "integrity": "sha512-EKQmr16tM8s16vTT3cA5L0kZZcTMU5DUOZTuvpnY738m+jyP3JIUj+Mm1xc1rsLkGBQ/gVnfKYPwOmPg1tUR4Q==",
-      "license": "BSD-3-Clause"
-    },
-    "node_modules/@hapi/tlds": {
-      "version": "1.1.4",
-      "resolved": "https://registry.npmjs.org/@hapi/tlds/-/tlds-1.1.4.tgz",
-      "integrity": "sha512-Fq+20dxsxLaUn5jSSWrdtSRcIUba2JquuorF9UW1wIJS5cSUwxIsO2GIhaWynPRflvxSzFN+gxKte2HEW1OuoA==",
-      "license": "BSD-3-Clause",
-      "engines": {
-        "node": ">=14.0.0"
-      }
-    },
-    "node_modules/@hapi/topo": {
-      "version": "6.0.2",
-      "resolved": "https://registry.npmjs.org/@hapi/topo/-/topo-6.0.2.tgz",
-      "integrity": "sha512-KR3rD5inZbGMrHmgPxsJ9dbi6zEK+C3ZwUwTa+eMwWLz7oijWUTWD2pMSNNYJAU6Qq+65NkxXjqHr/7LM2Xkqg==",
-      "license": "BSD-3-Clause",
-      "dependencies": {
-        "@hapi/hoek": "^11.0.2"
+        "node": ">=20.0.0"
       }
     },
     "node_modules/@mongodb-js/saslprep": {
@@ -1904,12 +306,6 @@ module.exports = mongoose.model("User", userSchema);
       "dependencies": {
         "sparse-bitfield": "^3.0.3"
       }
-    },
-    "node_modules/@standard-schema/spec": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz",
-      "integrity": "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==",
-      "license": "MIT"
     },
     "node_modules/@types/webidl-conversions": {
       "version": "7.0.3",
@@ -2488,24 +884,6 @@ module.exports = mongoose.model("User", userSchema);
       "license": "MIT",
       "engines": {
         "node": ">= 0.10"
-      }
-    },
-    "node_modules/joi": {
-      "version": "18.0.2",
-      "resolved": "https://registry.npmjs.org/joi/-/joi-18.0.2.tgz",
-      "integrity": "sha512-RuCOQMIt78LWnktPoeBL0GErkNaJPTBGcYuyaBvUOQSpcpcLfWrHPPihYdOGbV5pam9VTWbeoF7TsGiHugcjGA==",
-      "license": "BSD-3-Clause",
-      "dependencies": {
-        "@hapi/address": "^5.1.1",
-        "@hapi/formula": "^3.0.2",
-        "@hapi/hoek": "^11.0.7",
-        "@hapi/pinpoint": "^2.0.1",
-        "@hapi/tlds": "^1.1.1",
-        "@hapi/topo": "^6.0.2",
-        "@standard-schema/spec": "^1.0.0"
-      },
-      "engines": {
-        "node": ">= 20"
       }
     },
     "node_modules/jsonwebtoken": {
@@ -3175,6 +1553,15 @@ module.exports = mongoose.model("User", userSchema);
       "engines": {
         "node": ">=18"
       }
+    },
+    "node_modules/zod": {
+      "version": "3.25.76",
+      "resolved": "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz",
+      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==",
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/colinhacks"
+      }
     }
   }
 }
@@ -3184,28 +1571,1660 @@ module.exports = mongoose.model("User", userSchema);
 
 
 // ##########################################
-// FILE 23 of 82: backend\routes\adminRoutes.js
-// SIZE: 3153 bytes
-// MODIFIED: 2026-02-02 18:50:54
+// FILE 3 of 84: backend\src\analytics\churnModel.js
+// SIZE: 3316 bytes
+// MODIFIED: 2026-02-02 17:27:56
 // ##########################################
 
-const express = require("express");
-const router = express.Router();
+const User = require("../models/User");
+const Payment = require("../models/Payment");
+const Request = require("../models/Request");
 
-const auth = require("../middleware/auth");
-const isAdmin = require("../middleware/isAdmin");
+/* =====================================================
+   RESIDENT CHURN PREDICTION MODEL
+===================================================== */
 
-const {
-    getAllResidents,
-    addResident
-} = require("../controllers/adminController");
+async function calculateResidentChurn(resident) {
+    let score = 0;
+    const reasons = [];
+
+    /* =======================
+       PAYMENT BEHAVIOR
+    ======================= */
+    const payments = await Payment.find({
+        residentId: resident._id
+    }).sort({ createdAt: -1 });
+
+    const unpaid = payments.filter(
+        (p) => p.status === "unpaid"
+    ).length;
+
+    if (unpaid >= 2) {
+        score += 30;
+        reasons.push("Multiple unpaid payments");
+    } else if (unpaid === 1) {
+        score += 15;
+        reasons.push("Recent unpaid payment");
+    }
+
+    /* =======================
+       MAINTENANCE REQUESTS
+    ======================= */
+    const requests = await Request.find({
+        residentId: resident._id
+    }).sort({ createdAt: -1 });
+
+    if (requests.length >= 5) {
+        score += 20;
+        reasons.push("High number of maintenance requests");
+    }
+
+    const recentComplaint = requests.find((r) => {
+        const days =
+            (Date.now() - new Date(r.createdAt)) /
+            (1000 * 60 * 60 * 24);
+        return days <= 30;
+    });
+
+    if (recentComplaint) {
+        score += 10;
+        reasons.push("Recent maintenance complaint");
+    }
+
+    /* =======================
+       ACTIVITY / INACTIVITY
+    ======================= */
+    const lastActivity = resident.updatedAt || resident.createdAt;
+    const inactiveDays =
+        (Date.now() - new Date(lastActivity)) /
+        (1000 * 60 * 60 * 24);
+
+    if (inactiveDays > 90) {
+        score += 15;
+        reasons.push("Inactive for over 90 days");
+    }
+
+    /* =======================
+       TENURE FACTOR
+    ======================= */
+    const tenureDays =
+        (Date.now() - new Date(resident.createdAt)) /
+        (1000 * 60 * 60 * 24);
+
+    if (tenureDays < 60) {
+        score += 10;
+        reasons.push("New resident (low tenure)");
+    }
+
+    score = Math.min(100, score);
+
+    let riskLevel = "LOW";
+    if (score >= 60) riskLevel = "HIGH";
+    else if (score >= 30) riskLevel = "MEDIUM";
+
+    return {
+        residentId: resident._id,
+        name: resident.name,
+        email: resident.email,
+        score,
+        riskLevel,
+        reasons
+    };
+}
+
+async function predictChurn() {
+    const residents = await User.find({
+        role: "resident",
+        isActive: true
+    });
+
+    const results = [];
+
+    for (const resident of residents) {
+        const churn = await calculateResidentChurn(resident);
+        results.push(churn);
+    }
+
+    results.sort((a, b) => b.score - a.score);
+
+    return {
+        generatedAt: new Date(),
+        totalResidents: residents.length,
+        highRisk: results.filter((r) => r.riskLevel === "HIGH").length,
+        mediumRisk: results.filter((r) => r.riskLevel === "MEDIUM").length,
+        lowRisk: results.filter((r) => r.riskLevel === "LOW").length,
+        residents: results
+    };
+}
+
+module.exports = {
+    predictChurn
+};
+
+
+
+
+
+// ##########################################
+// FILE 4 of 84: backend\src\analytics\forecastEngine.js
+// SIZE: 2314 bytes
+// MODIFIED: 2026-02-02 20:10:07
+// ##########################################
+
+const Room = require("../models/rooms");
+
+/* =====================================================
+   OCCUPANCY FORECAST ENGINE (HONEST VERSION)
+===================================================== */
+
+/**
+ * Get current occupancy snapshot
+ * (Used as baseline, not fake history)
+ */
+async function getCurrentOccupancy() {
+    const rooms = await Room.find({}, "totalBeds occupiedBeds");
+
+    if (!rooms.length) {
+        return {
+            totalBeds: 0,
+            occupiedBeds: 0,
+            occupancyRate: 0
+        };
+    }
+
+    const totalBeds = rooms.reduce(
+        (sum, r) => sum + (r.totalBeds || 0),
+        0
+    );
+
+    const occupiedBeds = rooms.reduce(
+        (sum, r) => sum + (r.occupiedBeds || 0),
+        0
+    );
+
+    const occupancyRate =
+        totalBeds === 0
+            ? 0
+            : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
+
+    return { totalBeds, occupiedBeds, occupancyRate };
+}
+
+/**
+ * Predict occupancy using flat projection
+ * (No fake trends without historical data)
+ */
+async function predictOccupancy(monthsAhead = 6) {
+    const snapshot = await getCurrentOccupancy();
+
+    if (snapshot.totalBeds === 0) {
+        return {
+            history: [],
+            forecast: [],
+            meta: {
+                note: "No room data available",
+                generatedAt: new Date()
+            }
+        };
+    }
+
+    const now = new Date();
+
+    // Represent "history" as a single baseline point
+    const history = [
+        {
+            month: now.toISOString().slice(0, 7),
+            occupancyRate: snapshot.occupancyRate
+        }
+    ];
+
+    const forecast = [];
+
+    for (let i = 1; i <= monthsAhead; i++) {
+        const date = new Date(now);
+        date.setMonth(now.getMonth() + i);
+
+        forecast.push({
+            month: date.toISOString().slice(0, 7),
+            predictedOccupancy: snapshot.occupancyRate
+        });
+    }
+
+    return {
+        history,
+        forecast,
+        meta: {
+            model: "Flat baseline (no historical data)",
+            generatedAt: new Date(),
+            totalBeds: snapshot.totalBeds,
+            occupiedBeds: snapshot.occupiedBeds
+        }
+    };
+}
+
+module.exports = {
+    predictOccupancy
+};
+
+
+
+
+
+// ##########################################
+// FILE 5 of 84: backend\src\analytics\kpiCalculator.js
+// SIZE: 2977 bytes
+// MODIFIED: 2026-02-02 20:09:44
+// ##########################################
+
+const Room = require("../models/rooms");
+const Payment = require("../models/Payment");
+const Request = require("../models/Request");
+
+/* =====================================================
+   KPI CALCULATOR (SNAPSHOT-BASED)
+===================================================== */
+
+async function getKPIs({ fromDate, toDate } = {}) {
+    const dateFilter =
+        fromDate && toDate
+            ? { createdAt: { $gte: fromDate, $lte: toDate } }
+            : {};
+
+    /* =======================
+       OCCUPANCY KPI
+    ======================= */
+    const roomDocs = await Room.find({}, "totalBeds occupiedBeds");
+
+    const totals = roomDocs.reduce(
+        (acc, room) => {
+            acc.totalBeds += room.totalBeds || 0;
+            acc.occupiedBeds += room.occupiedBeds || 0;
+            return acc;
+        },
+        { totalBeds: 0, occupiedBeds: 0 }
+    );
+
+    const occupancyRate =
+        totals.totalBeds === 0
+            ? 0
+            : Number(
+                ((totals.occupiedBeds / totals.totalBeds) * 100).toFixed(2)
+            );
+
+    /* =======================
+       PAYMENT COLLECTION KPI
+    ======================= */
+    const payments = await Payment.find(dateFilter, "amount status");
+
+    let totalBilled = 0;
+    let totalCollected = 0;
+
+    for (const payment of payments) {
+        totalBilled += payment.amount || 0;
+        if (payment.status === "paid") {
+            totalCollected += payment.amount || 0;
+        }
+    }
+
+    const collectionRate =
+        totalBilled === 0
+            ? 0
+            : Number(((totalCollected / totalBilled) * 100).toFixed(2));
+
+    /* =======================
+       MAINTENANCE KPI
+    ======================= */
+    const resolvedRequests = await Request.find(
+        { status: "resolved", ...dateFilter },
+        "createdAt updatedAt"
+    );
+
+    let totalResolutionHours = 0;
+
+    for (const req of resolvedRequests) {
+        const hours =
+            (new Date(req.updatedAt) - new Date(req.createdAt)) /
+            (1000 * 60 * 60);
+        totalResolutionHours += hours;
+    }
+
+    const avgResolutionTime =
+        resolvedRequests.length === 0
+            ? 0
+            : Number(
+                (totalResolutionHours / resolvedRequests.length).toFixed(2)
+            );
+
+    return {
+        occupancy: {
+            rate: occupancyRate,
+            occupiedBeds: totals.occupiedBeds,
+            totalBeds: totals.totalBeds
+        },
+        payments: {
+            collectionRate,
+            totalBilled,
+            totalCollected
+        },
+        maintenance: {
+            avgResolutionTime,
+            resolvedCount: resolvedRequests.length
+        },
+        meta: {
+            mode: "snapshot",
+            fromDate: fromDate || null,
+            toDate: toDate || null,
+            generatedAt: new Date()
+        }
+    };
+}
+
+module.exports = {
+    getKPIs
+};
+
+
+
+
+
+// ##########################################
+// FILE 6 of 84: backend\src\analytics\maintenanceForecast.js
+// SIZE: 2812 bytes
+// MODIFIED: 2026-02-02 17:27:25
+// ##########################################
 
 const Request = require("../models/Request");
-const RequestHistory = require("../models/RequestHistory");
-const Payment = require("../models/Payment");
-const User = require("../models/User");
 
-/* ================= RESIDENT MANAGEMENT ================= */
+/* =====================================================
+   MAINTENANCE COST FORECAST ENGINE
+===================================================== */
+
+async function getMonthlyMaintenanceCosts(months = 6) {
+    const now = new Date();
+    const history = [];
+
+    for (let i = months; i > 0; i--) {
+        const start = new Date(
+            now.getFullYear(),
+            now.getMonth() - i,
+            1
+        );
+        const end = new Date(
+            now.getFullYear(),
+            now.getMonth() - i + 1,
+            0,
+            23,
+            59,
+            59
+        );
+
+        const requests = await Request.find({
+            createdAt: { $gte: start, $lte: end }
+        });
+
+        const totalCost = requests.reduce(
+            (sum, r) => sum + (r.cost || 0),
+            0
+        );
+
+        history.push({
+            month: start.toISOString().slice(0, 7),
+            cost: Number(totalCost.toFixed(2))
+        });
+    }
+
+    return history;
+}
+
+function calculateCostTrend(data) {
+    if (data.length < 2) return 0;
+
+    let change = 0;
+    for (let i = 1; i < data.length; i++) {
+        change += data[i].cost - data[i - 1].cost;
+    }
+
+    return change / (data.length - 1);
+}
+
+function detectSpikeRisk(history) {
+    if (history.length < 3) return "LOW";
+
+    const avg =
+        history.reduce((s, m) => s + m.cost, 0) / history.length;
+
+    const last = history[history.length - 1].cost;
+
+    if (last > avg * 1.4) return "HIGH";
+    if (last > avg * 1.2) return "MEDIUM";
+    return "LOW";
+}
+
+async function predictMaintenanceCost(monthsAhead = 6) {
+    const history = await getMonthlyMaintenanceCosts(6);
+
+    if (history.length === 0) {
+        return {
+            history: [],
+            forecast: [],
+            note: "Not enough data to forecast maintenance costs"
+        };
+    }
+
+    const trend = calculateCostTrend(history);
+    const spikeRisk = detectSpikeRisk(history);
+
+    let currentCost = history[history.length - 1].cost;
+    const forecast = [];
+
+    for (let i = 1; i <= monthsAhead; i++) {
+        currentCost += trend;
+        currentCost = Math.max(0, currentCost);
+
+        const date = new Date();
+        date.setMonth(date.getMonth() + i);
+
+        forecast.push({
+            month: date.toISOString().slice(0, 7),
+            predictedCost: Number(currentCost.toFixed(2))
+        });
+    }
+
+    return {
+        history,
+        forecast,
+        meta: {
+            trend: Number(trend.toFixed(2)),
+            spikeRisk,
+            generatedAt: new Date(),
+            model: "Linear Trend + Spike Detection"
+        }
+    };
+}
+
+module.exports = {
+    predictMaintenanceCost
+};
+
+
+
+
+
+// ##########################################
+// FILE 7 of 84: backend\src\analytics\revenueOptimizer.js
+// SIZE: 4069 bytes
+// MODIFIED: 2026-02-02 20:09:57
+// ##########################################
+
+const Room = require("../models/rooms");
+const Payment = require("../models/Payment");
+const { predictChurn } = require("./churnModel");
+
+/* =====================================================
+   REVENUE OPTIMIZATION ENGINE (SNAPSHOT-BASED)
+===================================================== */
+
+async function optimizeRevenue() {
+    /* =======================
+       OCCUPANCY ANALYSIS
+    ======================= */
+    const roomDocs = await Room.find({}, "totalBeds occupiedBeds rent");
+
+    const totals = roomDocs.reduce(
+        (acc, room) => {
+            acc.totalBeds += room.totalBeds || 0;
+            acc.occupiedBeds += room.occupiedBeds || 0;
+            acc.totalRent += (room.rent || 0) * (room.totalBeds || 0);
+            return acc;
+        },
+        { totalBeds: 0, occupiedBeds: 0, totalRent: 0 }
+    );
+
+    const occupancyRate =
+        totals.totalBeds === 0
+            ? 0
+            : (totals.occupiedBeds / totals.totalBeds) * 100;
+
+    const avgRent =
+        totals.totalBeds === 0
+            ? 0
+            : totals.totalRent / totals.totalBeds;
+
+    /* =======================
+       PAYMENT COLLECTION
+    ======================= */
+    const payments = await Payment.find({}, "amount status");
+
+    const totalBilled = payments.reduce(
+        (sum, p) => sum + (p.amount || 0),
+        0
+    );
+
+    const collected = payments
+        .filter((p) => p.status === "paid")
+        .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    const collectionRate =
+        totalBilled === 0 ? 0 : (collected / totalBilled) * 100;
+
+    /* =======================
+       CHURN IMPACT
+    ======================= */
+    let highRiskResidents = 0;
+
+    try {
+        const churnData = await predictChurn();
+        highRiskResidents = churnData?.highRisk || 0;
+    } catch (err) {
+        console.warn("CHURN MODEL ERROR:", err.message);
+    }
+
+    /* =======================
+       INSIGHTS GENERATION
+    ======================= */
+    const insights = [];
+    let revenueLeakEstimate = 0;
+
+    if (occupancyRate < 70) {
+        const emptyBeds = totals.totalBeds - totals.occupiedBeds;
+        revenueLeakEstimate += emptyBeds * avgRent;
+
+        insights.push({
+            type: "OCCUPANCY",
+            severity: "HIGH",
+            message: "Low occupancy detected",
+            recommendation:
+                "Offer promotions, flexible pricing, or partnerships to increase occupancy."
+        });
+    }
+
+    if (collectionRate < 85) {
+        revenueLeakEstimate += totalBilled - collected;
+
+        insights.push({
+            type: "PAYMENTS",
+            severity: "MEDIUM",
+            message: "Low payment collection rate",
+            recommendation:
+                "Enable automated reminders, enforce deadlines, or introduce incentives."
+        });
+    }
+
+    if (highRiskResidents > 0) {
+        insights.push({
+            type: "CHURN",
+            severity: "HIGH",
+            message: `${highRiskResidents} residents at high churn risk`,
+            recommendation:
+                "Proactively engage residents and offer retention incentives."
+        });
+    }
+
+    if (insights.length === 0) {
+        insights.push({
+            type: "HEALTHY",
+            severity: "LOW",
+            message: "Revenue performance is healthy",
+            recommendation:
+                "Maintain current pricing and operational strategy."
+        });
+    }
+
+    return {
+        generatedAt: new Date(),
+        metrics: {
+            occupancyRate: Number(occupancyRate.toFixed(2)),
+            collectionRate: Number(collectionRate.toFixed(2)),
+            avgRent: Number(avgRent.toFixed(2)),
+            totalBeds: totals.totalBeds,
+            occupiedBeds: totals.occupiedBeds
+        },
+        revenueLeakEstimate: Math.round(revenueLeakEstimate),
+        insights,
+        meta: {
+            mode: "snapshot"
+        }
+    };
+}
+
+module.exports = {
+    optimizeRevenue
+};
+
+
+
+
+
+// ##########################################
+// FILE 8 of 84: backend\src\app.js
+// SIZE: 1678 bytes
+// MODIFIED: 2026-02-02 21:06:08
+// ##########################################
+
+import express from "express";
+import cors from "cors";
+
+import { connectDB } from "./config/db.js";
+import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import routes from "./routes/index.js";
+
+/* ======================
+   APP INITIALIZATION
+====================== */
+const app = express();
+
+/* ======================
+   DATABASE
+====================== */
+await connectDB();
+
+/* ======================
+   CORS CONFIG
+====================== */
+const allowedOrigins = [
+    "https://tagt.website",
+    "https://www.tagt.website",
+    "http://localhost:3000"
+];
+
+app.use(
+    cors({
+        origin(origin, callback) {
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            return callback(
+                new Error(`CORS blocked: ${origin}`),
+                false
+            );
+        },
+        credentials: true
+    })
+);
+
+/* ======================
+   MIDDLEWARE
+====================== */
+app.use(express.json({ limit: "10kb" }));
+
+/* ======================
+   HEALTH CHECK
+====================== */
+app.get("/api/health", (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || "development",
+        timestamp: new Date().toISOString()
+    });
+});
+
+/* ======================
+   ROUTES
+====================== */
+app.use("/api", routes);
+
+/* ======================
+   ERROR HANDLING
+====================== */
+app.use(notFound);
+app.use(errorHandler);
+
+export default app;
+
+
+
+
+
+// ##########################################
+// FILE 9 of 84: backend\src\config\db.js
+// SIZE: 622 bytes
+// MODIFIED: 2026-02-02 20:54:36
+// ##########################################
+
+import mongoose from "mongoose";
+
+export const connectDB = async () => {
+    const mongoUri = process.env.MONGO_URI;
+
+    if (!mongoUri) {
+        console.error("❌ MONGO_URI is not defined");
+        process.exit(1);
+    }
+
+    try {
+        mongoose.set("strictQuery", true);
+
+        await mongoose.connect(mongoUri, {
+            autoIndex: true,
+            serverSelectionTimeoutMS: 5000
+        });
+
+        console.log("✅ MongoDB connected successfully");
+    } catch (error) {
+        console.error("❌ MongoDB connection failed:", error.message);
+        process.exit(1);
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE 10 of 84: backend\src\controllers\adminController.js
+// SIZE: 2728 bytes
+// MODIFIED: 2026-02-02 21:18:26
+// ##########################################
+
+import bcrypt from "bcryptjs";
+
+import User from "../models/User.js";
+import Room from "../models/rooms.js";
+
+/* ============================
+   GET ALL RESIDENTS (ADMIN)
+============================ */
+export const getAllResidents = async (req, res, next) => {
+    try {
+        const residents = await User.find({ role: "resident" })
+            .populate("roomId", "roomNumber totalBeds occupiedBeds")
+            .sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            residents
+        });
+    } catch (error) {
+        console.error("GET RESIDENTS ERROR:", error.message);
+        next(error);
+    }
+};
+
+/* ============================
+   ADD NEW RESIDENT (ADMIN)
+============================ */
+export const addResident = async (req, res, next) => {
+    try {
+        const { name, email, password, roomId } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Name, email, and password are required"
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const existingUser = await User.findOne({
+            email: normalizedEmail
+        });
+
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists"
+            });
+        }
+
+        let room = null;
+
+        // Validate room & availability
+        if (roomId) {
+            room = await Room.findById(roomId);
+
+            if (!room) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid room selected"
+                });
+            }
+
+            if (room.occupiedBeds >= room.totalBeds) {
+                return res.status(400).json({
+                    success: false,
+                    message: "No beds available in this room"
+                });
+            }
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const resident = await User.create({
+            name,
+            email: normalizedEmail,
+            password: hashedPassword,
+            role: "resident",
+            roomId: room ? room._id : null
+        });
+
+        // Increase occupied beds AFTER resident creation
+        if (room) {
+            room.occupiedBeds += 1;
+            await room.save();
+        }
+
+        res.status(201).json({
+            success: true,
+            resident
+        });
+    } catch (error) {
+        console.error("ADD RESIDENT ERROR:", error.message);
+        next(error);
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE 11 of 84: backend\src\controllers\roomController.js
+// SIZE: 2412 bytes
+// MODIFIED: 2026-02-02 21:20:22
+// ##########################################
+
+import Room from "../models/rooms.js";
+
+/* ============================
+   GET ALL ROOMS
+============================ */
+export const getAllRooms = async (req, res, next) => {
+    try {
+        const rooms = await Room.find().sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            rooms
+        });
+    } catch (error) {
+        console.error("GET ROOMS ERROR:", error.message);
+        next(error);
+    }
+};
+
+/* ============================
+   ADD NEW ROOM
+============================ */
+export const addRoom = async (req, res, next) => {
+    try {
+        const { roomNumber, rent, totalBeds, note } = req.body;
+
+        if (!roomNumber || !rent || !totalBeds) {
+            return res.status(400).json({
+                success: false,
+                message: "Room number, rent, and total beds are required"
+            });
+        }
+
+        const exists = await Room.findOne({ roomNumber });
+        if (exists) {
+            return res.status(400).json({
+                success: false,
+                message: "Room number already exists"
+            });
+        }
+
+        const room = await Room.create({
+            roomNumber,
+            rent,
+            totalBeds,
+            occupiedBeds: 0,
+            note: note || ""
+        });
+
+        res.status(201).json({
+            success: true,
+            room
+        });
+    } catch (error) {
+        console.error("ADD ROOM ERROR:", error.message);
+        next(error);
+    }
+};
+
+/* ============================
+   DELETE ROOM
+============================ */
+export const deleteRoom = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const room = await Room.findById(id);
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                message: "Room not found"
+            });
+        }
+
+        if (room.occupiedBeds > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete room with residents"
+            });
+        }
+
+        await room.deleteOne();
+
+        res.json({
+            success: true,
+            message: "Room deleted successfully"
+        });
+    } catch (error) {
+        console.error("DELETE ROOM ERROR:", error.message);
+        next(error);
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE 12 of 84: backend\src\middleware\auth.js
+// SIZE: 1193 bytes
+// MODIFIED: 2026-02-02 21:11:34
+// ##########################################
+
+import jwt from "jsonwebtoken";
+
+/**
+ * Authentication middleware
+ * - Verifies JWT token
+ * - Attaches user info to req.user
+ */
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({
+            success: false,
+            message: "Authorization token missing"
+        });
+    }
+
+    if (!process.env.JWT_SECRET) {
+        console.error("❌ JWT_SECRET is not defined");
+        return res.status(500).json({
+            success: false,
+            message: "Server configuration error"
+        });
+    }
+
+    try {
+        const token = authHeader.replace("Bearer", "").trim();
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
+
+        next();
+    } catch (error) {
+        console.warn("❌ AUTH FAILED:", error.message);
+        return res.status(401).json({
+            success: false,
+            message: "Invalid or expired token"
+        });
+    }
+};
+
+export default authMiddleware;
+
+
+
+
+
+// ##########################################
+// FILE 13 of 84: backend\src\middleware\errorHandler.js
+// SIZE: 609 bytes
+// MODIFIED: 2026-02-02 21:07:12
+// ##########################################
+
+// ===============================
+// 404 – Not Found Middleware
+// ===============================
+export const notFound = (req, res, next) => {
+    res.status(404).json({
+        success: false,
+        message: `Route not found: ${req.originalUrl}`
+    });
+};
+
+// ===============================
+// Global Error Handler
+// ===============================
+export const errorHandler = (err, req, res, next) => {
+    console.error("❌ ERROR:", err.message);
+
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Server error"
+    });
+};
+
+
+
+
+
+// ##########################################
+// FILE 14 of 84: backend\src\middleware\isAdmin.js
+// SIZE: 761 bytes
+// MODIFIED: 2026-02-02 21:12:00
+// ##########################################
+
+/**
+ * Admin-only middleware
+ * Must be used AFTER auth middleware
+ */
+const isAdmin = (req, res, next) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized"
+            });
+        }
+
+        if (req.user.role !== "admin") {
+            return res.status(403).json({
+                success: false,
+                message: "Admin access only"
+            });
+        }
+
+        next();
+    } catch (error) {
+        console.error("❌ IS ADMIN ERROR:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Authorization failed"
+        });
+    }
+};
+
+export default isAdmin;
+
+
+
+
+
+// ##########################################
+// FILE 15 of 84: backend\src\middleware\validate.js
+// SIZE: 243 bytes
+// MODIFIED: 2026-01-27 00:07:04
+// ##########################################
+
+module.exports = (schema) => (req, res, next) => {
+    const { error } = schema.validate(req.body);
+    if (error) {
+        return res.status(400).json({
+            message: error.details[0].message
+        });
+    }
+    next();
+};
+
+
+
+
+
+// ##########################################
+// FILE 16 of 84: backend\src\models\ActivityLog.js
+// SIZE: 540 bytes
+// MODIFIED: 2026-01-27 00:05:41
+// ##########################################
+
+const mongoose = require("mongoose");
+
+const ActivityLogSchema = new mongoose.Schema(
+    {
+        action: {
+            type: String,
+            required: true
+        },
+        performedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        },
+        role: {
+            type: String,
+            required: true
+        },
+        ipAddress: String,
+        route: String
+    },
+    { timestamps: true }
+);
+
+module.exports = mongoose.model("ActivityLog", ActivityLogSchema);
+
+
+
+
+
+// ##########################################
+// FILE 17 of 84: backend\src\models\Payment.js
+// SIZE: 1356 bytes
+// MODIFIED: 2026-02-02 21:15:41
+// ##########################################
+
+import mongoose from "mongoose";
+
+const paymentSchema = new mongoose.Schema(
+    {
+        residentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+
+        amount: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+
+        description: {
+            type: String,
+            default: "",
+            trim: true
+        },
+
+        type: {
+            type: String,
+            default: "manual"
+        },
+
+        month: {
+            type: String,
+            default: null,
+            index: true
+        },
+
+        status: {
+            type: String,
+            enum: ["unpaid", "paid"],
+            default: "unpaid",
+            index: true
+        },
+
+        adminNote: {
+            type: String,
+            default: ""
+        },
+
+        paidAt: {
+            type: Date,
+            default: null
+        },
+
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+/* =========================
+   INDEXES
+========================= */
+paymentSchema.index({ residentId: 1, status: 1 });
+
+export default mongoose.model("Payment", paymentSchema);
+
+
+
+
+
+// ##########################################
+// FILE 18 of 84: backend\src\models\Request.js
+// SIZE: 1949 bytes
+// MODIFIED: 2026-02-02 21:24:00
+// ##########################################
+
+import mongoose from "mongoose";
+
+const requestSchema = new mongoose.Schema(
+    {
+        residentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+
+        message: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        status: {
+            type: String,
+            enum: ["pending", "in-progress", "resolved"],
+            default: "pending",
+            index: true
+        },
+
+        statusHistory: [
+            {
+                status: {
+                    type: String,
+                    required: true
+                },
+                changedAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }
+        ],
+
+        adminNotes: [
+            {
+                note: {
+                    type: String,
+                    required: true
+                },
+                status: {
+                    type: String
+                },
+                adminId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User"
+                },
+                createdAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }
+        ],
+
+        workflowStatus: {
+            type: String,
+            enum: ["Received", "In-Progress", "On Hold", "Done"],
+            default: "Received",
+            index: true
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+/* =========================
+   INDEXES
+========================= */
+requestSchema.index({ residentId: 1, status: 1 });
+requestSchema.index({ status: 1, createdAt: -1 });
+requestSchema.index({ workflowStatus: 1, createdAt: -1 });
+
+const Request = mongoose.model("Request", requestSchema);
+
+export default Request;
+
+
+
+
+
+// ##########################################
+// FILE 19 of 84: backend\src\models\RequestHistory.js
+// SIZE: 1670 bytes
+// MODIFIED: 2026-02-02 21:17:46
+// ##########################################
+
+import mongoose from "mongoose";
+
+/**
+ * RequestHistory
+ * Phase 2 Archive Model
+ */
+const requestHistorySchema = new mongoose.Schema(
+    {
+        requestId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Request",
+            index: true
+        },
+
+        residentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+
+        originalMessage: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        finalResolution: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        timeline: [
+            {
+                status: {
+                    type: String
+                },
+                note: {
+                    type: String
+                },
+                adminId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User"
+                },
+                createdAt: {
+                    type: Date
+                }
+            }
+        ],
+
+        resolvedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+
+        resolvedAt: {
+            type: Date,
+            default: Date.now,
+            index: true
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+/* =========================
+   INDEXES
+========================= */
+requestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
+
+export default mongoose.model("RequestHistory", requestHistorySchema);
+
+
+
+
+
+// ##########################################
+// FILE 20 of 84: backend\src\models\resident.js
+// SIZE: 2351 bytes
+// MODIFIED: 2026-02-02 21:25:01
+// ##########################################
+
+import { Router } from "express";
+
+import Request from "../models/Request.js";
+import auth from "../middleware/auth.js";
+
+const router = Router();
+
+/* =========================
+   CREATE REQUEST (RESIDENT)
+========================= */
+router.post("/request", auth, async (req, res, next) => {
+    try {
+        const { message } = req.body;
+
+        if (!message || !message.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Message is required"
+            });
+        }
+
+        const request = await Request.create({
+            residentId: req.user.id,
+            message: message.trim(),
+            status: "pending",
+            workflowStatus: "Received",
+            statusHistory: [{ status: "pending" }]
+        });
+
+        res.status(201).json({
+            success: true,
+            request
+        });
+    } catch (error) {
+        console.error("CREATE REQUEST ERROR:", error.message);
+        next(error);
+    }
+});
+
+/* =========================
+   GET MY REQUESTS (RESIDENT)
+========================= */
+router.get("/requests", auth, async (req, res, next) => {
+    try {
+        const requests = await Request.find({
+            residentId: req.user.id
+        })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.json({
+            success: true,
+            requests
+        });
+    } catch (error) {
+        console.error("GET MY REQUESTS ERROR:", error.message);
+        next(error);
+    }
+});
+
+/* =========================
+   DELETE REQUEST (RESIDENT)
+========================= */
+router.delete("/request/:id", auth, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const request = await Request.findOne({
+            _id: id,
+            residentId: req.user.id
+        });
+
+        if (!request) {
+            return res.status(404).json({
+                success: false,
+                message: "Request not found"
+            });
+        }
+
+        await request.deleteOne();
+
+        res.json({
+            success: true,
+            message: "Request deleted"
+        });
+    } catch (error) {
+        console.error("DELETE REQUEST ERROR:", error.message);
+        next(error);
+    }
+});
+
+export default router;
+
+
+
+
+
+// ##########################################
+// FILE 21 of 84: backend\src\models\rooms.js
+// SIZE: 1267 bytes
+// MODIFIED: 2026-02-02 21:13:50
+// ##########################################
+
+import mongoose from "mongoose";
+
+const roomSchema = new mongoose.Schema(
+    {
+        roomNumber: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            index: true
+        },
+
+        rent: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+
+        totalBeds: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+
+        occupiedBeds: {
+            type: Number,
+            default: 0,
+            min: 0,
+            validate: {
+                validator(value) {
+                    return value <= this.totalBeds;
+                },
+                message: "Occupied beds cannot exceed total beds"
+            }
+        },
+
+        note: {
+            type: String,
+            default: ""
+        }
+    },
+    {
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    }
+);
+
+/* ============================
+   VIRTUAL: AVAILABLE BEDS
+============================ */
+roomSchema.virtual("availableBeds").get(function () {
+    return this.totalBeds - this.occupiedBeds;
+});
+
+export default mongoose.model("Room", roomSchema);
+
+
+
+
+
+// ##########################################
+// FILE 22 of 84: backend\src\models\User.js
+// SIZE: 1020 bytes
+// MODIFIED: 2026-02-02 21:23:21
+// ##########################################
+
+import mongoose from "mongoose";
+
+const userSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+            index: true
+        },
+
+        password: {
+            type: String,
+            required: true,
+            minlength: 6,
+            select: false
+        },
+
+        role: {
+            type: String,
+            enum: ["admin", "resident"],
+            default: "resident"
+        },
+
+        roomId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Room",
+            default: null
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+const User = mongoose.model("User", userSchema);
+
+export default User;
+
+
+
+
+
+// ##########################################
+// FILE 23 of 84: backend\src\routes\adminRoutes.js
+// SIZE: 2395 bytes
+// MODIFIED: 2026-02-02 21:17:21
+// ##########################################
+
+import { Router } from "express";
+
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+
+import {
+    getAllResidents,
+    addResident
+} from "../controllers/adminController.js";
+
+import Request from "../models/Request.js";
+import Payment from "../models/Payment.js";
+import User from "../models/User.js";
+
+// NOTE:
+// RequestHistory model is referenced in old code.
+// If it exists, convert it later and uncomment the import.
+// import RequestHistory from "../models/RequestHistory.js";
+
+const router = Router();
+
+/* =========================
+   RESIDENT MANAGEMENT
+========================= */
 
 // GET all residents
 router.get("/residents", auth, isAdmin, getAllResidents);
@@ -3213,51 +3232,31 @@ router.get("/residents", auth, isAdmin, getAllResidents);
 // ADD resident
 router.post("/residents", auth, isAdmin, addResident);
 
-/* ================= REQUESTS ================= */
+/* =========================
+   REQUESTS
+========================= */
 
 // GET all maintenance requests
-router.get("/requests", auth, isAdmin, async (req, res) => {
+router.get("/requests", auth, isAdmin, async (req, res, next) => {
     try {
         const requests = await Request.find()
             .populate("residentId", "name email")
             .sort({ createdAt: -1 });
 
-        return res.json({
+        res.json({
             success: true,
             requests
         });
-    } catch (err) {
-        console.error("GET REQUESTS ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch requests"
-        });
+    } catch (error) {
+        next(error);
     }
 });
 
-// GET request history (archived)
-router.get("/requests/history", auth, isAdmin, async (req, res) => {
-    try {
-        const history = await RequestHistory.find()
-            .populate("residentId", "name email")
-            .sort({ createdAt: -1 });
+/* =========================
+   ADMIN DASHBOARD STATS
+========================= */
 
-        return res.json({
-            success: true,
-            history
-        });
-    } catch (err) {
-        console.error("GET REQUEST HISTORY ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch request history"
-        });
-    }
-});
-
-/* ================= ADMIN DASHBOARD STATS ================= */
-
-router.get("/stats", auth, isAdmin, async (req, res) => {
+router.get("/stats", auth, isAdmin, async (req, res, next) => {
     try {
         const totalResidents = await User.countDocuments({
             role: "resident",
@@ -3278,7 +3277,7 @@ router.get("/stats", auth, isAdmin, async (req, res) => {
             .filter((p) => p.status === "unpaid")
             .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-        return res.json({
+        res.json({
             success: true,
             stats: {
                 totalResidents,
@@ -3287,23 +3286,19 @@ router.get("/stats", auth, isAdmin, async (req, res) => {
                 outstandingBalance
             }
         });
-    } catch (err) {
-        console.error("ADMIN STATS ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch admin stats"
-        });
+    } catch (error) {
+        next(error);
     }
 });
 
-module.exports = router;
+export default router;
 
 
 
 
 
 // ##########################################
-// FILE 24 of 82: backend\routes\analytics.js
+// FILE 24 of 84: backend\src\routes\analytics.js
 // SIZE: 4249 bytes
 // MODIFIED: 2026-02-02 17:25:17
 // ##########################################
@@ -3449,20 +3444,23 @@ module.exports = router;
 
 
 // ##########################################
-// FILE 25 of 82: backend\routes\auth.js
-// SIZE: 1885 bytes
-// MODIFIED: 2026-02-02 18:44:39
+// FILE 25 of 84: backend\src\routes\auth.js
+// SIZE: 1860 bytes
+// MODIFIED: 2026-02-02 21:08:01
 // ##########################################
 
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const User = require("../models/User");
-const generateToken = require("../utils/generateToken");
+import { Router } from "express";
+import bcrypt from "bcryptjs";
 
-const router = express.Router();
+import User from "../models/User.js";
+import generateToken from "../utils/generateToken.js";
 
-/* ================= LOGIN ================= */
-router.post("/login", async (req, res) => {
+const router = Router();
+
+/* =========================
+   LOGIN
+========================= */
+router.post("/login", async (req, res, next) => {
     try {
         const email = req.body.email?.toLowerCase().trim();
         const { password } = req.body;
@@ -3498,9 +3496,12 @@ router.post("/login", async (req, res) => {
             });
         }
 
-        const token = generateToken(user);
+        const token = generateToken({
+            id: user._id,
+            role: user.role
+        });
 
-        return res.json({
+        return res.status(200).json({
             success: true,
             token,
             user: {
@@ -3511,40 +3512,105 @@ router.post("/login", async (req, res) => {
                 roomId: user.roomId
             }
         });
-    } catch (err) {
-        console.error("LOGIN ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Login failed"
-        });
+    } catch (error) {
+        next(error); // handled by global error middleware
     }
 });
 
-module.exports = router;
+export default router;
 
 
 
 
 
 // ##########################################
-// FILE 26 of 82: backend\routes\payments.js
-// SIZE: 4859 bytes
-// MODIFIED: 2026-02-02 17:24:18
+// FILE 26 of 84: backend\src\routes\index.js
+// SIZE: 1351 bytes
+// MODIFIED: 2026-02-02 21:22:31
 // ##########################################
 
-const express = require("express");
-const mongoose = require("mongoose");
-const router = express.Router();
+import { Router } from "express";
 
-const Payment = require("../models/Payment");
-const User = require("../models/User");
-const auth = require("../middleware/auth");
-const isAdmin = require("../middleware/isAdmin");
+import authRoutes from "./auth.js";
+import adminRoutes from "./adminRoutes.js";
+import roomRoutes from "./rooms.js";
+import paymentRoutes from "./payments.js";
+import residentRoutes from "./resident.js";
+
+const router = Router();
+
+/* =========================
+   AUTH ROUTES
+========================= */
+router.use("/auth", authRoutes);
+
+/* =========================
+   ADMIN ROUTES
+========================= */
+router.use("/admin", adminRoutes);
+
+/* =========================
+   ROOM ROUTES
+========================= */
+router.use("/rooms", roomRoutes);
+
+/* =========================
+   PAYMENT ROUTES
+========================= */
+router.use("/payments", paymentRoutes);
+
+/* =========================
+   RESIDENT ROUTES
+========================= */
+router.use("/resident", residentRoutes);
+
+/* =========================
+   API ROOT
+========================= */
+router.get("/", (req, res) => {
+    res.json({
+        success: true,
+        message: "TAGT API is running"
+    });
+});
+
+/* =========================
+   HEALTH CHECK
+========================= */
+router.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
+export default router;
+
+
+
+
+
+// ##########################################
+// FILE 27 of 84: backend\src\routes\payments.js
+// SIZE: 4514 bytes
+// MODIFIED: 2026-02-02 21:21:18
+// ##########################################
+
+import { Router } from "express";
+import mongoose from "mongoose";
+
+import Payment from "../models/Payment.js";
+import User from "../models/User.js";
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+
+const router = Router();
 
 /* =========================================================
    ADMIN → CREATE BILL
 ========================================================= */
-router.post("/", auth, isAdmin, async (req, res) => {
+router.post("/", auth, isAdmin, async (req, res, next) => {
     try {
         const { residentId, description, type, month, adminNote } = req.body;
         const amount = Number(req.body.amount);
@@ -3591,19 +3657,16 @@ router.post("/", auth, isAdmin, async (req, res) => {
             success: true,
             payment
         });
-    } catch (err) {
-        console.error("CREATE PAYMENT ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to create payment"
-        });
+    } catch (error) {
+        console.error("CREATE PAYMENT ERROR:", error.message);
+        next(error);
     }
 });
 
 /* =========================================================
    ADMIN → GET ALL PAYMENTS
 ========================================================= */
-router.get("/", auth, isAdmin, async (req, res) => {
+router.get("/", auth, isAdmin, async (req, res, next) => {
     try {
         const payments = await Payment.find()
             .populate("residentId", "email name")
@@ -3613,19 +3676,16 @@ router.get("/", auth, isAdmin, async (req, res) => {
             success: true,
             payments
         });
-    } catch (err) {
-        console.error("FETCH PAYMENTS ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch payments"
-        });
+    } catch (error) {
+        console.error("FETCH PAYMENTS ERROR:", error.message);
+        next(error);
     }
 });
 
 /* =========================================================
    RESIDENT → GET OWN PAYMENTS
 ========================================================= */
-router.get("/my", auth, async (req, res) => {
+router.get("/my", auth, async (req, res, next) => {
     try {
         res.set({
             "Cache-Control": "no-store, no-cache, must-revalidate, private",
@@ -3641,28 +3701,27 @@ router.get("/my", auth, async (req, res) => {
             success: true,
             payments
         });
-    } catch (err) {
-        console.error("FETCH MY PAYMENTS ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch payments"
-        });
+    } catch (error) {
+        console.error("FETCH MY PAYMENTS ERROR:", error.message);
+        next(error);
     }
 });
 
 /* =========================================================
    ADMIN → MARK PAYMENT AS PAID
 ========================================================= */
-router.put("/:id/paid", auth, isAdmin, async (req, res) => {
+router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
     try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid payment ID"
             });
         }
 
-        const payment = await Payment.findById(req.params.id);
+        const payment = await Payment.findById(id);
         if (!payment) {
             return res.status(404).json({
                 success: false,
@@ -3685,35 +3744,34 @@ router.put("/:id/paid", auth, isAdmin, async (req, res) => {
             success: true,
             message: "Payment marked as paid"
         });
-    } catch (err) {
-        console.error("MARK PAID ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to mark payment as paid"
-        });
+    } catch (error) {
+        console.error("MARK PAID ERROR:", error.message);
+        next(error);
     }
 });
 
-module.exports = router;
+export default router;
 
 
 
 
 
 // ##########################################
-// FILE 27 of 82: backend\routes\resident.js
-// SIZE: 2518 bytes
-// MODIFIED: 2026-02-02 17:42:47
+// FILE 28 of 84: backend\src\routes\resident.js
+// SIZE: 2134 bytes
+// MODIFIED: 2026-02-02 21:27:00
 // ##########################################
 
-const express = require("express");
-const router = express.Router();
+import { Router } from "express";
+import Request from "../models/Request.js";
+import auth from "../middleware/auth.js";
 
-const Request = require("../models/Request");
-const auth = require("../middleware/auth");
+const router = Router();
 
-/* ================= CREATE REQUEST ================= */
-router.post("/request", auth, async (req, res) => {
+/* =========================
+   CREATE REQUEST (RESIDENT)
+========================= */
+router.post("/request", auth, async (req, res, next) => {
     try {
         const { message } = req.body;
 
@@ -3736,17 +3794,15 @@ router.post("/request", auth, async (req, res) => {
             success: true,
             request
         });
-    } catch (err) {
-        console.error("CREATE REQUEST ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to create request"
-        });
+    } catch (error) {
+        next(error);
     }
 });
 
-/* ================= GET MY REQUESTS ================= */
-router.get("/requests", auth, async (req, res) => {
+/* =========================
+   GET MY REQUESTS
+========================= */
+router.get("/requests", auth, async (req, res, next) => {
     try {
         const requests = await Request.find({
             residentId: req.user.id
@@ -3758,17 +3814,15 @@ router.get("/requests", auth, async (req, res) => {
             success: true,
             requests
         });
-    } catch (err) {
-        console.error("GET MY REQUESTS ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch requests"
-        });
+    } catch (error) {
+        next(error);
     }
 });
 
-/* ================= DELETE REQUEST ================= */
-router.delete("/request/:id", auth, async (req, res) => {
+/* =========================
+   DELETE REQUEST
+========================= */
+router.delete("/request/:id", auth, async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -3790,38 +3844,35 @@ router.delete("/request/:id", auth, async (req, res) => {
             success: true,
             message: "Request deleted"
         });
-    } catch (err) {
-        console.error("DELETE REQUEST ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete request"
-        });
+    } catch (error) {
+        next(error);
     }
 });
 
-module.exports = router;
+export default router;
 
 
 
 
 
 // ##########################################
-// FILE 28 of 82: backend\routes\rooms.js
-// SIZE: 895 bytes
-// MODIFIED: 2026-02-02 18:46:58
+// FILE 29 of 84: backend\src\routes\rooms.js
+// SIZE: 879 bytes
+// MODIFIED: 2026-02-02 21:19:13
 // ##########################################
 
-const express = require("express");
-const auth = require("../middleware/auth");
-const isAdmin = require("../middleware/isAdmin");
+import { Router } from "express";
 
-const {
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+
+import {
     getAllRooms,
     addRoom,
     deleteRoom
-} = require("../controllers/roomController");
+} from "../controllers/roomController.js";
 
-const router = express.Router();
+const router = Router();
 
 /* =========================================================
    GET ALL ROOMS (ADMIN)
@@ -3838,14 +3889,33 @@ router.post("/", auth, isAdmin, addRoom);
 ========================================================= */
 router.delete("/:id", auth, isAdmin, deleteRoom);
 
-module.exports = router;
+export default router;
 
 
 
 
 
 // ##########################################
-// FILE 29 of 82: backend\utils\emailService.js
+// FILE 30 of 84: backend\src\server.js
+// SIZE: 190 bytes
+// MODIFIED: 2026-02-02 20:53:10
+// ##########################################
+
+import "dotenv/config";
+import app from "./app.js";
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`🚀 Backend running on port ${PORT}`);
+});
+
+
+
+
+
+// ##########################################
+// FILE 31 of 84: backend\src\utils\emailService.js
 // SIZE: 4505 bytes
 // MODIFIED: 2026-02-02 18:42:57
 // ##########################################
@@ -3976,20 +4046,20 @@ module.exports = {
 
 
 // ##########################################
-// FILE 30 of 82: backend\utils\generateToken.js
-// SIZE: 659 bytes
-// MODIFIED: 2026-02-02 18:40:03
+// FILE 32 of 84: backend\src\utils\generateToken.js
+// SIZE: 641 bytes
+// MODIFIED: 2026-02-02 21:16:33
 // ##########################################
 
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 /**
  * Generate JWT for authenticated user
- * @param {Object} user - User document
+ * @param {Object} user - User object
  * @returns {string} JWT token
  */
-function generateToken(user) {
-    if (!user || !user._id || !user.role) {
+const generateToken = (user) => {
+    if (!user || !user.id || !user.role) {
         throw new Error("Invalid user data for token generation");
     }
 
@@ -3999,7 +4069,7 @@ function generateToken(user) {
 
     return jwt.sign(
         {
-            id: user._id.toString(),
+            id: user.id,
             role: user.role
         },
         process.env.JWT_SECRET,
@@ -4007,18 +4077,18 @@ function generateToken(user) {
             expiresIn: "7d"
         }
     );
-}
+};
 
-module.exports = generateToken;
+export default generateToken;
 
 
 
 
 
 // ##########################################
-// FILE 31 of 82: frontend\package.json
+// FILE 33 of 84: frontend\package.json
 // SIZE: 1116 bytes
-// MODIFIED: 2026-02-02 19:26:51
+// MODIFIED: 2026-02-02 21:54:30
 // ##########################################
 
 {
@@ -4065,9 +4135,9 @@ module.exports = generateToken;
     ]
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.23",
+    "autoprefixer": "^10.4.24",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.19"
   }
 }
 
@@ -4076,9 +4146,9 @@ module.exports = generateToken;
 
 
 // ##########################################
-// FILE 32 of 82: frontend\package-lock.json
-// SIZE: 680620 bytes
-// MODIFIED: 2026-02-02 19:47:43
+// FILE 34 of 84: frontend\package-lock.json
+// SIZE: 677229 bytes
+// MODIFIED: 2026-02-02 21:54:30
 // ##########################################
 
 {
@@ -4106,9 +4176,9 @@ module.exports = generateToken;
         "web-vitals": "^2.1.4"
       },
       "devDependencies": {
-        "autoprefixer": "^10.4.23",
+        "autoprefixer": "^10.4.24",
         "postcss": "^8.5.6",
-        "tailwindcss": "^3.4.17"
+        "tailwindcss": "^3.4.19"
       }
     },
     "node_modules/@adobe/css-tools": {
@@ -8954,9 +9024,9 @@ module.exports = generateToken;
       }
     },
     "node_modules/autoprefixer": {
-      "version": "10.4.23",
-      "resolved": "https://registry.npmjs.org/autoprefixer/-/autoprefixer-10.4.23.tgz",
-      "integrity": "sha512-YYTXSFulfwytnjAPlw8QHncHJmlvFKtczb8InXaAx9Q0LbfDnfEYDE55omerIJKihhmU61Ft+cAOSzQVaBUmeA==",
+      "version": "10.4.24",
+      "resolved": "https://registry.npmjs.org/autoprefixer/-/autoprefixer-10.4.24.tgz",
+      "integrity": "sha512-uHZg7N9ULTVbutaIsDRoUkoS8/h3bdsmVJYZ5l3wv8Cp/6UIIoRDm90hZ+BwxUj/hGBEzLxdHNSKuFpn8WOyZw==",
       "funding": [
         {
           "type": "opencollective",
@@ -8974,7 +9044,7 @@ module.exports = generateToken;
       "license": "MIT",
       "dependencies": {
         "browserslist": "^4.28.1",
-        "caniuse-lite": "^1.0.30001760",
+        "caniuse-lite": "^1.0.30001766",
         "fraction.js": "^5.3.4",
         "picocolors": "^1.1.1",
         "postcss-value-parser": "^4.2.0"
@@ -17056,7 +17126,6 @@ module.exports = generateToken;
       "version": "4.0.2",
       "resolved": "https://registry.npmjs.org/postcss-load-config/-/postcss-load-config-4.0.2.tgz",
       "integrity": "sha512-bSVhyJGL00wMVoPUzAVAnbEoWyqRxkjv64tUl427SKnPrENtq6hJwUojroMz2VB+Q1edmi4IfrAPpami5VVgMQ==",
-      "dev": true,
       "funding": [
         {
           "type": "opencollective",
@@ -17092,7 +17161,6 @@ module.exports = generateToken;
       "version": "3.1.3",
       "resolved": "https://registry.npmjs.org/lilconfig/-/lilconfig-3.1.3.tgz",
       "integrity": "sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==",
-      "dev": true,
       "license": "MIT",
       "engines": {
         "node": ">=14"
@@ -17105,7 +17173,6 @@ module.exports = generateToken;
       "version": "2.8.2",
       "resolved": "https://registry.npmjs.org/yaml/-/yaml-2.8.2.tgz",
       "integrity": "sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==",
-      "dev": true,
       "license": "ISC",
       "bin": {
         "yaml": "bin.mjs"
@@ -18414,114 +18481,6 @@ module.exports = generateToken;
         "typescript": {
           "optional": true
         }
-      }
-    },
-    "node_modules/react-scripts/node_modules/lilconfig": {
-      "version": "3.1.3",
-      "resolved": "https://registry.npmjs.org/lilconfig/-/lilconfig-3.1.3.tgz",
-      "integrity": "sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==",
-      "license": "MIT",
-      "engines": {
-        "node": ">=14"
-      },
-      "funding": {
-        "url": "https://github.com/sponsors/antonk52"
-      }
-    },
-    "node_modules/react-scripts/node_modules/postcss-load-config": {
-      "version": "6.0.1",
-      "resolved": "https://registry.npmjs.org/postcss-load-config/-/postcss-load-config-6.0.1.tgz",
-      "integrity": "sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==",
-      "funding": [
-        {
-          "type": "opencollective",
-          "url": "https://opencollective.com/postcss/"
-        },
-        {
-          "type": "github",
-          "url": "https://github.com/sponsors/ai"
-        }
-      ],
-      "license": "MIT",
-      "dependencies": {
-        "lilconfig": "^3.1.1"
-      },
-      "engines": {
-        "node": ">= 18"
-      },
-      "peerDependencies": {
-        "jiti": ">=1.21.0",
-        "postcss": ">=8.0.9",
-        "tsx": "^4.8.1",
-        "yaml": "^2.4.2"
-      },
-      "peerDependenciesMeta": {
-        "jiti": {
-          "optional": true
-        },
-        "postcss": {
-          "optional": true
-        },
-        "tsx": {
-          "optional": true
-        },
-        "yaml": {
-          "optional": true
-        }
-      }
-    },
-    "node_modules/react-scripts/node_modules/tailwindcss": {
-      "version": "3.4.19",
-      "resolved": "https://registry.npmjs.org/tailwindcss/-/tailwindcss-3.4.19.tgz",
-      "integrity": "sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ==",
-      "license": "MIT",
-      "dependencies": {
-        "@alloc/quick-lru": "^5.2.0",
-        "arg": "^5.0.2",
-        "chokidar": "^3.6.0",
-        "didyoumean": "^1.2.2",
-        "dlv": "^1.1.3",
-        "fast-glob": "^3.3.2",
-        "glob-parent": "^6.0.2",
-        "is-glob": "^4.0.3",
-        "jiti": "^1.21.7",
-        "lilconfig": "^3.1.3",
-        "micromatch": "^4.0.8",
-        "normalize-path": "^3.0.0",
-        "object-hash": "^3.0.0",
-        "picocolors": "^1.1.1",
-        "postcss": "^8.4.47",
-        "postcss-import": "^15.1.0",
-        "postcss-js": "^4.0.1",
-        "postcss-load-config": "^4.0.2 || ^5.0 || ^6.0",
-        "postcss-nested": "^6.2.0",
-        "postcss-selector-parser": "^6.1.2",
-        "resolve": "^1.22.8",
-        "sucrase": "^3.35.0"
-      },
-      "bin": {
-        "tailwind": "lib/cli.js",
-        "tailwindcss": "lib/cli.js"
-      },
-      "engines": {
-        "node": ">=14.0.0"
-      }
-    },
-    "node_modules/react-scripts/node_modules/yaml": {
-      "version": "2.8.2",
-      "resolved": "https://registry.npmjs.org/yaml/-/yaml-2.8.2.tgz",
-      "integrity": "sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==",
-      "license": "ISC",
-      "optional": true,
-      "peer": true,
-      "bin": {
-        "yaml": "bin.mjs"
-      },
-      "engines": {
-        "node": ">= 14.6"
-      },
-      "funding": {
-        "url": "https://github.com/sponsors/eemeli"
       }
     },
     "node_modules/react-smooth": {
@@ -20356,10 +20315,9 @@ module.exports = generateToken;
       "license": "MIT"
     },
     "node_modules/tailwindcss": {
-      "version": "3.4.17",
-      "resolved": "https://registry.npmjs.org/tailwindcss/-/tailwindcss-3.4.17.tgz",
-      "integrity": "sha512-w33E2aCvSDP0tW9RZuNXadXlkHXqFzSkQew/aIa2i/Sj8fThxwovwlXHSPXTbAHwEIhBFXAedUhP2tueAKP8Og==",
-      "dev": true,
+      "version": "3.4.19",
+      "resolved": "https://registry.npmjs.org/tailwindcss/-/tailwindcss-3.4.19.tgz",
+      "integrity": "sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ==",
       "license": "MIT",
       "dependencies": {
         "@alloc/quick-lru": "^5.2.0",
@@ -20370,7 +20328,7 @@ module.exports = generateToken;
         "fast-glob": "^3.3.2",
         "glob-parent": "^6.0.2",
         "is-glob": "^4.0.3",
-        "jiti": "^1.21.6",
+        "jiti": "^1.21.7",
         "lilconfig": "^3.1.3",
         "micromatch": "^4.0.8",
         "normalize-path": "^3.0.0",
@@ -20379,7 +20337,7 @@ module.exports = generateToken;
         "postcss": "^8.4.47",
         "postcss-import": "^15.1.0",
         "postcss-js": "^4.0.1",
-        "postcss-load-config": "^4.0.2",
+        "postcss-load-config": "^4.0.2 || ^5.0 || ^6.0",
         "postcss-nested": "^6.2.0",
         "postcss-selector-parser": "^6.1.2",
         "resolve": "^1.22.8",
@@ -20397,7 +20355,6 @@ module.exports = generateToken;
       "version": "3.1.3",
       "resolved": "https://registry.npmjs.org/lilconfig/-/lilconfig-3.1.3.tgz",
       "integrity": "sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==",
-      "dev": true,
       "license": "MIT",
       "engines": {
         "node": ">=14"
@@ -22121,7 +22078,7 @@ module.exports = generateToken;
 
 
 // ##########################################
-// FILE 33 of 82: frontend\postcss.config.js
+// FILE 35 of 84: frontend\postcss.config.js
 // SIZE: 99 bytes
 // MODIFIED: 2026-01-27 00:41:10
 // ##########################################
@@ -22138,7 +22095,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 34 of 82: frontend\public\index.html
+// FILE 36 of 84: frontend\public\index.html
 // SIZE: 1445 bytes
 // MODIFIED: 2026-02-02 17:38:54
 // ##########################################
@@ -22180,7 +22137,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 35 of 82: frontend\public\manifest.json
+// FILE 37 of 84: frontend\public\manifest.json
 // SIZE: 492 bytes
 // MODIFIED: 2026-01-27 16:34:59
 // ##########################################
@@ -22216,7 +22173,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 36 of 82: frontend\public\robots.txt
+// FILE 38 of 84: frontend\public\robots.txt
 // SIZE: 67 bytes
 // MODIFIED: 2026-01-22 18:14:44
 // ##########################################
@@ -22230,7 +22187,7 @@ Disallow:
 
 
 // ##########################################
-// FILE 37 of 82: frontend\README.md
+// FILE 39 of 84: frontend\README.md
 // SIZE: 3359 bytes
 // MODIFIED: 2026-01-22 18:14:42
 // ##########################################
@@ -22311,7 +22268,7 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 
 // ##########################################
-// FILE 38 of 82: frontend\src\animations\pageTransition.js
+// FILE 40 of 84: frontend\src\animations\pageTransition.js
 // SIZE: 394 bytes
 // MODIFIED: 2026-01-27 00:22:58
 // ##########################################
@@ -22344,9 +22301,9 @@ export const pageVariants = {
 
 
 // ##########################################
-// FILE 39 of 82: frontend\src\api\axios.js
+// FILE 41 of 84: frontend\src\api\axios.js
 // SIZE: 1238 bytes
-// MODIFIED: 2026-02-02 18:52:14
+// MODIFIED: 2026-02-02 22:08:55
 // ##########################################
 
 import axios from "axios";
@@ -22408,7 +22365,7 @@ export default api;
 
 
 // ##########################################
-// FILE 40 of 82: frontend\src\App.css
+// FILE 42 of 84: frontend\src\App.css
 // SIZE: 564 bytes
 // MODIFIED: 2026-01-22 18:14:23
 // ##########################################
@@ -22457,7 +22414,7 @@ export default api;
 
 
 // ##########################################
-// FILE 41 of 82: frontend\src\App.js
+// FILE 43 of 84: frontend\src\App.js
 // SIZE: 2802 bytes
 // MODIFIED: 2026-02-02 19:00:38
 // ##########################################
@@ -22540,7 +22497,7 @@ export default function App() {
 
 
 // ##########################################
-// FILE 42 of 82: frontend\src\components\AppLayout.jsx
+// FILE 44 of 84: frontend\src\components\AppLayout.jsx
 // SIZE: 1074 bytes
 // MODIFIED: 2026-02-02 19:31:38
 // ##########################################
@@ -22588,7 +22545,7 @@ export default function AppLayout({ children }) {
 
 
 // ##########################################
-// FILE 43 of 82: frontend\src\components\Button.jsx
+// FILE 45 of 84: frontend\src\components\Button.jsx
 // SIZE: 817 bytes
 // MODIFIED: 2026-02-02 19:29:54
 // ##########################################
@@ -22628,7 +22585,7 @@ export default function Button({
 
 
 // ##########################################
-// FILE 44 of 82: frontend\src\components\Card.jsx
+// FILE 46 of 84: frontend\src\components\Card.jsx
 // SIZE: 473 bytes
 // MODIFIED: 2026-02-02 19:30:25
 // ##########################################
@@ -22658,7 +22615,7 @@ export default function Card({ children, className = "" }) {
 
 
 // ##########################################
-// FILE 45 of 82: frontend\src\components\ChurnRiskTable.jsx
+// FILE 47 of 84: frontend\src\components\ChurnRiskTable.jsx
 // SIZE: 8077 bytes
 // MODIFIED: 2026-02-02 19:37:54
 // ##########################################
@@ -22865,7 +22822,7 @@ export default function ChurnRiskTable() {
 
 
 // ##########################################
-// FILE 46 of 82: frontend\src\components\KpiCards.jsx
+// FILE 48 of 84: frontend\src\components\KpiCards.jsx
 // SIZE: 2842 bytes
 // MODIFIED: 2026-02-02 19:36:37
 // ##########################################
@@ -22963,7 +22920,7 @@ export default function KpiCards() {
 
 
 // ##########################################
-// FILE 47 of 82: frontend\src\components\Loader.jsx
+// FILE 49 of 84: frontend\src\components\Loader.jsx
 // SIZE: 246 bytes
 // MODIFIED: 2026-01-27 00:20:04
 // ##########################################
@@ -22981,7 +22938,7 @@ export default function Loader() {
 
 
 // ##########################################
-// FILE 48 of 82: frontend\src\components\MaintenanceCostForecast.jsx
+// FILE 50 of 84: frontend\src\components\MaintenanceCostForecast.jsx
 // SIZE: 6560 bytes
 // MODIFIED: 2026-02-02 19:40:01
 // ##########################################
@@ -23165,7 +23122,7 @@ export default function MaintenanceCostForecast() {
 
 
 // ##########################################
-// FILE 49 of 82: frontend\src\components\Navbar.jsx
+// FILE 51 of 84: frontend\src\components\Navbar.jsx
 // SIZE: 1825 bytes
 // MODIFIED: 2026-02-02 19:33:43
 // ##########################################
@@ -23230,7 +23187,7 @@ export default function Navbar({ onMenuClick }) {
 
 
 // ##########################################
-// FILE 50 of 82: frontend\src\components\OccupancyForecast.jsx
+// FILE 52 of 84: frontend\src\components\OccupancyForecast.jsx
 // SIZE: 5455 bytes
 // MODIFIED: 2026-02-02 19:39:19
 // ##########################################
@@ -23386,7 +23343,7 @@ export default function OccupancyForecast() {
 
 
 // ##########################################
-// FILE 51 of 82: frontend\src\components\ProtectedRoute.jsx
+// FILE 53 of 84: frontend\src\components\ProtectedRoute.jsx
 // SIZE: 1021 bytes
 // MODIFIED: 2026-02-02 18:59:12
 // ##########################################
@@ -23435,7 +23392,7 @@ export default function ProtectedRoute({ adminOnly = false }) {
 
 
 // ##########################################
-// FILE 52 of 82: frontend\src\components\RequestsChart.jsx
+// FILE 54 of 84: frontend\src\components\RequestsChart.jsx
 // SIZE: 2261 bytes
 // MODIFIED: 2026-02-02 19:35:55
 // ##########################################
@@ -23508,7 +23465,7 @@ export default function RequestsChart({ data = [] }) {
 
 
 // ##########################################
-// FILE 53 of 82: frontend\src\components\RequestTable.jsx
+// FILE 55 of 84: frontend\src\components\RequestTable.jsx
 // SIZE: 1204 bytes
 // MODIFIED: 2026-01-27 14:36:34
 // ##########################################
@@ -23553,7 +23510,7 @@ export default function RequestTable({ requests, refresh }) {
 
 
 // ##########################################
-// FILE 54 of 82: frontend\src\components\RevenueOptimization.jsx
+// FILE 56 of 84: frontend\src\components\RevenueOptimization.jsx
 // SIZE: 4524 bytes
 // MODIFIED: 2026-02-01 21:38:49
 // ##########################################
@@ -23693,7 +23650,7 @@ export default function RevenueOptimization() {
 
 
 // ##########################################
-// FILE 55 of 82: frontend\src\components\Sidebar.jsx
+// FILE 57 of 84: frontend\src\components\Sidebar.jsx
 // SIZE: 3896 bytes
 // MODIFIED: 2026-02-02 19:33:02
 // ##########################################
@@ -23814,7 +23771,7 @@ export default function Sidebar({ open, onClose }) {
 
 
 // ##########################################
-// FILE 56 of 82: frontend\src\components\StatCard.jsx
+// FILE 58 of 84: frontend\src\components\StatCard.jsx
 // SIZE: 2065 bytes
 // MODIFIED: 2026-02-02 19:34:32
 // ##########################################
@@ -23895,7 +23852,7 @@ export default function StatCard({
 
 
 // ##########################################
-// FILE 57 of 82: frontend\src\components\StatusModal.jsx
+// FILE 59 of 84: frontend\src\components\StatusModal.jsx
 // SIZE: 1847 bytes
 // MODIFIED: 2026-01-27 18:06:20
 // ##########################################
@@ -23962,7 +23919,7 @@ export default function StatusModal({ request, onClose, onSave }) {
 
 
 // ##########################################
-// FILE 58 of 82: frontend\src\components\ToastProvider.jsx
+// FILE 60 of 84: frontend\src\components\ToastProvider.jsx
 // SIZE: 390 bytes
 // MODIFIED: 2026-01-27 00:23:05
 // ##########################################
@@ -23989,7 +23946,7 @@ export default function ToastProvider() {
 
 
 // ##########################################
-// FILE 59 of 82: frontend\src\context\AuthContext.jsx
+// FILE 61 of 84: frontend\src\context\AuthContext.jsx
 // SIZE: 1990 bytes
 // MODIFIED: 2026-02-02 18:56:28
 // ##########################################
@@ -24086,7 +24043,7 @@ export const useAuth = () => useContext(AuthContext);
 
 
 // ##########################################
-// FILE 60 of 82: frontend\src\hooks\useAdminStats.js
+// FILE 62 of 84: frontend\src\hooks\useAdminStats.js
 // SIZE: 1546 bytes
 // MODIFIED: 2026-01-30 12:55:34
 // ##########################################
@@ -24147,7 +24104,7 @@ export default function useAdminStats() {
 
 
 // ##########################################
-// FILE 61 of 82: frontend\src\index.css
+// FILE 63 of 84: frontend\src\index.css
 // SIZE: 1427 bytes
 // MODIFIED: 2026-02-02 19:29:08
 // ##########################################
@@ -24215,7 +24172,7 @@ code {
 
 
 // ##########################################
-// FILE 62 of 82: frontend\src\index.js
+// FILE 64 of 84: frontend\src\index.js
 // SIZE: 359 bytes
 // MODIFIED: 2026-02-02 19:28:05
 // ##########################################
@@ -24240,7 +24197,7 @@ root.render(
 
 
 // ##########################################
-// FILE 63 of 82: frontend\src\layouts\DashboardLayout.jsx
+// FILE 65 of 84: frontend\src\layouts\DashboardLayout.jsx
 // SIZE: 4856 bytes
 // MODIFIED: 2026-02-02 17:55:58
 // ##########################################
@@ -24371,7 +24328,7 @@ export default function DashboardLayout({ children }) {
 
 
 // ##########################################
-// FILE 64 of 82: frontend\src\pages\AdminDashboard.jsx
+// FILE 66 of 84: frontend\src\pages\AdminDashboard.jsx
 // SIZE: 7811 bytes
 // MODIFIED: 2026-02-02 19:31:05
 // ##########################################
@@ -24588,7 +24545,7 @@ export default function AdminDashboard() {
 
 
 // ##########################################
-// FILE 65 of 82: frontend\src\pages\AdminRequests.jsx
+// FILE 67 of 84: frontend\src\pages\AdminRequests.jsx
 // SIZE: 14686 bytes
 // MODIFIED: 2026-02-02 18:22:23
 // ##########################################
@@ -24941,7 +24898,7 @@ export default function AdminRequests() {
 
 
 // ##########################################
-// FILE 66 of 82: frontend\src\pages\AdminResidents.jsx
+// FILE 68 of 84: frontend\src\pages\AdminResidents.jsx
 // SIZE: 17263 bytes
 // MODIFIED: 2026-02-02 19:44:50
 // ##########################################
@@ -25333,7 +25290,7 @@ export default function AdminRequests() {
 
 
 // ##########################################
-// FILE 67 of 82: frontend\src\pages\AdminRooms.jsx
+// FILE 69 of 84: frontend\src\pages\AdminRooms.jsx
 // SIZE: 12416 bytes
 // MODIFIED: 2026-02-02 18:29:31
 // ##########################################
@@ -25642,7 +25599,7 @@ export default function AdminRooms() {
 
 
 // ##########################################
-// FILE 68 of 82: frontend\src\pages\Login.jsx
+// FILE 70 of 84: frontend\src\pages\Login.jsx
 // SIZE: 5462 bytes
 // MODIFIED: 2026-02-02 18:57:08
 // ##########################################
@@ -25801,7 +25758,7 @@ export default function Login() {
 
 
 // ##########################################
-// FILE 69 of 82: frontend\src\pages\Payments.jsx
+// FILE 71 of 84: frontend\src\pages\Payments.jsx
 // SIZE: 9168 bytes
 // MODIFIED: 2026-02-02 19:43:37
 // ##########################################
@@ -26023,7 +25980,7 @@ export default function Payments() {
 
 
 // ##########################################
-// FILE 70 of 82: frontend\src\pages\RequestHistory.jsx
+// FILE 72 of 84: frontend\src\pages\RequestHistory.jsx
 // SIZE: 6594 bytes
 // MODIFIED: 2026-02-02 19:50:13
 // ##########################################
@@ -26178,7 +26135,7 @@ export default function RequestHistory() {
 
 
 // ##########################################
-// FILE 71 of 82: frontend\src\pages\ResidentDashboard.jsx
+// FILE 73 of 84: frontend\src\pages\ResidentDashboard.jsx
 // SIZE: 10063 bytes
 // MODIFIED: 2026-02-02 19:41:31
 // ##########################################
@@ -26425,7 +26382,7 @@ export default function ResidentDashboard() {
 
 
 // ##########################################
-// FILE 72 of 82: frontend\src\pages\ResidentPayments.jsx
+// FILE 74 of 84: frontend\src\pages\ResidentPayments.jsx
 // SIZE: 6460 bytes
 // MODIFIED: 2026-02-02 19:42:22
 // ##########################################
@@ -26588,7 +26545,7 @@ export default function ResidentPayments() {
 
 
 // ##########################################
-// FILE 73 of 82: frontend\src\pages\Rooms.jsx
+// FILE 75 of 84: frontend\src\pages\Rooms.jsx
 // SIZE: 10055 bytes
 // MODIFIED: 2026-02-02 17:38:52
 // ##########################################
@@ -26863,7 +26820,7 @@ export default function roomss() {
 
 
 // ##########################################
-// FILE 74 of 82: frontend\src\routes\AdminRoute.jsx
+// FILE 76 of 84: frontend\src\routes\AdminRoute.jsx
 // SIZE: 631 bytes
 // MODIFIED: 2026-01-27 18:41:17
 // ##########################################
@@ -26901,7 +26858,7 @@ export default function AdminRoute({ children }) {
 
 
 // ##########################################
-// FILE 75 of 82: frontend\src\routes\ProtectedRoute.jsx
+// FILE 77 of 84: frontend\src\routes\ProtectedRoute.jsx
 // SIZE: 433 bytes
 // MODIFIED: 2026-02-02 15:04:16
 // ##########################################
@@ -26930,7 +26887,7 @@ export default function ProtectedRoute({ children, role }) {
 
 
 // ##########################################
-// FILE 76 of 82: frontend\src\routes\ResidentRoute.jsx
+// FILE 78 of 84: frontend\src\routes\ResidentRoute.jsx
 // SIZE: 629 bytes
 // MODIFIED: 2026-01-27 18:41:47
 // ##########################################
@@ -26968,7 +26925,7 @@ export default function ResidentRoute({ children }) {
 
 
 // ##########################################
-// FILE 77 of 82: frontend\src\services\adminService.js
+// FILE 79 of 84: frontend\src\services\adminService.js
 // SIZE: 1447 bytes
 // MODIFIED: 2026-02-02 16:51:26
 // ##########################################
@@ -27027,7 +26984,7 @@ export const getResidents = async () => {
 
 
 // ##########################################
-// FILE 78 of 82: frontend\src\services\analyticsService.js
+// FILE 80 of 84: frontend\src\services\analyticsService.js
 // SIZE: 1976 bytes
 // MODIFIED: 2026-02-01 21:38:13
 // ##########################################
@@ -27122,7 +27079,7 @@ export const optimizeRevenue = async () => {
 
 
 // ##########################################
-// FILE 79 of 82: frontend\src\services\authService.js
+// FILE 81 of 84: frontend\src\services\authService.js
 // SIZE: 0 bytes
 // MODIFIED: 2026-01-26 12:54:26
 // ##########################################
@@ -27132,7 +27089,7 @@ export const optimizeRevenue = async () => {
 
 
 // ##########################################
-// FILE 80 of 82: frontend\src\services\residentService.js
+// FILE 82 of 84: frontend\src\services\residentService.js
 // SIZE: 1033 bytes
 // MODIFIED: 2026-01-28 23:13:29
 // ##########################################
@@ -27179,7 +27136,7 @@ export const deleteRequest = async (id) => {
 
 
 // ##########################################
-// FILE 81 of 82: frontend\tailwind.config.js
+// FILE 83 of 84: frontend\tailwind.config.js
 // SIZE: 236 bytes
 // MODIFIED: 2026-01-28 15:49:48
 // ##########################################
@@ -27200,7 +27157,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 82 of 82: package-lock.json
+// FILE 84 of 84: package-lock.json
 // SIZE: 83 bytes
 // MODIFIED: 2026-02-02 19:47:20
 // ##########################################

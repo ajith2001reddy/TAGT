@@ -1,88 +1,84 @@
-import { Router } from "express";
-import Request from "../models/Request.js";
-import auth from "../middleware/auth.js";
+import express from "express";
+import { getAllResidents, addResident, deleteResident } from "../controllers/residentController.js";
+import auth from "../middleware/auth.js"; // Protect routes for residents
+import isAdmin from "../middleware/isAdmin.js"; // Admin check for specific actions
 
-const router = Router();
+const router = express.Router();
 
-/* =========================
-   CREATE REQUEST (RESIDENT)
-========================= */
-router.post("/request", auth, async (req, res, next) => {
-    try {
-        const { message } = req.body;
+/**
+ * @swagger
+ * /api/residents:
+ *   get:
+ *     summary: Retrieve all residents (Admin only)
+ *     tags: [Residents]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all residents
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/", auth, isAdmin, getAllResidents);
 
-        if (!message || !message.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: "Message is required"
-            });
-        }
+/**
+ * @swagger
+ * /api/residents:
+ *   post:
+ *     summary: Add a new resident (Admin only)
+ *     tags: [Residents]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               roomId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Resident added successfully
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/", auth, isAdmin, addResident);
 
-        const request = await Request.create({
-            residentId: req.user.id,
-            message: message.trim(),
-            status: "pending",
-            workflowStatus: "Received",
-            statusHistory: [{ status: "pending" }]
-        });
-
-        res.status(201).json({
-            success: true,
-            request
-        });
-    } catch (error) {
-        next(error);
-    }
-});
-
-/* =========================
-   GET MY REQUESTS
-========================= */
-router.get("/requests", auth, async (req, res, next) => {
-    try {
-        const requests = await Request.find({
-            residentId: req.user.id
-        })
-            .sort({ createdAt: -1 })
-            .lean();
-
-        res.json({
-            success: true,
-            requests
-        });
-    } catch (error) {
-        next(error);
-    }
-});
-
-/* =========================
-   DELETE REQUEST
-========================= */
-router.delete("/request/:id", auth, async (req, res, next) => {
-    try {
-        const { id } = req.params;
-
-        const request = await Request.findOne({
-            _id: id,
-            residentId: req.user.id
-        });
-
-        if (!request) {
-            return res.status(404).json({
-                success: false,
-                message: "Request not found"
-            });
-        }
-
-        await request.deleteOne();
-
-        res.json({
-            success: true,
-            message: "Request deleted"
-        });
-    } catch (error) {
-        next(error);
-    }
-});
+/**
+ * @swagger
+ * /api/residents/{id}:
+ *   delete:
+ *     summary: Delete a resident (Admin only)
+ *     tags: [Residents]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Resident ID to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Resident deleted successfully
+ *       404:
+ *         description: Resident not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete("/:id", auth, isAdmin, deleteResident);
 
 export default router;
