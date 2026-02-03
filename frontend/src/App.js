@@ -11,7 +11,7 @@ import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
 import AdminRooms from "./pages/AdminRooms";
 
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
 
 function AnimatedRoutes() {
