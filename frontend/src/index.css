@@ -1,14 +1,16 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ===============================
-   GLOBAL ANIMATED BACKGROUND
-   PHASE 1 � GEN-Z FOUNDATION
+   GLOBAL STYLES (MOBILE SAFE)
 ================================ */
 
-html, body {
-    height: 100%;
+html,
+body {
+    width: 100%;
+    min-height: 100dvh; /* ✅ Mobile-safe viewport height */
+    overflow-x: hidden; /* ✅ Prevent sideways scroll */
 }
 
 body {
@@ -17,10 +19,10 @@ body {
     background: linear-gradient( 270deg, #020617, #020617, #0f172a, #1e293b, #020617 );
     background-size: 600% 600%;
     animation: gradientFlow 25s ease infinite;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    color: #e5e7eb; /* soft light text */
+    color: #e5e7eb;
 }
 
 /* Smooth animated movement */
@@ -38,7 +40,18 @@ body {
     }
 }
 
-/* Code blocks unchanged */
+/* ===============================
+   MOBILE PERFORMANCE OPTIMIZATION
+================================ */
+
+/* Reduce animation intensity on small screens */
+@media (max-width: 768px) {
+    body {
+        animation-duration: 45s; /* ✅ smoother, less battery drain */
+    }
+}
+
+/* Code blocks */
 code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }

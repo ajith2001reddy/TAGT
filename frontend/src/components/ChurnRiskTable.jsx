@@ -3,10 +3,7 @@ import { motion } from "framer-motion";
 import { predictChurn } from "../services/analyticsService";
 
 /* =====================================================
-   CHURN RISK TABLE (STEP 4)
-   - Resident churn prediction
-   - Risk levels with reasons
-   - Actionable insights
+   CHURN RISK TABLE – MOBILE SAFE
 ===================================================== */
 
 export default function ChurnRiskTable() {
@@ -38,13 +35,13 @@ export default function ChurnRiskTable() {
 
     if (loading) {
         return (
-            <div className="bg-white/10 border border-white/10 rounded-2xl p-6 animate-pulse h-64" />
+            <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6 animate-pulse h-48" />
         );
     }
 
     if (!data || !data.residents || data.residents.length === 0) {
         return (
-            <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
                 <p className="text-gray-400 text-center">
                     No churn risk data available
                 </p>
@@ -53,13 +50,9 @@ export default function ChurnRiskTable() {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/10 border border-white/10 rounded-2xl p-6"
-        >
+        <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
                     <h2 className="text-lg font-semibold">
                         Resident Churn Risk
@@ -70,7 +63,7 @@ export default function ChurnRiskTable() {
                 </div>
 
                 {/* SUMMARY */}
-                <div className="flex gap-4 text-sm">
+                <div className="flex gap-3 text-xs sm:text-sm">
                     <span className="text-red-400">
                         High: {data.highRisk}
                     </span>
@@ -83,8 +76,57 @@ export default function ChurnRiskTable() {
                 </div>
             </div>
 
-            {/* TABLE */}
-            <div className="overflow-x-auto">
+            {/* ================= MOBILE VIEW ================= */}
+            <div className="space-y-4 sm:hidden">
+                {data.residents.map((r) => (
+                    <div
+                        key={r.residentId}
+                        className="bg-black/40 border border-white/10 rounded-xl p-4"
+                    >
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <p className="font-medium">
+                                    {r.name}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                    {r.email}
+                                </p>
+                            </div>
+
+                            <span
+                                className={`px-2 py-1 rounded text-xs font-semibold ${badgeColor(
+                                    r.riskLevel
+                                )}`}
+                            >
+                                {r.riskLevel}
+                            </span>
+                        </div>
+
+                        <p className="text-sm text-gray-300 mb-1">
+                            <strong>Score:</strong> {r.score}
+                        </p>
+
+                        <p className="text-sm text-gray-300 mb-1">
+                            <strong>Reasons:</strong>{" "}
+                            {r.reasons.length > 0
+                                ? r.reasons.join(", ")
+                                : "No major risk factors"}
+                        </p>
+
+                        <p className="text-sm text-gray-300">
+                            <strong>Action:</strong>{" "}
+                            {r.riskLevel === "HIGH"
+                                ? "Immediate follow-up"
+                                : r.riskLevel === "MEDIUM"
+                                    ? "Check-in & support"
+                                    : "No action needed"}
+                        </p>
+                    </div>
+                ))}
+            </div>
+
+            {/* ================= DESKTOP TABLE ================= */}
+            <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead className="text-gray-400 border-b border-white/10">
                         <tr>
@@ -149,6 +191,6 @@ export default function ChurnRiskTable() {
                     </tbody>
                 </table>
             </div>
-        </motion.div>
+        </div>
     );
 }

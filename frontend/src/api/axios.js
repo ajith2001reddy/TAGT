@@ -2,9 +2,9 @@ import axios from "axios";
 
 /**
  * Backend API Configuration
- * - Explicit production-safe fallback
- * - Prevents undefined baseURL
- * - Always targets /api
+ * - Production-safe fallback
+ * - Normalized error handling
+ * - JWT auto-injection
  */
 
 const API_URL =
@@ -12,6 +12,7 @@ const API_URL =
 
 const api = axios.create({
     baseURL: API_URL.replace(/\/$/, ""),
+    timeout: 15000,
     headers: {
         "Content-Type": "application/json"
     }
@@ -21,25 +22,31 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
-        if (token) {
+
+        if (token && typeof token === "string") {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
         return config;
     },
     (error) => Promise.reject(error)
 );
 
-// Global auth handling (SAFE)
+// Global response handling
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Only clear token
             localStorage.removeItem("token");
-            // DO NOT navigate here
-            // DO NOT manage role here
         }
-        return Promise.reject(error);
+
+        return Promise.reject({
+            status: error.response?.status,
+            message:
+                error.response?.data?.message ||
+                error.message ||
+                "Request failed"
+        });
     }
 );
 

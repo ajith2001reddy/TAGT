@@ -1,9 +1,9 @@
-const rooms = require("../models/rooms");
+const Room = require("../models/Room");
 const Payment = require("../models/Payment");
 const Request = require("../models/Request");
 
 /* =====================================================
-   ADVANCED KPI CALCULATOR
+   KPI CALCULATOR (SNAPSHOT-BASED)
 ===================================================== */
 
 async function getKPIs({ fromDate, toDate } = {}) {
@@ -15,12 +15,12 @@ async function getKPIs({ fromDate, toDate } = {}) {
     /* =======================
        OCCUPANCY KPI
     ======================= */
-    const rooms = await rooms.find({}, "totalBeds occupiedBeds");
+    const roomDocs = await Room.find({}, "totalBeds occupiedBeds");
 
-    const totals = rooms.reduce(
-        (acc, r) => {
-            acc.totalBeds += r.totalBeds || 0;
-            acc.occupiedBeds += r.occupiedBeds || 0;
+    const totals = roomDocs.reduce(
+        (acc, room) => {
+            acc.totalBeds += room.totalBeds || 0;
+            acc.occupiedBeds += room.occupiedBeds || 0;
             return acc;
         },
         { totalBeds: 0, occupiedBeds: 0 }
@@ -41,10 +41,10 @@ async function getKPIs({ fromDate, toDate } = {}) {
     let totalBilled = 0;
     let totalCollected = 0;
 
-    for (const p of payments) {
-        totalBilled += p.amount || 0;
-        if (p.status === "paid") {
-            totalCollected += p.amount || 0;
+    for (const payment of payments) {
+        totalBilled += payment.amount || 0;
+        if (payment.status === "paid") {
+            totalCollected += payment.amount || 0;
         }
     }
 
@@ -63,9 +63,9 @@ async function getKPIs({ fromDate, toDate } = {}) {
 
     let totalResolutionHours = 0;
 
-    for (const r of resolvedRequests) {
+    for (const req of resolvedRequests) {
         const hours =
-            (new Date(r.updatedAt) - new Date(r.createdAt)) /
+            (new Date(req.updatedAt) - new Date(req.createdAt)) /
             (1000 * 60 * 60);
         totalResolutionHours += hours;
     }
@@ -93,6 +93,7 @@ async function getKPIs({ fromDate, toDate } = {}) {
             resolvedCount: resolvedRequests.length
         },
         meta: {
+            mode: "snapshot",
             fromDate: fromDate || null,
             toDate: toDate || null,
             generatedAt: new Date()

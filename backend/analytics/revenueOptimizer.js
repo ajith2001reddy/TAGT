@@ -1,22 +1,22 @@
-﻿const rooms = require("../models/rooms");
+﻿const Room = require("../models/Room");
 const Payment = require("../models/Payment");
 const { predictChurn } = require("./churnModel");
 
 /* =====================================================
-   REVENUE OPTIMIZATION ENGINE
+   REVENUE OPTIMIZATION ENGINE (SNAPSHOT-BASED)
 ===================================================== */
 
 async function optimizeRevenue() {
     /* =======================
        OCCUPANCY ANALYSIS
     ======================= */
-    const rooms = await rooms.find({}, "totalBeds occupiedBeds rent");
+    const roomDocs = await Room.find({}, "totalBeds occupiedBeds rent");
 
-    const totals = rooms.reduce(
-        (acc, r) => {
-            acc.totalBeds += r.totalBeds || 0;
-            acc.occupiedBeds += r.occupiedBeds || 0;
-            acc.totalRent += (r.rent || 0) * (r.totalBeds || 0);
+    const totals = roomDocs.reduce(
+        (acc, room) => {
+            acc.totalBeds += room.totalBeds || 0;
+            acc.occupiedBeds += room.occupiedBeds || 0;
+            acc.totalRent += (room.rent || 0) * (room.totalBeds || 0);
             return acc;
         },
         { totalBeds: 0, occupiedBeds: 0, totalRent: 0 }
@@ -35,16 +35,16 @@ async function optimizeRevenue() {
     /* =======================
        PAYMENT COLLECTION
     ======================= */
-    const payments = await Payment.find();
+    const payments = await Payment.find({}, "amount status");
 
     const totalBilled = payments.reduce(
-        (s, p) => s + (p.amount || 0),
+        (sum, p) => sum + (p.amount || 0),
         0
     );
 
     const collected = payments
         .filter((p) => p.status === "paid")
-        .reduce((s, p) => s + (p.amount || 0), 0);
+        .reduce((sum, p) => sum + (p.amount || 0), 0);
 
     const collectionRate =
         totalBilled === 0 ? 0 : (collected / totalBilled) * 100;
@@ -52,8 +52,14 @@ async function optimizeRevenue() {
     /* =======================
        CHURN IMPACT
     ======================= */
-    const churnData = await predictChurn();
-    const highRiskResidents = churnData.highRisk || 0;
+    let highRiskResidents = 0;
+
+    try {
+        const churnData = await predictChurn();
+        highRiskResidents = churnData?.highRisk || 0;
+    } catch (err) {
+        console.warn("CHURN MODEL ERROR:", err.message);
+    }
 
     /* =======================
        INSIGHTS GENERATION
@@ -70,7 +76,7 @@ async function optimizeRevenue() {
             severity: "HIGH",
             message: "Low occupancy detected",
             recommendation:
-                "Offer promotions or flexible pricing to increase occupancy."
+                "Offer promotions, flexible pricing, or partnerships to increase occupancy."
         });
     }
 
@@ -82,7 +88,7 @@ async function optimizeRevenue() {
             severity: "MEDIUM",
             message: "Low payment collection rate",
             recommendation:
-                "Enable reminders, enforce deadlines, or automate billing."
+                "Enable automated reminders, enforce deadlines, or introduce incentives."
         });
     }
 
@@ -116,7 +122,10 @@ async function optimizeRevenue() {
             occupiedBeds: totals.occupiedBeds
         },
         revenueLeakEstimate: Math.round(revenueLeakEstimate),
-        insights
+        insights,
+        meta: {
+            mode: "snapshot"
+        }
     };
 }
 

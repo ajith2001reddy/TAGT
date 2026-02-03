@@ -19,7 +19,9 @@ const userSchema = new mongoose.Schema(
 
         password: {
             type: String,
-            required: true
+            required: true,
+            minlength: 6,
+            select: false // never return password by default
         },
 
         role: {
@@ -28,9 +30,9 @@ const userSchema = new mongoose.Schema(
             default: "resident"
         },
 
-        roomsId: {
+        roomId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "rooms",
+            ref: "Room",
             default: null
         },
 
@@ -46,6 +48,7 @@ const userSchema = new mongoose.Schema(
     }
 );
 
+// Useful compound index
 userSchema.index({ role: 1, isActive: 1 });
 
 module.exports = mongoose.model("User", userSchema);

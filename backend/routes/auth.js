@@ -8,7 +8,8 @@ const router = express.Router();
 /* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const email = req.body.email?.toLowerCase().trim();
+        const { password } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({
@@ -17,7 +18,8 @@ router.post("/login", async (req, res) => {
             });
         }
 
-        const user = await User.findOne({ email: email.toLowerCase() });
+        const user = await User.findOne({ email }).select("+password");
+
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -25,15 +27,15 @@ router.post("/login", async (req, res) => {
             });
         }
 
-        if (user.isActive === false) {
+        if (!user.isActive) {
             return res.status(403).json({
                 success: false,
                 message: "Account is disabled"
             });
         }
 
-        const match = await bcrypt.compare(password, user.password);
-        if (!match) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid credentials"
@@ -42,7 +44,7 @@ router.post("/login", async (req, res) => {
 
         const token = generateToken(user);
 
-        res.json({
+        return res.json({
             success: true,
             token,
             user: {
@@ -50,12 +52,12 @@ router.post("/login", async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                roomsId: user.roomsId
+                roomId: user.roomId
             }
         });
     } catch (err) {
-        console.error("LOGIN ERROR:", err);
-        res.status(500).json({
+        console.error("LOGIN ERROR:", err.message);
+        return res.status(500).json({
             success: false,
             message: "Login failed"
         });

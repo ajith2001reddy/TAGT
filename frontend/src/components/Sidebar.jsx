@@ -2,13 +2,18 @@
 import { useAuth } from "../context/AuthContext";
 
 const base =
-    "block px-4 py-2 rounded hover:bg-gray-700 transition";
+    "block px-4 py-3 rounded-lg hover:bg-gray-700 transition";
 const active =
     "bg-gray-800 font-semibold";
 
 export default function Sidebar({ open, onClose }) {
     const { user, logout } = useAuth();
     const role = user?.role;
+
+    const handleLogout = () => {
+        onClose();
+        logout();
+    };
 
     return (
         <>
@@ -23,18 +28,21 @@ export default function Sidebar({ open, onClose }) {
             <aside
                 className={`
                     fixed top-0 left-0 z-50
-                    w-64 min-h-screen
+                    w-64 h-full
                     bg-gray-900 text-white
                     transform transition-transform duration-300
                     ${open ? "translate-x-0" : "-translate-x-full"}
                     md:translate-x-0
+                    flex flex-col
                 `}
             >
-                <div className="p-4 text-xl font-bold border-b border-gray-700">
+                {/* Header */}
+                <div className="p-4 text-xl font-bold border-b border-gray-700 pt-safe">
                     TAGT PMS
                 </div>
 
-                <nav className="p-4 space-y-2">
+                {/* Nav */}
+                <nav className="flex-1 overflow-y-auto p-4 space-y-2">
                     {/* Dashboard */}
                     <NavLink
                         to={
@@ -90,8 +98,8 @@ export default function Sidebar({ open, onClose }) {
 
                     {/* Logout */}
                     <button
-                        onClick={logout}
-                        className="mt-6 text-left px-4 py-2 text-red-400 hover:bg-red-500/10 rounded"
+                        onClick={handleLogout}
+                        className="mt-6 w-full text-left px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition"
                     >
                         Logout
                     </button>

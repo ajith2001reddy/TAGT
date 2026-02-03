@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import DashboardLayout from "../layouts/DashboardLayout";
+import AppLayout from "../components/AppLayout";
+import Button from "../components/Button";
 import {
     createRequest,
     getMyRequests
 } from "../services/residentService";
 
 /**
- * RESIDENT DASHBOARD
- * - Correct status handling
- * - Syncs with admin updates
- * - Stable resolved / active separation
+ * RESIDENT DASHBOARD – MOBILE SAFE
  */
 
 export default function ResidentDashboard() {
@@ -70,25 +68,19 @@ export default function ResidentDashboard() {
         switch (status) {
             case "pending":
                 return (
-                    <span
-                        className={`${base} bg-yellow-600/20 text-yellow-400`}
-                    >
+                    <span className={`${base} bg-yellow-600/20 text-yellow-400`}>
                         Pending
                     </span>
                 );
             case "in-progress":
                 return (
-                    <span
-                        className={`${base} bg-blue-600/20 text-blue-400`}
-                    >
+                    <span className={`${base} bg-blue-600/20 text-blue-400`}>
                         In Progress
                     </span>
                 );
             case "resolved":
                 return (
-                    <span
-                        className={`${base} bg-green-600/20 text-green-400`}
-                    >
+                    <span className={`${base} bg-green-600/20 text-green-400`}>
                         Resolved
                     </span>
                 );
@@ -98,11 +90,11 @@ export default function ResidentDashboard() {
     };
 
     return (
-        <DashboardLayout>
-            <div className="space-y-10">
+        <AppLayout>
+            <div className="space-y-8">
                 {/* HEADER */}
                 <div>
-                    <h1 className="text-3xl font-bold">
+                    <h1 className="text-2xl sm:text-3xl font-bold">
                         My Maintenance Requests
                     </h1>
                     <p className="text-gray-400 mt-1">
@@ -111,7 +103,7 @@ export default function ResidentDashboard() {
                 </div>
 
                 {/* CREATE REQUEST */}
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
                     <h2 className="text-lg font-semibold mb-3">
                         Submit a New Request
                     </h2>
@@ -125,17 +117,14 @@ export default function ResidentDashboard() {
                     />
 
                     <div className="flex justify-end mt-4">
-                        <button
-                            onClick={submitRequest}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition"
-                        >
+                        <Button onClick={submitRequest}>
                             Submit Request
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
                 {/* ACTIVE REQUESTS */}
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Active Requests
                     </h2>
@@ -153,7 +142,7 @@ export default function ResidentDashboard() {
                             {activeRequests.map((r) => (
                                 <li
                                     key={r._id}
-                                    className="py-3 flex justify-between items-start"
+                                    className="py-3 flex flex-col sm:flex-row sm:justify-between gap-2"
                                 >
                                     <p className="text-gray-200">
                                         {r.message}
@@ -168,7 +157,7 @@ export default function ResidentDashboard() {
                 </div>
 
                 {/* RESOLVED REQUESTS */}
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Resolved Requests
                     </h2>
@@ -183,14 +172,12 @@ export default function ResidentDashboard() {
                                 const isOpen = expandedId === r._id;
                                 const lastNote =
                                     r.adminNotes?.length > 0
-                                        ? r.adminNotes[
-                                        r.adminNotes.length - 1
-                                        ]
+                                        ? r.adminNotes[r.adminNotes.length - 1]
                                         : null;
 
                                 return (
                                     <li key={r._id} className="py-4">
-                                        <div className="flex justify-between items-start">
+                                        <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
                                             <p className="text-gray-200">
                                                 {r.message}
                                             </p>
@@ -211,7 +198,7 @@ export default function ResidentDashboard() {
                                         </button>
 
                                         {isOpen && (
-                                            <div className="mt-4 bg-black/30 border border-white/10 rounded-lg p-4 text-sm space-y-2">
+                                            <div className="mt-4 bg-black/30 border border-white/10 rounded-lg p-4 text-sm space-y-2 break-words">
                                                 {r.workflowStatus && (
                                                     <p>
                                                         <strong className="text-gray-300">
@@ -244,6 +231,6 @@ export default function ResidentDashboard() {
                     )}
                 </div>
             </div>
-        </DashboardLayout>
+        </AppLayout>
     );
 }

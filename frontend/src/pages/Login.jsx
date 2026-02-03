@@ -15,7 +15,7 @@ export default function Login() {
 
     const isSubmitting = useRef(false);
     const navigate = useNavigate();
-    const { login } = useAuth(); // ✅ IMPORTANT
+    const { login, user } = useAuth();
 
     const validateEmail = (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -54,28 +54,25 @@ export default function Login() {
             const { token } = res.data || {};
 
             if (!token) {
-                toast.error("Login failed: no token received");
+                toast.error("Login failed");
                 return;
             }
 
-            // ✅ Update AuthContext (single source of truth)
+            // Update AuthContext (single source of truth)
             login(token);
-
-            const payload = JSON.parse(atob(token.split(".")[1]));
 
             toast.success("Login successful");
 
-            // ✅ Correct dashboard redirect
-            if (payload.role === "admin") {
-                navigate("/admin/dashboard", { replace: true });
-            } else {
-                navigate("/resident/dashboard", { replace: true });
-            }
+            // Redirect based on role (from AuthContext)
+            setTimeout(() => {
+                if (user?.role === "admin") {
+                    navigate("/admin/dashboard", { replace: true });
+                } else {
+                    navigate("/resident/dashboard", { replace: true });
+                }
+            }, 0);
         } catch (err) {
-            toast.error(
-                err.response?.data?.message ||
-                "Invalid email or password"
-            );
+            toast.error(err.message || "Invalid email or password");
             setPassword("");
             setErrors({});
         } finally {

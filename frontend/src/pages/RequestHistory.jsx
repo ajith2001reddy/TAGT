@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import DashboardLayout from "../layouts/DashboardLayout";
+import AppLayout from "../components/AppLayout";
 import api from "../api/axios";
 
 /**
- * REQUEST HISTORY (DARK THEME FIXED)
+ * REQUEST HISTORY – MOBILE SAFE
  * - Read-only audit view
  * - Searchable
- * - Fully visible on dark UI
+ * - Responsive & dark-theme safe
  */
 
 export default function RequestHistory() {
@@ -40,11 +40,11 @@ export default function RequestHistory() {
     );
 
     return (
-        <DashboardLayout>
-            <div className="space-y-8">
+        <AppLayout>
+            <div className="space-y-6">
                 {/* HEADER */}
                 <div>
-                    <h1 className="text-3xl font-bold">
+                    <h1 className="text-2xl sm:text-3xl font-bold">
                         Request History
                     </h1>
                     <p className="text-gray-400 mt-1">
@@ -65,11 +65,11 @@ export default function RequestHistory() {
 
                 {/* CONTENT */}
                 {loading ? (
-                    <div className="bg-white/10 border border-white/10 rounded-2xl p-8 text-center text-gray-400">
+                    <div className="bg-white/10 border border-white/10 rounded-2xl p-6 text-center text-gray-400">
                         Loading request history…
                     </div>
                 ) : filteredHistory.length === 0 ? (
-                    <div className="bg-white/10 border border-white/10 rounded-2xl p-8 text-center text-gray-400">
+                    <div className="bg-white/10 border border-white/10 rounded-2xl p-6 text-center text-gray-400">
                         No archived requests found.
                     </div>
                 ) : (
@@ -77,12 +77,12 @@ export default function RequestHistory() {
                         {filteredHistory.map((item) => (
                             <div
                                 key={item._id}
-                                className="bg-white/10 border border-white/10 rounded-2xl p-6"
+                                className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6"
                             >
                                 {/* HEADER */}
-                                <div className="flex justify-between items-start mb-3">
+                                <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-3">
                                     <div>
-                                        <p className="font-semibold text-gray-100">
+                                        <p className="font-semibold text-gray-100 break-words">
                                             {item.originalMessage}
                                         </p>
                                         <p className="text-xs text-gray-400 mt-1">
@@ -93,13 +93,13 @@ export default function RequestHistory() {
                                         </p>
                                     </div>
 
-                                    <span className="px-2.5 py-1 text-xs font-semibold rounded bg-green-600/20 text-green-400">
+                                    <span className="self-start px-2.5 py-1 text-xs font-semibold rounded bg-green-600/20 text-green-400">
                                         Closed
                                     </span>
                                 </div>
 
                                 {/* FINAL RESOLUTION */}
-                                <div className="bg-black/30 border border-white/10 rounded-lg p-4 text-sm text-gray-300 mb-3">
+                                <div className="bg-black/30 border border-white/10 rounded-lg p-4 text-sm text-gray-300 mb-3 break-words">
                                     <strong className="text-gray-200">
                                         Final Resolution
                                     </strong>
@@ -120,7 +120,7 @@ export default function RequestHistory() {
                                                 (t, index) => (
                                                     <li
                                                         key={index}
-                                                        className="flex gap-2"
+                                                        className="flex gap-2 break-words"
                                                     >
                                                         <span className="text-blue-400 font-semibold">
                                                             [{t.status}]
@@ -139,6 +139,6 @@ export default function RequestHistory() {
                     </div>
                 )}
             </div>
-        </DashboardLayout>
+        </AppLayout>
     );
 }

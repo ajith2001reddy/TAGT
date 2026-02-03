@@ -1,5 +1,5 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-02 18:00:52
+Generated: 2026-02-02 18:32:30
 Project Path: E:\TAGT
 ```
 TAGT
@@ -119,7 +119,7 @@ TAGT
 ## File Statistics
 
 Total Files: 80
-Total Size: 920.45 KB
+Total Size: 924.64 KB
 
 ## File Type Distribution
 
@@ -22461,8 +22461,8 @@ export default api;
 
 // ##########################################
 // FILE 41 of 80: frontend\src\App.js
-// SIZE: 4293 bytes
-// MODIFIED: 2026-02-02 17:55:58
+// SIZE: 4339 bytes
+// MODIFIED: 2026-02-02 18:14:59
 // ##########################################
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -22476,7 +22476,7 @@ import AdminRequests from "./pages/AdminRequests";
 import RequestHistory from "./pages/RequestHistory";
 import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
-import rooms from "./pages/rooms";
+import AdminRooms from "./pages/AdminRooms"; // ✅ FIXED
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
@@ -22531,7 +22531,7 @@ function AnimatedRoutes() {
                     path="/admin/rooms"
                     element={
                         <ProtectedRoute role="admin">
-                            <rooms />
+                            <AdminRooms /> {/* ✅ FIXED */}
                         </ProtectedRoute>
                     }
                 />
@@ -22544,6 +22544,7 @@ function AnimatedRoutes() {
                         </ProtectedRoute>
                     }
                 />
+
                 {/* ADMIN ROOT REDIRECT */}
                 <Route
                     path="/admin"
@@ -22563,7 +22564,6 @@ function AnimatedRoutes() {
                         </ProtectedRoute>
                     }
                 />
-
 
                 {/* RESIDENT */}
                 <Route
@@ -24185,8 +24185,8 @@ export default function DashboardLayout({ children }) {
 
 // ##########################################
 // FILE 63 of 80: frontend\src\pages\AdminDashboard.jsx
-// SIZE: 7900 bytes
-// MODIFIED: 2026-02-02 12:46:27
+// SIZE: 7642 bytes
+// MODIFIED: 2026-02-02 18:21:12
 // ##########################################
 
 import { motion } from "framer-motion";
@@ -24207,16 +24207,8 @@ import useAdminStats from "../hooks/useAdminStats";
 import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
-/**
- * ADMIN DASHBOARD (FULL AI ANALYTICS)
- * STEP 1 → KPIs
- * STEP 2 → Occupancy Forecast
- * STEP 3 → Maintenance Cost Forecast
- * STEP 4 → Resident Churn Prediction
- */
-
 export default function AdminDashboard() {
-    const { stats, loading } = useAdminStats();
+    const { stats = {}, loading } = useAdminStats(); // ✅ SAFE DEFAULT
 
     const [allRequests, setAllRequests] = useState([]);
     const [activeRequests, setActiveRequests] = useState([]);
@@ -24318,16 +24310,10 @@ export default function AdminDashboard() {
                     </p>
                 </div>
 
-                {/* STEP 1 — KPIs */}
+                {/* AI ANALYTICS */}
                 <KpiCards />
-
-                {/* STEP 2 */}
                 <OccupancyForecast />
-
-                {/* STEP 3 */}
                 <MaintenanceCostForecast />
-
-                {/* STEP 4 */}
                 <ChurnRiskTable />
 
                 {/* CORE METRICS */}
@@ -24337,12 +24323,12 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <StatCard
                             title="Total Residents"
-                            value={stats.totalResidents}
+                            value={stats.totalResidents || 0}
                             accent="blue"
                         />
                         <StatCard
                             title="Pending Requests"
-                            value={stats.pendingRequests}
+                            value={stats.pendingRequests || 0}
                             accent="yellow"
                         />
                         <StatCard
@@ -24414,8 +24400,8 @@ export default function AdminDashboard() {
 
 // ##########################################
 // FILE 64 of 80: frontend\src\pages\AdminRequests.jsx
-// SIZE: 14289 bytes
-// MODIFIED: 2026-01-30 13:52:04
+// SIZE: 14686 bytes
+// MODIFIED: 2026-02-02 18:22:23
 // ##########################################
 
 import { useEffect, useState } from "react";
@@ -24436,8 +24422,6 @@ export default function AdminRequests() {
     const [archiveTarget, setArchiveTarget] = useState(null);
     const [finalResolution, setFinalResolution] = useState("");
     const [archiving, setArchiving] = useState(false);
-
-    const [deletingId, setDeletingId] = useState(null);
 
     const WORKFLOW_FLOW = {
         Received: ["In-Progress"],
@@ -24468,21 +24452,7 @@ export default function AdminRequests() {
         }
     };
 
-    const deleteRequest = async (id) => {
-        if (!window.confirm("Delete this request permanently?")) return;
-
-        setDeletingId(id);
-        try {
-            await api.delete(`/admin/requests/${id}`);
-            toast.success("Request deleted");
-            fetchRequests();
-        } catch {
-            toast.error("Failed to delete request");
-        } finally {
-            setDeletingId(null);
-        }
-    };
-
+    /* ================= WORKFLOW ================= */
     const openWorkflowModal = (req) => {
         setSelectedRequest(req);
         setWorkflowStatus("");
@@ -24503,10 +24473,13 @@ export default function AdminRequests() {
 
         setSubmitting(true);
         try {
-            await api.put(`/admin/requests/${selectedRequest._id}/workflow-status`, {
-                workflowStatus,
-                note: adminNote.trim()
-            });
+            await api.put(
+                `/admin/requests/${selectedRequest._id}/workflow-status`,
+                {
+                    workflowStatus,
+                    note: adminNote.trim()
+                }
+            );
 
             toast.success("Status updated");
             closeWorkflowModal();
@@ -24518,7 +24491,12 @@ export default function AdminRequests() {
         }
     };
 
+    /* ================= ARCHIVE ================= */
     const openArchiveModal = (req) => {
+        if (req.workflowStatus !== "Done") {
+            toast.error("Only completed requests can be archived");
+            return;
+        }
         setArchiveTarget(req);
         setFinalResolution("");
     };
@@ -24536,9 +24514,12 @@ export default function AdminRequests() {
 
         setArchiving(true);
         try {
-            await api.post(`/admin/requests/${archiveTarget._id}/archive`, {
-                finalResolution: finalResolution.trim()
-            });
+            await api.post(
+                `/admin/requests/${archiveTarget._id}/archive`,
+                {
+                    finalResolution: finalResolution.trim()
+                }
+            );
 
             toast.success("Request archived");
             closeArchiveModal();
@@ -24550,9 +24531,10 @@ export default function AdminRequests() {
         }
     };
 
-    const getStatusBadge = (status) => (
+    const getStatusBadge = (status = "Received") => (
         <span
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${WORKFLOW_COLORS[status] || "bg-gray-500/20 text-gray-300 border-gray-500/30"
+            className={`px-3 py-1 rounded-full text-xs font-medium border ${WORKFLOW_COLORS[status] ||
+                "bg-gray-500/20 text-gray-300 border-gray-500/30"
                 }`}
         >
             {status}
@@ -24566,39 +24548,54 @@ export default function AdminRequests() {
                     Maintenance Requests
                 </h1>
 
-                <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 overflow-hidden">
+                <div className="rounded-2xl bg-white/10 border border-white/10 overflow-hidden">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="text-gray-400 border-b border-white/10">
-                                <th className="px-6 py-4 text-left">Message</th>
-                                <th className="px-6 py-4 text-left">Resident</th>
-                                <th className="px-6 py-4 text-left">Status</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4 text-left">
+                                    Message
+                                </th>
+                                <th className="px-6 py-4 text-left">
+                                    Resident
+                                </th>
+                                <th className="px-6 py-4 text-left">
+                                    Status
+                                </th>
+                                <th className="px-6 py-4 text-right">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                                    <td
+                                        colSpan="4"
+                                        className="px-6 py-8 text-center text-gray-400"
+                                    >
                                         Loading…
                                     </td>
                                 </tr>
                             ) : requests.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                                    <td
+                                        colSpan="4"
+                                        className="px-6 py-8 text-center text-gray-400"
+                                    >
                                         No requests found
                                     </td>
                                 </tr>
                             ) : (
                                 requests.map((req) => {
-                                    const status = req.workflowStatus || "Received";
+                                    const status =
+                                        req.workflowStatus || "Received";
                                     const isDone = status === "Done";
 
                                     return (
                                         <tr
                                             key={req._id}
-                                            className="border-t border-white/5 hover:bg-white/5 transition"
+                                            className="border-t border-white/5 hover:bg-white/5"
                                         >
                                             <td className="px-6 py-4">
                                                 {req.message}
@@ -24611,33 +24608,30 @@ export default function AdminRequests() {
                                             </td>
                                             <td className="px-6 py-4 text-right space-x-2">
                                                 {!isDone && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => openWorkflowModal(req)}
-                                                            className="px-3 py-1 bg-indigo-600/90 hover:bg-indigo-700 text-xs rounded text-white"
-                                                        >
-                                                            Update
-                                                        </button>
-
-                                                        <button
-                                                            onClick={() => openArchiveModal(req)}
-                                                            className="px-3 py-1 bg-gray-500/20 hover:bg-gray-500/30 text-xs rounded"
-                                                        >
-                                                            Archive
-                                                        </button>
-                                                    </>
+                                                    <button
+                                                        onClick={() =>
+                                                            openWorkflowModal(
+                                                                req
+                                                            )
+                                                        }
+                                                        className="px-3 py-1 bg-indigo-600 text-xs rounded text-white"
+                                                    >
+                                                        Update
+                                                    </button>
                                                 )}
 
-                                                <button
-                                                    onClick={() => deleteRequest(req._id)}
-                                                    disabled={deletingId === req._id}
-                                                    className={`px-3 py-1 text-xs rounded text-white ${deletingId === req._id
-                                                        ? "bg-red-400/40 cursor-not-allowed"
-                                                        : "bg-red-600/90 hover:bg-red-700"
-                                                        }`}
-                                                >
-                                                    {deletingId === req._id ? "Deleting…" : "Delete"}
-                                                </button>
+                                                {isDone && (
+                                                    <button
+                                                        onClick={() =>
+                                                            openArchiveModal(
+                                                                req
+                                                            )
+                                                        }
+                                                        className="px-3 py-1 bg-gray-500/20 text-xs rounded"
+                                                    >
+                                                        Archive
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     );
@@ -24656,7 +24650,7 @@ export default function AdminRequests() {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
+                            className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
                         >
                             <h3 className="text-lg font-semibold mb-4">
                                 Update Status
@@ -24665,11 +24659,14 @@ export default function AdminRequests() {
                             <select
                                 className="w-full bg-black/30 border border-white/10 rounded p-2 mb-3"
                                 value={workflowStatus}
-                                onChange={(e) => setWorkflowStatus(e.target.value)}
+                                onChange={(e) =>
+                                    setWorkflowStatus(e.target.value)
+                                }
                             >
                                 <option value="">Select status</option>
                                 {WORKFLOW_FLOW[
-                                    selectedRequest.workflowStatus || "Received"
+                                    selectedRequest.workflowStatus ||
+                                    "Received"
                                 ]?.map((s) => (
                                     <option key={s}>{s}</option>
                                 ))}
@@ -24679,7 +24676,9 @@ export default function AdminRequests() {
                                 className="w-full bg-black/30 border border-white/10 rounded p-2 mb-4"
                                 placeholder="Admin note"
                                 value={adminNote}
-                                onChange={(e) => setAdminNote(e.target.value)}
+                                onChange={(e) =>
+                                    setAdminNote(e.target.value)
+                                }
                             />
 
                             <div className="flex justify-end gap-2">
@@ -24690,10 +24689,11 @@ export default function AdminRequests() {
                                     Cancel
                                 </button>
                                 <button
+                                    disabled={submitting}
                                     onClick={updateWorkflowStatus}
                                     className="px-3 py-1 bg-indigo-600 text-white rounded"
                                 >
-                                    Save
+                                    {submitting ? "Saving…" : "Save"}
                                 </button>
                             </div>
                         </motion.div>
@@ -24709,7 +24709,7 @@ export default function AdminRequests() {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-96 text-white"
+                            className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
                         >
                             <h3 className="text-lg font-semibold mb-4">
                                 Archive Request
@@ -24719,7 +24719,9 @@ export default function AdminRequests() {
                                 className="w-full bg-black/30 border border-white/10 rounded p-2 mb-4"
                                 placeholder="Final resolution"
                                 value={finalResolution}
-                                onChange={(e) => setFinalResolution(e.target.value)}
+                                onChange={(e) =>
+                                    setFinalResolution(e.target.value)
+                                }
                             />
 
                             <div className="flex justify-end gap-2">
@@ -24730,10 +24732,11 @@ export default function AdminRequests() {
                                     Cancel
                                 </button>
                                 <button
+                                    disabled={archiving}
                                     onClick={archiveRequest}
                                     className="px-3 py-1 bg-red-600 text-white rounded"
                                 >
-                                    Archive
+                                    {archiving ? "Archiving…" : "Archive"}
                                 </button>
                             </div>
                         </motion.div>
@@ -24747,281 +24750,352 @@ export default function AdminRequests() {
 
 
 
+
 // ##########################################
 // FILE 65 of 80: frontend\src\pages\AdminResidents.jsx
-// SIZE: 10800 bytes
-// MODIFIED: 2026-02-02 17:38:54
+// SIZE: 14686 bytes
+// MODIFIED: 2026-02-02 18:25:11
 // ##########################################
 
-import { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import api from "../api/axios";
+import DashboardLayout from "../layouts/DashboardLayout";
 import toast from "react-hot-toast";
 
-import DashboardLayout from "../layouts/DashboardLayout";
-import api from "../api/axios";
-
-export default function AdminResidents() {
-    const [residents, setResidents] = useState([]);
+export default function AdminRequests() {
+    const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    /* ===== ADD RESIDENT FORM ===== */
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        password: "",
-        roomsId: ""
-    });
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [workflowStatus, setWorkflowStatus] = useState("");
+    const [adminNote, setAdminNote] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
-    /* ===== BILLING ===== */
-    const [billingTarget, setBillingTarget] = useState(null);
-    const [billAmount, setBillAmount] = useState("");
-    const [billDescription, setBillDescription] = useState("");
+    const [archiveTarget, setArchiveTarget] = useState(null);
+    const [finalResolution, setFinalResolution] = useState("");
+    const [archiving, setArchiving] = useState(false);
 
-    /* ================= FETCH RESIDENTS ================= */
-    const fetchResidents = useCallback(async () => {
+    const WORKFLOW_FLOW = {
+        Received: ["In-Progress"],
+        "In-Progress": ["On Hold", "Done"],
+        "On Hold": ["In-Progress"]
+    };
+
+    const WORKFLOW_COLORS = {
+        Received: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+        "In-Progress": "bg-blue-500/20 text-blue-300 border-blue-500/30",
+        "On Hold": "bg-orange-500/20 text-orange-300 border-orange-500/30",
+        Done: "bg-green-500/20 text-green-300 border-green-500/30"
+    };
+
+    useEffect(() => {
+        fetchRequests();
+    }, []);
+
+    const fetchRequests = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/admin/residents");
-            setResidents(Array.isArray(res.data) ? res.data : []);
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to load residents");
-            setResidents([]);
+            const res = await api.get("/admin/requests");
+            setRequests(Array.isArray(res.data) ? res.data : []);
+        } catch {
+            toast.error("Failed to load requests");
         } finally {
             setLoading(false);
         }
-    }, []);
+    };
 
-    useEffect(() => {
-        fetchResidents();
-    }, [fetchResidents]);
+    /* ================= WORKFLOW ================= */
+    const openWorkflowModal = (req) => {
+        setSelectedRequest(req);
+        setWorkflowStatus("");
+        setAdminNote("");
+    };
 
-    /* ================= ADD RESIDENT ================= */
-    const addResident = async () => {
-        const { name, email, password, roomsId } = form;
+    const closeWorkflowModal = () => {
+        setSelectedRequest(null);
+        setWorkflowStatus("");
+        setAdminNote("");
+    };
 
-        if (!name || !email || !password) {
-            toast.error("Name, email, and password are required");
+    const updateWorkflowStatus = async () => {
+        if (!workflowStatus || !adminNote.trim()) {
+            toast.error("Status and admin note are required");
             return;
         }
 
+        setSubmitting(true);
         try {
-            await api.post("/admin/residents", {
-                name,
-                email,
-                password,
-                roomsId: roomsId || null
-            });
+            await api.put(
+                `/admin/requests/${selectedRequest._id}/workflow-status`,
+                {
+                    workflowStatus,
+                    note: adminNote.trim()
+                }
+            );
 
-            toast.success("Resident added successfully");
-            setForm({
-                name: "",
-                email: "",
-                password: "",
-                roomsId: ""
-            });
-
-            fetchResidents();
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to add resident");
+            toast.success("Status updated");
+            closeWorkflowModal();
+            fetchRequests();
+        } catch {
+            toast.error("Failed to update status");
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    /* ================= SEND BILL ================= */
-    const sendBill = async () => {
-        if (!billingTarget?._id) {
-            toast.error("Invalid resident selected");
+    /* ================= ARCHIVE ================= */
+    const openArchiveModal = (req) => {
+        if (req.workflowStatus !== "Done") {
+            toast.error("Only completed requests can be archived");
+            return;
+        }
+        setArchiveTarget(req);
+        setFinalResolution("");
+    };
+
+    const closeArchiveModal = () => {
+        setArchiveTarget(null);
+        setFinalResolution("");
+    };
+
+    const archiveRequest = async () => {
+        if (!finalResolution.trim()) {
+            toast.error("Final resolution is required");
             return;
         }
 
-        const amount = Number(billAmount);
-        if (!Number.isFinite(amount) || amount <= 0) {
-            toast.error("Enter a valid amount");
-            return;
-        }
-
+        setArchiving(true);
         try {
-            await api.post("/payments", {
-                residentId: billingTarget._id,
-                amount,
-                description: billDescription || "Direct charge",
-                type: "manual"
-            });
+            await api.post(
+                `/admin/requests/${archiveTarget._id}/archive`,
+                {
+                    finalResolution: finalResolution.trim()
+                }
+            );
 
-            toast.success("Bill sent successfully");
-            setBillingTarget(null);
-            setBillAmount("");
-            setBillDescription("");
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to send bill");
+            toast.success("Request archived");
+            closeArchiveModal();
+            fetchRequests();
+        } catch {
+            toast.error("Failed to archive request");
+        } finally {
+            setArchiving(false);
         }
     };
 
-    const MotionButton = ({ children, className, ...props }) => (
-        <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            transition={{ duration: 0.15 }}
-            className={className}
-            {...props}
+    const getStatusBadge = (status = "Received") => (
+        <span
+            className={`px-3 py-1 rounded-full text-xs font-medium border ${WORKFLOW_COLORS[status] ||
+                "bg-gray-500/20 text-gray-300 border-gray-500/30"
+                }`}
         >
-            {children}
-        </motion.button>
+            {status}
+        </span>
     );
 
     return (
         <DashboardLayout>
-            <div className="space-y-10 text-gray-100">
-                <div>
-                    <h1 className="text-3xl font-bold">Residents</h1>
-                    <p className="text-gray-400 mt-1">
-                        Manage residents and send direct bills
-                    </p>
-                </div>
+            <div className="max-w-7xl mx-auto text-gray-100">
+                <h1 className="text-3xl font-bold mb-6">
+                    Maintenance Requests
+                </h1>
 
-                {/* ADD RESIDENT */}
-                <div className="rounded-2xl bg-white/10 border border-white/10 p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Add New Resident
-                    </h2>
+                <div className="rounded-2xl bg-white/10 border border-white/10 overflow-hidden">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-gray-400 border-b border-white/10">
+                                <th className="px-6 py-4 text-left">
+                                    Message
+                                </th>
+                                <th className="px-6 py-4 text-left">
+                                    Resident
+                                </th>
+                                <th className="px-6 py-4 text-left">
+                                    Status
+                                </th>
+                                <th className="px-6 py-4 text-right">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        {["name", "email", "password", "roomsId"].map(
-                            (field) => (
-                                <input
-                                    key={field}
-                                    type={
-                                        field === "password"
-                                            ? "password"
-                                            : "text"
-                                    }
-                                    placeholder={field.toUpperCase()}
-                                    className="rounded-lg bg-black/30 border border-white/10 p-2 text-sm"
-                                    value={form[field]}
-                                    onChange={(e) =>
-                                        setForm({
-                                            ...form,
-                                            [field]: e.target.value
-                                        })
-                                    }
-                                />
-                            )
-                        )}
-
-                        <MotionButton
-                            onClick={addResident}
-                            className="md:col-span-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
-                        >
-                            Add Resident
-                        </MotionButton>
-                    </div>
-                </div>
-
-                {/* RESIDENT LIST */}
-                <div className="rounded-2xl bg-white/10 border border-white/10 p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Resident List
-                    </h2>
-
-                    {loading ? (
-                        <p className="text-center text-gray-400">
-                            Loading residents…
-                        </p>
-                    ) : residents.length === 0 ? (
-                        <p className="text-center text-gray-400">
-                            No residents found.
-                        </p>
-                    ) : (
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="text-gray-400 border-b border-white/10">
-                                    <th className="p-2 text-left">Name</th>
-                                    <th className="p-2 text-left">Email</th>
-                                    <th className="p-2 text-center">rooms</th>
-                                    <th className="p-2 text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {residents.map((r) => (
-                                    <tr
-                                        key={r._id}
-                                        className="border-b border-white/5"
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td
+                                        colSpan="4"
+                                        className="px-6 py-8 text-center text-gray-400"
                                     >
-                                        <td className="p-2">{r.name}</td>
-                                        <td className="p-2">{r.email}</td>
-                                        <td className="p-2 text-center">
-                                            {r.roomsId?.roomsNumber || "-"}
-                                        </td>
-                                        <td className="p-2 text-center">
-                                            <MotionButton
-                                                onClick={() =>
-                                                    setBillingTarget(r)
-                                                }
-                                                className="bg-green-600 text-white px-3 py-1 rounded-lg"
-                                            >
-                                                Send Bill
-                                            </MotionButton>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                                        Loading…
+                                    </td>
+                                </tr>
+                            ) : requests.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan="4"
+                                        className="px-6 py-8 text-center text-gray-400"
+                                    >
+                                        No requests found
+                                    </td>
+                                </tr>
+                            ) : (
+                                requests.map((req) => {
+                                    const status =
+                                        req.workflowStatus || "Received";
+                                    const isDone = status === "Done";
+
+                                    return (
+                                        <tr
+                                            key={req._id}
+                                            className="border-t border-white/5 hover:bg-white/5"
+                                        >
+                                            <td className="px-6 py-4">
+                                                {req.message}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {req.residentId?.email}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {getStatusBadge(status)}
+                                            </td>
+                                            <td className="px-6 py-4 text-right space-x-2">
+                                                {!isDone && (
+                                                    <button
+                                                        onClick={() =>
+                                                            openWorkflowModal(
+                                                                req
+                                                            )
+                                                        }
+                                                        className="px-3 py-1 bg-indigo-600 text-xs rounded text-white"
+                                                    >
+                                                        Update
+                                                    </button>
+                                                )}
+
+                                                {isDone && (
+                                                    <button
+                                                        onClick={() =>
+                                                            openArchiveModal(
+                                                                req
+                                                            )
+                                                        }
+                                                        className="px-3 py-1 bg-gray-500/20 text-xs rounded"
+                                                    >
+                                                        Archive
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* BILL MODAL */}
-            {billingTarget && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
-                    >
-                        <h3 className="text-lg font-semibold mb-4">
-                            Send Bill to {billingTarget.email}
-                        </h3>
+            {/* WORKFLOW MODAL */}
+            <AnimatePresence>
+                {selectedRequest && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
+                        >
+                            <h3 className="text-lg font-semibold mb-4">
+                                Update Status
+                            </h3>
 
-                        <input
-                            type="number"
-                            placeholder="Amount"
-                            className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-3"
-                            value={billAmount}
-                            onChange={(e) =>
-                                setBillAmount(e.target.value)
-                            }
-                        />
-
-                        <textarea
-                            placeholder="Description"
-                            className="w-full rounded-lg bg-black/30 border border-white/10 p-2 mb-4"
-                            rows={3}
-                            value={billDescription}
-                            onChange={(e) =>
-                                setBillDescription(e.target.value)
-                            }
-                        />
-
-                        <div className="flex justify-end gap-3">
-                            <MotionButton
-                                onClick={() => setBillingTarget(null)}
-                                className="px-4 py-2 border border-white/10 rounded-lg"
+                            <select
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-3"
+                                value={workflowStatus}
+                                onChange={(e) =>
+                                    setWorkflowStatus(e.target.value)
+                                }
                             >
-                                Cancel
-                            </MotionButton>
+                                <option value="">Select status</option>
+                                {WORKFLOW_FLOW[
+                                    selectedRequest.workflowStatus ||
+                                    "Received"
+                                ]?.map((s) => (
+                                    <option key={s}>{s}</option>
+                                ))}
+                            </select>
 
-                            <MotionButton
-                                onClick={sendBill}
-                                className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                            >
-                                Send Bill
-                            </MotionButton>
-                        </div>
-                    </motion.div>
-                </div>
-            )}
+                            <textarea
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-4"
+                                placeholder="Admin note"
+                                value={adminNote}
+                                onChange={(e) =>
+                                    setAdminNote(e.target.value)
+                                }
+                            />
+
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    onClick={closeWorkflowModal}
+                                    className="px-3 py-1 border border-white/10 rounded"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    disabled={submitting}
+                                    onClick={updateWorkflowStatus}
+                                    className="px-3 py-1 bg-indigo-600 text-white rounded"
+                                >
+                                    {submitting ? "Saving…" : "Save"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ARCHIVE MODAL */}
+            <AnimatePresence>
+                {archiveTarget && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white/10 border border-white/10 rounded-2xl p-6 w-96"
+                        >
+                            <h3 className="text-lg font-semibold mb-4">
+                                Archive Request
+                            </h3>
+
+                            <textarea
+                                className="w-full bg-black/30 border border-white/10 rounded p-2 mb-4"
+                                placeholder="Final resolution"
+                                value={finalResolution}
+                                onChange={(e) =>
+                                    setFinalResolution(e.target.value)
+                                }
+                            />
+
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    onClick={closeArchiveModal}
+                                    className="px-3 py-1 border border-white/10 rounded"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    disabled={archiving}
+                                    onClick={archiveRequest}
+                                    className="px-3 py-1 bg-red-600 text-white rounded"
+                                >
+                                    {archiving ? "Archiving…" : "Archive"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </DashboardLayout>
     );
 }
@@ -25032,8 +25106,8 @@ export default function AdminResidents() {
 
 // ##########################################
 // FILE 66 of 80: frontend\src\pages\AdminRooms.jsx
-// SIZE: 12456 bytes
-// MODIFIED: 2026-02-02 17:55:58
+// SIZE: 12416 bytes
+// MODIFIED: 2026-02-02 18:29:31
 // ##########################################
 
 import { useEffect, useState, useCallback } from "react";
@@ -25041,40 +25115,40 @@ import toast from "react-hot-toast";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
-export default function Adminroomss() {
-    const [rooms, setroomss] = useState([]);
+export default function AdminRooms() {
+    const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [form, setForm] = useState({
-        roomsNumber: "",
+        roomNumber: "",
         totalBeds: "",
         note: ""
     });
 
-    const [selectedrooms, setSelectedrooms] = useState(null);
+    const [selectedRoom, setSelectedRoom] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH rooms ================= */
-    const fetchroomss = useCallback(async () => {
+    /* ================= FETCH ROOMS ================= */
+    const fetchRooms = useCallback(async () => {
         try {
             setLoading(true);
             const res = await api.get("/rooms");
-            setroomss(Array.isArray(res.data) ? res.data : []);
+            setRooms(res.data?.rooms || res.data || []);
         } catch {
             toast.error("Failed to load rooms");
-            setroomss([]);
+            setRooms([]);
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchroomss();
-    }, [fetchroomss]);
+        fetchRooms();
+    }, [fetchRooms]);
 
     /* ================= ADD rooms ================= */
-    const addrooms = async () => {
-        if (!form.roomsNumber || !form.totalBeds) {
+    const addRoom = async () => {
+        if (!form.roomNumber || !form.totalBeds) {
             toast.error("rooms number and total beds are required");
             return;
         }
@@ -25086,14 +25160,14 @@ export default function Adminroomss() {
 
         try {
             await api.post("/rooms", {
-                roomsNumber: form.roomsNumber,
+                roomNumber: form.roomNumber,
                 totalBeds: Number(form.totalBeds),
                 note: form.note
             });
 
             toast.success("rooms added successfully");
-            setForm({ roomsNumber: "", totalBeds: "", note: "" });
-            fetchroomss();
+            setForm({ roomNumber: "", totalBeds: "", note: "" });
+            fetchRooms();
         } catch {
             toast.error("Failed to add rooms");
         }
@@ -25101,7 +25175,7 @@ export default function Adminroomss() {
 
     /* ================= UPDATE OCCUPANCY ================= */
     const updateOccupancy = async () => {
-        if (!selectedrooms) return;
+        if (!selectedRoom) return;
 
         const value = Number(occupiedBeds);
 
@@ -25110,35 +25184,35 @@ export default function Adminroomss() {
             return;
         }
 
-        if (value > selectedrooms.totalBeds) {
+        if (value > selectedRoom.totalBeds) {
             toast.error("Occupied beds cannot exceed total beds");
             return;
         }
 
         try {
             await api.put(
-                `/rooms/${selectedrooms._id}/occupancy`,
+                `/rooms/${selectedRoom._id}/occupancy`,
                 { occupiedBeds: value }
             );
 
             toast.success("Occupancy updated");
-            setSelectedrooms(null);
+            setSelectedRoom(null);
             setOccupiedBeds("");
-            fetchroomss();
+            fetchRooms();
         } catch {
             toast.error("Failed to update occupancy");
         }
     };
 
     /* ================= DELETE rooms ================= */
-    const deleterooms = async (rooms) => {
+    const deleteRoom = async (rooms) => {
         if (rooms.occupiedBeds > 0) {
             toast.error("Cannot delete a rooms with occupied beds");
             return;
         }
 
         const confirm = window.confirm(
-            `Delete rooms ${rooms.roomsNumber}? This cannot be undone.`
+            `Delete rooms ${rooms.roomNumber}? This cannot be undone.`
         );
 
         if (!confirm) return;
@@ -25146,7 +25220,7 @@ export default function Adminroomss() {
         try {
             await api.delete(`/rooms/${rooms._id}`);
             toast.success("rooms deleted");
-            fetchroomss();
+            fetchRooms();
         } catch {
             toast.error("Failed to delete rooms");
         }
@@ -25157,7 +25231,7 @@ export default function Adminroomss() {
             <div className="space-y-10">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                        rooms & Bed Management
+                        Rooms & Bed Management
                     </h1>
                     <p className="text-gray-500 mt-1">
                         Manage rooms, capacity, and occupancy
@@ -25174,9 +25248,9 @@ export default function Adminroomss() {
                         <input
                             placeholder="rooms Number"
                             className="border rounded-lg p-2"
-                            value={form.roomsNumber}
+                            value={form.roomNumber}
                             onChange={(e) =>
-                                setForm({ ...form, roomsNumber: e.target.value })
+                                setForm({ ...form, roomNumber: e.target.value })
                             }
                         />
 
@@ -25200,7 +25274,7 @@ export default function Adminroomss() {
                         />
 
                         <button
-                            onClick={addrooms}
+                            onClick={addRoom}
                             className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
                         >
                             Add rooms
@@ -25208,9 +25282,9 @@ export default function Adminroomss() {
                     </div>
                 </div>
 
-                {/* rooms TABLE */}
+                {/* ROOMS TABLE */}
                 <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">rooms</h2>
+                    <h2 className="text-lg font-semibold mb-4">Rooms</h2>
 
                     {loading ? (
                         <p className="text-gray-500 text-center">
@@ -25251,7 +25325,7 @@ export default function Adminroomss() {
                                                 className="border-b hover:bg-gray-50"
                                             >
                                                 <td className="p-2">
-                                                    {r.roomsNumber}
+                                                    {r.roomNumber}
                                                 </td>
                                                 <td className="p-2 text-center">
                                                     {r.totalBeds}
@@ -25265,7 +25339,7 @@ export default function Adminroomss() {
                                                 <td className="p-2 text-center space-x-2">
                                                     <button
                                                         onClick={() => {
-                                                            setSelectedrooms(r);
+                                                            setSelectedRoom(r);
                                                             setOccupiedBeds(
                                                                 String(
                                                                     r.occupiedBeds
@@ -25278,7 +25352,7 @@ export default function Adminroomss() {
                                                     </button>
                                                     <button
                                                         onClick={() =>
-                                                            deleterooms(r)
+                                                            deleteRoom(r)
                                                         }
                                                         className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
                                                     >
@@ -25296,12 +25370,12 @@ export default function Adminroomss() {
             </div>
 
             {/* OCCUPANCY MODAL */}
-            {selectedrooms && (
+            {selectedRoom && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl p-6 w-96">
                         <h3 className="text-lg font-semibold mb-4">
                             Update Occupancy – rooms{" "}
-                            {selectedrooms.roomsNumber}
+                            {selectedRoom.roomNumber}
                         </h3>
 
                         <input
@@ -25315,7 +25389,7 @@ export default function Adminroomss() {
 
                         <div className="flex justify-end gap-3">
                             <button
-                                onClick={() => setSelectedrooms(null)}
+                                onClick={() => setSelectedRoom(null)}
                                 className="px-4 py-2 border rounded-lg"
                             >
                                 Cancel
@@ -25818,20 +25892,23 @@ export default function RequestHistory() {
 
 // ##########################################
 // FILE 70 of 80: frontend\src\pages\ResidentDashboard.jsx
-// SIZE: 10183 bytes
-// MODIFIED: 2026-02-01 22:59:50
+// SIZE: 10443 bytes
+// MODIFIED: 2026-02-02 18:19:16
 // ##########################################
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { createRequest, getMyRequests } from "../services/residentService";
+import {
+    createRequest,
+    getMyRequests
+} from "../services/residentService";
 
 /**
- * RESIDENT DASHBOARD (FINAL FIX)
- * - Correctly reflects admin-updated request status
- * - Handles status + workflowStatus
- * - No stale "pending" state
+ * RESIDENT DASHBOARD
+ * - Correct status handling
+ * - Syncs with admin updates
+ * - Stable resolved / active separation
  */
 
 export default function ResidentDashboard() {
@@ -25875,47 +25952,47 @@ export default function ResidentDashboard() {
         loadRequests();
     }, []);
 
-    /* ================= RESOLUTION LOGIC (FIX) ================= */
+    /* ================= RESOLUTION LOGIC ================= */
     const isResolved = (r) =>
         r.status === "resolved" ||
-        r.workflowStatus === "Done" ||
-        r.workflowStatus === "Resolved";
+        r.workflowStatus === "Done";
 
-    const activeRequests = requests.filter(
-        (r) => !isResolved(r)
-    );
-
-    const resolvedRequests = requests.filter(
-        (r) => isResolved(r)
-    );
+    const activeRequests = requests.filter((r) => !isResolved(r));
+    const resolvedRequests = requests.filter((r) => isResolved(r));
 
     /* ================= STATUS BADGE ================= */
     const StatusBadge = ({ status }) => {
         const base =
             "inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded";
 
-        if (status === "pending")
-            return (
-                <span className={`${base} bg-yellow-600/20 text-yellow-400`}>
-                    Pending
-                </span>
-            );
-
-        if (status === "in-progress")
-            return (
-                <span className={`${base} bg-blue-600/20 text-blue-400`}>
-                    In Progress
-                </span>
-            );
-
-        if (status === "resolved")
-            return (
-                <span className={`${base} bg-green-600/20 text-green-400`}>
-                    Resolved
-                </span>
-            );
-
-        return null;
+        switch (status) {
+            case "pending":
+                return (
+                    <span
+                        className={`${base} bg-yellow-600/20 text-yellow-400`}
+                    >
+                        Pending
+                    </span>
+                );
+            case "in-progress":
+                return (
+                    <span
+                        className={`${base} bg-blue-600/20 text-blue-400`}
+                    >
+                        In Progress
+                    </span>
+                );
+            case "resolved":
+                return (
+                    <span
+                        className={`${base} bg-green-600/20 text-green-400`}
+                    >
+                        Resolved
+                    </span>
+                );
+            default:
+                return null;
+        }
     };
 
     return (
@@ -25940,7 +26017,7 @@ export default function ResidentDashboard() {
                     <textarea
                         className="w-full bg-black/30 text-gray-100 placeholder-gray-400 p-4 border border-white/10 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         rows={4}
-                        placeholder="Describe the issue in detail (e.g., water leakage, electrical problem)…"
+                        placeholder="Describe the issue in detail…"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                     />
@@ -25974,12 +26051,14 @@ export default function ResidentDashboard() {
                             {activeRequests.map((r) => (
                                 <li
                                     key={r._id}
-                                    className="py-3 flex items-start justify-between"
+                                    className="py-3 flex justify-between items-start"
                                 >
                                     <p className="text-gray-200">
                                         {r.message}
                                     </p>
-                                    <StatusBadge status={r.status || "pending"} />
+                                    <StatusBadge
+                                        status={r.status || "pending"}
+                                    />
                                 </li>
                             ))}
                         </ul>
@@ -26002,7 +26081,9 @@ export default function ResidentDashboard() {
                                 const isOpen = expandedId === r._id;
                                 const lastNote =
                                     r.adminNotes?.length > 0
-                                        ? r.adminNotes[r.adminNotes.length - 1]
+                                        ? r.adminNotes[
+                                        r.adminNotes.length - 1
+                                        ]
                                         : null;
 
                                 return (

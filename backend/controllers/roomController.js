@@ -1,19 +1,19 @@
-const rooms = require("../models/rooms");
+const Room = require("../models/Room");
 
 /* ============================
-   GET ALL rooms
+   GET ALL ROOMS
    ============================ */
-exports.getAllroomss = async (req, res) => {
+exports.getAllRooms = async (req, res) => {
     try {
-        const rooms = await rooms.find().sort({ createdAt: -1 });
+        const rooms = await Room.find().sort({ createdAt: -1 });
 
-        res.json({
+        return res.json({
             success: true,
             rooms
         });
     } catch (err) {
-        console.error("GET rooms ERROR:", err);
-        res.status(500).json({
+        console.error("GET ROOMS ERROR:", err.message);
+        return res.status(500).json({
             success: false,
             message: "Failed to fetch rooms"
         });
@@ -21,81 +21,81 @@ exports.getAllroomss = async (req, res) => {
 };
 
 /* ============================
-   ADD NEW rooms
+   ADD NEW ROOM
    ============================ */
-exports.addrooms = async (req, res) => {
+exports.addRoom = async (req, res) => {
     try {
-        const { roomsNumber, rent, totalBeds, note } = req.body;
+        const { roomNumber, rent, totalBeds, note } = req.body;
 
-        if (!roomsNumber || !rent || !totalBeds) {
+        if (!roomNumber || !rent || !totalBeds) {
             return res.status(400).json({
                 success: false,
-                message: "rooms number, rent, and total beds are required"
+                message: "Room number, rent, and total beds are required"
             });
         }
 
-        const exists = await rooms.findOne({ roomsNumber });
+        const exists = await Room.findOne({ roomNumber });
         if (exists) {
             return res.status(400).json({
                 success: false,
-                message: "rooms number already exists"
+                message: "Room number already exists"
             });
         }
 
-        const rooms = await rooms.create({
-            roomsNumber,
+        const room = await Room.create({
+            roomNumber,
             rent,
             totalBeds,
             occupiedBeds: 0,
             note: note || ""
         });
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
-            rooms
+            room
         });
     } catch (err) {
-        console.error("ADD rooms ERROR:", err);
-        res.status(500).json({
+        console.error("ADD ROOM ERROR:", err.message);
+        return res.status(500).json({
             success: false,
-            message: "Failed to add rooms"
+            message: "Failed to add room"
         });
     }
 };
 
 /* ============================
-   DELETE rooms
+   DELETE ROOM
    ============================ */
-exports.deleterooms = async (req, res) => {
+exports.deleteRoom = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const rooms = await rooms.findById(id);
-        if (!rooms) {
+        const room = await Room.findById(id);
+        if (!room) {
             return res.status(404).json({
                 success: false,
-                message: "rooms not found"
+                message: "Room not found"
             });
         }
 
-        if (rooms.occupiedBeds > 0) {
+        if (room.occupiedBeds > 0) {
             return res.status(400).json({
                 success: false,
-                message: "Cannot delete rooms with residents"
+                message: "Cannot delete room with residents"
             });
         }
 
-        await rooms.deleteOne();
+        await room.deleteOne();
 
-        res.json({
+        return res.json({
             success: true,
-            message: "rooms deleted successfully"
+            message: "Room deleted successfully"
         });
     } catch (err) {
-        console.error("DELETE rooms ERROR:", err);
-        res.status(500).json({
+        console.error("DELETE ROOM ERROR:", err.message);
+        return res.status(500).json({
             success: false,
-            message: "Failed to delete rooms"
+            message: "Failed to delete room"
         });
     }
 };

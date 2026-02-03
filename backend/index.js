@@ -2,16 +2,20 @@
 
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose");
 
 /* ================= APP INIT ================= */
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+/* ================= DB ================= */
+const connectDB = require("./config/db");
+connectDB();
+
 /* ================= CORS ================= */
 const allowedOrigins = [
     "https://tagt.website",
-    "https://www.tagt.website"
+    "https://www.tagt.website",
+    "http://localhost:3000"
 ];
 
 app.use(
@@ -35,23 +39,9 @@ app.use(
 /* ================= MIDDLEWARE ================= */
 app.use(express.json());
 
-/* ================= DB CONNECT ================= */
-if (!process.env.MONGO_URI) {
-    console.error("❌ MONGO_URI not defined");
-    process.exit(1);
-}
-
-mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => console.log("✅ MongoDB connected"))
-    .catch((err) => {
-        console.error("❌ MongoDB connection failed", err);
-        process.exit(1);
-    });
-
 /* ================= ROUTES ================= */
 const authRoutes = require("./routes/auth");
-const adminRoutes = require("./routes/adminRoutes");
+const adminRoutes = require("./routes/adminRoutes"); // ✅ FIXED
 const roomsRoutes = require("./routes/rooms");
 const paymentRoutes = require("./routes/payments");
 const analyticsRoutes = require("./routes/analytics");

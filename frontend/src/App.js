@@ -9,9 +9,9 @@ import AdminRequests from "./pages/AdminRequests";
 import RequestHistory from "./pages/RequestHistory";
 import Payments from "./pages/Payments";
 import ResidentPayments from "./pages/ResidentPayments";
-import AdminRooms from "./pages/AdminRooms"; // ✅ FIXED
+import AdminRooms from "./pages/AdminRooms";
 
-import ProtectedRoute from "./routes/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import ToastProvider from "./components/ToastProvider";
 
 function AnimatedRoutes() {
@@ -23,99 +23,37 @@ function AnimatedRoutes() {
                 {/* PUBLIC */}
                 <Route path="/login" element={<Login />} />
 
-                {/* ADMIN */}
-                <Route
-                    path="/admin/dashboard"
-                    element={
-                        <ProtectedRoute role="admin">
-                            <AdminDashboard />
-                        </ProtectedRoute>
-                    }
-                />
+                {/* ================= ADMIN ROUTES ================= */}
+                <Route element={<ProtectedRoute adminOnly />}>
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/admin/requests" element={<AdminRequests />} />
+                    <Route path="/admin/history" element={<RequestHistory />} />
+                    <Route path="/admin/residents" element={<AdminResidents />} />
+                    <Route path="/admin/rooms" element={<AdminRooms />} />
+                    <Route path="/payments" element={<Payments />} />
+                    <Route
+                        path="/admin"
+                        element={<Navigate to="/admin/dashboard" replace />}
+                    />
+                </Route>
 
-                <Route
-                    path="/admin/requests"
-                    element={
-                        <ProtectedRoute role="admin">
-                            <AdminRequests />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/history"
-                    element={
-                        <ProtectedRoute role="admin">
-                            <RequestHistory />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/residents"
-                    element={
-                        <ProtectedRoute role="admin">
-                            <AdminResidents />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/rooms"
-                    element={
-                        <ProtectedRoute role="admin">
-                            <AdminRooms /> {/* ✅ FIXED */}
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/payments"
-                    element={
-                        <ProtectedRoute role="admin">
-                            <Payments />
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* ADMIN ROOT REDIRECT */}
-                <Route
-                    path="/admin"
-                    element={
-                        <ProtectedRoute role="admin">
-                            <Navigate to="/admin/dashboard" replace />
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* RESIDENT ROOT REDIRECT */}
-                <Route
-                    path="/resident"
-                    element={
-                        <ProtectedRoute role="resident">
+                {/* ================= RESIDENT ROUTES ================= */}
+                <Route element={<ProtectedRoute />}>
+                    <Route
+                        path="/resident/dashboard"
+                        element={<ResidentDashboard />}
+                    />
+                    <Route
+                        path="/resident/payments"
+                        element={<ResidentPayments />}
+                    />
+                    <Route
+                        path="/resident"
+                        element={
                             <Navigate to="/resident/dashboard" replace />
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* RESIDENT */}
-                <Route
-                    path="/resident/dashboard"
-                    element={
-                        <ProtectedRoute role="resident">
-                            <ResidentDashboard />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/resident/payments"
-                    element={
-                        <ProtectedRoute role="resident">
-                            <ResidentPayments />
-                        </ProtectedRoute>
-                    }
-                />
+                        }
+                    />
+                </Route>
 
                 {/* DEFAULT */}
                 <Route path="/" element={<Navigate to="/login" replace />} />

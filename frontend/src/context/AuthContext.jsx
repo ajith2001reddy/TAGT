@@ -1,13 +1,28 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 /**
- * Auth Context (SAFE VERSION)
+ * Auth Context
  * - JWT is the single source of truth
- * - No localStorage.role
- * - Prevents infinite redirects
+ * - No role stored separately
+ * - Safe against malformed tokens
  */
 
 const AuthContext = createContext(null);
+
+function decodeToken(token) {
+    try {
+        const base64 = token.split(".")[1];
+        if (!base64) return null;
+
+        const payload = JSON.parse(atob(base64));
+        return {
+            id: payload.id,
+            role: payload.role
+        };
+    } catch {
+        return null;
+    }
+}
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -22,28 +37,29 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        try {
-            const payload = JSON.parse(atob(token.split(".")[1]));
-            setUser({
-                id: payload.id,
-                role: payload.role
-            });
-        } catch (err) {
+        const decoded = decodeToken(token);
+
+        if (decoded) {
+            setUser(decoded);
+        } else {
             localStorage.removeItem("token");
             setUser(null);
-        } finally {
-            setLoading(false);
         }
+
+        setLoading(false);
     }, []);
 
     const login = (token) => {
-        localStorage.setItem("token", token);
+        const decoded = decodeToken(token);
 
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        setUser({
-            id: payload.id,
-            role: payload.role
-        });
+        if (!decoded) {
+            localStorage.removeItem("token");
+            setUser(null);
+            return;
+        }
+
+        localStorage.setItem("token", token);
+        setUser(decoded);
     };
 
     const logout = () => {

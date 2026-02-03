@@ -31,13 +31,13 @@ router.get("/requests", auth, isAdmin, async (req, res) => {
             .populate("residentId", "name email")
             .sort({ createdAt: -1 });
 
-        res.json({
+        return res.json({
             success: true,
             requests
         });
     } catch (err) {
-        console.error("GET REQUESTS ERROR:", err);
-        res.status(500).json({
+        console.error("GET REQUESTS ERROR:", err.message);
+        return res.status(500).json({
             success: false,
             message: "Failed to fetch requests"
         });
@@ -51,13 +51,13 @@ router.get("/requests/history", auth, isAdmin, async (req, res) => {
             .populate("residentId", "name email")
             .sort({ createdAt: -1 });
 
-        res.json({
+        return res.json({
             success: true,
             history
         });
     } catch (err) {
-        console.error("GET REQUEST HISTORY ERROR:", err);
-        res.status(500).json({
+        console.error("GET REQUEST HISTORY ERROR:", err.message);
+        return res.status(500).json({
             success: false,
             message: "Failed to fetch request history"
         });
@@ -69,7 +69,7 @@ router.get("/requests/history", auth, isAdmin, async (req, res) => {
 router.get("/stats", auth, isAdmin, async (req, res) => {
     try {
         const totalResidents = await User.countDocuments({
-            role: { $regex: /^resident$/i },
+            role: "resident",
             isActive: true
         });
 
@@ -77,17 +77,17 @@ router.get("/stats", auth, isAdmin, async (req, res) => {
             status: { $ne: "resolved" }
         });
 
-        const payments = await Payment.find();
+        const payments = await Payment.find({}, "amount status");
 
         const totalRevenue = payments
             .filter((p) => p.status === "paid")
-            .reduce((sum, p) => sum + p.amount, 0);
+            .reduce((sum, p) => sum + (p.amount || 0), 0);
 
         const outstandingBalance = payments
             .filter((p) => p.status === "unpaid")
-            .reduce((sum, p) => sum + p.amount, 0);
+            .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-        res.json({
+        return res.json({
             success: true,
             stats: {
                 totalResidents,
@@ -97,8 +97,8 @@ router.get("/stats", auth, isAdmin, async (req, res) => {
             }
         });
     } catch (err) {
-        console.error("ADMIN STATS ERROR:", err);
-        res.status(500).json({
+        console.error("ADMIN STATS ERROR:", err.message);
+        return res.status(500).json({
             success: false,
             message: "Failed to fetch admin stats"
         });

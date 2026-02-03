@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import {
-    getKPIs
-} from "../services/analyticsService";
+import { getKPIs } from "../services/analyticsService";
 
 /* =====================================================
-   KPI CARDS – ADMIN DASHBOARD
-   - Real-time analytics
-   - Smooth animations
-   - Safe loading states
+   KPI CARDS – MOBILE SAFE
 ===================================================== */
 
 export default function KpiCards() {
@@ -33,11 +28,11 @@ export default function KpiCards() {
 
     if (loading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
                     <div
                         key={i}
-                        className="bg-white/10 h-28 rounded-xl animate-pulse"
+                        className="bg-white/10 h-24 sm:h-28 rounded-xl animate-pulse"
                     />
                 ))}
             </div>
@@ -50,42 +45,39 @@ export default function KpiCards() {
         {
             title: "Occupancy",
             value: `${kpis.occupancy.rate}%`,
-            subtitle: `${kpis.occupancy.occupiedBeds} / ${kpis.occupancy.totalBeds} beds`,
-            accent: "blue"
+            subtitle: `${kpis.occupancy.occupiedBeds} / ${kpis.occupancy.totalBeds} beds`
         },
         {
             title: "Payment Collection",
             value: `${kpis.payments.collectionRate}%`,
-            subtitle: `$${kpis.payments.totalCollected} collected`,
-            accent: "green"
+            subtitle: `$${kpis.payments.totalCollected} collected`
         },
         {
             title: "Avg Resolution Time",
             value: `${kpis.maintenance.avgResolutionTime} hrs`,
-            subtitle: `${kpis.maintenance.resolvedCount} resolved`,
-            accent: "yellow"
+            subtitle: `${kpis.maintenance.resolvedCount} resolved`
         }
     ];
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {cards.map((card, index) => (
                 <motion.div
                     key={card.title}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`bg-white/10 border border-white/10 rounded-2xl p-6`}
+                    transition={{ duration: 0.25, delay: index * 0.05 }}
+                    className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6"
                 >
-                    <p className="text-sm text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-400 truncate">
                         {card.title}
                     </p>
 
-                    <h2 className="text-3xl font-bold mt-2">
+                    <h2 className="text-2xl sm:text-3xl font-bold mt-2 break-all">
                         {card.value}
                     </h2>
 
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">
                         {card.subtitle}
                     </p>
                 </motion.div>

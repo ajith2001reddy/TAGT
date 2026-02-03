@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
 /**
- * STAT CARD (DARK THEME FIXED)
- * - SaaS grade
- * - Works on dark glass UI
- * - No logic changes
+ * STAT CARD (MOBILE SAFE)
+ * - Dark theme friendly
+ * - Responsive typography
+ * - No hover jank on mobile
  */
 
 export default function StatCard({
@@ -25,16 +25,25 @@ export default function StatCard({
         <motion.div
             whileHover={{ y: -4 }}
             transition={{ type: "spring", stiffness: 300 }}
-            className="bg-white/10 border border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-md transition text-gray-100"
+            className="
+                bg-white/10 border border-white/10
+                rounded-2xl
+                p-4 sm:p-6
+                shadow-sm hover:shadow-md
+                transition
+                text-gray-100
+            "
         >
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-medium text-gray-400">
+            <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-400 truncate">
                         {title}
                     </p>
-                    <h3 className="text-3xl font-bold mt-2">
+
+                    <h3 className="text-2xl sm:text-3xl font-bold mt-2 break-all">
                         {value}
                     </h3>
+
                     {subtitle && (
                         <p className="text-xs text-gray-400 mt-1">
                             {subtitle}
@@ -44,7 +53,13 @@ export default function StatCard({
 
                 {icon && (
                     <div
-                        className={`h-12 w-12 rounded-xl flex items-center justify-center ${accentMap[accent]}`}
+                        className={`
+                            flex-shrink-0
+                            h-10 w-10 sm:h-12 sm:w-12
+                            rounded-xl
+                            flex items-center justify-center
+                            ${accentMap[accent]}
+                        `}
                     >
                         {icon}
                     </div>

@@ -1,23 +1,23 @@
 ﻿const User = require("../models/User");
-const rooms = require("../models/rooms");
+const Room = require("../models/Room");
 const bcrypt = require("bcryptjs");
 
 /* ============================
    GET ALL RESIDENTS (ADMIN)
-   ============================ */
+============================ */
 exports.getAllResidents = async (req, res) => {
     try {
-        const residents = await User.find({
-            role: { $regex: /^resident$/i }
-        })
-            .populate("roomsId", "roomsNumber totalBeds occupiedBeds")
-            .select("-password")
+        const residents = await User.find({ role: "resident" })
+            .populate("roomId", "roomNumber totalBeds occupiedBeds")
             .sort({ createdAt: -1 });
 
-        res.json(residents);
+        return res.json({
+            success: true,
+            residents
+        });
     } catch (err) {
-        console.error("GET RESIDENTS ERROR:", err);
-        res.status(500).json({
+        console.error("GET RESIDENTS ERROR:", err.message);
+        return res.status(500).json({
             success: false,
             message: "Failed to fetch residents"
         });
@@ -26,10 +26,10 @@ exports.getAllResidents = async (req, res) => {
 
 /* ============================
    ADD NEW RESIDENT (ADMIN)
-   ============================ */
+============================ */
 exports.addResident = async (req, res) => {
     try {
-        const { name, email, password, roomsId } = req.body;
+        const { name, email, password, roomId } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({
@@ -38,34 +38,34 @@ exports.addResident = async (req, res) => {
             });
         }
 
-        const exists = await User.findOne({
-            email: email.toLowerCase()
+        const existingUser = await User.findOne({
+            email: email.toLowerCase().trim()
         });
 
-        if (exists) {
+        if (existingUser) {
             return res.status(400).json({
                 success: false,
                 message: "Email already exists"
             });
         }
 
-        let rooms = null;
+        let room = null;
 
-        // ✅ Validate rooms & availability
-        if (roomsId) {
-            rooms = await rooms.findById(roomsId);
+        // Validate room & availability
+        if (roomId) {
+            room = await Room.findById(roomId);
 
-            if (!rooms) {
+            if (!room) {
                 return res.status(400).json({
                     success: false,
-                    message: "Invalid rooms selected"
+                    message: "Invalid room selected"
                 });
             }
 
-            if (rooms.occupiedBeds >= rooms.totalBeds) {
+            if (room.occupiedBeds >= room.totalBeds) {
                 return res.status(400).json({
                     success: false,
-                    message: "No beds available in this rooms"
+                    message: "No beds available in this room"
                 });
             }
         }
@@ -74,25 +74,25 @@ exports.addResident = async (req, res) => {
 
         const resident = await User.create({
             name,
-            email: email.toLowerCase(),
+            email: email.toLowerCase().trim(),
             password: hashedPassword,
             role: "resident",
-            roomsId: rooms ? rooms._id : null
+            roomId: room ? room._id : null
         });
 
-        // ✅ Increase occupied beds AFTER resident creation
-        if (rooms) {
-            rooms.occupiedBeds += 1;
-            await rooms.save();
+        // Increase occupied beds AFTER resident creation
+        if (room) {
+            room.occupiedBeds += 1;
+            await room.save();
         }
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             resident
         });
     } catch (err) {
-        console.error("ADD RESIDENT ERROR:", err);
-        res.status(500).json({
+        console.error("ADD RESIDENT ERROR:", err.message);
+        return res.status(500).json({
             success: false,
             message: "Failed to add resident"
         });
