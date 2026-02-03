@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const roomSchema = new mongoose.Schema(
     {
@@ -27,7 +27,7 @@ const roomSchema = new mongoose.Schema(
             default: 0,
             min: 0,
             validate: {
-                validator: function (value) {
+                validator(value) {
                     return value <= this.totalBeds;
                 },
                 message: "Occupied beds cannot exceed total beds"
@@ -48,9 +48,9 @@ const roomSchema = new mongoose.Schema(
 
 /* ============================
    VIRTUAL: AVAILABLE BEDS
-   ============================ */
+============================ */
 roomSchema.virtual("availableBeds").get(function () {
     return this.totalBeds - this.occupiedBeds;
 });
 
-module.exports = mongoose.model("Room", roomSchema);
+export default mongoose.model("Room", roomSchema);

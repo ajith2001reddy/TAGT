@@ -1,12 +1,12 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 /**
  * Generate JWT for authenticated user
- * @param {Object} user - User document
+ * @param {Object} user - User object
  * @returns {string} JWT token
  */
-function generateToken(user) {
-    if (!user || !user._id || !user.role) {
+const generateToken = (user) => {
+    if (!user || !user.id || !user.role) {
         throw new Error("Invalid user data for token generation");
     }
 
@@ -16,7 +16,7 @@ function generateToken(user) {
 
     return jwt.sign(
         {
-            id: user._id.toString(),
+            id: user.id,
             role: user.role
         },
         process.env.JWT_SECRET,
@@ -24,6 +24,6 @@ function generateToken(user) {
             expiresIn: "7d"
         }
     );
-}
+};
 
-module.exports = generateToken;
+export default generateToken;

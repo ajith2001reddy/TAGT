@@ -1,29 +1,26 @@
-const Room = require("../models/rooms");
+import Room from "../models/rooms.js";
 
 /* ============================
    GET ALL ROOMS
-   ============================ */
-exports.getAllRooms = async (req, res) => {
+============================ */
+export const getAllRooms = async (req, res, next) => {
     try {
         const rooms = await Room.find().sort({ createdAt: -1 });
 
-        return res.json({
+        res.json({
             success: true,
             rooms
         });
-    } catch (err) {
-        console.error("GET ROOMS ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch rooms"
-        });
+    } catch (error) {
+        console.error("GET ROOMS ERROR:", error.message);
+        next(error);
     }
 };
 
 /* ============================
    ADD NEW ROOM
-   ============================ */
-exports.addRoom = async (req, res) => {
+============================ */
+export const addRoom = async (req, res, next) => {
     try {
         const { roomNumber, rent, totalBeds, note } = req.body;
 
@@ -50,23 +47,20 @@ exports.addRoom = async (req, res) => {
             note: note || ""
         });
 
-        return res.status(201).json({
+        res.status(201).json({
             success: true,
             room
         });
-    } catch (err) {
-        console.error("ADD ROOM ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to add room"
-        });
+    } catch (error) {
+        console.error("ADD ROOM ERROR:", error.message);
+        next(error);
     }
 };
 
 /* ============================
    DELETE ROOM
-   ============================ */
-exports.deleteRoom = async (req, res) => {
+============================ */
+export const deleteRoom = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -87,15 +81,12 @@ exports.deleteRoom = async (req, res) => {
 
         await room.deleteOne();
 
-        return res.json({
+        res.json({
             success: true,
             message: "Room deleted successfully"
         });
-    } catch (err) {
-        console.error("DELETE ROOM ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to delete room"
-        });
+    } catch (error) {
+        console.error("DELETE ROOM ERROR:", error.message);
+        next(error);
     }
 };

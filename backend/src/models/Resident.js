@@ -1,11 +1,14 @@
-const express = require("express");
-const router = express.Router();
+import { Router } from "express";
 
-const Request = require("../models/Request");
-const auth = require("../middleware/auth");
+import Request from "../models/Request.js";
+import auth from "../middleware/auth.js";
 
-/* ================= CREATE REQUEST ================= */
-router.post("/request", auth, async (req, res) => {
+const router = Router();
+
+/* =========================
+   CREATE REQUEST (RESIDENT)
+========================= */
+router.post("/request", auth, async (req, res, next) => {
     try {
         const { message } = req.body;
 
@@ -28,17 +31,16 @@ router.post("/request", auth, async (req, res) => {
             success: true,
             request
         });
-    } catch (err) {
-        console.error("CREATE REQUEST ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to create request"
-        });
+    } catch (error) {
+        console.error("CREATE REQUEST ERROR:", error.message);
+        next(error);
     }
 });
 
-/* ================= GET MY REQUESTS ================= */
-router.get("/requests", auth, async (req, res) => {
+/* =========================
+   GET MY REQUESTS (RESIDENT)
+========================= */
+router.get("/requests", auth, async (req, res, next) => {
     try {
         const requests = await Request.find({
             residentId: req.user.id
@@ -50,17 +52,16 @@ router.get("/requests", auth, async (req, res) => {
             success: true,
             requests
         });
-    } catch (err) {
-        console.error("GET MY REQUESTS ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch requests"
-        });
+    } catch (error) {
+        console.error("GET MY REQUESTS ERROR:", error.message);
+        next(error);
     }
 });
 
-/* ================= DELETE REQUEST ================= */
-router.delete("/request/:id", auth, async (req, res) => {
+/* =========================
+   DELETE REQUEST (RESIDENT)
+========================= */
+router.delete("/request/:id", auth, async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -82,13 +83,10 @@ router.delete("/request/:id", auth, async (req, res) => {
             success: true,
             message: "Request deleted"
         });
-    } catch (err) {
-        console.error("DELETE REQUEST ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete request"
-        });
+    } catch (error) {
+        console.error("DELETE REQUEST ERROR:", error.message);
+        next(error);
     }
 });
 
-module.exports = router;
+export default router;

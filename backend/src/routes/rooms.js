@@ -1,14 +1,15 @@
-const express = require("express");
-const auth = require("../middleware/auth");
-const isAdmin = require("../middleware/isAdmin");
+import { Router } from "express";
 
-const {
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+
+import {
     getAllRooms,
     addRoom,
     deleteRoom
-} = require("../controllers/roomController");
+} from "../controllers/roomController.js";
 
-const router = express.Router();
+const router = Router();
 
 /* =========================================================
    GET ALL ROOMS (ADMIN)
@@ -25,4 +26,4 @@ router.post("/", auth, isAdmin, addRoom);
 ========================================================= */
 router.delete("/:id", auth, isAdmin, deleteRoom);
 
-module.exports = router;
+export default router;

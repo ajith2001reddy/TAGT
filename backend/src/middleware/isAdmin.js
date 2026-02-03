@@ -1,8 +1,8 @@
-/**
+﻿/**
  * Admin-only middleware
  * Must be used AFTER auth middleware
  */
-function isAdmin(req, res, next) {
+const isAdmin = (req, res, next) => {
     try {
         if (!req.user) {
             return res.status(401).json({
@@ -18,14 +18,14 @@ function isAdmin(req, res, next) {
             });
         }
 
-        return next();
-    } catch (err) {
-        console.error("IS ADMIN ERROR:", err.message);
+        next();
+    } catch (error) {
+        console.error("❌ IS ADMIN ERROR:", error.message);
         return res.status(500).json({
             success: false,
             message: "Authorization failed"
         });
     }
-}
+};
 
-module.exports = isAdmin;
+export default isAdmin;

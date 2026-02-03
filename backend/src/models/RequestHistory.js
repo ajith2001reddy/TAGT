@@ -1,11 +1,10 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 /**
  * RequestHistory
  * Phase 2 Archive Model
  */
-
-const RequestHistorySchema = new mongoose.Schema(
+const requestHistorySchema = new mongoose.Schema(
     {
         requestId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -67,6 +66,9 @@ const RequestHistorySchema = new mongoose.Schema(
     }
 );
 
-RequestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
+/* =========================
+   INDEXES
+========================= */
+requestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
 
-module.exports = mongoose.model("RequestHistory", RequestHistorySchema);
+export default mongoose.model("RequestHistory", requestHistorySchema);

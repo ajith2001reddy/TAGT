@@ -1,16 +1,17 @@
-﻿const express = require("express");
-const mongoose = require("mongoose");
-const router = express.Router();
+﻿import { Router } from "express";
+import mongoose from "mongoose";
 
-const Payment = require("../models/Payment");
-const User = require("../models/User");
-const auth = require("../middleware/auth");
-const isAdmin = require("../middleware/isAdmin");
+import Payment from "../models/Payment.js";
+import User from "../models/User.js";
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+
+const router = Router();
 
 /* =========================================================
    ADMIN → CREATE BILL
 ========================================================= */
-router.post("/", auth, isAdmin, async (req, res) => {
+router.post("/", auth, isAdmin, async (req, res, next) => {
     try {
         const { residentId, description, type, month, adminNote } = req.body;
         const amount = Number(req.body.amount);
@@ -57,19 +58,16 @@ router.post("/", auth, isAdmin, async (req, res) => {
             success: true,
             payment
         });
-    } catch (err) {
-        console.error("CREATE PAYMENT ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to create payment"
-        });
+    } catch (error) {
+        console.error("CREATE PAYMENT ERROR:", error.message);
+        next(error);
     }
 });
 
 /* =========================================================
    ADMIN → GET ALL PAYMENTS
 ========================================================= */
-router.get("/", auth, isAdmin, async (req, res) => {
+router.get("/", auth, isAdmin, async (req, res, next) => {
     try {
         const payments = await Payment.find()
             .populate("residentId", "email name")
@@ -79,19 +77,16 @@ router.get("/", auth, isAdmin, async (req, res) => {
             success: true,
             payments
         });
-    } catch (err) {
-        console.error("FETCH PAYMENTS ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch payments"
-        });
+    } catch (error) {
+        console.error("FETCH PAYMENTS ERROR:", error.message);
+        next(error);
     }
 });
 
 /* =========================================================
    RESIDENT → GET OWN PAYMENTS
 ========================================================= */
-router.get("/my", auth, async (req, res) => {
+router.get("/my", auth, async (req, res, next) => {
     try {
         res.set({
             "Cache-Control": "no-store, no-cache, must-revalidate, private",
@@ -107,28 +102,27 @@ router.get("/my", auth, async (req, res) => {
             success: true,
             payments
         });
-    } catch (err) {
-        console.error("FETCH MY PAYMENTS ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch payments"
-        });
+    } catch (error) {
+        console.error("FETCH MY PAYMENTS ERROR:", error.message);
+        next(error);
     }
 });
 
 /* =========================================================
    ADMIN → MARK PAYMENT AS PAID
 ========================================================= */
-router.put("/:id/paid", auth, isAdmin, async (req, res) => {
+router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
     try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid payment ID"
             });
         }
 
-        const payment = await Payment.findById(req.params.id);
+        const payment = await Payment.findById(id);
         if (!payment) {
             return res.status(404).json({
                 success: false,
@@ -151,13 +145,10 @@ router.put("/:id/paid", auth, isAdmin, async (req, res) => {
             success: true,
             message: "Payment marked as paid"
         });
-    } catch (err) {
-        console.error("MARK PAID ERROR:", err);
-        res.status(500).json({
-            success: false,
-            message: "Failed to mark payment as paid"
-        });
+    } catch (error) {
+        console.error("MARK PAID ERROR:", error.message);
+        next(error);
     }
 });
 
-module.exports = router;
+export default router;

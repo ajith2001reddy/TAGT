@@ -1,33 +1,31 @@
-﻿const User = require("../models/User");
-const rooms = require("../models/rooms");
-const bcrypt = require("bcryptjs");
+﻿import bcrypt from "bcryptjs";
+
+import User from "../models/User.js";
+import Room from "../models/rooms.js";
 
 /* ============================
    GET ALL RESIDENTS (ADMIN)
 ============================ */
-exports.getAllResidents = async (req, res) => {
+export const getAllResidents = async (req, res, next) => {
     try {
         const residents = await User.find({ role: "resident" })
             .populate("roomId", "roomNumber totalBeds occupiedBeds")
             .sort({ createdAt: -1 });
 
-        return res.json({
+        res.json({
             success: true,
             residents
         });
-    } catch (err) {
-        console.error("GET RESIDENTS ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch residents"
-        });
+    } catch (error) {
+        console.error("GET RESIDENTS ERROR:", error.message);
+        next(error);
     }
 };
 
 /* ============================
    ADD NEW RESIDENT (ADMIN)
 ============================ */
-exports.addResident = async (req, res) => {
+export const addResident = async (req, res, next) => {
     try {
         const { name, email, password, roomId } = req.body;
 
@@ -38,8 +36,10 @@ exports.addResident = async (req, res) => {
             });
         }
 
+        const normalizedEmail = email.toLowerCase().trim();
+
         const existingUser = await User.findOne({
-            email: email.toLowerCase().trim()
+            email: normalizedEmail
         });
 
         if (existingUser) {
@@ -53,7 +53,7 @@ exports.addResident = async (req, res) => {
 
         // Validate room & availability
         if (roomId) {
-            room = await rooms.findById(roomId);
+            room = await Room.findById(roomId);
 
             if (!room) {
                 return res.status(400).json({
@@ -74,7 +74,7 @@ exports.addResident = async (req, res) => {
 
         const resident = await User.create({
             name,
-            email: email.toLowerCase().trim(),
+            email: normalizedEmail,
             password: hashedPassword,
             role: "resident",
             roomId: room ? room._id : null
@@ -86,15 +86,12 @@ exports.addResident = async (req, res) => {
             await room.save();
         }
 
-        return res.status(201).json({
+        res.status(201).json({
             success: true,
             resident
         });
-    } catch (err) {
-        console.error("ADD RESIDENT ERROR:", err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to add resident"
-        });
+    } catch (error) {
+        console.error("ADD RESIDENT ERROR:", error.message);
+        next(error);
     }
 };
