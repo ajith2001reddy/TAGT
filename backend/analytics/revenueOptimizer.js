@@ -1,4 +1,4 @@
-﻿const Room = require("../models/Room");
+﻿const Room = require("../models/rooms");
 const Payment = require("../models/Payment");
 const { predictChurn } = require("./churnModel");
 
