@@ -1,5 +1,5 @@
 ﻿const User = require("../models/User");
-const Room = require("../models/Room");
+const rooms = require("../models/rooms");
 const bcrypt = require("bcryptjs");
 
 /* ============================
@@ -53,7 +53,7 @@ exports.addResident = async (req, res) => {
 
         // Validate room & availability
         if (roomId) {
-            room = await Room.findById(roomId);
+            room = await rooms.findById(roomId);
 
             if (!room) {
                 return res.status(400).json({
