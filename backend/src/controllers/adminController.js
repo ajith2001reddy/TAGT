@@ -1,66 +1,61 @@
 ﻿import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import Room from "../models/rooms.js";
 
-/* ============================
-   GET ALL RESIDENTS (ADMIN)
-============================ */
 export const getAllResidents = async (req, res, next) => {
     try {
         const residents = await User.find({ role: "resident" })
             .populate("roomId", "roomNumber totalBeds occupiedBeds")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
-        res.json({
-            success: true,
-            residents
-        });
-    } catch (error) {
-        console.error("GET RESIDENTS ERROR:", error.message);
-        next(error);
+        res.json({ success: true, residents });
+    } catch (err) {
+        next(err);
     }
 };
 
-/* ============================
-   ADD NEW RESIDENT (ADMIN)
-============================ */
 export const addResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const { name, email, password, roomId } = req.body;
 
-        // Validation for required fields
         if (!name || !email || !password) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: "Name, email, and password are required"
             });
         }
 
-        // Normalize email and check for uniqueness
         const normalizedEmail = email.toLowerCase().trim();
-        const existingUser = await User.findOne({ email: normalizedEmail });
 
-        if (existingUser) {
+        const existing = await User.findOne({ email: normalizedEmail }).session(session);
+        if (existing) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: "Email already exists"
             });
         }
 
-        // Validate room & availability
         let room = null;
         if (roomId) {
-            room = await Room.findById(roomId);
+            room = await Room.findById(roomId).session(session);
 
             if (!room) {
+                await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
                     message: "Invalid room selected"
                 });
             }
 
-            // Check room availability before creating the resident
             if (room.occupiedBeds >= room.totalBeds) {
+                await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
                     message: "No beds available in this room"
@@ -68,30 +63,36 @@ export const addResident = async (req, res, next) => {
             }
         }
 
-        // Use User model's pre-save method for password hashing
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create the resident
-        const resident = await User.create({
-            name,
-            email: normalizedEmail,
-            password: hashedPassword,
-            role: "resident",
-            roomId: room ? room._id : null
-        });
+        const resident = await User.create(
+            [
+                {
+                    name,
+                    email: normalizedEmail,
+                    password: hashedPassword,
+                    role: "resident",
+                    roomId: room ? room._id : null
+                }
+            ],
+            { session }
+        );
 
-        // Update the room after creating the resident
         if (room) {
             room.occupiedBeds += 1;
-            await room.save();
+            await room.save({ session });
         }
+
+        await session.commitTransaction();
 
         res.status(201).json({
             success: true,
-            resident
+            resident: resident[0]
         });
-    } catch (error) {
-        console.error("ADD RESIDENT ERROR:", error.message);
-        next(error);
+    } catch (err) {
+        await session.abortTransaction();
+        next(err);
+    } finally {
+        session.endSession();
     }
 };

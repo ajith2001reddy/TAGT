@@ -1,33 +1,37 @@
 const Request = require("../models/Request");
 
-/* =====================================================
-   MAINTENANCE COST FORECAST ENGINE
-===================================================== */
-
 async function getMonthlyMaintenanceCosts(months = 6) {
     const now = new Date();
     const history = [];
 
-    for (let i = months; i > 0; i--) {
+    const ranges = Array.from({ length: months }, (_, i) => {
         const start = new Date(
             now.getFullYear(),
-            now.getMonth() - i,
+            now.getMonth() - (months - i),
             1
         );
         const end = new Date(
             now.getFullYear(),
-            now.getMonth() - i + 1,
+            now.getMonth() - (months - i) + 1,
             0,
             23,
             59,
             59
         );
+        return { start, end };
+    });
 
-        const requests = await Request.find({
-            createdAt: { $gte: start, $lte: end }
-        });
+    const requestsByMonth = await Promise.all(
+        ranges.map(({ start, end }) =>
+            Request.find(
+                { createdAt: { $gte: start, $lte: end } },
+                "cost"
+            ).lean()
+        )
+    );
 
-        const totalCost = requests.reduce(
+    ranges.forEach(({ start }, idx) => {
+        const totalCost = requestsByMonth[idx].reduce(
             (sum, r) => sum + (r.cost || 0),
             0
         );
@@ -36,7 +40,7 @@ async function getMonthlyMaintenanceCosts(months = 6) {
             month: start.toISOString().slice(0, 7),
             cost: Number(totalCost.toFixed(2))
         });
-    }
+    });
 
     return history;
 }
@@ -68,11 +72,14 @@ function detectSpikeRisk(history) {
 async function predictMaintenanceCost(monthsAhead = 6) {
     const history = await getMonthlyMaintenanceCosts(6);
 
-    if (history.length === 0) {
+    if (!history.length) {
         return {
             history: [],
             forecast: [],
-            note: "Not enough data to forecast maintenance costs"
+            meta: {
+                model: "Insufficient data",
+                generatedAt: new Date()
+            }
         };
     }
 
@@ -83,8 +90,7 @@ async function predictMaintenanceCost(monthsAhead = 6) {
     const forecast = [];
 
     for (let i = 1; i <= monthsAhead; i++) {
-        currentCost += trend;
-        currentCost = Math.max(0, currentCost);
+        currentCost = Math.max(0, currentCost + trend);
 
         const date = new Date();
         date.setMonth(date.getMonth() + i);
@@ -102,11 +108,9 @@ async function predictMaintenanceCost(monthsAhead = 6) {
             trend: Number(trend.toFixed(2)),
             spikeRisk,
             generatedAt: new Date(),
-            model: "Linear Trend + Spike Detection"
+            model: "Linear Trend Projection"
         }
     };
 }
 
-module.exports = {
-    predictMaintenanceCost
-};
+module.exports = { predictMaintenanceCost };

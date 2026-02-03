@@ -12,40 +12,29 @@ import Request from "../models/Request.js";
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
 
-// NOTE:
-// RequestHistory model is referenced in old code.
-// If it exists, convert it later and uncomment the import.
-// import RequestHistory from "../models/RequestHistory.js";
-
 const router = Router();
 
 /* =========================
    RESIDENT MANAGEMENT
 ========================= */
 
-// GET all residents
 router.get("/residents", auth, isAdmin, getAllResidents);
-
-// ADD resident
 router.post("/residents", auth, isAdmin, addResident);
 
 /* =========================
    REQUESTS
 ========================= */
 
-// GET all maintenance requests
 router.get("/requests", auth, isAdmin, async (req, res, next) => {
     try {
         const requests = await Request.find()
             .populate("residentId", "name email")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
-        res.json({
-            success: true,
-            requests
-        });
-    } catch (error) {
-        next(error);
+        res.json({ success: true, requests });
+    } catch (err) {
+        next(err);
     }
 });
 
@@ -55,24 +44,23 @@ router.get("/requests", auth, isAdmin, async (req, res, next) => {
 
 router.get("/stats", auth, isAdmin, async (req, res, next) => {
     try {
-        const totalResidents = await User.countDocuments({
-            role: "resident",
-            isActive: true
-        });
+        const [
+            totalResidents,
+            pendingRequests,
+            payments
+        ] = await Promise.all([
+            User.countDocuments({ role: "resident", isActive: true }),
+            Request.countDocuments({ status: { $ne: "resolved" } }),
+            Payment.find({}, "amount status").lean()
+        ]);
 
-        const pendingRequests = await Request.countDocuments({
-            status: { $ne: "resolved" }
-        });
+        let totalRevenue = 0;
+        let outstandingBalance = 0;
 
-        const payments = await Payment.find({}, "amount status");
-
-        const totalRevenue = payments
-            .filter((p) => p.status === "paid")
-            .reduce((sum, p) => sum + (p.amount || 0), 0);
-
-        const outstandingBalance = payments
-            .filter((p) => p.status === "unpaid")
-            .reduce((sum, p) => sum + (p.amount || 0), 0);
+        for (const p of payments) {
+            if (p.status === "paid") totalRevenue += p.amount || 0;
+            else outstandingBalance += p.amount || 0;
+        }
 
         res.json({
             success: true,
@@ -83,8 +71,8 @@ router.get("/stats", auth, isAdmin, async (req, res, next) => {
                 outstandingBalance
             }
         });
-    } catch (error) {
-        next(error);
+    } catch (err) {
+        next(err);
     }
 });
 

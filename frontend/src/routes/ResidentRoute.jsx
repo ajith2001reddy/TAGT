@@ -14,12 +14,12 @@ export default function ResidentRoute({ children }) {
 
     // Not logged in
     if (!token) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/login" replace />;
     }
 
     // Logged in but not resident
     if (role !== "resident") {
-        return <Navigate to="/admin" replace />;
+        return <Navigate to={role === "admin" ? "/admin" : "/"} replace />;
     }
 
     // Resident allowed

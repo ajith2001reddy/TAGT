@@ -37,7 +37,7 @@ export default function AdminRooms() {
     /* ================= ADD rooms ================= */
     const addRoom = async () => {
         if (!form.roomNumber || !form.totalBeds) {
-            toast.error("rooms number and total beds are required");
+            toast.error("Room number and total beds are required");
             return;
         }
 
@@ -53,11 +53,11 @@ export default function AdminRooms() {
                 note: form.note
             });
 
-            toast.success("rooms added successfully");
+            toast.success("Room added successfully");
             setForm({ roomNumber: "", totalBeds: "", note: "" });
             fetchRooms();
         } catch {
-            toast.error("Failed to add rooms");
+            toast.error("Failed to add room");
         }
     };
 
@@ -93,24 +93,24 @@ export default function AdminRooms() {
     };
 
     /* ================= DELETE rooms ================= */
-    const deleteRoom = async (rooms) => {
-        if (rooms.occupiedBeds > 0) {
-            toast.error("Cannot delete a rooms with occupied beds");
+    const deleteRoom = async (room) => {
+        if (room.occupiedBeds > 0) {
+            toast.error("Cannot delete a room with occupied beds");
             return;
         }
 
         const confirm = window.confirm(
-            `Delete rooms ${rooms.roomNumber}? This cannot be undone.`
+            `Delete room ${room.roomNumber}? This cannot be undone.`
         );
 
         if (!confirm) return;
 
         try {
-            await api.delete(`/rooms/${rooms._id}`);
-            toast.success("rooms deleted");
+            await api.delete(`/rooms/${room._id}`);
+            toast.success("Room deleted");
             fetchRooms();
         } catch {
-            toast.error("Failed to delete rooms");
+            toast.error("Failed to delete room");
         }
     };
 
@@ -126,15 +126,15 @@ export default function AdminRooms() {
                     </p>
                 </div>
 
-                {/* ADD rooms */}
+                {/* ADD ROOM */}
                 <div className="bg-white rounded-2xl border p-6">
                     <h2 className="text-lg font-semibold mb-4">
-                        Add New rooms
+                        Add New Room
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <input
-                            placeholder="rooms Number"
+                            placeholder="Room Number"
                             className="border rounded-lg p-2"
                             value={form.roomNumber}
                             onChange={(e) =>
@@ -165,7 +165,7 @@ export default function AdminRooms() {
                             onClick={addRoom}
                             className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
                         >
-                            Add rooms
+                            Add Room
                         </button>
                     </div>
                 </div>
@@ -187,7 +187,7 @@ export default function AdminRooms() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b text-gray-500">
-                                        <th className="p-2 text-left">rooms</th>
+                                        <th className="p-2 text-left">Room</th>
                                         <th className="p-2 text-center">
                                             Total Beds
                                         </th>
@@ -203,23 +203,23 @@ export default function AdminRooms() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {rooms.map((r) => {
+                                    {rooms.map((room) => {
                                         const availableBeds =
-                                            r.totalBeds - r.occupiedBeds;
+                                            room.totalBeds - room.occupiedBeds;
 
                                         return (
                                             <tr
-                                                key={r._id}
+                                                key={room._id}
                                                 className="border-b hover:bg-gray-50"
                                             >
                                                 <td className="p-2">
-                                                    {r.roomNumber}
+                                                    {room.roomNumber}
                                                 </td>
                                                 <td className="p-2 text-center">
-                                                    {r.totalBeds}
+                                                    {room.totalBeds}
                                                 </td>
                                                 <td className="p-2 text-center">
-                                                    {r.occupiedBeds}
+                                                    {room.occupiedBeds}
                                                 </td>
                                                 <td className="p-2 text-center font-semibold">
                                                     {availableBeds}
@@ -227,10 +227,10 @@ export default function AdminRooms() {
                                                 <td className="p-2 text-center space-x-2">
                                                     <button
                                                         onClick={() => {
-                                                            setSelectedRoom(r);
+                                                            setSelectedRoom(room);
                                                             setOccupiedBeds(
                                                                 String(
-                                                                    r.occupiedBeds
+                                                                    room.occupiedBeds
                                                                 )
                                                             );
                                                         }}
@@ -240,7 +240,7 @@ export default function AdminRooms() {
                                                     </button>
                                                     <button
                                                         onClick={() =>
-                                                            deleteRoom(r)
+                                                            deleteRoom(room)
                                                         }
                                                         className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
                                                     >
@@ -262,7 +262,7 @@ export default function AdminRooms() {
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl p-6 w-96">
                         <h3 className="text-lg font-semibold mb-4">
-                            Update Occupancy – rooms{" "}
+                            Update Occupancy – Room{" "}
                             {selectedRoom.roomNumber}
                         </h3>
 

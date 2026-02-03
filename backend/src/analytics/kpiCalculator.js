@@ -2,22 +2,22 @@ const Room = require("../models/rooms");
 const Payment = require("../models/Payment");
 const Request = require("../models/Request");
 
-/* =====================================================
-   KPI CALCULATOR (SNAPSHOT-BASED)
-===================================================== */
-
 async function getKPIs({ fromDate, toDate } = {}) {
     const dateFilter =
         fromDate && toDate
             ? { createdAt: { $gte: fromDate, $lte: toDate } }
             : {};
 
-    /* =======================
-       OCCUPANCY KPI
-    ======================= */
-    const roomDocs = await Room.find({}, "totalBeds occupiedBeds");
+    const [rooms, payments, resolvedRequests] = await Promise.all([
+        Room.find({}, "totalBeds occupiedBeds").lean(),
+        Payment.find(dateFilter, "amount status").lean(),
+        Request.find(
+            { status: "resolved", ...dateFilter },
+            "createdAt updatedAt"
+        ).lean()
+    ]);
 
-    const totals = roomDocs.reduce(
+    const totals = rooms.reduce(
         (acc, room) => {
             acc.totalBeds += room.totalBeds || 0;
             acc.occupiedBeds += room.occupiedBeds || 0;
@@ -32,11 +32,6 @@ async function getKPIs({ fromDate, toDate } = {}) {
             : Number(
                 ((totals.occupiedBeds / totals.totalBeds) * 100).toFixed(2)
             );
-
-    /* =======================
-       PAYMENT COLLECTION KPI
-    ======================= */
-    const payments = await Payment.find(dateFilter, "amount status");
 
     let totalBilled = 0;
     let totalCollected = 0;
@@ -53,21 +48,12 @@ async function getKPIs({ fromDate, toDate } = {}) {
             ? 0
             : Number(((totalCollected / totalBilled) * 100).toFixed(2));
 
-    /* =======================
-       MAINTENANCE KPI
-    ======================= */
-    const resolvedRequests = await Request.find(
-        { status: "resolved", ...dateFilter },
-        "createdAt updatedAt"
-    );
-
     let totalResolutionHours = 0;
 
     for (const req of resolvedRequests) {
-        const hours =
+        totalResolutionHours +=
             (new Date(req.updatedAt) - new Date(req.createdAt)) /
             (1000 * 60 * 60);
-        totalResolutionHours += hours;
     }
 
     const avgResolutionTime =
@@ -101,6 +87,4 @@ async function getKPIs({ fromDate, toDate } = {}) {
     };
 }
 
-module.exports = {
-    getKPIs
-};
+module.exports = { getKPIs };

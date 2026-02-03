@@ -1,110 +1,128 @@
 ﻿import { NavLink } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 
 const base =
-    "block px-4 py-3 rounded-lg hover:bg-gray-700 transition";
+    "flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all";
 const active =
-    "bg-gray-800 font-semibold";
+    "bg-blue-500/90 text-white shadow-lg shadow-blue-500/25";
+const idle =
+    "text-gray-300 hover:bg-white/10";
 
-export default function Sidebar({ open, onClose }) {
+export default function Sidebar({ onNavigate }) {
     const { user, logout } = useAuth();
     const role = user?.role;
 
-    const handleLogout = () => {
-        onClose();
-        logout();
-    };
-
     return (
-        <>
-            {/* Overlay – mobile only */}
-            {open && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
-                    onClick={onClose}
-                />
-            )}
+        <motion.div
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="
+                h-full flex flex-col px-4 py-6 space-y-6
+                bg-black/40 backdrop-blur-2xl
+                border-r border-white/10
+            "
+        >
+            {/* Brand */}
+            <div className="px-2">
+                <h1 className="text-2xl font-bold text-white tracking-tight">
+                    TAGT
+                </h1>
+                <p className="text-xs text-gray-400">
+                    Property Management
+                </p>
+            </div>
 
-            <aside
-                className={`
-                    fixed top-0 left-0 z-50
-                    w-64 h-full
-                    bg-gray-900 text-white
-                    transform transition-transform duration-300
-                    ${open ? "translate-x-0" : "-translate-x-full"}
-                    md:translate-x-0
-                    flex flex-col
-                `}
-            >
-                {/* Header */}
-                <div className="p-4 text-xl font-bold border-b border-gray-700 pt-safe">
-                    TAGT PMS
+            {/* Navigation */}
+            <nav className="flex-1 space-y-6">
+                <div>
+                    <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
+                        Dashboard
+                    </p>
+
+                    <NavLink
+                        to={role === "admin" ? "/admin" : "/resident"}
+                        end
+                        onClick={onNavigate}
+                        className={({ isActive }) =>
+                            `${base} ${isActive ? active : idle}`
+                        }
+                    >
+                        Overview
+                    </NavLink>
                 </div>
 
-                {/* Nav */}
-                <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-                    {/* Dashboard */}
-                    <NavLink
-                        to={
-                            role === "admin"
-                                ? "/admin/dashboard"
-                                : "/resident/dashboard"
-                        }
-                        className={({ isActive }) =>
-                            `${base} ${isActive ? active : ""}`
-                        }
-                        onClick={onClose}
-                    >
-                        Dashboard
-                    </NavLink>
+                {role === "admin" && (
+                    <div>
+                        <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
+                            Management
+                        </p>
 
-                    {/* Admin Links */}
-                    {role === "admin" && (
-                        <>
+                        {[
+                            { to: "/admin/requests", label: "Requests" },
+                            { to: "/admin/residents", label: "Residents" },
+                            { to: "/admin/rooms", label: "Rooms" },
+                            { to: "/payments", label: "Payments" }
+                        ].map((item) => (
                             <NavLink
-                                to="/admin/requests"
+                                key={item.to}
+                                to={item.to}
+                                onClick={onNavigate}
                                 className={({ isActive }) =>
-                                    `${base} ${isActive ? active : ""}`
+                                    `${base} ${isActive ? active : idle}`
                                 }
-                                onClick={onClose}
                             >
-                                Requests
+                                {item.label}
                             </NavLink>
+                        ))}
+                    </div>
+                )}
 
-                            <NavLink
-                                to="/admin/residents"
-                                className={({ isActive }) =>
-                                    `${base} ${isActive ? active : ""}`
-                                }
-                                onClick={onClose}
-                            >
-                                Residents
-                            </NavLink>
-                        </>
-                    )}
+                {role === "resident" && (
+                    <div>
+                        <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
+                            My Space
+                        </p>
 
-                    {/* Resident Links */}
-                    {role === "resident" && (
                         <NavLink
-                            to="/resident/requests"
+                            to="/resident"
+                            end
+                            onClick={onNavigate}
                             className={({ isActive }) =>
-                                `${base} ${isActive ? active : ""}`
+                                `${base} ${isActive ? active : idle}`
                             }
-                            onClick={onClose}
                         >
                             My Requests
                         </NavLink>
-                    )}
 
-                    {/* Logout */}
-                    <button
-                        onClick={handleLogout}
-                        className="mt-6 w-full text-left px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition"
-                    >
-                        Logout
-                    </button>
-                </nav>
-            </aside>
-        </>
+                        <NavLink
+                            to="/resident/payments"
+                            onClick={onNavigate}
+                            className={({ isActive }) =>
+                                `${base} ${isActive ? active : idle}`
+                            }
+                        >
+                            My Payments
+                        </NavLink>
+                    </div>
+                )}
+            </nav>
+
+            {/* Logout */}
+            <button
+                onClick={() => {
+                    logout();
+                    onNavigate?.();
+                }}
+                className="
+                    mt-auto px-4 py-2 rounded-xl text-sm font-medium
+                    text-red-400 hover:bg-red-500/10
+                    transition
+                "
+            >
+                Logout
+            </button>
+        </motion.div>
     );
 }

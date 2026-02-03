@@ -1,36 +1,10 @@
-import { useState, useEffect } from "react";
-import Sidebar from "./Sidebar";
-import Navbar from "./Navbar";
+import { Outlet } from "react-router-dom";
 
-export default function AppLayout({ children }) {
-    const [open, setOpen] = useState(false);
-
-    // Lock body scroll when sidebar is open (mobile)
-    useEffect(() => {
-        if (open) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "";
-        }
-
-        return () => {
-            document.body.style.overflow = "";
-        };
-    }, [open]);
-
+export default function AppLayout() {
     return (
-        <div className="flex min-h-[100dvh] bg-gray-950">
-            <Sidebar open={open} onClose={() => setOpen(false)} />
-
-            <div
-                className={`flex flex-col flex-1 transition-all duration-300 ${open ? "md:ml-64" : ""
-                    }`}
-            >
-                <Navbar onMenuClick={() => setOpen(true)} />
-
-                <main className="flex-1 p-4 sm:p-6">
-                    {children}
-                </main>
+        <div className="min-h-screen bg-black text-white antialiased">
+            <div className="min-h-screen bg-gradient-to-br from-black via-gray-900/80 to-black">
+                <Outlet />
             </div>
         </div>
     );

@@ -2,21 +2,18 @@
 const Payment = require("../models/Payment");
 const { predictChurn } = require("./churnModel");
 
-/* =====================================================
-   REVENUE OPTIMIZATION ENGINE (SNAPSHOT-BASED)
-===================================================== */
-
 async function optimizeRevenue() {
-    /* =======================
-       OCCUPANCY ANALYSIS
-    ======================= */
-    const roomDocs = await Room.find({}, "totalBeds occupiedBeds rent");
+    const [rooms, payments] = await Promise.all([
+        Room.find({}, "totalBeds occupiedBeds rent").lean(),
+        Payment.find({}, "amount status").lean()
+    ]);
 
-    const totals = roomDocs.reduce(
+    const totals = rooms.reduce(
         (acc, room) => {
-            acc.totalBeds += room.totalBeds || 0;
+            const beds = room.totalBeds || 0;
+            acc.totalBeds += beds;
             acc.occupiedBeds += room.occupiedBeds || 0;
-            acc.totalRent += (room.rent || 0) * (room.totalBeds || 0);
+            acc.totalRent += (room.rent || 0) * beds;
             return acc;
         },
         { totalBeds: 0, occupiedBeds: 0, totalRent: 0 }
@@ -32,38 +29,25 @@ async function optimizeRevenue() {
             ? 0
             : totals.totalRent / totals.totalBeds;
 
-    /* =======================
-       PAYMENT COLLECTION
-    ======================= */
-    const payments = await Payment.find({}, "amount status");
+    let totalBilled = 0;
+    let totalCollected = 0;
 
-    const totalBilled = payments.reduce(
-        (sum, p) => sum + (p.amount || 0),
-        0
-    );
-
-    const collected = payments
-        .filter((p) => p.status === "paid")
-        .reduce((sum, p) => sum + (p.amount || 0), 0);
+    for (const p of payments) {
+        totalBilled += p.amount || 0;
+        if (p.status === "paid") totalCollected += p.amount || 0;
+    }
 
     const collectionRate =
-        totalBilled === 0 ? 0 : (collected / totalBilled) * 100;
+        totalBilled === 0
+            ? 0
+            : (totalCollected / totalBilled) * 100;
 
-    /* =======================
-       CHURN IMPACT
-    ======================= */
     let highRiskResidents = 0;
-
     try {
         const churnData = await predictChurn();
         highRiskResidents = churnData?.highRisk || 0;
-    } catch (err) {
-        console.warn("CHURN MODEL ERROR:", err.message);
-    }
+    } catch { }
 
-    /* =======================
-       INSIGHTS GENERATION
-    ======================= */
     const insights = [];
     let revenueLeakEstimate = 0;
 
@@ -81,7 +65,7 @@ async function optimizeRevenue() {
     }
 
     if (collectionRate < 85) {
-        revenueLeakEstimate += totalBilled - collected;
+        revenueLeakEstimate += totalBilled - totalCollected;
 
         insights.push({
             type: "PAYMENTS",
@@ -102,7 +86,7 @@ async function optimizeRevenue() {
         });
     }
 
-    if (insights.length === 0) {
+    if (!insights.length) {
         insights.push({
             type: "HEALTHY",
             severity: "LOW",
@@ -123,12 +107,8 @@ async function optimizeRevenue() {
         },
         revenueLeakEstimate: Math.round(revenueLeakEstimate),
         insights,
-        meta: {
-            mode: "snapshot"
-        }
+        meta: { mode: "snapshot" }
     };
 }
 
-module.exports = {
-    optimizeRevenue
-};
+module.exports = { optimizeRevenue };

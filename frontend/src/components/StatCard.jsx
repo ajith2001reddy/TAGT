@@ -1,12 +1,5 @@
 import { motion } from "framer-motion";
 
-/**
- * STAT CARD (MOBILE SAFE)
- * - Dark theme friendly
- * - Responsive typography
- * - No hover jank on mobile
- */
-
 export default function StatCard({
     title,
     value,
@@ -15,23 +8,24 @@ export default function StatCard({
     accent = "blue"
 }) {
     const accentMap = {
-        blue: "bg-blue-600/20 text-blue-400",
-        green: "bg-green-600/20 text-green-400",
-        red: "bg-red-600/20 text-red-400",
-        yellow: "bg-yellow-600/20 text-yellow-400"
+        blue: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+        green: "bg-green-500/20 text-green-400 border-green-500/30",
+        red: "bg-red-500/20 text-red-400 border-red-500/30",
+        yellow: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
     };
 
     return (
         <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -4 }}
-            transition={{ type: "spring", stiffness: 300 }}
             className="
-                bg-white/10 border border-white/10
+                glass
                 rounded-2xl
                 p-4 sm:p-6
-                shadow-sm hover:shadow-md
-                transition
-                text-gray-100
+                text-white
+                transition-all
             "
         >
             <div className="flex items-center justify-between gap-4">
@@ -40,7 +34,7 @@ export default function StatCard({
                         {title}
                     </p>
 
-                    <h3 className="text-2xl sm:text-3xl font-bold mt-2 break-all">
+                    <h3 className="text-2xl sm:text-3xl font-semibold mt-2 break-all">
                         {value}
                     </h3>
 
@@ -57,6 +51,8 @@ export default function StatCard({
                             flex-shrink-0
                             h-10 w-10 sm:h-12 sm:w-12
                             rounded-xl
+                            border
+                            backdrop-blur-md
                             flex items-center justify-center
                             ${accentMap[accent]}
                         `}

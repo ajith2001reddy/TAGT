@@ -44,8 +44,8 @@ export default function ResidentPayments() {
     const StatusBadge = ({ status }) => (
         <span
             className={`px-2 py-1 rounded text-xs font-semibold capitalize ${status === "paid"
-                    ? "bg-green-600/20 text-green-400"
-                    : "bg-red-600/20 text-red-400"
+                ? "bg-green-600/20 text-green-400"
+                : "bg-red-600/20 text-red-400"
                 }`}
         >
             {status}

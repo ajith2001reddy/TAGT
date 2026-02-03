@@ -11,10 +11,6 @@ import {
 import { motion } from "framer-motion";
 import { predictMaintenanceCost } from "../services/analyticsService";
 
-/* =====================================================
-   MAINTENANCE COST FORECAST – MOBILE SAFE
-===================================================== */
-
 export default function MaintenanceCostForecast() {
     const [months, setMonths] = useState(6);
     const [data, setData] = useState([]);
@@ -40,8 +36,7 @@ export default function MaintenanceCostForecast() {
 
             setMeta(res?.meta || null);
             setData([...history, ...forecast]);
-        } catch (err) {
-            console.error("MAINTENANCE FORECAST ERROR", err);
+        } catch {
             setData([]);
             setMeta(null);
         } finally {
@@ -55,15 +50,15 @@ export default function MaintenanceCostForecast() {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6"
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="glass rounded-2xl p-4 sm:p-6"
         >
             {/* HEADER */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
-                    <h2 className="text-lg font-semibold">
+                    <h2 className="text-lg font-semibold text-white">
                         Maintenance Cost Forecast
                     </h2>
                     <p className="text-sm text-gray-400">
@@ -71,19 +66,16 @@ export default function MaintenanceCostForecast() {
                     </p>
                 </div>
 
-                {/* RANGE SELECTOR */}
                 <div className="flex gap-2">
                     {[3, 6, 12].map((m) => (
                         <button
                             key={m}
                             onClick={() => setMonths(m)}
-                            className={`
-                                px-3 py-2 rounded-lg text-sm
-                                min-h-[40px]
+                            className={`px-3 py-2 rounded-xl text-sm font-medium transition
                                 ${months === m
-                                    ? "bg-amber-600 text-white"
-                                    : "bg-white/10 text-gray-300 hover:bg-white/20"}
-                            `}
+                                    ? "bg-amber-500/90 text-black shadow-lg shadow-amber-500/30"
+                                    : "bg-white/10 text-gray-300 hover:bg-white/20"
+                                }`}
                         >
                             {m}M
                         </button>
@@ -93,10 +85,10 @@ export default function MaintenanceCostForecast() {
 
             {/* META */}
             {meta && (
-                <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-6 text-sm text-gray-400">
+                <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:gap-6 text-sm text-gray-400">
                     <span>
                         Avg Trend:{" "}
-                        <strong className="text-gray-200">
+                        <strong className="text-white">
                             ${meta.trend}/month
                         </strong>
                     </span>
@@ -119,9 +111,9 @@ export default function MaintenanceCostForecast() {
 
             {/* CHART */}
             {loading ? (
-                <div className="h-48 sm:h-64 animate-pulse bg-white/5 rounded-xl" />
+                <div className="h-56 rounded-xl bg-white/5 animate-pulse" />
             ) : data.length === 0 ? (
-                <p className="text-gray-400 text-center py-10">
+                <p className="text-gray-400 text-center py-12">
                     Not enough data to generate forecast
                 </p>
             ) : (
@@ -133,27 +125,29 @@ export default function MaintenanceCostForecast() {
                         >
                             <CartesianGrid
                                 strokeDasharray="3 3"
-                                stroke="#334155"
+                                stroke="rgba(255,255,255,0.08)"
                             />
                             <XAxis
                                 dataKey="month"
-                                stroke="#94a3b8"
+                                stroke="#9ca3af"
                                 tick={{ fontSize: 11 }}
                                 angle={-30}
                                 textAnchor="end"
                                 height={50}
                             />
                             <YAxis
-                                stroke="#94a3b8"
+                                stroke="#9ca3af"
                                 tick={{ fontSize: 11 }}
                                 tickFormatter={(v) => `$${v}`}
                             />
                             <Tooltip
                                 contentStyle={{
-                                    background: "#020617",
-                                    border: "1px solid #334155",
-                                    borderRadius: "8px",
-                                    fontSize: "12px"
+                                    background: "rgba(0,0,0,0.85)",
+                                    backdropFilter: "blur(12px)",
+                                    border: "1px solid rgba(255,255,255,0.15)",
+                                    borderRadius: "12px",
+                                    fontSize: "12px",
+                                    color: "#fff"
                                 }}
                                 formatter={(v) => [`$${v}`, "Cost"]}
                             />

@@ -1,32 +1,26 @@
+import mongoose from "mongoose";
 import Room from "../models/rooms.js";
-import { logger } from "../utils/logger.js"; // Assuming a logger utility like winston is set up
+import { logger } from "../utils/logger.js";
 
-/* ============================
-   GET ALL ROOMS
-============================ */
 export const getAllRooms = async (req, res, next) => {
     try {
-        const rooms = await Room.find().sort({ createdAt: -1 });
-
-        res.json({
-            success: true,
-            rooms
-        });
-    } catch (error) {
-        logger.error("GET ROOMS ERROR:", error.message);
-        next(error);
+        const rooms = await Room.find().sort({ createdAt: -1 }).lean();
+        res.json({ success: true, rooms });
+    } catch (err) {
+        logger.error(`GET ROOMS ERROR: ${err.message}`);
+        next(err);
     }
 };
 
-/* ============================
-   ADD NEW ROOM
-============================ */
 export const addRoom = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const { roomNumber, rent, totalBeds, note } = req.body;
 
-        // Validation for required fields and correct data types
-        if (!roomNumber || !rent || !totalBeds) {
+        if (!roomNumber || rent == null || totalBeds == null) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: "Room number, rent, and total beds are required"
@@ -34,6 +28,7 @@ export const addRoom = async (req, res, next) => {
         }
 
         if (typeof rent !== "number" || rent <= 0) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: "Rent must be a positive number"
@@ -41,61 +36,60 @@ export const addRoom = async (req, res, next) => {
         }
 
         if (typeof totalBeds !== "number" || totalBeds <= 0) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: "Total beds must be a positive number"
             });
         }
 
-        // Room number format validation (example: alphanumeric format)
-        const roomNumberRegex = /^[A-Za-z0-9]+$/;
-        if (!roomNumberRegex.test(roomNumber)) {
+        if (!/^[A-Za-z0-9]+$/.test(roomNumber)) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: "Room number must be alphanumeric"
             });
         }
 
-        // Check if the room number already exists
-        const exists = await Room.findOne({ roomNumber });
+        const exists = await Room.findOne({ roomNumber }).session(session);
         if (exists) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: "Room number already exists"
             });
         }
 
-        // Ensure note is a string (optional field)
-        const roomNote = typeof note === "string" ? note : "";
+        const [room] = await Room.create(
+            [
+                {
+                    roomNumber,
+                    rent,
+                    totalBeds,
+                    occupiedBeds: 0,
+                    note: typeof note === "string" ? note : ""
+                }
+            ],
+            { session }
+        );
 
-        // Create new room
-        const room = await Room.create({
-            roomNumber,
-            rent,
-            totalBeds,
-            occupiedBeds: 0,
-            note: roomNote
-        });
+        await session.commitTransaction();
 
-        logger.info(`Room added: ${roomNumber}`); // Log room creation
-        res.status(201).json({
-            success: true,
-            room
-        });
-    } catch (error) {
-        logger.error("ADD ROOM ERROR:", error.message);
-        next(error);
+        logger.info(`Room added: ${room.roomNumber}`);
+        res.status(201).json({ success: true, room });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`ADD ROOM ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
     }
 };
 
-/* ============================
-   DELETE ROOM
-============================ */
 export const deleteRoom = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        // Find room by ID
         const room = await Room.findById(id);
         if (!room) {
             return res.status(404).json({
@@ -104,7 +98,6 @@ export const deleteRoom = async (req, res, next) => {
             });
         }
 
-        // Check if the room is still occupied by residents
         if (room.occupiedBeds > 0) {
             return res.status(400).json({
                 success: false,
@@ -112,16 +105,15 @@ export const deleteRoom = async (req, res, next) => {
             });
         }
 
-        // Delete room
         await room.deleteOne();
 
-        logger.info(`Room deleted: ${room.roomNumber}`); // Log room deletion
+        logger.info(`Room deleted: ${room.roomNumber}`);
         res.json({
             success: true,
             message: "Room deleted successfully"
         });
-    } catch (error) {
-        logger.error("DELETE ROOM ERROR:", error.message);
-        next(error);
+    } catch (err) {
+        logger.error(`DELETE ROOM ERROR: ${err.message}`);
+        next(err);
     }
 };

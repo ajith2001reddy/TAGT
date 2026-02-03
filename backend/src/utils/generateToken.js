@@ -1,12 +1,7 @@
 import jwt from "jsonwebtoken";
 
-/**
- * Generate JWT for authenticated user
- * @param {Object} user - User object
- * @returns {string} JWT token
- */
 const generateToken = (user) => {
-    if (!user || !user.id || !user.role) {
+    if (!user?.id || !user?.role) {
         throw new Error("Invalid user data for token generation");
     }
 

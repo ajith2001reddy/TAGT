@@ -8,20 +8,17 @@ const requestSchema = new mongoose.Schema(
             required: true,
             index: true
         },
-
         message: {
             type: String,
             required: true,
             trim: true
         },
-
         status: {
             type: String,
             enum: ["pending", "in-progress", "resolved"],
             default: "pending",
             index: true
         },
-
         statusHistory: [
             {
                 status: {
@@ -34,7 +31,6 @@ const requestSchema = new mongoose.Schema(
                 }
             }
         ],
-
         adminNotes: [
             {
                 note: {
@@ -54,12 +50,16 @@ const requestSchema = new mongoose.Schema(
                 }
             }
         ],
-
         workflowStatus: {
             type: String,
             enum: ["Received", "In-Progress", "On Hold", "Done"],
             default: "Received",
             index: true
+        },
+        cost: {
+            type: Number,
+            default: 0,
+            min: 0
         }
     },
     {
@@ -67,13 +67,8 @@ const requestSchema = new mongoose.Schema(
     }
 );
 
-/* =========================
-   INDEXES
-========================= */
 requestSchema.index({ residentId: 1, status: 1 });
 requestSchema.index({ status: 1, createdAt: -1 });
 requestSchema.index({ workflowStatus: 1, createdAt: -1 });
 
-const Request = mongoose.model("Request", requestSchema);
-
-export default Request;
+export default mongoose.model("Request", requestSchema);

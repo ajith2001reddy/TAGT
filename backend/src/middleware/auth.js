@@ -1,10 +1,5 @@
 ﻿import jwt from "jsonwebtoken";
 
-/**
- * Authentication middleware
- * - Verifies JWT token
- * - Attaches user info to req.user
- */
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
@@ -16,7 +11,6 @@ const authMiddleware = (req, res, next) => {
     }
 
     if (!process.env.JWT_SECRET) {
-        console.error("❌ JWT_SECRET is not defined");
         return res.status(500).json({
             success: false,
             message: "Server configuration error"
@@ -24,7 +18,7 @@ const authMiddleware = (req, res, next) => {
     }
 
     try {
-        const token = authHeader.replace("Bearer", "").trim();
+        const token = authHeader.split(" ")[1];
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -34,8 +28,7 @@ const authMiddleware = (req, res, next) => {
         };
 
         next();
-    } catch (error) {
-        console.warn("❌ AUTH FAILED:", error.message);
+    } catch {
         return res.status(401).json({
             success: false,
             message: "Invalid or expired token"

@@ -1,116 +1,75 @@
+import { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { NavLink } from "react-router-dom";
-import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
+import SidebarContent from "../components/SidebarContent"; // Assuming SidebarContent is in a separate file for reusability
 
 export default function DashboardLayout({ children }) {
-    const token = localStorage.getItem("token");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    let role = null;
-    try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        role = payload.role;
-    } catch {
-        role = null;
-    }
+    const role = useMemo(() => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) return null;
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            return payload.role;
+        } catch {
+            return null;
+        }
+    }, []);
 
     const baseLink =
-        "flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium";
-
-    const linkClass = ({ isActive }) =>
-        isActive
-            ? `${baseLink} bg-blue-600 text-white shadow`
-            : `${baseLink} text-gray-300 hover:bg-white/10`;
+        "flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all";
+    const active =
+        "bg-blue-500/90 text-white shadow-lg shadow-blue-500/20";
+    const idle =
+        "text-gray-300 hover:bg-white/10";
 
     return (
-        <div className="min-h-screen text-gray-100">
-            <Navbar />
+        <div className="min-h-screen bg-black text-gray-100">
+            {/* Navbar */}
+            <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-            <div className="flex backdrop-blur-xl bg-black/40 min-h-[calc(100vh-64px)]">
-                <motion.aside
-                    initial={false}
-                    whileHover={{ x: 2 }}
-                    transition={{ type: "spring", stiffness: 120, damping: 18 }}
-                    className="w-64 px-4 py-6 border-r border-white/10 bg-white/5 backdrop-blur-xl"
-                >
-                    <div className="mb-8 px-2">
-                        <h1 className="text-2xl font-bold text-blue-400">
-                            TAGT
-                        </h1>
-                        <p className="text-xs text-gray-400">
-                            Property Management
-                        </p>
-                    </div>
+            <div className="flex min-h-[calc(100vh-64px)]">
+                {/* Desktop Sidebar */}
+                <aside className="hidden lg:block w-64 border-r border-white/10 bg-white/5 backdrop-blur-xl">
+                    <SidebarContent role={role} linkClass={(props) => `${baseLink} ${props.isActive ? active : idle}`} />
+                </aside>
 
-                    <nav className="space-y-6">
-                        {/* COMMON */}
-                        <div>
-                            <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
-                                Dashboard
-                            </p>
+                {/* Mobile Sidebar */}
+                <AnimatePresence>
+                    {sidebarOpen && (
+                        <>
+                            {/* Overlay */}
+                            <motion.div
+                                className="fixed inset-0 bg-black/60 z-40"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setSidebarOpen(false)}
+                            />
 
-                            <NavLink
-                                to={role === "admin" ? "/admin" : "/resident"}
-                                end
-                                className={linkClass}
+                            {/* Drawer */}
+                            <motion.aside
+                                className="fixed left-0 top-0 bottom-0 w-64 z-50 bg-black/90 backdrop-blur-xl border-r border-white/10"
+                                initial={{ x: -300 }}
+                                animate={{ x: 0 }}
+                                exit={{ x: -300 }}
+                                transition={{ type: "spring", stiffness: 120, damping: 20 }}
                             >
-                                Overview
-                            </NavLink>
+                                <SidebarContent
+                                    role={role}
+                                    linkClass={(props) => `${baseLink} ${props.isActive ? active : idle}`}
+                                    onNavigate={() => setSidebarOpen(false)}
+                                />
+                            </motion.aside>
+                        </>
+                    )}
+                </AnimatePresence>
 
-                        </div>
-
-                        {/* ADMIN */}
-                        {role === "admin" && (
-                            <div>
-                                <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
-                                    Management
-                                </p>
-
-                                {[
-                                    { to: "/admin/requests", label: "Requests" },
-                                    { to: "/admin/history", label: "History" },
-                                    { to: "/admin/residents", label: "Residents" },
-                                    { to: "/admin/rooms", label: "rooms" },
-                                    { to: "/payments", label: "Payments" }
-                                ].map((item) => (
-                                    <NavLink
-                                        key={item.to}
-                                        to={item.to}
-                                        className={linkClass}
-                                    >
-                                        {item.label}
-                                    </NavLink>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* RESIDENT */}
-                        {role === "resident" && (
-                            <div>
-                                <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
-                                    My Space
-                                </p>
-
-                                <NavLink
-                                    to="/resident"
-                                    end
-                                    className={linkClass}
-                                >
-                                    My Requests
-                                </NavLink>
-
-                                <NavLink
-                                    to="/resident/payments"
-                                    className={linkClass}
-                                >
-                                    My Payments
-                                </NavLink>
-                            </div>
-                        )}
-                    </nav>
-                </motion.aside>
-
-                <main className="flex-1 p-8 overflow-y-auto">
-                    <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6 shadow-xl">
+                {/* Main Content */}
+                <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+                    <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6 shadow-xl min-h-full">
                         {children}
                     </div>
                 </main>

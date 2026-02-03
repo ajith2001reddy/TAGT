@@ -8,47 +8,41 @@ const paymentSchema = new mongoose.Schema(
             required: true,
             index: true
         },
-
         amount: {
             type: Number,
             required: true,
             min: 0
         },
-
         description: {
             type: String,
-            default: "",
-            trim: true
+            trim: true,
+            default: ""
         },
-
         type: {
             type: String,
-            default: "manual"
-        },
-
-        month: {
-            type: String,
-            default: null,
+            enum: ["manual", "auto"],
+            default: "manual",
             index: true
         },
-
+        month: {
+            type: String,
+            index: true,
+            default: null
+        },
         status: {
             type: String,
             enum: ["unpaid", "paid"],
             default: "unpaid",
             index: true
         },
-
         adminNote: {
             type: String,
             default: ""
         },
-
         paidAt: {
             type: Date,
             default: null
         },
-
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
@@ -59,9 +53,6 @@ const paymentSchema = new mongoose.Schema(
     }
 );
 
-/* =========================
-   INDEXES
-========================= */
-paymentSchema.index({ residentId: 1, status: 1 });
+paymentSchema.index({ residentId: 1, status: 1, month: 1 });
 
 export default mongoose.model("Payment", paymentSchema);

@@ -5,15 +5,15 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
 
 /**
- * roomss (DARK THEME FIXED)
- * Phase 4 – rooms & Bed Management (Admin)
+ * Roomss Management (DARK THEME FIXED)
+ * Phase 4 – Rooms & Bed Management (Admin)
  */
 
-export default function roomss() {
-    const [roomss, setroomss] = useState([]);
+export default function Roomss() {
+    const [roomss, setRoomss] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    /* ===== ADD rooms FORM ===== */
+    /* ===== ADD ROOM FORM ===== */
     const [form, setForm] = useState({
         roomsNumber: "",
         totalBeds: "",
@@ -21,32 +21,32 @@ export default function roomss() {
     });
 
     /* ===== OCCUPANCY MODAL ===== */
-    const [selectedrooms, setSelectedrooms] = useState(null);
+    const [selectedRoom, setSelectedRoom] = useState(null);
     const [occupiedBeds, setOccupiedBeds] = useState("");
 
-    /* ================= FETCH roomsS ================= */
-    const fetchroomss = async () => {
+    /* ================= FETCH ROOMSS ================= */
+    const fetchRoomss = async () => {
         try {
             setLoading(true);
             const res = await api.get("/roomss");
-            setroomss(Array.isArray(res.data) ? res.data : []);
+            setRoomss(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error(err);
             toast.error("Failed to load roomss");
-            setroomss([]);
+            setRoomss([]);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchroomss();
+        fetchRoomss();
     }, []);
 
-    /* ================= ADD rooms ================= */
-    const addrooms = async () => {
+    /* ================= ADD ROOM ================= */
+    const addRoom = async () => {
         if (!form.roomsNumber || !form.totalBeds) {
-            toast.error("rooms number and total beds are required");
+            toast.error("Room number and total beds are required");
             return;
         }
 
@@ -57,12 +57,12 @@ export default function roomss() {
                 note: form.note
             });
 
-            toast.success("rooms added");
+            toast.success("Room added");
             setForm({ roomsNumber: "", totalBeds: "", note: "" });
-            fetchroomss();
+            fetchRoomss();
         } catch (err) {
             console.error(err);
-            toast.error("Failed to add rooms");
+            toast.error("Failed to add room");
         }
     };
 
@@ -75,49 +75,49 @@ export default function roomss() {
 
         try {
             await api.put(
-                `/roomss/${selectedrooms._id}/occupancy`,
+                `/roomss/${selectedRoom._id}/occupancy`,
                 { occupiedBeds: Number(occupiedBeds) }
             );
 
             toast.success("Occupancy updated");
-            setSelectedrooms(null);
+            setSelectedRoom(null);
             setOccupiedBeds("");
-            fetchroomss();
+            fetchRoomss();
         } catch (err) {
             console.error(err);
             toast.error("Failed to update occupancy");
         }
     };
 
-    /* ================= DELETE rooms ================= */
-    const deleterooms = async (rooms) => {
+    /* ================= DELETE ROOM ================= */
+    const deleteRoom = async (room) => {
         if (
             !window.confirm(
-                `Delete rooms ${rooms.roomsNumber}? This cannot be undone.`
+                `Delete room ${room.roomsNumber}? This cannot be undone.`
             )
         )
             return;
 
         try {
-            await api.delete(`/roomss/${rooms._id}`);
-            toast.success("rooms deleted");
-            fetchroomss();
+            await api.delete(`/roomss/${room._id}`);
+            toast.success("Room deleted");
+            fetchRoomss();
         } catch (err) {
             console.error(err);
-            toast.error("Failed to delete rooms");
+            toast.error("Failed to delete room");
         }
     };
 
     return (
         <DashboardLayout>
             <h2 className="text-2xl font-bold mb-6">
-                roomss & Bed Management
+                Room & Bed Management
             </h2>
 
-            {/* ADD rooms */}
+            {/* ADD ROOM */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
                 <input
-                    placeholder="rooms Number"
+                    placeholder="Room Number"
                     className="bg-black/30 text-gray-100 border border-white/10 p-2 rounded focus:outline-none"
                     value={form.roomsNumber}
                     onChange={(e) =>
@@ -154,28 +154,28 @@ export default function roomss() {
                 />
 
                 <button
-                    onClick={addrooms}
+                    onClick={addRoom}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                 >
-                    Add rooms
+                    Add Room
                 </button>
             </div>
 
-            {/* roomsS TABLE */}
+            {/* ROOM TABLE */}
             {loading ? (
                 <p className="text-center text-gray-400">
                     Loading…
                 </p>
             ) : roomss.length === 0 ? (
                 <p className="text-center text-gray-400">
-                    No roomss added yet.
+                    No rooms added yet.
                 </p>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-gray-200 border border-white/10 rounded-lg">
                         <thead className="bg-white/10">
                             <tr>
-                                <th className="p-3">rooms</th>
+                                <th className="p-3">Room</th>
                                 <th className="p-3">Total Beds</th>
                                 <th className="p-3">Occupied</th>
                                 <th className="p-3">Available</th>
@@ -198,7 +198,7 @@ export default function roomss() {
                                     <td className="p-3 space-x-2">
                                         <button
                                             onClick={() => {
-                                                setSelectedrooms(r);
+                                                setSelectedRoom(r);
                                                 setOccupiedBeds(
                                                     r.occupiedBeds
                                                 );
@@ -209,7 +209,7 @@ export default function roomss() {
                                         </button>
 
                                         <button
-                                            onClick={() => deleterooms(r)}
+                                            onClick={() => deleteRoom(r)}
                                             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
                                         >
                                             Delete
@@ -223,12 +223,12 @@ export default function roomss() {
             )}
 
             {/* OCCUPANCY MODAL */}
-            {selectedrooms && (
+            {selectedRoom && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-xl w-96">
                         <h3 className="font-bold mb-3">
-                            Update Occupancy – rooms{" "}
-                            {selectedrooms.roomsNumber}
+                            Update Occupancy – Room{" "}
+                            {selectedRoom.roomsNumber}
                         </h3>
 
                         <input
@@ -243,7 +243,7 @@ export default function roomss() {
                         <div className="flex justify-end gap-2">
                             <button
                                 onClick={() =>
-                                    setSelectedrooms(null)
+                                    setSelectedRoom(null)
                                 }
                                 className="text-gray-400 hover:text-gray-200"
                             >

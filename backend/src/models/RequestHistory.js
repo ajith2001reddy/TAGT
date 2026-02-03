@@ -1,9 +1,5 @@
 import mongoose from "mongoose";
 
-/**
- * RequestHistory
- * Phase 2 Archive Model
- */
 const requestHistorySchema = new mongoose.Schema(
     {
         requestId: {
@@ -11,26 +7,22 @@ const requestHistorySchema = new mongoose.Schema(
             ref: "Request",
             index: true
         },
-
         residentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
             index: true
         },
-
         originalMessage: {
             type: String,
             required: true,
             trim: true
         },
-
         finalResolution: {
             type: String,
             required: true,
             trim: true
         },
-
         timeline: [
             {
                 status: {
@@ -44,17 +36,17 @@ const requestHistorySchema = new mongoose.Schema(
                     ref: "User"
                 },
                 createdAt: {
-                    type: Date
+                    type: Date,
+                    default: Date.now
                 }
             }
         ],
-
         resolvedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true
         },
-
         resolvedAt: {
             type: Date,
             default: Date.now,
@@ -66,9 +58,6 @@ const requestHistorySchema = new mongoose.Schema(
     }
 );
 
-/* =========================
-   INDEXES
-========================= */
 requestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
 
 export default mongoose.model("RequestHistory", requestHistorySchema);

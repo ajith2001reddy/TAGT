@@ -38,8 +38,7 @@ export default function Payments() {
                 }));
 
             setPayments(cleaned);
-        } catch (err) {
-            console.error(err);
+        } catch {
             toast.error("Failed to load payments");
             setPayments([]);
         } finally {
@@ -73,8 +72,8 @@ export default function Payments() {
     const StatusBadge = ({ status }) => (
         <span
             className={`px-2 py-1 rounded text-xs font-semibold capitalize ${isUnpaid(status)
-                    ? "bg-red-600/20 text-red-400"
-                    : "bg-green-600/20 text-green-400"
+                ? "bg-red-600/20 text-red-400"
+                : "bg-green-600/20 text-green-400"
                 }`}
         >
             {isUnpaid(status) ? "unpaid" : "paid"}

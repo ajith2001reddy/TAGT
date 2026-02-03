@@ -17,7 +17,7 @@ export default function AdminRoute({ children }) {
         return <Navigate to="/" replace />;
     }
 
-    // Logged in but not admin
+    // Logged in but not admin or role is missing/invalid
     if (role !== "admin") {
         return <Navigate to="/resident" replace />;
     }

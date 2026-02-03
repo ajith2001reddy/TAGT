@@ -1,14 +1,15 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import api from "../api/axios";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+
 import AppLayout from "../components/AppLayout";
 import Button from "../components/Button";
-import toast from "react-hot-toast";
+import api from "../api/axios";
 
 export default function AdminRequests() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
-
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [workflowStatus, setWorkflowStatus] = useState("");
     const [adminNote, setAdminNote] = useState("");
@@ -348,9 +349,7 @@ export default function AdminRequests() {
                                         placeholder="Final resolution"
                                         value={finalResolution}
                                         onChange={(e) =>
-                                            setFinalResolution(
-                                                e.target.value
-                                            )
+                                            setFinalResolution(e.target.value)
                                         }
                                     />
 

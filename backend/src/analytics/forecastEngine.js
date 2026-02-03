@@ -1,23 +1,7 @@
 const Room = require("../models/rooms");
 
-/* =====================================================
-   OCCUPANCY FORECAST ENGINE (HONEST VERSION)
-===================================================== */
-
-/**
- * Get current occupancy snapshot
- * (Used as baseline, not fake history)
- */
 async function getCurrentOccupancy() {
-    const rooms = await Room.find({}, "totalBeds occupiedBeds");
-
-    if (!rooms.length) {
-        return {
-            totalBeds: 0,
-            occupiedBeds: 0,
-            occupancyRate: 0
-        };
-    }
+    const rooms = await Room.find({}, "totalBeds occupiedBeds").lean();
 
     const totalBeds = rooms.reduce(
         (sum, r) => sum + (r.totalBeds || 0),
@@ -37,10 +21,6 @@ async function getCurrentOccupancy() {
     return { totalBeds, occupiedBeds, occupancyRate };
 }
 
-/**
- * Predict occupancy using flat projection
- * (No fake trends without historical data)
- */
 async function predictOccupancy(monthsAhead = 6) {
     const snapshot = await getCurrentOccupancy();
 
@@ -49,7 +29,7 @@ async function predictOccupancy(monthsAhead = 6) {
             history: [],
             forecast: [],
             meta: {
-                note: "No room data available",
+                model: "No data",
                 generatedAt: new Date()
             }
         };
@@ -57,7 +37,6 @@ async function predictOccupancy(monthsAhead = 6) {
 
     const now = new Date();
 
-    // Represent "history" as a single baseline point
     const history = [
         {
             month: now.toISOString().slice(0, 7),
@@ -65,30 +44,27 @@ async function predictOccupancy(monthsAhead = 6) {
         }
     ];
 
-    const forecast = [];
-
-    for (let i = 1; i <= monthsAhead; i++) {
+    const forecast = Array.from({ length: monthsAhead }, (_, i) => {
         const date = new Date(now);
-        date.setMonth(now.getMonth() + i);
+        date.setMonth(now.getMonth() + i + 1);
 
-        forecast.push({
+        return {
             month: date.toISOString().slice(0, 7),
             predictedOccupancy: snapshot.occupancyRate
-        });
-    }
+        };
+    });
 
     return {
         history,
         forecast,
         meta: {
-            model: "Flat baseline (no historical data)",
+            model: "Flat baseline projection",
             generatedAt: new Date(),
             totalBeds: snapshot.totalBeds,
-            occupiedBeds: snapshot.occupiedBeds
+            occupiedBeds: snapshot.occupiedBeds,
+            occupancyRate: snapshot.occupancyRate
         }
     };
 }
 
-module.exports = {
-    predictOccupancy
-};
+module.exports = { predictOccupancy };

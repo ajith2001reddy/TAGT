@@ -8,15 +8,15 @@ import isAdmin from "../middleware/isAdmin.js";
 
 const router = Router();
 
-/* =========================================================
+/* =========================
    ADMIN → CREATE BILL
-========================================================= */
+========================= */
 router.post("/", auth, isAdmin, async (req, res, next) => {
     try {
         const { residentId, description, type, month, adminNote } = req.body;
         const amount = Number(req.body.amount);
 
-        if (!residentId || !mongoose.Types.ObjectId.isValid(residentId)) {
+        if (!mongoose.Types.ObjectId.isValid(residentId)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid resident"
@@ -34,7 +34,7 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
             _id: residentId,
             role: "resident",
             isActive: true
-        });
+        }).lean();
 
         if (!resident) {
             return res.status(400).json({
@@ -54,38 +54,31 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
             createdBy: req.user.id
         });
 
-        res.status(201).json({
-            success: true,
-            payment
-        });
-    } catch (error) {
-        console.error("CREATE PAYMENT ERROR:", error.message);
-        next(error);
+        res.status(201).json({ success: true, payment });
+    } catch (err) {
+        next(err);
     }
 });
 
-/* =========================================================
+/* =========================
    ADMIN → GET ALL PAYMENTS
-========================================================= */
+========================= */
 router.get("/", auth, isAdmin, async (req, res, next) => {
     try {
         const payments = await Payment.find()
             .populate("residentId", "email name")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
-        res.json({
-            success: true,
-            payments
-        });
-    } catch (error) {
-        console.error("FETCH PAYMENTS ERROR:", error.message);
-        next(error);
+        res.json({ success: true, payments });
+    } catch (err) {
+        next(err);
     }
 });
 
-/* =========================================================
+/* =========================
    RESIDENT → GET OWN PAYMENTS
-========================================================= */
+========================= */
 router.get("/my", auth, async (req, res, next) => {
     try {
         res.set({
@@ -96,21 +89,19 @@ router.get("/my", auth, async (req, res, next) => {
 
         const payments = await Payment.find({
             residentId: req.user.id
-        }).sort({ createdAt: -1 });
+        })
+            .sort({ createdAt: -1 })
+            .lean();
 
-        res.json({
-            success: true,
-            payments
-        });
-    } catch (error) {
-        console.error("FETCH MY PAYMENTS ERROR:", error.message);
-        next(error);
+        res.json({ success: true, payments });
+    } catch (err) {
+        next(err);
     }
 });
 
-/* =========================================================
+/* =========================
    ADMIN → MARK PAYMENT AS PAID
-========================================================= */
+========================= */
 router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -145,9 +136,8 @@ router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
             success: true,
             message: "Payment marked as paid"
         });
-    } catch (error) {
-        console.error("MARK PAID ERROR:", error.message);
-        next(error);
+    } catch (err) {
+        next(err);
     }
 });
 

@@ -2,10 +2,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getKPIs } from "../services/analyticsService";
 
-/* =====================================================
-   KPI CARDS – MOBILE SAFE
-===================================================== */
-
 export default function KpiCards() {
     const [kpis, setKpis] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -19,8 +15,8 @@ export default function KpiCards() {
             setLoading(true);
             const data = await getKPIs();
             setKpis(data);
-        } catch (err) {
-            console.error("KPI LOAD ERROR", err);
+        } catch {
+            setKpis(null);
         } finally {
             setLoading(false);
         }
@@ -28,18 +24,24 @@ export default function KpiCards() {
 
     if (loading) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                 {[1, 2, 3].map((i) => (
                     <div
                         key={i}
-                        className="bg-white/10 h-24 sm:h-28 rounded-xl animate-pulse"
+                        className="glass h-28 rounded-2xl animate-pulse"
                     />
                 ))}
             </div>
         );
     }
 
-    if (!kpis) return null;
+    if (!kpis) {
+        return (
+            <div className="glass rounded-2xl p-6 text-center text-gray-400">
+                Unable to load KPI data
+            </div>
+        );
+    }
 
     const cards = [
         {
@@ -64,16 +66,20 @@ export default function KpiCards() {
             {cards.map((card, index) => (
                 <motion.div
                     key={card.title}
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, delay: index * 0.05 }}
-                    className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6"
+                    transition={{
+                        duration: 0.35,
+                        delay: index * 0.06,
+                        ease: [0.16, 1, 0.3, 1]
+                    }}
+                    className="glass rounded-2xl p-5 sm:p-6"
                 >
                     <p className="text-xs sm:text-sm text-gray-400 truncate">
                         {card.title}
                     </p>
 
-                    <h2 className="text-2xl sm:text-3xl font-bold mt-2 break-all">
+                    <h2 className="text-3xl sm:text-4xl font-semibold text-white mt-2">
                         {card.value}
                     </h2>
 

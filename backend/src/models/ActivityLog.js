@@ -1,23 +1,33 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const ActivityLogSchema = new mongoose.Schema(
     {
         action: {
             type: String,
-            required: true
+            required: true,
+            index: true
         },
         performedBy: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true
+            required: true,
+            ref: "User",
+            index: true
         },
         role: {
             type: String,
-            required: true
+            required: true,
+            index: true
         },
-        ipAddress: String,
-        route: String
+        ipAddress: {
+            type: String
+        },
+        route: {
+            type: String
+        }
     },
-    { timestamps: true }
+    {
+        timestamps: true
+    }
 );
 
-module.exports = mongoose.model("ActivityLog", ActivityLogSchema);
+export default mongoose.model("ActivityLog", ActivityLogSchema);

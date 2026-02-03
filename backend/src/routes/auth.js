@@ -6,9 +6,6 @@ import generateToken from "../utils/generateToken.js";
 
 const router = Router();
 
-/* =========================
-   LOGIN
-========================= */
 router.post("/login", async (req, res, next) => {
     try {
         const email = req.body.email?.toLowerCase().trim();
@@ -21,19 +18,14 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        const user = await User.findOne({ email }).select("+password");
+        const user = await User.findOne({ email })
+            .select("+password")
+            .lean();
 
-        if (!user) {
+        if (!user || !user.isActive) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid credentials"
-            });
-        }
-
-        if (!user.isActive) {
-            return res.status(403).json({
-                success: false,
-                message: "Account is disabled"
             });
         }
 
@@ -50,7 +42,7 @@ router.post("/login", async (req, res, next) => {
             role: user.role
         });
 
-        return res.status(200).json({
+        res.json({
             success: true,
             token,
             user: {
@@ -61,8 +53,8 @@ router.post("/login", async (req, res, next) => {
                 roomId: user.roomId
             }
         });
-    } catch (error) {
-        next(error); // handled by global error middleware
+    } catch (err) {
+        next(err);
     }
 });
 

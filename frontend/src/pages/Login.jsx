@@ -111,6 +111,11 @@ export default function Login() {
                             placeholder="you@example.com"
                             className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                        {errors.email && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {errors.email}
+                            </p>
+                        )}
                     </div>
 
                     {/* Password */}
@@ -126,6 +131,11 @@ export default function Login() {
                             placeholder="••••••••"
                             className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                        {errors.password && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {errors.password}
+                            </p>
+                        )}
                     </div>
 
                     {/* Button */}

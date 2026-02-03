@@ -3,10 +3,9 @@ import { getAdminStats } from "../services/adminService";
 import toast from "react-hot-toast";
 
 /**
- * Admin Dashboard Stats Hook (FIXED)
- * - Always returns full stats shape
- * - Prevents undefined dashboard values
- * - Safe against backend inconsistencies
+ * Admin Dashboard Stats Hook
+ * - Returns full stats shape even if backend fails
+ * - Ensures fallback data is safe (no undefined values)
  */
 
 export default function useAdminStats() {
@@ -26,17 +25,17 @@ export default function useAdminStats() {
                 const data = await getAdminStats();
 
                 setStats({
-                    totalResidents: Number(data?.totalResidents) || 0,
-                    pendingRequests: Number(data?.pendingRequests) || 0,
-                    unpaidPayments: Number(data?.unpaidPayments) || 0,
-                    totalRevenue: Number(data?.totalRevenue) || 0,
-                    outstandingBalance: Number(data?.outstandingBalance) || 0
+                    totalResidents: data?.totalResidents ?? 0,
+                    pendingRequests: data?.pendingRequests ?? 0,
+                    unpaidPayments: data?.unpaidPayments ?? 0,
+                    totalRevenue: data?.totalRevenue ?? 0,
+                    outstandingBalance: data?.outstandingBalance ?? 0
                 });
             } catch (err) {
                 console.error(err);
                 toast.error("Failed to load dashboard stats");
 
-                // fallback is already safe
+                // Preserve previous data if fetching fails
                 setStats((prev) => prev);
             } finally {
                 setLoading(false);

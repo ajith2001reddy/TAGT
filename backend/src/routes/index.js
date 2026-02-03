@@ -5,37 +5,17 @@ import adminRoutes from "./adminRoutes.js";
 import roomRoutes from "./rooms.js";
 import paymentRoutes from "./payments.js";
 import residentRoutes from "./resident.js";
+import analyticsRoutes from "./analytics.js";
 
 const router = Router();
 
-/* =========================
-   AUTH ROUTES
-========================= */
 router.use("/auth", authRoutes);
-
-/* =========================
-   ADMIN ROUTES
-========================= */
 router.use("/admin", adminRoutes);
-
-/* =========================
-   ROOM ROUTES
-========================= */
 router.use("/rooms", roomRoutes);
-
-/* =========================
-   PAYMENT ROUTES
-========================= */
 router.use("/payments", paymentRoutes);
-
-/* =========================
-   RESIDENT ROUTES
-========================= */
 router.use("/resident", residentRoutes);
+router.use("/analytics", analyticsRoutes);
 
-/* =========================
-   API ROOT
-========================= */
 router.get("/", (req, res) => {
     res.json({
         success: true,
@@ -43,9 +23,6 @@ router.get("/", (req, res) => {
     });
 });
 
-/* =========================
-   HEALTH CHECK
-========================= */
 router.get("/health", (req, res) => {
     res.status(200).json({
         status: "OK",

@@ -157,13 +157,13 @@ export default function AdminDashboard() {
 
                 {/* REQUESTS OVERVIEW */}
                 {!reqLoading && chartData.some((d) => d.count > 0) && (
-                    <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
+                    <div className="glass rounded-2xl p-4 sm:p-6">
                         <RequestsChart data={chartData} />
                     </div>
                 )}
 
                 {/* ACTIVE REQUESTS */}
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
+                <div className="glass rounded-2xl p-4 sm:p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-semibold">
                             Active Maintenance Requests

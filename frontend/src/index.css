@@ -22,7 +22,8 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    color: #e5e7eb;
+    color: #e5e7eb; /* Default text color for light mode */
+    padding: 0; /* Ensure no unwanted padding */
 }
 
 /* Smooth animated movement */
@@ -51,7 +52,25 @@ body {
     }
 }
 
-/* Code blocks */
+/* ===============================
+   DARK MODE SUPPORT (optional)
+================================ */
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient( 270deg, #0f172a, #020617, #1e293b, #020617, #0f172a );
+        color: #d1d5db; /* Lighter text for dark mode */
+    }
+}
+
+/* ===============================
+   CODE BLOCKS
+================================ */
+
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+    color: #f9fafb; /* Light text color for code */
+    background-color: #1f2937; /* Dark background for code */
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
 }

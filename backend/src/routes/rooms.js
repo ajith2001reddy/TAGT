@@ -1,4 +1,5 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 
 import auth from "../middleware/auth.js";
 import isAdmin from "../middleware/isAdmin.js";
@@ -11,19 +12,21 @@ import {
 
 const router = Router();
 
-/* =========================================================
-   GET ALL ROOMS (ADMIN)
-========================================================= */
 router.get("/", auth, isAdmin, getAllRooms);
 
-/* =========================================================
-   CREATE ROOM (ADMIN)
-========================================================= */
 router.post("/", auth, isAdmin, addRoom);
 
-/* =========================================================
-   DELETE ROOM (ADMIN)
-========================================================= */
-router.delete("/:id", auth, isAdmin, deleteRoom);
+router.delete("/:id", auth, isAdmin, async (req, res, next) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid room ID"
+        });
+    }
+
+    return deleteRoom(req, res, next);
+});
 
 export default router;

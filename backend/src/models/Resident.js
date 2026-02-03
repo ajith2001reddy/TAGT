@@ -1,13 +1,10 @@
 import { Router } from "express";
-
+import mongoose from "mongoose";
 import Request from "../models/Request.js";
 import auth from "../middleware/auth.js";
 
 const router = Router();
 
-/* =========================
-   CREATE REQUEST (RESIDENT)
-========================= */
 router.post("/request", auth, async (req, res, next) => {
     try {
         const { message } = req.body;
@@ -31,15 +28,11 @@ router.post("/request", auth, async (req, res, next) => {
             success: true,
             request
         });
-    } catch (error) {
-        console.error("CREATE REQUEST ERROR:", error.message);
-        next(error);
+    } catch (err) {
+        next(err);
     }
 });
 
-/* =========================
-   GET MY REQUESTS (RESIDENT)
-========================= */
 router.get("/requests", auth, async (req, res, next) => {
     try {
         const requests = await Request.find({
@@ -52,18 +45,21 @@ router.get("/requests", auth, async (req, res, next) => {
             success: true,
             requests
         });
-    } catch (error) {
-        console.error("GET MY REQUESTS ERROR:", error.message);
-        next(error);
+    } catch (err) {
+        next(err);
     }
 });
 
-/* =========================
-   DELETE REQUEST (RESIDENT)
-========================= */
 router.delete("/request/:id", auth, async (req, res, next) => {
     try {
         const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid request ID"
+            });
+        }
 
         const request = await Request.findOne({
             _id: id,
@@ -83,9 +79,8 @@ router.delete("/request/:id", auth, async (req, res, next) => {
             success: true,
             message: "Request deleted"
         });
-    } catch (error) {
-        console.error("DELETE REQUEST ERROR:", error.message);
-        next(error);
+    } catch (err) {
+        next(err);
     }
 });
 

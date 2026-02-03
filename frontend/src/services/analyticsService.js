@@ -19,14 +19,18 @@ import api from "../api/axios";
  */
 export const getKPIs = async ({ fromDate, toDate } = {}) => {
     const params = {};
-
     if (fromDate && toDate) {
         params.fromDate = fromDate;
         params.toDate = toDate;
     }
 
-    const res = await api.get("/analytics/kpis", { params });
-    return res.data?.data;
+    try {
+        const res = await api.get("/analytics/kpis", { params });
+        return res.data?.data;
+    } catch (err) {
+        console.error("Error fetching KPIs:", err);
+        throw new Error("Failed to fetch KPIs");
+    }
 };
 
 /* =======================
@@ -37,11 +41,15 @@ export const getKPIs = async ({ fromDate, toDate } = {}) => {
  * Predict occupancy for next N months
  */
 export const predictOccupancy = async (months = 6) => {
-    const res = await api.get("/analytics/predict/occupancy", {
-        params: { months }
-    });
-
-    return res.data?.data;
+    try {
+        const res = await api.get("/analytics/predict/occupancy", {
+            params: { months }
+        });
+        return res.data?.data;
+    } catch (err) {
+        console.error("Error predicting occupancy:", err);
+        throw new Error("Failed to predict occupancy");
+    }
 };
 
 /* =======================
@@ -52,11 +60,15 @@ export const predictOccupancy = async (months = 6) => {
  * Predict maintenance costs for next N months
  */
 export const predictMaintenanceCost = async (months = 6) => {
-    const res = await api.get("/analytics/predict/maintenance", {
-        params: { months }
-    });
-
-    return res.data?.data;
+    try {
+        const res = await api.get("/analytics/predict/maintenance", {
+            params: { months }
+        });
+        return res.data?.data;
+    } catch (err) {
+        console.error("Error predicting maintenance cost:", err);
+        throw new Error("Failed to predict maintenance cost");
+    }
 };
 
 /* =======================
@@ -67,8 +79,13 @@ export const predictMaintenanceCost = async (months = 6) => {
  * Predict resident churn risk
  */
 export const predictChurn = async () => {
-    const res = await api.get("/analytics/predict/churn");
-    return res.data?.data;
+    try {
+        const res = await api.get("/analytics/predict/churn");
+        return res.data?.data;
+    } catch (err) {
+        console.error("Error predicting churn:", err);
+        throw new Error("Failed to predict churn");
+    }
 };
 
 /* =======================
@@ -79,6 +96,11 @@ export const predictChurn = async () => {
  * Get AI revenue optimization insights
  */
 export const optimizeRevenue = async () => {
-    const res = await api.get("/analytics/optimize/revenue");
-    return res.data?.data;
+    try {
+        const res = await api.get("/analytics/optimize/revenue");
+        return res.data?.data;
+    } catch (err) {
+        console.error("Error optimizing revenue:", err);
+        throw new Error("Failed to optimize revenue");
+    }
 };

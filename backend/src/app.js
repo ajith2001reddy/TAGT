@@ -1,36 +1,41 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import residentRoutes from './routes/resident.js'; // Example route
-import { errorHandler, notFound } from './middleware/errorHandler.js';
-import { swaggerSpec, swaggerUi } from './swagger.js'; // Import Swagger
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
+import apiRoutes from "./routes/index.js";
+import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { swaggerSpec, swaggerUi } from "./swagger.js";
 
 const app = express();
 
-// Security Headers
-app.use(helmet());
-app.use(cors());
+app.set("trust proxy", 1);
 
-// Rate Limiting
+app.use(helmet());
+
+app.use(
+    cors({
+        origin: process.env.FRONTEND_URL || "*",
+        credentials: true
+    })
+);
+
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per window
-    message: "Too many requests, please try again later."
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path === "/api/health"
 });
 app.use(limiter);
 
-// Middleware for parsing JSON and urlencoded data
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Routes Setup
-app.use('/api/residents', residentRoutes); // Integrate resident routes
+app.use("/api", apiRoutes);
 
-// Swagger UI Route
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Error Handling Middleware
 app.use(notFound);
 app.use(errorHandler);
 

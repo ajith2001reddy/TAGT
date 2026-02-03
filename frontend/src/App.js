@@ -31,28 +31,14 @@ function AnimatedRoutes() {
                     <Route path="/admin/residents" element={<AdminResidents />} />
                     <Route path="/admin/rooms" element={<AdminRooms />} />
                     <Route path="/payments" element={<Payments />} />
-                    <Route
-                        path="/admin"
-                        element={<Navigate to="/admin/dashboard" replace />}
-                    />
+                    <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 </Route>
 
                 {/* ================= RESIDENT ROUTES ================= */}
                 <Route element={<ProtectedRoute />}>
-                    <Route
-                        path="/resident/dashboard"
-                        element={<ResidentDashboard />}
-                    />
-                    <Route
-                        path="/resident/payments"
-                        element={<ResidentPayments />}
-                    />
-                    <Route
-                        path="/resident"
-                        element={
-                            <Navigate to="/resident/dashboard" replace />
-                        }
-                    />
+                    <Route path="/resident/dashboard" element={<ResidentDashboard />} />
+                    <Route path="/resident/payments" element={<ResidentPayments />} />
+                    <Route path="/resident" element={<Navigate to="/resident/dashboard" replace />} />
                 </Route>
 
                 {/* DEFAULT */}

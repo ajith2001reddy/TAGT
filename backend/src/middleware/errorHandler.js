@@ -1,21 +1,20 @@
-﻿// ===============================
-// 404 – Not Found Middleware
-// ===============================
-export const notFound = (req, res, next) => {
+﻿export const notFound = (req, res, next) => {
     res.status(404).json({
         success: false,
         message: `Route not found: ${req.originalUrl}`
     });
 };
 
-// ===============================
-// Global Error Handler
-// ===============================
 export const errorHandler = (err, req, res, next) => {
-    console.error("❌ ERROR:", err.message);
+    if (res.headersSent) {
+        return next(err);
+    }
 
-    res.status(err.status || 500).json({
+    const status = err.status || err.statusCode || 500;
+
+    res.status(status).json({
         success: false,
-        message: err.message || "Server error"
+        message: err.message || "Server error",
+        ...(process.env.NODE_ENV === "development" && { stack: err.stack })
     });
 };
