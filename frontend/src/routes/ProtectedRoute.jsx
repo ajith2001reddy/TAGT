@@ -1,11 +1,11 @@
-﻿import { Navigate, useLocation } from "react-router-dom";
+﻿import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function ProtectedRoute({ children, role }) {
+export default function ProtectedRoute({ adminOnly = false }) {
     const { user, loading } = useAuth();
     const location = useLocation();
 
-    // Prevent flicker / redirect loops
+    // ⏳ Prevent flicker while auth state is loading
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center text-gray-400">
@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children, role }) {
         );
     }
 
-    // Not authenticated → login
+    // 🔒 Not authenticated → login
     if (!user) {
         return (
             <Navigate
@@ -25,16 +25,16 @@ export default function ProtectedRoute({ children, role }) {
         );
     }
 
-    // Role mismatch → redirect to the appropriate route based on the user's role
-    if (role && user.role !== role) {
+    // 🛑 Admin-only route but user is not admin
+    if (adminOnly && user.role !== "admin") {
         return (
             <Navigate
-                to={user.role === "admin" ? "/admin" : "/resident"}
+                to="/resident/dashboard"
                 replace
             />
         );
     }
 
-    // Return children if all checks pass
-    return children;
+    // ✅ Auth OK → render nested routes
+    return <Outlet />;
 }

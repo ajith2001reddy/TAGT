@@ -1,11 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
-
-/**
- * Auth Context
- * - JWT is the single source of truth
- * - No role stored separately
- * - Safe against malformed tokens
- */
+﻿import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
@@ -15,6 +8,7 @@ function decodeToken(token) {
         if (!base64) return null;
 
         const payload = JSON.parse(atob(base64));
+
         return {
             id: payload.id,
             role: payload.role
@@ -28,7 +22,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Load auth state once on app start
+    // 🔄 Initialize auth state from JWT once
     useEffect(() => {
         const token = localStorage.getItem("token");
 
@@ -39,16 +33,17 @@ export const AuthProvider = ({ children }) => {
 
         const decoded = decodeToken(token);
 
-        if (decoded) {
-            setUser(decoded);
-        } else {
+        if (!decoded) {
             localStorage.removeItem("token");
             setUser(null);
+        } else {
+            setUser(decoded);
         }
 
         setLoading(false);
     }, []);
 
+    // ✅ Called AFTER successful login
     const login = (token) => {
         const decoded = decodeToken(token);
 
@@ -65,13 +60,14 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem("token");
         setUser(null);
+        window.location.href = "/login";
     };
 
     return (
         <AuthContext.Provider
             value={{
                 user,
-                isAuthenticated: !!user,
+                isAuthenticated: Boolean(user),
                 isAdmin: user?.role === "admin",
                 loading,
                 login,
@@ -83,4 +79,10 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+    const ctx = useContext(AuthContext);
+    if (!ctx) {
+        throw new Error("useAuth must be used within AuthProvider");
+    }
+    return ctx;
+};
