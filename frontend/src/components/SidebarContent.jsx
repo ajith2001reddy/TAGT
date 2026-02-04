@@ -1,4 +1,3 @@
-// frontend/src/components/SidebarContent.jsx
 import { NavLink } from "react-router-dom";
 
 export default function SidebarContent({ role, linkClass }) {
@@ -10,7 +9,11 @@ export default function SidebarContent({ role, linkClass }) {
                 </p>
 
                 <NavLink
-                    to={role === "admin" ? "/admin" : "/resident"}
+                    to={
+                        role === "admin"
+                            ? "/admin/dashboard"
+                            : "/resident/dashboard"
+                    }
                     end
                     className={linkClass}
                 >
@@ -24,7 +27,10 @@ export default function SidebarContent({ role, linkClass }) {
                         Management
                     </p>
 
-                    {[{ to: "/admin/requests", label: "Requests" }, { to: "/admin/residents", label: "Residents" }].map((item) => (
+                    {[
+                        { to: "/admin/requests", label: "Requests" },
+                        { to: "/admin/residents", label: "Residents" },
+                    ].map((item) => (
                         <NavLink
                             key={item.to}
                             to={item.to}
@@ -42,11 +48,18 @@ export default function SidebarContent({ role, linkClass }) {
                         My Space
                     </p>
 
-                    <NavLink to="/resident" end className={linkClass}>
+                    <NavLink
+                        to="/resident/dashboard"
+                        end
+                        className={linkClass}
+                    >
                         My Requests
                     </NavLink>
 
-                    <NavLink to="/resident/payments" className={linkClass}>
+                    <NavLink
+                        to="/resident/payments"
+                        className={linkClass}
+                    >
                         My Payments
                     </NavLink>
                 </div>

@@ -1,6 +1,6 @@
 ﻿import axios from "axios";
 
-// ✅ Vite-compatible env variable
+// ✅ CRA-compatible env variable
 const API_URL =
     process.env.REACT_APP_API_URL || "https://api.tagt.website/api";
 
@@ -26,14 +26,20 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// 🚫 Handle auth expiration (NOT login)
+// 🚫 Handle auth expiration safely
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         const status = error.response?.status;
         const url = error.config?.url;
+        const hadToken = Boolean(localStorage.getItem("token"));
 
-        if (status === 401 && !url?.includes("/auth/login")) {
+        // Only redirect if token existed (session expired)
+        if (
+            status === 401 &&
+            hadToken &&
+            !url?.includes("/auth/login")
+        ) {
             localStorage.removeItem("token");
             window.location.href = "/login";
         }

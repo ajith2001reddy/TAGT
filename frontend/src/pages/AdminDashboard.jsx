@@ -17,7 +17,7 @@ import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
 export default function AdminDashboard() {
-    const { stats = {}, loading } = useAdminStats();
+    const { stats = {}, loading: statsLoading } = useAdminStats();
 
     const [allRequests, setAllRequests] = useState([]);
     const [activeRequests, setActiveRequests] = useState([]);
@@ -42,7 +42,8 @@ export default function AdminDashboard() {
             );
 
             setActiveRequests(active.slice(0, 5));
-        } catch {
+        } catch (err) {
+            console.error("Failed to load requests:", err);
             toast.error("Failed to load requests");
             setAllRequests([]);
             setActiveRequests([]);
@@ -57,7 +58,8 @@ export default function AdminDashboard() {
             setRevenueLoading(true);
             const res = await api.get("/payments");
             setPayments(Array.isArray(res.data) ? res.data : []);
-        } catch {
+        } catch (err) {
+            console.error("Failed to load payments:", err);
             toast.error("Failed to load revenue data");
             setPayments([]);
         } finally {
@@ -76,20 +78,20 @@ export default function AdminDashboard() {
             status: "Pending",
             count: allRequests.filter(
                 (r) => r.status === "pending"
-            ).length
+            ).length,
         },
         {
             status: "In Progress",
             count: allRequests.filter(
                 (r) => r.status === "in-progress"
-            ).length
+            ).length,
         },
         {
             status: "Resolved",
             count: allRequests.filter(
                 (r) => r.status === "resolved"
-            ).length
-        }
+            ).length,
+        },
     ];
 
     /* ================= REVENUE METRICS ================= */
@@ -128,7 +130,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* CORE METRICS */}
-                {loading || revenueLoading ? (
+                {statsLoading || revenueLoading ? (
                     <Loader />
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

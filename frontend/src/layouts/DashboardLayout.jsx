@@ -1,22 +1,14 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NavLink } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import SidebarContent from "../components/SidebarContent"; // Assuming SidebarContent is in a separate file for reusability
+import SidebarContent from "../components/SidebarContent";
+import { useAuth } from "../context/AuthContext";
 
 export default function DashboardLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { user } = useAuth();
 
-    const role = useMemo(() => {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) return null;
-            const payload = JSON.parse(atob(token.split(".")[1]));
-            return payload.role;
-        } catch {
-            return null;
-        }
-    }, []);
+    const role = user?.role ?? null;
 
     const baseLink =
         "flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all";
@@ -33,7 +25,12 @@ export default function DashboardLayout({ children }) {
             <div className="flex min-h-[calc(100vh-64px)]">
                 {/* Desktop Sidebar */}
                 <aside className="hidden lg:block w-64 border-r border-white/10 bg-white/5 backdrop-blur-xl">
-                    <SidebarContent role={role} linkClass={(props) => `${baseLink} ${props.isActive ? active : idle}`} />
+                    <SidebarContent
+                        role={role}
+                        linkClass={(props) =>
+                            `${baseLink} ${props.isActive ? active : idle}`
+                        }
+                    />
                 </aside>
 
                 {/* Mobile Sidebar */}
@@ -55,12 +52,20 @@ export default function DashboardLayout({ children }) {
                                 initial={{ x: -300 }}
                                 animate={{ x: 0 }}
                                 exit={{ x: -300 }}
-                                transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 120,
+                                    damping: 20,
+                                }}
                             >
                                 <SidebarContent
                                     role={role}
-                                    linkClass={(props) => `${baseLink} ${props.isActive ? active : idle}`}
-                                    onNavigate={() => setSidebarOpen(false)}
+                                    linkClass={(props) =>
+                                        `${baseLink} ${props.isActive ? active : idle}`
+                                    }
+                                    onNavigate={() =>
+                                        setSidebarOpen(false)
+                                    }
                                 />
                             </motion.aside>
                         </>

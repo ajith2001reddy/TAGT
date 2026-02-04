@@ -13,25 +13,19 @@ export const login = async ({ email, password }) => {
             password,
         });
 
-        // Expected backend response:
+        // Backend response example:
         // {
-        //   token: "jwt",
-        //   user: { id, email, role, ... }
+        //   token: "jwt"
         // }
-
-        if (response.data?.token) {
-            localStorage.setItem("token", response.data.token);
-        }
 
         return response.data;
     } catch (error) {
-        // Error already normalized by axios interceptor
         throw error;
     }
 };
 
 /**
- * Register user (optional, if you have signup)
+ * Register user (optional)
  */
 export const register = async (data) => {
     try {
@@ -43,7 +37,7 @@ export const register = async (data) => {
 };
 
 /**
- * Get current logged-in user
+ * Get current logged-in user (optional)
  */
 export const getCurrentUser = async () => {
     try {
@@ -56,7 +50,8 @@ export const getCurrentUser = async () => {
 
 /**
  * Logout user
+ * NOTE: AuthContext handles state + redirect
  */
-export const logout = () => {
-    localStorage.removeItem("token");
+export const logout = async () => {
+    return Promise.resolve();
 };

@@ -7,14 +7,6 @@ import Card from "../components/Card";
 import { useAuth } from "../context/AuthContext";
 import { login as loginService } from "../services/authService";
 
-function decodeToken(token) {
-    try {
-        return JSON.parse(atob(token.split(".")[1]));
-    } catch {
-        return null;
-    }
-}
-
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -23,7 +15,7 @@ export default function Login() {
 
     const isSubmitting = useRef(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, user } = useAuth();
 
     const validateEmail = (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -54,7 +46,6 @@ export default function Login() {
         setLoading(true);
 
         try {
-            // ✅ SINGLE source of truth
             const data = await loginService({
                 email: email.trim().toLowerCase(),
                 password,
@@ -67,19 +58,20 @@ export default function Login() {
                 return;
             }
 
-            // ✅ Update global auth state
+            // ✅ Single source of truth
             login(token);
-
-            const decoded = decodeToken(token);
 
             toast.success("Login successful");
 
-            navigate(
-                decoded?.role === "admin"
-                    ? "/admin/dashboard"
-                    : "/resident/dashboard",
-                { replace: true }
-            );
+            // ⏳ Allow AuthContext to update, then redirect
+            setTimeout(() => {
+                navigate(
+                    user?.role === "admin"
+                        ? "/admin/dashboard"
+                        : "/resident/dashboard",
+                    { replace: true }
+                );
+            }, 0);
         } catch (err) {
             toast.error(err?.message || "Invalid email or password");
             setPassword("");

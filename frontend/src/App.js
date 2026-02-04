@@ -12,6 +12,7 @@ import ResidentPayments from "./pages/ResidentPayments";
 import AdminRooms from "./pages/AdminRooms";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminRoute from "./routes/AdminRoute";
 import ToastProvider from "./components/ToastProvider";
 
 function AnimatedRoutes() {
@@ -20,11 +21,11 @@ function AnimatedRoutes() {
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-                {/* PUBLIC */}
+                {/* ================= PUBLIC ================= */}
                 <Route path="/login" element={<Login />} />
 
                 {/* ================= ADMIN ROUTES ================= */}
-                <Route element={<ProtectedRoute adminOnly />}>
+                <Route element={<AdminRoute />}>
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/admin/requests" element={<AdminRequests />} />
                     <Route path="/admin/history" element={<RequestHistory />} />
@@ -41,7 +42,7 @@ function AnimatedRoutes() {
                     <Route path="/resident" element={<Navigate to="/resident/dashboard" replace />} />
                 </Route>
 
-                {/* DEFAULT */}
+                {/* ================= DEFAULT ================= */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
         </AnimatePresence>

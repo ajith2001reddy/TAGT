@@ -1,5 +1,5 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-04 12:20:37
+Generated: 2026-02-04 12:43:53
 Project Path: E:\TAGT
 ```
 TAGT
@@ -126,7 +126,7 @@ TAGT
 ## File Statistics
 
 Total Files: 87
-Total Size: 1135.33 KB
+Total Size: 1135.46 KB
 
 ## File Type Distribution
 
@@ -7629,8 +7629,8 @@ export const connectDB = async () => {
 
 // ##########################################
 // FILE 10 of 87: backend\src\controllers\adminController.js
-// SIZE: 2898 bytes
-// MODIFIED: 2026-02-03 12:43:04
+// SIZE: 2941 bytes
+// MODIFIED: 2026-02-04 12:28:29
 // ##########################################
 
 import bcrypt from "bcryptjs";
@@ -7698,14 +7698,13 @@ export const addResident = async (req, res, next) => {
             }
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
+        // FIXED: Removed manual bcrypt.hash() - let pre-save hook handle it
         const resident = await User.create(
             [
                 {
                     name,
                     email: normalizedEmail,
-                    password: hashedPassword,
+                    password: password, // Plain text - pre-save hook will hash
                     role: "resident",
                     roomId: room ? room._id : null
                 }
@@ -7731,7 +7730,6 @@ export const addResident = async (req, res, next) => {
         session.endSession();
     }
 };
-
 
 
 
@@ -8576,8 +8574,8 @@ export default mongoose.model("Room", roomSchema);
 
 // ##########################################
 // FILE 23 of 87: backend\src\models\User.js
-// SIZE: 1551 bytes
-// MODIFIED: 2026-02-03 21:43:32
+// SIZE: 1570 bytes
+// MODIFIED: 2026-02-04 12:29:03
 // ##########################################
 
 import mongoose from "mongoose";
@@ -8628,7 +8626,7 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-// Hash password before save
+// Hash password before save - ONLY HASHING POINT
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
@@ -8641,7 +8639,6 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 };
 
 export default mongoose.model("User", userSchema);
-
 
 
 
@@ -8842,13 +8839,11 @@ export default router;
 
 // ##########################################
 // FILE 26 of 87: backend\src\routes\auth.js
-// SIZE: 1597 bytes
-// MODIFIED: 2026-02-03 12:08:05
+// SIZE: 1666 bytes
+// MODIFIED: 2026-02-04 12:28:47
 // ##########################################
 
 import { Router } from "express";
-import bcrypt from "bcryptjs";
-
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 
@@ -8857,7 +8852,7 @@ const router = Router();
 router.post("/login", async (req, res, next) => {
     try {
         const email = req.body.email?.toLowerCase().trim();
-        const { password } = req.body;
+        const password = req.body.password?.trim();
 
         if (!email || !password) {
             return res.status(400).json({
@@ -8866,9 +8861,8 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        const user = await User.findOne({ email })
-            .select("+password")
-            .lean();
+        // Find user with password (select: false in schema, so explicitly select it)
+        const user = await User.findOne({ email }).select("+password");
 
         if (!user || !user.isActive) {
             return res.status(401).json({
@@ -8877,7 +8871,9 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        // Use model's comparePassword method
+        const isMatch = await user.comparePassword(password);
+
         if (!isMatch) {
             return res.status(401).json({
                 success: false,
@@ -8907,7 +8903,6 @@ router.post("/login", async (req, res, next) => {
 });
 
 export default router;
-
 
 
 
@@ -9408,7 +9403,7 @@ export {
 // ##########################################
 // FILE 34 of 87: backend\src\utils\generateToken.js
 // SIZE: 513 bytes
-// MODIFIED: 2026-02-03 12:10:42
+// MODIFIED: 2026-02-04 12:30:54
 // ##########################################
 
 import jwt from "jsonwebtoken";
