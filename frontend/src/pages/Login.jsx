@@ -7,6 +7,15 @@ import Button from "../components/Button";
 import Card from "../components/Card";
 import { useAuth } from "../context/AuthContext";
 
+function decodeToken(token) {
+    try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload;
+    } catch {
+        return null;
+    }
+}
+
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -15,7 +24,7 @@ export default function Login() {
 
     const isSubmitting = useRef(false);
     const navigate = useNavigate();
-    const { login, user } = useAuth();
+    const { login } = useAuth();
 
     const validateEmail = (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -46,33 +55,39 @@ export default function Login() {
         setLoading(true);
 
         try {
+            // 🔑 CALL BACKEND
             const res = await api.post("/auth/login", {
                 email: email.trim().toLowerCase(),
                 password
             });
 
-            const { token } = res.data || {};
+            // ✅ FIX: read wrapped response
+            const { token } = res.data?.data ?? {};
 
             if (!token) {
-                toast.error("Login failed");
+                toast.error("Invalid login response");
                 return;
             }
 
-            // Update AuthContext (single source of truth)
+            // 🔑 Update AuthContext
             login(token);
+
+            // Decode role immediately (do NOT rely on stale context)
+            const decoded = decodeToken(token);
 
             toast.success("Login successful");
 
-            // Redirect based on role (from AuthContext)
-            setTimeout(() => {
-                if (user?.role === "admin") {
-                    navigate("/admin/dashboard", { replace: true });
-                } else {
-                    navigate("/resident/dashboard", { replace: true });
-                }
-            }, 0);
+            // ✅ Correct redirect
+            navigate(
+                decoded?.role === "admin"
+                    ? "/admin/dashboard"
+                    : "/resident/dashboard",
+                { replace: true }
+            );
         } catch (err) {
-            toast.error(err.message || "Invalid email or password");
+            toast.error(
+                err?.message || "Invalid email or password"
+            );
             setPassword("");
             setErrors({});
         } finally {
