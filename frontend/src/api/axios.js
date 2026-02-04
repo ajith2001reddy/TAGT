@@ -1,7 +1,8 @@
-import axios from "axios";
+﻿import axios from "axios";
 
+// ✅ CRA-compatible environment variable
 const API_URL =
-    import.meta.env.REACT_APP_API_URL || "https://api.tagt.website/api";
+    process.env.REACT_APP_API_URL || "https://api.tagt.website/api";
 
 const api = axios.create({
     baseURL: API_URL.replace(/\/$/, ""),
@@ -11,6 +12,7 @@ const api = axios.create({
     }
 });
 
+// 🔑 Attach JWT to every request
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -24,6 +26,7 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// 🚫 Handle auth expiration
 api.interceptors.response.use(
     (response) => response,
     (error) => {
