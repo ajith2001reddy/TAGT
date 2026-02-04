@@ -1,5 +1,6 @@
-const Request = require("../models/Request");
+import Request from "../models/Request.js";
 
+// Function to get monthly maintenance costs for a specified number of months
 async function getMonthlyMaintenanceCosts(months = 6) {
     const now = new Date();
     const history = [];
@@ -45,6 +46,7 @@ async function getMonthlyMaintenanceCosts(months = 6) {
     return history;
 }
 
+// Function to calculate cost trends from historical data
 function calculateCostTrend(data) {
     if (data.length < 2) return 0;
 
@@ -56,6 +58,7 @@ function calculateCostTrend(data) {
     return change / (data.length - 1);
 }
 
+// Function to detect cost spikes based on historical data
 function detectSpikeRisk(history) {
     if (history.length < 3) return "LOW";
 
@@ -69,6 +72,7 @@ function detectSpikeRisk(history) {
     return "LOW";
 }
 
+// Function to predict future maintenance costs
 async function predictMaintenanceCost(monthsAhead = 6) {
     const history = await getMonthlyMaintenanceCosts(6);
 
@@ -113,4 +117,4 @@ async function predictMaintenanceCost(monthsAhead = 6) {
     };
 }
 
-module.exports = { predictMaintenanceCost };
+export { predictMaintenanceCost };

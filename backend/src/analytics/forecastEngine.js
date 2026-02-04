@@ -1,4 +1,4 @@
-const Room = require("../models/rooms");
+import Room from "../models/rooms.js";
 
 async function getCurrentOccupancy() {
     const rooms = await Room.find({}, "totalBeds occupiedBeds").lean();
@@ -67,4 +67,4 @@ async function predictOccupancy(monthsAhead = 6) {
     };
 }
 
-module.exports = { predictOccupancy };
+export { predictOccupancy };

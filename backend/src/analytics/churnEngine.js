@@ -1,7 +1,8 @@
-const User = require("../models/User");
-const Payment = require("../models/Payment");
-const Request = require("../models/Request");
+import User from "../models/User.js";
+import Payment from "../models/Payment.js";
+import Request from "../models/Request.js";
 
+// Function to calculate the churn score for each resident
 async function calculateResidentChurn(resident) {
     let score = 0;
     const reasons = [];
@@ -28,8 +29,7 @@ async function calculateResidentChurn(resident) {
 
     const hasRecentComplaint = requests.some(r => {
         const days =
-            (Date.now() - new Date(r.createdAt)) /
-            (1000 * 60 * 60 * 24);
+            (Date.now() - new Date(r.createdAt)) / (1000 * 60 * 60 * 24);
         return days <= 30;
     });
 
@@ -40,8 +40,7 @@ async function calculateResidentChurn(resident) {
 
     const lastActivity = resident.updatedAt || resident.createdAt;
     const inactiveDays =
-        (Date.now() - new Date(lastActivity)) /
-        (1000 * 60 * 60 * 24);
+        (Date.now() - new Date(lastActivity)) / (1000 * 60 * 60 * 24);
 
     if (inactiveDays > 90) {
         score += 15;
@@ -49,8 +48,7 @@ async function calculateResidentChurn(resident) {
     }
 
     const tenureDays =
-        (Date.now() - new Date(resident.createdAt)) /
-        (1000 * 60 * 60 * 24);
+        (Date.now() - new Date(resident.createdAt)) / (1000 * 60 * 60 * 24);
 
     if (tenureDays < 60) {
         score += 10;
@@ -73,6 +71,7 @@ async function calculateResidentChurn(resident) {
     };
 }
 
+// Function to predict churn for all residents
 async function predictChurn() {
     const residents = await User.find({
         role: "resident",
@@ -95,4 +94,4 @@ async function predictChurn() {
     };
 }
 
-module.exports = { predictChurn };
+export { calculateResidentChurn, predictChurn };

@@ -42,10 +42,12 @@ const roomSchema = new mongoose.Schema(
     }
 );
 
+// Virtual field for availability
 roomSchema.virtual("availableBeds").get(function () {
     return Math.max(0, this.totalBeds - this.occupiedBeds);
 });
 
+// Indexes for analytics & queries
 roomSchema.index({ rent: 1 });
 roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
 

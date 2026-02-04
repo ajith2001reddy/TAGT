@@ -19,7 +19,6 @@ const authMiddleware = (req, res, next) => {
 
     try {
         const token = authHeader.split(" ")[1];
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         req.user = {
@@ -34,6 +33,17 @@ const authMiddleware = (req, res, next) => {
             message: "Invalid or expired token"
         });
     }
+};
+
+// ✅ Admin-only guard
+export const isAdmin = (req, res, next) => {
+    if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Admin access required"
+        });
+    }
+    next();
 };
 
 export default authMiddleware;

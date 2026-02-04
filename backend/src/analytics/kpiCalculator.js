@@ -1,8 +1,8 @@
-const Room = require("../models/rooms");
-const Payment = require("../models/Payment");
-const Request = require("../models/Request");
+import Room from "../models/rooms.js";
+import Payment from "../models/Payment.js";
+import Request from "../models/Request.js";
 
-async function getKPIs({ fromDate, toDate } = {}) {
+export const getKPIs = async ({ fromDate, toDate } = {}) => {
     const dateFilter =
         fromDate && toDate
             ? { createdAt: { $gte: fromDate, $lte: toDate } }
@@ -52,8 +52,7 @@ async function getKPIs({ fromDate, toDate } = {}) {
 
     for (const req of resolvedRequests) {
         totalResolutionHours +=
-            (new Date(req.updatedAt) - new Date(req.createdAt)) /
-            (1000 * 60 * 60);
+            (new Date(req.updatedAt) - new Date(req.createdAt)) / (1000 * 60 * 60);
     }
 
     const avgResolutionTime =
@@ -85,6 +84,4 @@ async function getKPIs({ fromDate, toDate } = {}) {
             generatedAt: new Date()
         }
     };
-}
-
-module.exports = { getKPIs };
+};

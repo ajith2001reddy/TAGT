@@ -1,8 +1,10 @@
-﻿const Room = require("../models/rooms");
-const Payment = require("../models/Payment");
-const { predictChurn } = require("./churnModel");
+﻿// src/analytics/revenueOptimizer.js
 
-async function optimizeRevenue() {
+import Room from "../models/rooms.js";
+import Payment from "../models/Payment.js";
+import { predictChurn } from "./churnEngine.js";
+
+export const optimizeRevenue = async () => {
     const [rooms, payments] = await Promise.all([
         Room.find({}, "totalBeds occupiedBeds rent").lean(),
         Payment.find({}, "amount status").lean()
@@ -109,6 +111,4 @@ async function optimizeRevenue() {
         insights,
         meta: { mode: "snapshot" }
     };
-}
-
-module.exports = { optimizeRevenue };
+};

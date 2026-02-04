@@ -1,15 +1,14 @@
 ﻿import { Router } from "express";
-
-import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
+import auth, { isAdmin } from "../middleware/auth.js";
 
 import { getKPIs } from "../analytics/kpiCalculator.js";
 import { predictOccupancy } from "../analytics/forecastEngine.js";
 import { predictMaintenanceCost } from "../analytics/maintenanceForecast.js";
-import { predictChurn } from "../analytics/churnModel.js";
+import { predictChurn } from "../analytics/churnEngine.js";
 import { optimizeRevenue } from "../analytics/revenueOptimizer.js";
 
 const router = Router();
+
 
 /* =========================
    KPIs
@@ -35,7 +34,6 @@ router.get("/kpis", auth, isAdmin, async (req, res, next) => {
         }
 
         const kpis = await getKPIs(filters);
-
         res.json({ success: true, data: kpis });
     } catch (err) {
         next(err);

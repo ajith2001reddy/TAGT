@@ -1,8 +1,7 @@
-import bcrypt from "bcryptjs";
+import logger from "../utils/logger.js";  // Correct import for default export
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Room from "../models/rooms.js";
-import { logger } from "../utils/logger.js";
 
 export const getAllResidents = async (req, res, next) => {
     try {
