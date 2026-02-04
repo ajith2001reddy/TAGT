@@ -1,6 +1,4 @@
 ﻿import { Router } from "express";
-import bcrypt from "bcryptjs";
-
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 
@@ -9,7 +7,7 @@ const router = Router();
 router.post("/login", async (req, res, next) => {
     try {
         const email = req.body.email?.toLowerCase().trim();
-        const { password } = req.body;
+        const password = req.body.password?.trim();
 
         if (!email || !password) {
             return res.status(400).json({
@@ -18,9 +16,8 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        const user = await User.findOne({ email })
-            .select("+password")
-            .lean();
+        // Find user with password (select: false in schema, so explicitly select it)
+        const user = await User.findOne({ email }).select("+password");
 
         if (!user || !user.isActive) {
             return res.status(401).json({
@@ -29,7 +26,9 @@ router.post("/login", async (req, res, next) => {
             });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        // Use model's comparePassword method
+        const isMatch = await user.comparePassword(password);
+
         if (!isMatch) {
             return res.status(401).json({
                 success: false,

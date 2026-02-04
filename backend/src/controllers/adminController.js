@@ -63,14 +63,13 @@ export const addResident = async (req, res, next) => {
             }
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
+        // FIXED: Removed manual bcrypt.hash() - let pre-save hook handle it
         const resident = await User.create(
             [
                 {
                     name,
                     email: normalizedEmail,
-                    password: hashedPassword,
+                    password: password, // Plain text - pre-save hook will hash
                     role: "resident",
                     roomId: room ? room._id : null
                 }
