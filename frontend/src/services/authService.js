@@ -1,45 +1,62 @@
-import axios from "axios";
+import api from "../api/axios";
 
-const API_URL =
-    import.meta.env.VITE_API_URL || "https://api.tagt.website/api";
-
-const api = axios.create({
-    baseURL: API_URL.replace(/\/$/, ""),
-    timeout: 15000,
-    headers: {
-        "Content-Type": "application/json"
-    }
-});
-
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem("token");
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "/login";
-        }
-
-        return Promise.reject({
-            status: error.response?.status,
-            message:
-                error.response?.data?.message ||
-                error.message ||
-                "Request failed"
+/**
+ * Login user
+ * @param {Object} credentials
+ * @param {string} credentials.email
+ * @param {string} credentials.password
+ */
+export const login = async ({ email, password }) => {
+    try {
+        const response = await api.post("/auth/login", {
+            email,
+            password,
         });
-    }
-);
 
-export default api;
+        // Expected backend response:
+        // {
+        //   token: "jwt",
+        //   user: { id, email, role, ... }
+        // }
+
+        if (response.data?.token) {
+            localStorage.setItem("token", response.data.token);
+        }
+
+        return response.data;
+    } catch (error) {
+        // Error already normalized by axios interceptor
+        throw error;
+    }
+};
+
+/**
+ * Register user (optional, if you have signup)
+ */
+export const register = async (data) => {
+    try {
+        const response = await api.post("/auth/register", data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+/**
+ * Get current logged-in user
+ */
+export const getCurrentUser = async () => {
+    try {
+        const response = await api.get("/auth/me");
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+/**
+ * Logout user
+ */
+export const logout = () => {
+    localStorage.removeItem("token");
+};

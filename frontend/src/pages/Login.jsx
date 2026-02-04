@@ -2,15 +2,14 @@
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import api from "../api/axios";
 import Button from "../components/Button";
 import Card from "../components/Card";
 import { useAuth } from "../context/AuthContext";
+import { login as loginService } from "../services/authService";
 
 function decodeToken(token) {
     try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        return payload;
+        return JSON.parse(atob(token.split(".")[1]));
     } catch {
         return null;
     }
@@ -55,29 +54,26 @@ export default function Login() {
         setLoading(true);
 
         try {
-            // 🔑 CALL BACKEND
-            const res = await api.post("/auth/login", {
+            // ✅ SINGLE source of truth
+            const data = await loginService({
                 email: email.trim().toLowerCase(),
-                password
+                password,
             });
 
-            // ✅ FIX: read wrapped response
-            const { token } = res.data?.data ?? {};
+            const token = data?.token;
 
             if (!token) {
                 toast.error("Invalid login response");
                 return;
             }
 
-            // 🔑 Update AuthContext
+            // ✅ Update global auth state
             login(token);
 
-            // Decode role immediately (do NOT rely on stale context)
             const decoded = decodeToken(token);
 
             toast.success("Login successful");
 
-            // ✅ Correct redirect
             navigate(
                 decoded?.role === "admin"
                     ? "/admin/dashboard"
@@ -85,9 +81,7 @@ export default function Login() {
                 { replace: true }
             );
         } catch (err) {
-            toast.error(
-                err?.message || "Invalid email or password"
-            );
+            toast.error(err?.message || "Invalid email or password");
             setPassword("");
             setErrors({});
         } finally {
@@ -102,7 +96,6 @@ export default function Login() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-black to-slate-800">
             <Card>
                 <div className="w-[360px]">
-                    {/* Header */}
                     <div className="mb-8 text-center">
                         <h2 className="text-3xl font-bold text-blue-400">
                             TAGT
@@ -112,7 +105,6 @@ export default function Login() {
                         </p>
                     </div>
 
-                    {/* Email */}
                     <div className="mb-4">
                         <label className="block text-xs font-semibold text-gray-400 mb-1">
                             Email
@@ -123,8 +115,7 @@ export default function Login() {
                             disabled={loading}
                             autoFocus
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="you@example.com"
-                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white border border-white/10"
                         />
                         {errors.email && (
                             <p className="text-xs text-red-500 mt-1">
@@ -133,7 +124,6 @@ export default function Login() {
                         )}
                     </div>
 
-                    {/* Password */}
                     <div className="mb-6">
                         <label className="block text-xs font-semibold text-gray-400 mb-1">
                             Password
@@ -143,8 +133,7 @@ export default function Login() {
                             value={password}
                             disabled={loading}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white border border-white/10"
                         />
                         {errors.password && (
                             <p className="text-xs text-red-500 mt-1">
@@ -153,22 +142,15 @@ export default function Login() {
                         )}
                     </div>
 
-                    {/* Button */}
                     <Button
                         onClick={handleLogin}
                         disabled={loading}
-                        className="w-full py-3 text-sm font-semibold tracking-wide"
+                        className="w-full py-3 text-sm font-semibold"
                     >
                         {loading ? "Signing in..." : "Sign In"}
                     </Button>
-
-                    {/* Footer */}
-                    <p className="mt-6 text-center text-xs text-gray-500">
-                        Secure access for residents & administrators
-                    </p>
                 </div>
             </Card>
         </div>
     );
 }
- 

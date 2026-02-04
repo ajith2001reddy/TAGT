@@ -1,12 +1,12 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-03 21:36:45
+Generated: 2026-02-04 12:20:37
 Project Path: E:\TAGT
 ```
 TAGT
 ├── backend
 │   ├── src
 │   │   ├── analytics
-│   │   │   ├── churnModel.js
+│   │   │   ├── churnEngine.js
 │   │   │   ├── forecastEngine.js
 │   │   │   ├── kpiCalculator.js
 │   │   │   ├── maintenanceForecast.js
@@ -126,7 +126,7 @@ TAGT
 ## File Statistics
 
 Total Files: 87
-Total Size: 1136.26 KB
+Total Size: 1135.33 KB
 
 ## File Type Distribution
 
@@ -145,7 +145,7 @@ Total Size: 1136.26 KB
 
 1. backend\package.json
 2. backend\package-lock.json
-3. backend\src\analytics\churnModel.js
+3. backend\src\analytics\churnEngine.js
 4. backend\src\analytics\forecastEngine.js
 5. backend\src\analytics\kpiCalculator.js
 6. backend\src\analytics\maintenanceForecast.js
@@ -6965,14 +6965,14 @@ Total Size: 1136.26 KB
 
 
 // ##########################################
-// FILE 3 of 87: backend\src\analytics\churnModel.js
-// SIZE: 2793 bytes
-// MODIFIED: 2026-02-03 13:11:26
+// FILE 3 of 87: backend\src\analytics\churnEngine.js
+// SIZE: 2808 bytes
+// MODIFIED: 2026-02-03 21:42:41
 // ##########################################
 
-const User = require("../models/User");
-const Payment = require("../models/Payment");
-const Request = require("../models/Request");
+import User from "../models/User.js";
+import Payment from "../models/Payment.js";
+import Request from "../models/Request.js";
 
 // Function to calculate the churn score for each resident
 async function calculateResidentChurn(resident) {
@@ -7000,7 +7000,8 @@ async function calculateResidentChurn(resident) {
     }
 
     const hasRecentComplaint = requests.some(r => {
-        const days = (Date.now() - new Date(r.createdAt)) / (1000 * 60 * 60 * 24);
+        const days =
+            (Date.now() - new Date(r.createdAt)) / (1000 * 60 * 60 * 24);
         return days <= 30;
     });
 
@@ -7010,14 +7011,16 @@ async function calculateResidentChurn(resident) {
     }
 
     const lastActivity = resident.updatedAt || resident.createdAt;
-    const inactiveDays = (Date.now() - new Date(lastActivity)) / (1000 * 60 * 60 * 24);
+    const inactiveDays =
+        (Date.now() - new Date(lastActivity)) / (1000 * 60 * 60 * 24);
 
     if (inactiveDays > 90) {
         score += 15;
         reasons.push("Inactive for over 90 days");
     }
 
-    const tenureDays = (Date.now() - new Date(resident.createdAt)) / (1000 * 60 * 60 * 24);
+    const tenureDays =
+        (Date.now() - new Date(resident.createdAt)) / (1000 * 60 * 60 * 24);
 
     if (tenureDays < 60) {
         score += 10;
@@ -7063,7 +7066,7 @@ async function predictChurn() {
     };
 }
 
-module.exports = { calculateResidentChurn, predictChurn };
+export { calculateResidentChurn, predictChurn };
 
 
 
@@ -7071,11 +7074,11 @@ module.exports = { calculateResidentChurn, predictChurn };
 
 // ##########################################
 // FILE 4 of 87: backend\src\analytics\forecastEngine.js
-// SIZE: 1780 bytes
-// MODIFIED: 2026-02-03 13:13:30
+// SIZE: 1768 bytes
+// MODIFIED: 2026-02-03 21:42:22
 // ##########################################
 
-const Room = require("../models/rooms");
+import Room from "../models/rooms.js";
 
 async function getCurrentOccupancy() {
     const rooms = await Room.find({}, "totalBeds occupiedBeds").lean();
@@ -7144,7 +7147,7 @@ async function predictOccupancy(monthsAhead = 6) {
     };
 }
 
-module.exports = { predictOccupancy };
+export { predictOccupancy };
 
 
 
@@ -7250,11 +7253,11 @@ export const getKPIs = async ({ fromDate, toDate } = {}) => {
 
 // ##########################################
 // FILE 6 of 87: backend\src\analytics\maintenanceForecast.js
-// SIZE: 3189 bytes
-// MODIFIED: 2026-02-03 13:11:06
+// SIZE: 3177 bytes
+// MODIFIED: 2026-02-03 21:54:14
 // ##########################################
 
-const Request = require("../models/Request");
+import Request from "../models/Request.js";
 
 // Function to get monthly maintenance costs for a specified number of months
 async function getMonthlyMaintenanceCosts(months = 6) {
@@ -7373,7 +7376,7 @@ async function predictMaintenanceCost(monthsAhead = 6) {
     };
 }
 
-module.exports = { predictMaintenanceCost };
+export { predictMaintenanceCost };
 
 
 
@@ -7381,15 +7384,15 @@ module.exports = { predictMaintenanceCost };
 
 // ##########################################
 // FILE 7 of 87: backend\src\analytics\revenueOptimizer.js
-// SIZE: 3487 bytes
-// MODIFIED: 2026-02-03 13:09:45
+// SIZE: 3488 bytes
+// MODIFIED: 2026-02-03 21:53:10
 // ##########################################
 
 // src/analytics/revenueOptimizer.js
 
 import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
-import { predictChurn } from "./churnModel.js";
+import { predictChurn } from "./churnEngine.js";
 
 export const optimizeRevenue = async () => {
     const [rooms, payments] = await Promise.all([
@@ -7506,8 +7509,8 @@ export const optimizeRevenue = async () => {
 
 // ##########################################
 // FILE 8 of 87: backend\src\app.js
-// SIZE: 967 bytes
-// MODIFIED: 2026-02-03 12:11:02
+// SIZE: 1343 bytes
+// MODIFIED: 2026-02-03 22:02:46
 // ##########################################
 
 import express from "express";
@@ -7522,13 +7525,25 @@ import { swaggerSpec, swaggerUi } from "./swagger.js";
 const app = express();
 
 app.set("trust proxy", 1);
-
 app.use(helmet());
+
+const allowedOrigins = [
+    "https://tagt.website",
+    "https://www.tagt.website"
+];
 
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL || "*",
-        credentials: true
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"]
     })
 );
 
@@ -7536,8 +7551,7 @@ const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     standardHeaders: true,
-    legacyHeaders: false,
-    skip: (req) => req.path === "/api/health"
+    legacyHeaders: false
 });
 app.use(limiter);
 
@@ -7545,7 +7559,6 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", apiRoutes);
-
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(notFound);
@@ -7980,8 +7993,8 @@ export const deleteRoom = async (req, res, next) => {
 
 // ##########################################
 // FILE 13 of 87: backend\src\middleware\auth.js
-// SIZE: 953 bytes
-// MODIFIED: 2026-02-03 12:03:23
+// SIZE: 1226 bytes
+// MODIFIED: 2026-02-03 21:46:07
 // ##########################################
 
 import jwt from "jsonwebtoken";
@@ -8005,7 +8018,6 @@ const authMiddleware = (req, res, next) => {
 
     try {
         const token = authHeader.split(" ")[1];
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         req.user = {
@@ -8020,6 +8032,17 @@ const authMiddleware = (req, res, next) => {
             message: "Invalid or expired token"
         });
     }
+};
+
+// ✅ Admin-only guard
+export const isAdmin = (req, res, next) => {
+    if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Admin access required"
+        });
+    }
+    next();
 };
 
 export default authMiddleware;
@@ -8488,8 +8511,8 @@ export default router;
 
 // ##########################################
 // FILE 22 of 87: backend\src\models\rooms.js
-// SIZE: 1266 bytes
-// MODIFIED: 2026-02-03 12:06:22
+// SIZE: 1337 bytes
+// MODIFIED: 2026-02-03 21:43:48
 // ##########################################
 
 import mongoose from "mongoose";
@@ -8536,10 +8559,12 @@ const roomSchema = new mongoose.Schema(
     }
 );
 
+// Virtual field for availability
 roomSchema.virtual("availableBeds").get(function () {
     return Math.max(0, this.totalBeds - this.occupiedBeds);
 });
 
+// Indexes for analytics & queries
 roomSchema.index({ rent: 1 });
 roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
 
@@ -8551,8 +8576,8 @@ export default mongoose.model("Room", roomSchema);
 
 // ##########################################
 // FILE 23 of 87: backend\src\models\User.js
-// SIZE: 1490 bytes
-// MODIFIED: 2026-02-03 12:06:42
+// SIZE: 1551 bytes
+// MODIFIED: 2026-02-03 21:43:32
 // ##########################################
 
 import mongoose from "mongoose";
@@ -8603,12 +8628,14 @@ const userSchema = new mongoose.Schema(
     }
 );
 
+// Hash password before save
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
+// Compare password for login
 userSchema.methods.comparePassword = function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 };
@@ -8711,18 +8738,21 @@ export default router;
 
 // ##########################################
 // FILE 25 of 87: backend\src\routes\analytics.js
-// SIZE: 2740 bytes
-// MODIFIED: 2026-02-03 13:12:19
+// SIZE: 2770 bytes
+// MODIFIED: 2026-02-03 21:47:17
 // ##########################################
 
 import { Router } from "express";
-import { getKPIs } from "../analytics/kpiCalculator.js";  // Correct ES Module import
+import auth, { isAdmin } from "../middleware/auth.js";
+
+import { getKPIs } from "../analytics/kpiCalculator.js";
 import { predictOccupancy } from "../analytics/forecastEngine.js";
 import { predictMaintenanceCost } from "../analytics/maintenanceForecast.js";
-import { predictChurn } from "../analytics/churnModel.js";
+import { predictChurn } from "../analytics/churnEngine.js";
 import { optimizeRevenue } from "../analytics/revenueOptimizer.js";
 
 const router = Router();
+
 
 /* =========================
    KPIs
@@ -8748,7 +8778,6 @@ router.get("/kpis", auth, isAdmin, async (req, res, next) => {
         }
 
         const kpis = await getKPIs(filters);
-
         res.json({ success: true, data: kpis });
     } catch (err) {
         next(err);
@@ -9174,8 +9203,8 @@ export default router;
 
 // ##########################################
 // FILE 31 of 87: backend\src\server.js
-// SIZE: 642 bytes
-// MODIFIED: 2026-02-03 12:11:24
+// SIZE: 924 bytes
+// MODIFIED: 2026-02-03 22:03:04
 // ##########################################
 
 import dotenv from "dotenv";
@@ -9188,23 +9217,32 @@ dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
-await connectDB();
+async function startServer() {
+    try {
+        await connectDB();
 
-const server = http.createServer(app);
+        const server = http.createServer(app);
 
-server.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-});
+        server.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+        });
 
-process.on("unhandledRejection", (err) => {
-    console.error("UNHANDLED REJECTION:", err);
-    server.close(() => process.exit(1));
-});
+        process.on("unhandledRejection", (err) => {
+            console.error("UNHANDLED REJECTION:", err);
+            server.close(() => process.exit(1));
+        });
 
-process.on("SIGTERM", () => {
-    console.log("SIGTERM received. Shutting down gracefully.");
-    server.close(() => process.exit(0));
-});
+        process.on("SIGTERM", () => {
+            console.log("SIGTERM received. Shutting down gracefully.");
+            server.close(() => process.exit(0));
+        });
+    } catch (err) {
+        console.error("❌ Failed to start server:", err);
+        process.exit(1);
+    }
+}
+
+startServer();
 
 
 
@@ -27644,23 +27682,25 @@ export const pageVariants = {
 
 // ##########################################
 // FILE 44 of 87: frontend\src\api\axios.js
-// SIZE: 1060 bytes
-// MODIFIED: 2026-02-03 12:14:51
+// SIZE: 1257 bytes
+// MODIFIED: 2026-02-04 12:09:42
 // ##########################################
 
 import axios from "axios";
 
+// ✅ Vite-compatible env variable
 const API_URL =
-    import.meta.env.VITE_API_URL || "https://api.tagt.website/api";
+    process.env.REACT_APP_API_URL || "https://api.tagt.website/api";
 
 const api = axios.create({
     baseURL: API_URL.replace(/\/$/, ""),
     timeout: 15000,
     headers: {
-        "Content-Type": "application/json"
-    }
+        "Content-Type": "application/json",
+    },
 });
 
+// 🔑 Attach JWT token
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -27674,20 +27714,24 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// 🚫 Handle auth expiration (NOT login)
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        const status = error.response?.status;
+        const url = error.config?.url;
+
+        if (status === 401 && !url?.includes("/auth/login")) {
             localStorage.removeItem("token");
             window.location.href = "/login";
         }
 
         return Promise.reject({
-            status: error.response?.status,
+            status,
             message:
                 error.response?.data?.message ||
                 error.message ||
-                "Request failed"
+                "Request failed",
         });
     }
 );
@@ -29403,18 +29447,11 @@ export default function ToastProvider() {
 
 // ##########################################
 // FILE 64 of 87: frontend\src\context\AuthContext.jsx
-// SIZE: 1990 bytes
-// MODIFIED: 2026-02-03 12:24:51
+// SIZE: 2091 bytes
+// MODIFIED: 2026-02-03 22:11:37
 // ##########################################
 
 import { createContext, useContext, useEffect, useState } from "react";
-
-/**
- * Auth Context
- * - JWT is the single source of truth
- * - No role stored separately
- * - Safe against malformed tokens
- */
 
 const AuthContext = createContext(null);
 
@@ -29424,6 +29461,7 @@ function decodeToken(token) {
         if (!base64) return null;
 
         const payload = JSON.parse(atob(base64));
+
         return {
             id: payload.id,
             role: payload.role
@@ -29437,7 +29475,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Load auth state once on app start
+    // 🔄 Initialize auth state from JWT once
     useEffect(() => {
         const token = localStorage.getItem("token");
 
@@ -29448,16 +29486,17 @@ export const AuthProvider = ({ children }) => {
 
         const decoded = decodeToken(token);
 
-        if (decoded) {
-            setUser(decoded);
-        } else {
+        if (!decoded) {
             localStorage.removeItem("token");
             setUser(null);
+        } else {
+            setUser(decoded);
         }
 
         setLoading(false);
     }, []);
 
+    // ✅ Called AFTER successful login
     const login = (token) => {
         const decoded = decodeToken(token);
 
@@ -29474,13 +29513,14 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem("token");
         setUser(null);
+        window.location.href = "/login";
     };
 
     return (
         <AuthContext.Provider
             value={{
                 user,
-                isAuthenticated: !!user,
+                isAuthenticated: Boolean(user),
                 isAdmin: user?.role === "admin",
                 loading,
                 login,
@@ -29492,7 +29532,13 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+    const ctx = useContext(AuthContext);
+    if (!ctx) {
+        throw new Error("useAuth must be used within AuthProvider");
+    }
+    return ctx;
+};
 
 
 
@@ -31039,18 +31085,26 @@ export default function AdminRooms() {
 
 // ##########################################
 // FILE 73 of 87: frontend\src\pages\Login.jsx
-// SIZE: 5918 bytes
-// MODIFIED: 2026-02-03 12:31:30
+// SIZE: 5383 bytes
+// MODIFIED: 2026-02-04 12:05:39
 // ##########################################
 
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import api from "../api/axios";
 import Button from "../components/Button";
 import Card from "../components/Card";
 import { useAuth } from "../context/AuthContext";
+import { login as loginService } from "../services/authService";
+
+function decodeToken(token) {
+    try {
+        return JSON.parse(atob(token.split(".")[1]));
+    } catch {
+        return null;
+    }
+}
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -31060,7 +31114,7 @@ export default function Login() {
 
     const isSubmitting = useRef(false);
     const navigate = useNavigate();
-    const { login, user } = useAuth();
+    const { login } = useAuth();
 
     const validateEmail = (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -31091,33 +31145,34 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const res = await api.post("/auth/login", {
+            // ✅ SINGLE source of truth
+            const data = await loginService({
                 email: email.trim().toLowerCase(),
-                password
+                password,
             });
 
-            const { token } = res.data || {};
+            const token = data?.token;
 
             if (!token) {
-                toast.error("Login failed");
+                toast.error("Invalid login response");
                 return;
             }
 
-            // Update AuthContext (single source of truth)
+            // ✅ Update global auth state
             login(token);
+
+            const decoded = decodeToken(token);
 
             toast.success("Login successful");
 
-            // Redirect based on role (from AuthContext)
-            setTimeout(() => {
-                if (user?.role === "admin") {
-                    navigate("/admin/dashboard", { replace: true });
-                } else {
-                    navigate("/resident/dashboard", { replace: true });
-                }
-            }, 0);
+            navigate(
+                decoded?.role === "admin"
+                    ? "/admin/dashboard"
+                    : "/resident/dashboard",
+                { replace: true }
+            );
         } catch (err) {
-            toast.error(err.message || "Invalid email or password");
+            toast.error(err?.message || "Invalid email or password");
             setPassword("");
             setErrors({});
         } finally {
@@ -31132,7 +31187,6 @@ export default function Login() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-black to-slate-800">
             <Card>
                 <div className="w-[360px]">
-                    {/* Header */}
                     <div className="mb-8 text-center">
                         <h2 className="text-3xl font-bold text-blue-400">
                             TAGT
@@ -31142,7 +31196,6 @@ export default function Login() {
                         </p>
                     </div>
 
-                    {/* Email */}
                     <div className="mb-4">
                         <label className="block text-xs font-semibold text-gray-400 mb-1">
                             Email
@@ -31153,8 +31206,7 @@ export default function Login() {
                             disabled={loading}
                             autoFocus
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="you@example.com"
-                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white border border-white/10"
                         />
                         {errors.email && (
                             <p className="text-xs text-red-500 mt-1">
@@ -31163,7 +31215,6 @@ export default function Login() {
                         )}
                     </div>
 
-                    {/* Password */}
                     <div className="mb-6">
                         <label className="block text-xs font-semibold text-gray-400 mb-1">
                             Password
@@ -31173,8 +31224,7 @@ export default function Login() {
                             value={password}
                             disabled={loading}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white border border-white/10"
                         />
                         {errors.password && (
                             <p className="text-xs text-red-500 mt-1">
@@ -31183,19 +31233,13 @@ export default function Login() {
                         )}
                     </div>
 
-                    {/* Button */}
                     <Button
                         onClick={handleLogin}
                         disabled={loading}
-                        className="w-full py-3 text-sm font-semibold tracking-wide"
+                        className="w-full py-3 text-sm font-semibold"
                     >
                         {loading ? "Signing in..." : "Sign In"}
                     </Button>
-
-                    {/* Footer */}
-                    <p className="mt-6 text-center text-xs text-gray-500">
-                        Secure access for residents & administrators
-                    </p>
                 </div>
             </Card>
         </div>
@@ -32307,18 +32351,18 @@ export default function AdminRoute({ children }) {
 
 // ##########################################
 // FILE 80 of 87: frontend\src\routes\ProtectedRoute.jsx
-// SIZE: 1091 bytes
-// MODIFIED: 2026-02-03 12:36:52
+// SIZE: 1074 bytes
+// MODIFIED: 2026-02-03 22:10:51
 // ##########################################
 
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function ProtectedRoute({ children, role }) {
+export default function ProtectedRoute({ adminOnly = false }) {
     const { user, loading } = useAuth();
     const location = useLocation();
 
-    // Prevent flicker / redirect loops
+    // ⏳ Prevent flicker while auth state is loading
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center text-gray-400">
@@ -32327,7 +32371,7 @@ export default function ProtectedRoute({ children, role }) {
         );
     }
 
-    // Not authenticated → login
+    // 🔒 Not authenticated → login
     if (!user) {
         return (
             <Navigate
@@ -32338,18 +32382,18 @@ export default function ProtectedRoute({ children, role }) {
         );
     }
 
-    // Role mismatch → redirect to the appropriate route based on the user's role
-    if (role && user.role !== role) {
+    // 🛑 Admin-only route but user is not admin
+    if (adminOnly && user.role !== "admin") {
         return (
             <Navigate
-                to={user.role === "admin" ? "/admin" : "/resident"}
+                to="/resident/dashboard"
                 replace
             />
         );
     }
 
-    // Return children if all checks pass
-    return children;
+    // ✅ Auth OK → render nested routes
+    return <Outlet />;
 }
 
 
@@ -32593,110 +32637,71 @@ export const optimizeRevenue = async () => {
 
 // ##########################################
 // FILE 84 of 87: frontend\src\services\authService.js
-// SIZE: 3147 bytes
-// MODIFIED: 2026-02-03 12:38:58
+// SIZE: 1364 bytes
+// MODIFIED: 2026-02-04 12:04:04
 // ##########################################
 
 import api from "../api/axios";
 
-// Auth service to handle authentication tasks
-
-/* =================== LOGIN =================== */
 /**
- * Login a user with their credentials.
- * Stores the token and user role in localStorage.
+ * Login user
+ * @param {Object} credentials
+ * @param {string} credentials.email
+ * @param {string} credentials.password
  */
-export const login = async (email, password) => {
+export const login = async ({ email, password }) => {
     try {
-        const res = await api.post("/auth/login", { email, password });
-        const { token, role, user } = res.data;
+        const response = await api.post("/auth/login", {
+            email,
+            password,
+        });
 
-        // Save token and user info in localStorage (or sessionStorage)
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
-        localStorage.setItem("user", JSON.stringify(user));
+        // Expected backend response:
+        // {
+        //   token: "jwt",
+        //   user: { id, email, role, ... }
+        // }
 
-        return user;
-    } catch (err) {
-        console.error("Login failed:", err);
-        throw new Error("Login failed, please try again.");
+        if (response.data?.token) {
+            localStorage.setItem("token", response.data.token);
+        }
+
+        return response.data;
+    } catch (error) {
+        // Error already normalized by axios interceptor
+        throw error;
     }
 };
 
-/* =================== REGISTER =================== */
 /**
- * Register a new user.
- * Creates a new user and logs them in by storing their token.
+ * Register user (optional, if you have signup)
  */
-export const register = async (email, password, role) => {
+export const register = async (data) => {
     try {
-        const res = await api.post("/auth/register", { email, password, role });
-        const { token, user } = res.data;
-
-        // Save token and user info in localStorage
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
-        localStorage.setItem("user", JSON.stringify(user));
-
-        return user;
-    } catch (err) {
-        console.error("Registration failed:", err);
-        throw new Error("Registration failed, please try again.");
+        const response = await api.post("/auth/register", data);
+        return response.data;
+    } catch (error) {
+        throw error;
     }
 };
 
-/* =================== LOGOUT =================== */
 /**
- * Logs out the user by clearing their session data.
+ * Get current logged-in user
+ */
+export const getCurrentUser = async () => {
+    try {
+        const response = await api.get("/auth/me");
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+/**
+ * Logout user
  */
 export const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("user");
-
-    // Redirect user to login page (if necessary)
-    window.location.href = "/login";
-};
-
-/* =================== GET CURRENT USER =================== */
-/**
- * Get the current authenticated user from localStorage.
- */
-export const getCurrentUser = () => {
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
-};
-
-/* =================== IS AUTHENTICATED =================== */
-/**
- * Check if the user is authenticated by verifying if a token exists.
- */
-export const isAuthenticated = () => {
-    const token = localStorage.getItem("token");
-    return !!token; // Return true if the token exists
-};
-
-/* =================== VALIDATE TOKEN =================== */
-/**
- * Validates the token by sending a request to check its validity.
- * Example implementation if you have a backend to verify the token.
- */
-export const validateToken = async () => {
-    try {
-        const res = await api.get("/auth/validate-token");
-        return res.data.isValid;
-    } catch (err) {
-        console.error("Token validation failed:", err);
-        return false;
-    }
-};
-
-/* =================== GET TOKEN =================== */
-/**
- * Get the stored token from localStorage.
- */
-export const getToken = () => {
-    return localStorage.getItem("token");
 };
 
 
