@@ -132,16 +132,18 @@ export const addResident = async (req, res, next) => {
 
         /* ---------- CREATE INITIAL RENT PAYMENT ---------- */
         if (finalRent > 0) {
+            const now = new Date();
+
             await Payment.create(
                 [
                     {
-                        residentId: resident._id,
+                        resident: resident._id,           // ✅ correct field
+                        room: room ? room._id : null,     // ✅ required by schema
                         amount: finalRent,
-                        description: "Monthly Rent",
+                        month: now.toISOString().slice(0, 7),
                         type: "rent",
-                        status: "unpaid",
-                        month: new Date().toISOString().slice(0, 7),
-                        createdBy: req.user?.id || null, // SAFE
+                        status: "pending",                // ✅ valid enum
+                        dueDate: new Date(now.getFullYear(), now.getMonth(), 5), // ✅ required
                     },
                 ],
                 { session }
