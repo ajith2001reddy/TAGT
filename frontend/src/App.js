@@ -31,23 +31,23 @@ function AnimatedRoutes() {
                 <Route path="/login" element={<Login />} />
 
                 {/* ADMIN */}
-                <Route element={<AdminRoute />}>
+                <Route path="/admin" element={<AdminRoute />}>
                     <Route element={<DashboardLayout />}>
-                        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                        <Route path="/admin/requests" element={<AdminRequests />} />
-                        <Route path="/admin/history" element={<RequestHistory />} />
-                        <Route path="/admin/residents" element={<AdminResidents />} />
-                        <Route path="/admin/rooms" element={<AdminRooms />} />
-                        <Route path="/admin/payments" element={<Payments />} />
-                        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                        <Route path="dashboard" element={<AdminDashboard />} />
+                        <Route path="requests" element={<AdminRequests />} />
+                        <Route path="history" element={<RequestHistory />} />
+                        <Route path="residents" element={<AdminResidents />} />
+                        <Route path="rooms" element={<AdminRooms />} />
+                        <Route path="payments" element={<Payments />} />
                     </Route>
                 </Route>
 
                 {/* RESIDENT */}
-                <Route element={<ProtectedRoute />}>
-                    <Route path="/resident/dashboard" element={<ResidentDashboard />} />
-                    <Route path="/resident/payments" element={<ResidentPayments />} />
-                    <Route path="/resident" element={<Navigate to="/resident/dashboard" replace />} />
+                <Route path="/resident" element={<ProtectedRoute />}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<ResidentDashboard />} />
+                    <Route path="payments" element={<ResidentPayments />} />
                 </Route>
 
                 {/* FALLBACK */}

@@ -1,33 +1,24 @@
 ﻿import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-/**
- * AdminRoute
- * - Allows access ONLY if user role === "admin"
- * - Relies on AuthContext (single source of truth)
- */
 export default function AdminRoute() {
     const { isAuthenticated, isAdmin, loading } = useAuth();
 
-    // ⏳ Wait until auth state is ready
+    // Wait for auth to resolve
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-gray-400">
-                Loading...
-            </div>
-        );
+        return null;
     }
 
-    // 🔒 Not logged in
+    // Not logged in → login
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
 
-    // 🛑 Logged in but not admin
+    // Logged in but not admin → resident dashboard
     if (!isAdmin) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/resident/dashboard" replace />;
     }
 
-    // ✅ Admin access granted
+    // Admin → allow access
     return <Outlet />;
 }

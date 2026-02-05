@@ -1,9 +1,16 @@
 ﻿import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Navbar({ onMenuClick }) {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const role = user?.role;
+
+    const handleLogout = () => {
+        logout();
+        navigate("/login", { replace: true });
+    };
 
     return (
         <motion.nav
@@ -21,7 +28,6 @@ export default function Navbar({ onMenuClick }) {
         >
             {/* LEFT */}
             <div className="flex items-center gap-3">
-                {/* Mobile Hamburger */}
                 <button
                     type="button"
                     onClick={onMenuClick}
@@ -62,9 +68,8 @@ export default function Navbar({ onMenuClick }) {
                     </span>
                 )}
 
-                {/* LOGOUT */}
                 <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="
             px-3 py-1.5 rounded-lg text-xs sm:text-sm
             bg-red-500/15 text-red-300

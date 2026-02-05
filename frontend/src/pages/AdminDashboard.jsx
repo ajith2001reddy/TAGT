@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import AppLayout from "../components/AppLayout";
 import StatCard from "../components/StatCard";
 import Loader from "../components/Loader";
 import RequestsChart from "../components/RequestsChart";
@@ -36,14 +35,11 @@ export default function AdminDashboard() {
             setAllRequests(safeData);
 
             const active = safeData.filter(
-                (r) =>
-                    r.status !== "resolved" &&
-                    r.workflowStatus !== "Done"
+                (r) => r.status !== "resolved" && r.workflowStatus !== "Done"
             );
 
             setActiveRequests(active.slice(0, 5));
         } catch (err) {
-            console.error("Failed to load requests:", err);
             toast.error("Failed to load requests");
             setAllRequests([]);
             setActiveRequests([]);
@@ -59,7 +55,6 @@ export default function AdminDashboard() {
             const res = await api.get("/payments");
             setPayments(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
-            console.error("Failed to load payments:", err);
             toast.error("Failed to load revenue data");
             setPayments([]);
         } finally {
@@ -72,137 +67,95 @@ export default function AdminDashboard() {
         fetchPayments();
     }, [fetchRequests, fetchPayments]);
 
-    /* ================= REQUEST STATUS METRICS ================= */
+    /* ================= METRICS ================= */
     const chartData = [
-        {
-            status: "Pending",
-            count: allRequests.filter(
-                (r) => r.status === "pending"
-            ).length,
-        },
-        {
-            status: "In Progress",
-            count: allRequests.filter(
-                (r) => r.status === "in-progress"
-            ).length,
-        },
-        {
-            status: "Resolved",
-            count: allRequests.filter(
-                (r) => r.status === "resolved"
-            ).length,
-        },
+        { status: "Pending", count: allRequests.filter(r => r.status === "pending").length },
+        { status: "In Progress", count: allRequests.filter(r => r.status === "in-progress").length },
+        { status: "Resolved", count: allRequests.filter(r => r.status === "resolved").length },
     ];
 
-    /* ================= REVENUE METRICS ================= */
     const totalRevenue = payments
-        .filter((p) => p.status === "paid")
+        .filter(p => p.status === "paid")
         .reduce((sum, p) => sum + p.amount, 0);
 
     const outstandingBalance = payments
-        .filter((p) => p.status === "unpaid")
+        .filter(p => p.status === "unpaid")
         .reduce((sum, p) => sum + p.amount, 0);
 
     return (
-        <AppLayout>
-            <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-10"
-            >
-                {/* HEADER */}
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold">
-                        Admin Dashboard
-                    </h1>
-                    <p className="text-gray-400 mt-1">
-                        AI-powered analytics & operational insights
-                    </p>
+        <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-10"
+        >
+            {/* HEADER */}
+            <div>
+                <h1 className="text-2xl sm:text-3xl font-bold">
+                    Admin Dashboard
+                </h1>
+                <p className="text-gray-400 mt-1">
+                    AI-powered analytics & operational insights
+                </p>
+            </div>
+
+            {/* AI ANALYTICS */}
+            <div className="space-y-8">
+                <KpiCards />
+                <OccupancyForecast />
+                <MaintenanceCostForecast />
+                <ChurnRiskTable />
+            </div>
+
+            {/* CORE METRICS */}
+            {statsLoading || revenueLoading ? (
+                <Loader />
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <StatCard title="Total Residents" value={stats.totalResidents || 0} accent="blue" />
+                    <StatCard title="Pending Requests" value={stats.pendingRequests || 0} accent="yellow" />
+                    <StatCard title="Total Revenue" value={`$${totalRevenue}`} accent="green" />
+                    <StatCard title="Outstanding Balance" value={`$${outstandingBalance}`} accent="red" />
                 </div>
+            )}
 
-                {/* AI ANALYTICS */}
-                <div className="space-y-8">
-                    <KpiCards />
-                    <OccupancyForecast />
-                    <MaintenanceCostForecast />
-                    <ChurnRiskTable />
-                </div>
-
-                {/* CORE METRICS */}
-                {statsLoading || revenueLoading ? (
-                    <Loader />
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                        <StatCard
-                            title="Total Residents"
-                            value={stats.totalResidents || 0}
-                            accent="blue"
-                        />
-                        <StatCard
-                            title="Pending Requests"
-                            value={stats.pendingRequests || 0}
-                            accent="yellow"
-                        />
-                        <StatCard
-                            title="Total Revenue"
-                            value={`$${totalRevenue}`}
-                            accent="green"
-                        />
-                        <StatCard
-                            title="Outstanding Balance"
-                            value={`$${outstandingBalance}`}
-                            accent="red"
-                        />
-                    </div>
-                )}
-
-                {/* REQUESTS OVERVIEW */}
-                {!reqLoading && chartData.some((d) => d.count > 0) && (
-                    <div className="glass rounded-2xl p-4 sm:p-6">
-                        <RequestsChart data={chartData} />
-                    </div>
-                )}
-
-                {/* ACTIVE REQUESTS */}
+            {/* REQUESTS OVERVIEW */}
+            {!reqLoading && chartData.some(d => d.count > 0) && (
                 <div className="glass rounded-2xl p-4 sm:p-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-semibold">
-                            Active Maintenance Requests
-                        </h2>
-                        <Link
-                            to="/admin/requests"
-                            className="text-sm text-blue-400"
-                        >
-                            View all
-                        </Link>
-                    </div>
-
-                    {reqLoading ? (
-                        <Loader />
-                    ) : activeRequests.length === 0 ? (
-                        <p className="text-gray-400 text-center">
-                            No active requests 🎉
-                        </p>
-                    ) : (
-                        <ul className="divide-y divide-white/10">
-                            {activeRequests.map((r) => (
-                                <li
-                                    key={r._id}
-                                    className="py-3 flex flex-col sm:flex-row sm:justify-between gap-2"
-                                >
-                                    <p className="text-gray-200">
-                                        {r.message}
-                                    </p>
-                                    <span className="text-xs self-start sm:self-center px-2 py-1 rounded bg-blue-600/20 text-blue-400 capitalize">
-                                        {r.status}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                    <RequestsChart data={chartData} />
                 </div>
-            </motion.div>
-        </AppLayout>
+            )}
+
+            {/* ACTIVE REQUESTS */}
+            <div className="glass rounded-2xl p-4 sm:p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold">
+                        Active Maintenance Requests
+                    </h2>
+                    <Link to="/admin/requests" className="text-sm text-blue-400">
+                        View all
+                    </Link>
+                </div>
+
+                {reqLoading ? (
+                    <Loader />
+                ) : activeRequests.length === 0 ? (
+                    <p className="text-gray-400 text-center">
+                        No active requests 🎉
+                    </p>
+                ) : (
+                    <ul className="divide-y divide-white/10">
+                        {activeRequests.map((r) => (
+                            <li key={r._id} className="py-3 flex justify-between">
+                                <p>{r.message}</p>
+                                <span className="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-400">
+                                    {r.status}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </motion.div>
     );
 }

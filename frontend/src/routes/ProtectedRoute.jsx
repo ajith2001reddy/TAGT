@@ -5,16 +5,12 @@ export default function ProtectedRoute() {
     const { isAuthenticated, loading } = useAuth();
     const location = useLocation();
 
-    // ⏳ Wait until auth state is resolved
+    // Wait for auth to resolve (render nothing)
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-gray-400">
-                Loading...
-            </div>
-        );
+        return null;
     }
 
-    // 🔒 Not logged in → login page
+    // Not authenticated → redirect to login
     if (!isAuthenticated) {
         return (
             <Navigate
@@ -25,6 +21,6 @@ export default function ProtectedRoute() {
         );
     }
 
-    // ✅ Authenticated → allow access
+    // Authenticated → allow access
     return <Outlet />;
 }

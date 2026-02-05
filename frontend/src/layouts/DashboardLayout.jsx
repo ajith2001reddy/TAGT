@@ -1,5 +1,5 @@
-﻿import { useState } from "react";
-import { Outlet } from "react-router-dom";
+﻿import { useState, useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import SidebarContent from "../components/SidebarContent";
@@ -8,6 +8,8 @@ import { useAuth } from "../context/AuthContext";
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { user } = useAuth();
+    const location = useLocation();
+
     const role = user?.role ?? null;
 
     const baseLink =
@@ -16,6 +18,11 @@ export default function DashboardLayout() {
         "bg-blue-500/90 text-white shadow-lg shadow-blue-500/20";
     const idle =
         "text-gray-300 hover:bg-white/10";
+
+    // Close mobile sidebar on route change
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [location.pathname]);
 
     return (
         <div className="min-h-screen bg-black text-gray-100">
@@ -46,7 +53,9 @@ export default function DashboardLayout() {
                             />
 
                             <motion.aside
-                                className="fixed left-0 top-0 bottom-0 w-64 z-50 bg-black/90 backdrop-blur-xl border-r border-white/10"
+                                className="fixed left-0 top-0 bottom-0 w-64 z-50
+                           bg-black/90 backdrop-blur-xl
+                           border-r border-white/10"
                                 initial={{ x: -300 }}
                                 animate={{ x: 0 }}
                                 exit={{ x: -300 }}
@@ -64,9 +73,10 @@ export default function DashboardLayout() {
                     )}
                 </AnimatePresence>
 
-                {/* MAIN CONTENT (ROUTES RENDER HERE) */}
+                {/* MAIN CONTENT */}
                 <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-                    <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6 shadow-xl min-h-full">
+                    <div className="rounded-2xl bg-white/10 backdrop-blur-xl
+                          border border-white/10 p-6 shadow-xl min-h-full">
                         <Outlet />
                     </div>
                 </main>

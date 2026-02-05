@@ -1,9 +1,8 @@
 ﻿import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext(null);
 
-// ✅ Safe JWT decode (base64url compatible)
+// Decode JWT safely (base64url compatible)
 function decodeToken(token) {
     try {
         const payloadBase64 = token.split(".")[1];
@@ -12,24 +11,22 @@ function decodeToken(token) {
         const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
         const payload = JSON.parse(atob(base64));
 
-        // ⏰ Expiry check
+        // Expiry check
         if (payload.exp && Date.now() >= payload.exp * 1000) {
             return null;
         }
 
         return payload;
-    } catch (err) {
-        console.error("Token decode failed:", err);
+    } catch {
         return null;
     }
 }
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
 
-    // 🔄 Restore auth state on app load
+    // Restore auth state on app load
     useEffect(() => {
         const token = localStorage.getItem("token");
 
@@ -50,47 +47,47 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    // ✅ Call this after successful login
+    // Login: store token + set user
     const login = (token) => {
         const decoded = decodeToken(token);
 
         if (!decoded) {
             localStorage.removeItem("token");
             setUser(null);
-            return;
+            return false;
         }
 
         localStorage.setItem("token", token);
         setUser(decoded);
+        return true;
     };
 
-    // ✅ Proper SPA logout (no hard refresh)
+    // Logout: clear auth state
     const logout = () => {
         localStorage.removeItem("token");
         setUser(null);
-        navigate("/login", { replace: true });
+    };
+
+    const value = {
+        user,
+        loading,
+        isAuthenticated: Boolean(user),
+        isAdmin: user?.role === "admin",
+        login,
+        logout,
     };
 
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                isAuthenticated: !!user,
-                isAdmin: user?.role === "admin",
-                loading,
-                login,
-                logout,
-            }}
-        >
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
-};
+}
 
-export const useAuth = () => {
+export function useAuth() {
     const ctx = useContext(AuthContext);
     if (!ctx) {
         throw new Error("useAuth must be used within AuthProvider");
     }
     return ctx;
-};
+}
