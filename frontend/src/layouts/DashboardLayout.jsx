@@ -1,13 +1,13 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { Outlet } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import SidebarContent from "../components/SidebarContent";
 import { useAuth } from "../context/AuthContext";
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { user } = useAuth();
-
     const role = user?.role ?? null;
 
     const baseLink =
@@ -27,8 +27,8 @@ export default function DashboardLayout({ children }) {
                 <aside className="hidden lg:block w-64 border-r border-white/10 bg-white/5 backdrop-blur-xl">
                     <SidebarContent
                         role={role}
-                        linkClass={(props) =>
-                            `${baseLink} ${props.isActive ? active : idle}`
+                        linkClass={({ isActive }) =>
+                            `${baseLink} ${isActive ? active : idle}`
                         }
                     />
                 </aside>
@@ -37,7 +37,6 @@ export default function DashboardLayout({ children }) {
                 <AnimatePresence>
                     {sidebarOpen && (
                         <>
-                            {/* Overlay */}
                             <motion.div
                                 className="fixed inset-0 bg-black/60 z-40"
                                 initial={{ opacity: 0 }}
@@ -46,25 +45,18 @@ export default function DashboardLayout({ children }) {
                                 onClick={() => setSidebarOpen(false)}
                             />
 
-                            {/* Drawer */}
                             <motion.aside
                                 className="fixed left-0 top-0 bottom-0 w-64 z-50 bg-black/90 backdrop-blur-xl border-r border-white/10"
                                 initial={{ x: -300 }}
                                 animate={{ x: 0 }}
                                 exit={{ x: -300 }}
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 120,
-                                    damping: 20,
-                                }}
+                                transition={{ type: "spring", stiffness: 120, damping: 20 }}
                             >
                                 <SidebarContent
                                     role={role}
-                                    linkClass={(props) =>
-                                        `${baseLink} ${props.isActive ? active : idle}`
-                                    }
-                                    onNavigate={() =>
-                                        setSidebarOpen(false)
+                                    onNavigate={() => setSidebarOpen(false)}
+                                    linkClass={({ isActive }) =>
+                                        `${baseLink} ${isActive ? active : idle}`
                                     }
                                 />
                             </motion.aside>
@@ -72,10 +64,10 @@ export default function DashboardLayout({ children }) {
                     )}
                 </AnimatePresence>
 
-                {/* Main Content */}
+                {/* MAIN CONTENT (ROUTES RENDER HERE) */}
                 <main className="flex-1 p-4 md:p-8 overflow-y-auto">
                     <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-6 shadow-xl min-h-full">
-                        {children}
+                        <Outlet />
                     </div>
                 </main>
             </div>

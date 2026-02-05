@@ -18,6 +18,7 @@ import AdminRooms from "./pages/AdminRooms";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
+import DashboardLayout from "./layouts/DashboardLayout";
 import ToastProvider from "./components/ToastProvider";
 
 function AnimatedRoutes() {
@@ -26,28 +27,30 @@ function AnimatedRoutes() {
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-                {/* ================= PUBLIC ================= */}
+                {/* PUBLIC */}
                 <Route path="/login" element={<Login />} />
 
-                {/* ================= ADMIN ================= */}
+                {/* ADMIN */}
                 <Route element={<AdminRoute />}>
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                    <Route path="/admin/requests" element={<AdminRequests />} />
-                    <Route path="/admin/history" element={<RequestHistory />} />
-                    <Route path="/admin/residents" element={<AdminResidents />} />
-                    <Route path="/admin/rooms" element={<AdminRooms />} />
-                    <Route path="/admin/payments" element={<Payments />} />
-                    <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                    <Route element={<DashboardLayout />}>
+                        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                        <Route path="/admin/requests" element={<AdminRequests />} />
+                        <Route path="/admin/history" element={<RequestHistory />} />
+                        <Route path="/admin/residents" element={<AdminResidents />} />
+                        <Route path="/admin/rooms" element={<AdminRooms />} />
+                        <Route path="/admin/payments" element={<Payments />} />
+                        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                    </Route>
                 </Route>
 
-                {/* ================= RESIDENT ================= */}
+                {/* RESIDENT */}
                 <Route element={<ProtectedRoute />}>
                     <Route path="/resident/dashboard" element={<ResidentDashboard />} />
                     <Route path="/resident/payments" element={<ResidentPayments />} />
                     <Route path="/resident" element={<Navigate to="/resident/dashboard" replace />} />
                 </Route>
 
-                {/* ================= FALLBACK ================= */}
+                {/* FALLBACK */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
