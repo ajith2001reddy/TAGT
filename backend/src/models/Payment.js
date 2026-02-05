@@ -14,7 +14,7 @@ const PaymentSchema = new mongoose.Schema(
         room: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Room",
-            required: true,
+            default: null,  
         },
 
         // 💰 Amount to be paid
