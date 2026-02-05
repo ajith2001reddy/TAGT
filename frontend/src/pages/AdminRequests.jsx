@@ -30,8 +30,11 @@ export default function AdminRequests() {
     const fetchRequests = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/resident/requests");
-            setRequests(Array.isArray(res.data) ? res.data : []);
+
+            // ✅ Correct endpoint
+            const res = await api.get("/requests");
+
+            setRequests(res.data?.requests || []);
         } catch {
             toast.error("Failed to load maintenance requests");
         } finally {
@@ -52,11 +55,11 @@ export default function AdminRequests() {
 
         setSaving(true);
         try {
-            await api.put(`/resident/request/${selected._id}`, {
-                status,
-            });
+            // ✅ Correct endpoint
+            await api.put(`/requests/${selected._id}/status`, { status });
 
             toast.success("Status updated");
+
             setSelected(null);
             setStatus("");
             fetchRequests();
@@ -89,7 +92,7 @@ export default function AdminRequests() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="text-gray-400 border-b border-white/10">
-                                    <th className="px-4 py-3 text-left">Issue</th>
+                                    <th className="px-4 py-3 text-left">Title</th>
                                     <th className="px-4 py-3 text-left">Resident</th>
                                     <th className="px-4 py-3 text-left">Status</th>
                                     <th className="px-4 py-3 text-right">Action</th>
@@ -98,18 +101,13 @@ export default function AdminRequests() {
                             <tbody>
                                 {requests.map((r) => (
                                     <tr key={r._id} className="border-t border-white/5">
-                                        <td className="px-4 py-3">{r.issue}</td>
-                                        <td className="px-4 py-3">
-                                            {r.residentId?.email}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {badge(r.status)}
-                                        </td>
+                                        {/* ✅ Correct fields */}
+                                        <td className="px-4 py-3">{r.title}</td>
+                                        <td className="px-4 py-3">{r.resident?.email}</td>
+                                        <td className="px-4 py-3">{badge(r.status)}</td>
                                         <td className="px-4 py-3 text-right">
                                             {r.status !== "done" && (
-                                                <Button onClick={() => setSelected(r)}>
-                                                    Update
-                                                </Button>
+                                                <Button onClick={() => setSelected(r)}>Update</Button>
                                             )}
                                         </td>
                                     </tr>

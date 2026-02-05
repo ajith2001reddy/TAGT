@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+ï»¿import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/axios";
@@ -9,19 +9,17 @@ export default function AdminRooms() {
 
     const [form, setForm] = useState({
         roomNumber: "",
+        rent: "",
         totalBeds: "",
-        note: ""
+        note: "",
     });
-
-    const [selectedRoom, setSelectedRoom] = useState(null);
-    const [occupiedBeds, setOccupiedBeds] = useState("");
 
     /* ================= FETCH ROOMS ================= */
     const fetchRooms = useCallback(async () => {
         try {
             setLoading(true);
             const res = await api.get("/rooms");
-            setRooms(res.data?.rooms || res.data || []);
+            setRooms(res.data?.rooms || []);
         } catch {
             toast.error("Failed to load rooms");
             setRooms([]);
@@ -34,65 +32,36 @@ export default function AdminRooms() {
         fetchRooms();
     }, [fetchRooms]);
 
-    /* ================= ADD rooms ================= */
+    /* ================= ADD ROOM ================= */
     const addRoom = async () => {
-        if (!form.roomNumber || !form.totalBeds) {
-            toast.error("Room number and total beds are required");
+        if (!form.roomNumber || !form.rent || !form.totalBeds) {
+            toast.error("Room number, rent, and total beds are required");
             return;
         }
 
-        if (Number(form.totalBeds) <= 0) {
-            toast.error("Total beds must be greater than 0");
+        if (Number(form.rent) <= 0 || Number(form.totalBeds) <= 0) {
+            toast.error("Rent and total beds must be greater than 0");
             return;
         }
 
         try {
             await api.post("/rooms", {
                 roomNumber: form.roomNumber,
+                rent: Number(form.rent),
                 totalBeds: Number(form.totalBeds),
-                note: form.note
+                note: form.note,
             });
 
             toast.success("Room added successfully");
-            setForm({ roomNumber: "", totalBeds: "", note: "" });
+
+            setForm({ roomNumber: "", rent: "", totalBeds: "", note: "" });
             fetchRooms();
-        } catch {
-            toast.error("Failed to add room");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to add room");
         }
     };
 
-    /* ================= UPDATE OCCUPANCY ================= */
-    const updateOccupancy = async () => {
-        if (!selectedRoom) return;
-
-        const value = Number(occupiedBeds);
-
-        if (!Number.isInteger(value) || value < 0) {
-            toast.error("Enter a valid occupied beds value");
-            return;
-        }
-
-        if (value > selectedRoom.totalBeds) {
-            toast.error("Occupied beds cannot exceed total beds");
-            return;
-        }
-
-        try {
-            await api.put(
-                `/rooms/${selectedRoom._id}/occupancy`,
-                { occupiedBeds: value }
-            );
-
-            toast.success("Occupancy updated");
-            setSelectedRoom(null);
-            setOccupiedBeds("");
-            fetchRooms();
-        } catch {
-            toast.error("Failed to update occupancy");
-        }
-    };
-
-    /* ================= DELETE rooms ================= */
+    /* ================= DELETE ROOM ================= */
     const deleteRoom = async (room) => {
         if (room.occupiedBeds > 0) {
             toast.error("Cannot delete a room with occupied beds");
@@ -122,17 +91,15 @@ export default function AdminRooms() {
                         Rooms & Bed Management
                     </h1>
                     <p className="text-gray-500 mt-1">
-                        Manage rooms, capacity, and occupancy
+                        Manage rooms and capacity
                     </p>
                 </div>
 
                 {/* ADD ROOM */}
                 <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Add New Room
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-4">Add New Room</h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                         <input
                             placeholder="Room Number"
                             className="border rounded-lg p-2"
@@ -140,6 +107,14 @@ export default function AdminRooms() {
                             onChange={(e) =>
                                 setForm({ ...form, roomNumber: e.target.value })
                             }
+                        />
+
+                        <input
+                            type="number"
+                            placeholder="Rent"
+                            className="border rounded-lg p-2"
+                            value={form.rent}
+                            onChange={(e) => setForm({ ...form, rent: e.target.value })}
                         />
 
                         <input
@@ -156,9 +131,7 @@ export default function AdminRooms() {
                             placeholder="Note (optional)"
                             className="border rounded-lg p-2"
                             value={form.note}
-                            onChange={(e) =>
-                                setForm({ ...form, note: e.target.value })
-                            }
+                            onChange={(e) => setForm({ ...form, note: e.target.value })}
                         />
 
                         <button
@@ -175,31 +148,20 @@ export default function AdminRooms() {
                     <h2 className="text-lg font-semibold mb-4">Rooms</h2>
 
                     {loading ? (
-                        <p className="text-gray-500 text-center">
-                            Loading rooms…
-                        </p>
+                        <p className="text-gray-500 text-center">Loading roomsâ€¦</p>
                     ) : rooms.length === 0 ? (
-                        <p className="text-gray-500 text-center">
-                            No rooms added yet.
-                        </p>
+                        <p className="text-gray-500 text-center">No rooms added yet.</p>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b text-gray-500">
                                         <th className="p-2 text-left">Room</th>
-                                        <th className="p-2 text-center">
-                                            Total Beds
-                                        </th>
-                                        <th className="p-2 text-center">
-                                            Occupied
-                                        </th>
-                                        <th className="p-2 text-center">
-                                            Available
-                                        </th>
-                                        <th className="p-2 text-center">
-                                            Actions
-                                        </th>
+                                        <th className="p-2 text-center">Rent</th>
+                                        <th className="p-2 text-center">Total Beds</th>
+                                        <th className="p-2 text-center">Occupied</th>
+                                        <th className="p-2 text-center">Available</th>
+                                        <th className="p-2 text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -208,40 +170,17 @@ export default function AdminRooms() {
                                             room.totalBeds - room.occupiedBeds;
 
                                         return (
-                                            <tr
-                                                key={room._id}
-                                                className="border-b hover:bg-gray-50"
-                                            >
-                                                <td className="p-2">
-                                                    {room.roomNumber}
-                                                </td>
-                                                <td className="p-2 text-center">
-                                                    {room.totalBeds}
-                                                </td>
-                                                <td className="p-2 text-center">
-                                                    {room.occupiedBeds}
-                                                </td>
+                                            <tr key={room._id} className="border-b hover:bg-gray-50">
+                                                <td className="p-2">{room.roomNumber}</td>
+                                                <td className="p-2 text-center">â‚¹{room.rent}</td>
+                                                <td className="p-2 text-center">{room.totalBeds}</td>
+                                                <td className="p-2 text-center">{room.occupiedBeds}</td>
                                                 <td className="p-2 text-center font-semibold">
                                                     {availableBeds}
                                                 </td>
-                                                <td className="p-2 text-center space-x-2">
+                                                <td className="p-2 text-center">
                                                     <button
-                                                        onClick={() => {
-                                                            setSelectedRoom(room);
-                                                            setOccupiedBeds(
-                                                                String(
-                                                                    room.occupiedBeds
-                                                                )
-                                                            );
-                                                        }}
-                                                        className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
-                                                    >
-                                                        Update
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            deleteRoom(room)
-                                                        }
+                                                        onClick={() => deleteRoom(room)}
                                                         className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
                                                     >
                                                         Delete
@@ -256,43 +195,6 @@ export default function AdminRooms() {
                     )}
                 </div>
             </div>
-
-            {/* OCCUPANCY MODAL */}
-            {selectedRoom && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-2xl p-6 w-96">
-                        <h3 className="text-lg font-semibold mb-4">
-                            Update Occupancy – Room{" "}
-                            {selectedRoom.roomNumber}
-                        </h3>
-
-                        <input
-                            type="number"
-                            className="w-full border rounded-lg p-2 mb-4"
-                            value={occupiedBeds}
-                            onChange={(e) =>
-                                setOccupiedBeds(e.target.value)
-                            }
-                        />
-
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setSelectedRoom(null)}
-                                className="px-4 py-2 border rounded-lg"
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                onClick={updateOccupancy}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                            >
-                                Save
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </DashboardLayout>
     );
 }

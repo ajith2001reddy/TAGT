@@ -1,8 +1,13 @@
-import logger from "../utils/logger.js";  // Correct import for default export
+﻿import logger from "../utils/logger.js";
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+
 import User from "../models/User.js";
 import Room from "../models/rooms.js";
 
+/**
+ * GET ALL RESIDENTS
+ */
 export const getAllResidents = async (req, res, next) => {
     try {
         const residents = await User.find({ role: "resident" })
@@ -10,13 +15,16 @@ export const getAllResidents = async (req, res, next) => {
             .sort({ createdAt: -1 })
             .lean();
 
-        res.json({ success: true, residents });
+        return res.json({ success: true, residents });
     } catch (err) {
         logger.error(`GET RESIDENTS ERROR: ${err.message}`);
         next(err);
     }
 };
 
+/**
+ * ADD RESIDENT
+ */
 export const addResident = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -28,7 +36,7 @@ export const addResident = async (req, res, next) => {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Name, email, and password are required"
+                message: "Name, email, and password are required",
             });
         }
 
@@ -39,11 +47,12 @@ export const addResident = async (req, res, next) => {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Email already exists"
+                message: "Email already exists",
             });
         }
 
         let room = null;
+
         if (roomId) {
             room = await Room.findById(roomId).session(session);
 
@@ -51,7 +60,7 @@ export const addResident = async (req, res, next) => {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
-                    message: "Invalid room selected"
+                    message: "Invalid room selected",
                 });
             }
 
@@ -59,11 +68,12 @@ export const addResident = async (req, res, next) => {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
-                    message: "No beds available in this room"
+                    message: "No beds available in this room",
                 });
             }
         }
 
+        // ✅ HASH PASSWORD (main missing fix)
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const [resident] = await User.create(
@@ -73,8 +83,8 @@ export const addResident = async (req, res, next) => {
                     email: normalizedEmail,
                     password: hashedPassword,
                     role: "resident",
-                    roomId: room ? room._id : null
-                }
+                    roomId: room ? room._id : null,
+                },
             ],
             { session }
         );
@@ -90,9 +100,9 @@ export const addResident = async (req, res, next) => {
             `Resident added: ${resident.name}, Room: ${room ? room.roomNumber : "None"}`
         );
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
-            resident
+            resident,
         });
     } catch (err) {
         await session.abortTransaction();
@@ -103,6 +113,9 @@ export const addResident = async (req, res, next) => {
     }
 };
 
+/**
+ * DELETE RESIDENT
+ */
 export const deleteResident = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -111,16 +124,18 @@ export const deleteResident = async (req, res, next) => {
         const { id } = req.params;
 
         const resident = await User.findById(id).session(session);
+
         if (!resident) {
             await session.abortTransaction();
             return res.status(404).json({
                 success: false,
-                message: "Resident not found"
+                message: "Resident not found",
             });
         }
 
         if (resident.roomId) {
             const room = await Room.findById(resident.roomId).session(session);
+
             if (room && room.occupiedBeds > 0) {
                 room.occupiedBeds -= 1;
                 await room.save({ session });
@@ -133,9 +148,9 @@ export const deleteResident = async (req, res, next) => {
 
         logger.info(`Resident deleted: ${resident.name}`);
 
-        res.json({
+        return res.json({
             success: true,
-            message: "Resident deleted successfully"
+            message: "Resident deleted successfully",
         });
     } catch (err) {
         await session.abortTransaction();

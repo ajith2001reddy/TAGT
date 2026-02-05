@@ -13,7 +13,8 @@ export default function AdminResidents() {
     const [form, setForm] = useState({
         name: "",
         email: "",
-        roomNumber: "",
+        password: "",
+        roomId: "",
     });
 
     // ================= FETCH =================
@@ -21,7 +22,9 @@ export default function AdminResidents() {
         try {
             setLoading(true);
             const res = await api.get("/resident");
-            setResidents(Array.isArray(res.data) ? res.data : []);
+
+            // ✅ Correct response handling
+            setResidents(res.data?.residents || []);
         } catch {
             toast.error("Failed to load residents");
         } finally {
@@ -35,21 +38,27 @@ export default function AdminResidents() {
 
     // ================= ADD =================
     const addResident = async () => {
-        if (!form.name || !form.email || !form.roomNumber) {
-            toast.error("All fields are required");
+        if (!form.name || !form.email || !form.password) {
+            toast.error("Name, email, and password are required");
             return;
         }
 
         setSaving(true);
         try {
             await api.post("/resident", form);
+
             toast.success("Resident added");
-            setForm({ name: "", email: "", roomNumber: "" });
-            fetchResidents();
+
+            setForm({
+                name: "",
+                email: "",
+                password: "",
+                roomId: "",
+            });
+
+            fetchResidents(); // ✅ refresh list
         } catch (err) {
-            toast.error(
-                err.response?.data?.message || "Failed to add resident"
-            );
+            toast.error(err.response?.data?.message || "Failed to add resident");
         } finally {
             setSaving(false);
         }
@@ -81,27 +90,31 @@ export default function AdminResidents() {
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
                         placeholder="Name"
                         value={form.name}
-                        onChange={(e) =>
-                            setForm({ ...form, name: e.target.value })
-                        }
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
                     />
 
                     <input
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
                         placeholder="Email"
                         value={form.email}
-                        onChange={(e) =>
-                            setForm({ ...form, email: e.target.value })
-                        }
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
                     />
 
+                    {/* ✅ Password field added */}
+                    <input
+                        type="password"
+                        className="w-full p-2 rounded bg-black/30 border border-white/10"
+                        placeholder="Password"
+                        value={form.password}
+                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    />
+
+                    {/* Optional roomId */}
                     <input
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
-                        placeholder="Room Number"
-                        value={form.roomNumber}
-                        onChange={(e) =>
-                            setForm({ ...form, roomNumber: e.target.value })
-                        }
+                        placeholder="Room ID (optional)"
+                        value={form.roomId}
+                        onChange={(e) => setForm({ ...form, roomId: e.target.value })}
                     />
 
                     <Button disabled={saving} onClick={addResident}>
@@ -127,15 +140,15 @@ export default function AdminResidents() {
                             </thead>
                             <tbody>
                                 {residents.map((r) => (
-                                    <tr
-                                        key={r._id}
-                                        className="border-t border-white/5"
-                                    >
+                                    <tr key={r._id} className="border-t border-white/5">
                                         <td className="px-4 py-3">{r.name}</td>
                                         <td className="px-4 py-3">{r.email}</td>
+
+                                        {/* ✅ Correct room display */}
                                         <td className="px-4 py-3">
-                                            {r.roomNumber || "-"}
+                                            {r.roomId?.roomNumber || "-"}
                                         </td>
+
                                         <td className="px-4 py-3 text-right">
                                             <Button
                                                 className="bg-red-600"

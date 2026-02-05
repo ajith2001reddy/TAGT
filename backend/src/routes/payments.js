@@ -17,30 +17,35 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
         const amount = Number(req.body.amount);
 
         if (!mongoose.Types.ObjectId.isValid(residentId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid resident"
-            });
+            return res.status(400).json({ success: false, message: "Invalid resident" });
         }
 
         if (!Number.isFinite(amount) || amount <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid amount"
-            });
+            return res.status(400).json({ success: false, message: "Invalid amount" });
         }
 
         const resident = await User.findOne({
             _id: residentId,
             role: "resident",
-            isActive: true
+            isActive: true,
         }).lean();
 
         if (!resident) {
             return res.status(400).json({
                 success: false,
-                message: "Resident not found or inactive"
+                message: "Resident not found or inactive",
             });
+        }
+
+        // ❗ Prevent duplicate monthly bill
+        if (month) {
+            const exists = await Payment.findOne({ residentId, month });
+            if (exists) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Bill already exists for this month",
+                });
+            }
         }
 
         const payment = await Payment.create({
@@ -51,7 +56,7 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
             month: month || null,
             adminNote: adminNote || "",
             status: "unpaid",
-            createdBy: req.user.id
+            createdBy: req.user.id,
         });
 
         res.status(201).json({ success: true, payment });
@@ -81,15 +86,7 @@ router.get("/", auth, isAdmin, async (req, res, next) => {
 ========================= */
 router.get("/my", auth, async (req, res, next) => {
     try {
-        res.set({
-            "Cache-Control": "no-store, no-cache, must-revalidate, private",
-            Pragma: "no-cache",
-            Expires: "0"
-        });
-
-        const payments = await Payment.find({
-            residentId: req.user.id
-        })
+        const payments = await Payment.find({ residentId: req.user.id })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -107,35 +104,49 @@ router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid payment ID"
-            });
+            return res.status(400).json({ success: false, message: "Invalid payment ID" });
         }
 
         const payment = await Payment.findById(id);
+
         if (!payment) {
-            return res.status(404).json({
-                success: false,
-                message: "Payment not found"
-            });
+            return res.status(404).json({ success: false, message: "Payment not found" });
         }
 
         if (payment.status === "paid") {
-            return res.json({
-                success: true,
-                message: "Payment already marked as paid"
-            });
+            return res.json({ success: true, message: "Payment already marked as paid" });
         }
 
         payment.status = "paid";
         payment.paidAt = new Date();
         await payment.save();
 
-        res.json({
-            success: true,
-            message: "Payment marked as paid"
-        });
+        res.json({ success: true, message: "Payment marked as paid" });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/* =========================
+   ADMIN → DELETE PAYMENT
+========================= */
+router.delete("/:id", auth, isAdmin, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid payment ID" });
+        }
+
+        const payment = await Payment.findById(id);
+
+        if (!payment) {
+            return res.status(404).json({ success: false, message: "Payment not found" });
+        }
+
+        await payment.deleteOne();
+
+        res.json({ success: true, message: "Payment deleted successfully" });
     } catch (err) {
         next(err);
     }

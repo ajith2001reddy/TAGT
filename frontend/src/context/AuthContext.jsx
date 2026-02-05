@@ -2,7 +2,7 @@
 
 const AuthContext = createContext(null);
 
-// Decode JWT safely (base64url compatible)
+// Decode JWT safely
 function decodeToken(token) {
     try {
         const payloadBase64 = token.split(".")[1];
@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Restore auth state on app load
+    // Restore auth on app start
     useEffect(() => {
         const token = localStorage.getItem("token");
 
@@ -46,14 +46,20 @@ export function AuthProvider({ children }) {
             localStorage.removeItem("user");
             setUser(null);
         } else {
-            setUser(decoded);
-            localStorage.setItem("user", JSON.stringify(decoded));
+            // ✅ Ensure role exists
+            const safeUser = {
+                ...decoded,
+                role: decoded.role || "resident",
+            };
+
+            setUser(safeUser);
+            localStorage.setItem("user", JSON.stringify(safeUser));
         }
 
         setLoading(false);
     }, []);
 
-    // Login: store token + user
+    // Login handler
     const login = (token) => {
         const decoded = decodeToken(token);
 
@@ -64,17 +70,26 @@ export function AuthProvider({ children }) {
             return false;
         }
 
+        const safeUser = {
+            ...decoded,
+            role: decoded.role || "resident",
+        };
+
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(decoded));
-        setUser(decoded);
+        localStorage.setItem("user", JSON.stringify(safeUser));
+        setUser(safeUser);
+
         return true;
     };
 
-    // Logout: clear auth state
+    // Logout handler
     const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         setUser(null);
+
+        // ✅ force redirect to login page
+        window.location.href = "/login";
     };
 
     const value = {
@@ -86,11 +101,7 @@ export function AuthProvider({ children }) {
         logout,
     };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

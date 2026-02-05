@@ -2,27 +2,19 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import AppLayout from "../components/AppLayout";
 import Button from "../components/Button";
-import {
-    createRequest,
-    getMyRequests
-} from "../services/residentService";
-
-/**
- * RESIDENT DASHBOARD – MOBILE SAFE
- */
+import { createRequest, getMyRequests } from "../services/residentService";
 
 export default function ResidentDashboard() {
-    const [message, setMessage] = useState("");
+    const [description, setDescription] = useState("");
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [expandedId, setExpandedId] = useState(null);
 
     /* ================= LOAD REQUESTS ================= */
     const loadRequests = async () => {
         try {
             setLoading(true);
             const data = await getMyRequests();
-            setRequests(Array.isArray(data) ? data : []);
+            setRequests(data || []);
         } catch {
             toast.error("Failed to load requests");
             setRequests([]);
@@ -33,15 +25,19 @@ export default function ResidentDashboard() {
 
     /* ================= SUBMIT REQUEST ================= */
     const submitRequest = async () => {
-        if (!message.trim()) {
+        if (!description.trim()) {
             toast.error("Please describe your issue");
             return;
         }
 
         try {
-            await createRequest(message.trim());
+            await createRequest({
+                title: "Maintenance Issue",
+                description: description.trim(),
+            });
+
             toast.success("Your request has been submitted");
-            setMessage("");
+            setDescription("");
             loadRequests();
         } catch {
             toast.error("Failed to submit request");
@@ -52,15 +48,12 @@ export default function ResidentDashboard() {
         loadRequests();
     }, []);
 
-    /* ================= RESOLUTION LOGIC ================= */
-    const isResolved = (r) =>
-        r.status === "resolved" ||
-        r.workflowStatus === "Done";
+    /* ================= STATUS HELPERS ================= */
+    const isResolved = (r) => r.status === "done";
 
     const activeRequests = requests.filter((r) => !isResolved(r));
     const resolvedRequests = requests.filter((r) => isResolved(r));
 
-    /* ================= STATUS BADGE ================= */
     const StatusBadge = ({ status }) => {
         const base =
             "inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded";
@@ -78,7 +71,13 @@ export default function ResidentDashboard() {
                         In Progress
                     </span>
                 );
-            case "resolved":
+            case "on-hold":
+                return (
+                    <span className={`${base} bg-orange-600/20 text-orange-400`}>
+                        On Hold
+                    </span>
+                );
+            case "done":
                 return (
                     <span className={`${base} bg-green-600/20 text-green-400`}>
                         Resolved
@@ -112,31 +111,23 @@ export default function ResidentDashboard() {
                         className="w-full bg-black/30 text-gray-100 placeholder-gray-400 p-4 border border-white/10 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         rows={4}
                         placeholder="Describe the issue in detail…"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
                     />
 
                     <div className="flex justify-end mt-4">
-                        <Button onClick={submitRequest}>
-                            Submit Request
-                        </Button>
+                        <Button onClick={submitRequest}>Submit Request</Button>
                     </div>
                 </div>
 
                 {/* ACTIVE REQUESTS */}
                 <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Active Requests
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-4">Active Requests</h2>
 
                     {loading ? (
-                        <p className="text-gray-400">
-                            Loading requests…
-                        </p>
+                        <p className="text-gray-400">Loading requests…</p>
                     ) : activeRequests.length === 0 ? (
-                        <p className="text-gray-400">
-                            You have no active requests.
-                        </p>
+                        <p className="text-gray-400">You have no active requests.</p>
                     ) : (
                         <ul className="divide-y divide-white/10">
                             {activeRequests.map((r) => (
@@ -144,12 +135,8 @@ export default function ResidentDashboard() {
                                     key={r._id}
                                     className="py-3 flex flex-col sm:flex-row sm:justify-between gap-2"
                                 >
-                                    <p className="text-gray-200">
-                                        {r.message}
-                                    </p>
-                                    <StatusBadge
-                                        status={r.status || "pending"}
-                                    />
+                                    <p className="text-gray-200">{r.description}</p>
+                                    <StatusBadge status={r.status} />
                                 </li>
                             ))}
                         </ul>
@@ -158,75 +145,18 @@ export default function ResidentDashboard() {
 
                 {/* RESOLVED REQUESTS */}
                 <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Resolved Requests
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-4">Resolved Requests</h2>
 
                     {resolvedRequests.length === 0 ? (
-                        <p className="text-gray-400">
-                            No resolved requests yet.
-                        </p>
+                        <p className="text-gray-400">No resolved requests yet.</p>
                     ) : (
                         <ul className="divide-y divide-white/10">
-                            {resolvedRequests.map((r) => {
-                                const isOpen = expandedId === r._id;
-                                const lastNote =
-                                    r.adminNotes?.length > 0
-                                        ? r.adminNotes[r.adminNotes.length - 1]
-                                        : null;
-
-                                return (
-                                    <li key={r._id} className="py-4">
-                                        <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
-                                            <p className="text-gray-200">
-                                                {r.message}
-                                            </p>
-                                            <StatusBadge status="resolved" />
-                                        </div>
-
-                                        <button
-                                            onClick={() =>
-                                                setExpandedId(
-                                                    isOpen ? null : r._id
-                                                )
-                                            }
-                                            className="mt-2 text-sm text-blue-400 hover:underline"
-                                        >
-                                            {isOpen
-                                                ? "Hide details"
-                                                : "View details"}
-                                        </button>
-
-                                        {isOpen && (
-                                            <div className="mt-4 bg-black/30 border border-white/10 rounded-lg p-4 text-sm space-y-2 break-words">
-                                                {r.workflowStatus && (
-                                                    <p>
-                                                        <strong className="text-gray-300">
-                                                            Final Status:
-                                                        </strong>{" "}
-                                                        {r.workflowStatus}
-                                                    </p>
-                                                )}
-
-                                                {lastNote ? (
-                                                    <>
-                                                        <p className="font-medium text-gray-300">
-                                                            Admin Resolution
-                                                        </p>
-                                                        <p className="text-gray-400">
-                                                            {lastNote.note}
-                                                        </p>
-                                                    </>
-                                                ) : (
-                                                    <p className="text-gray-400">
-                                                        No admin notes available.
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </li>
-                                );
-                            })}
+                            {resolvedRequests.map((r) => (
+                                <li key={r._id} className="py-3 flex justify-between">
+                                    <p className="text-gray-200">{r.description}</p>
+                                    <StatusBadge status="done" />
+                                </li>
+                            ))}
                         </ul>
                     )}
                 </div>

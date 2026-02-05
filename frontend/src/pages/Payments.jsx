@@ -9,6 +9,7 @@ import api from "../api/axios";
  * ADMIN PAYMENTS
  * - View all payments
  * - Mark payment as paid
+ * - Delete payment
  */
 
 export default function Payments() {
@@ -19,8 +20,10 @@ export default function Payments() {
     const fetchPayments = async () => {
         try {
             setLoading(true);
+
+            // ✅ correct parsing
             const res = await api.get("/payments");
-            setPayments(Array.isArray(res.data) ? res.data : []);
+            setPayments(res.data?.payments || []);
         } catch {
             toast.error("Failed to load payments");
             setPayments([]);
@@ -37,11 +40,24 @@ export default function Payments() {
         if (!window.confirm("Mark this payment as paid?")) return;
 
         try {
-            await api.put(`/payments/${id}`, { status: "paid" });
+            // ✅ correct endpoint
+            await api.put(`/payments/${id}/paid`);
             toast.success("Payment marked as paid");
             fetchPayments();
         } catch {
             toast.error("Failed to update payment");
+        }
+    };
+
+    const deletePayment = async (id) => {
+        if (!window.confirm("Delete this payment?")) return;
+
+        try {
+            await api.delete(`/payments/${id}`);
+            toast.success("Payment deleted");
+            fetchPayments();
+        } catch {
+            toast.error("Failed to delete payment");
         }
     };
 
@@ -82,13 +98,9 @@ export default function Payments() {
                 </div>
 
                 {loading ? (
-                    <p className="text-center text-gray-400">
-                        Loading payments…
-                    </p>
+                    <p className="text-center text-gray-400">Loading payments…</p>
                 ) : filteredPayments.length === 0 ? (
-                    <p className="text-center text-gray-400">
-                        No payments found.
-                    </p>
+                    <p className="text-center text-gray-400">No payments found.</p>
                 ) : (
                     <>
                         {/* MOBILE */}
@@ -112,11 +124,19 @@ export default function Payments() {
                                     {p.status !== "paid" && (
                                         <Button
                                             onClick={() => markAsPaid(p._id)}
-                                            className="w-full"
+                                            className="w-full mb-2"
                                         >
                                             Mark Paid
                                         </Button>
                                     )}
+
+                                    {/* ✅ delete button */}
+                                    <Button
+                                        onClick={() => deletePayment(p._id)}
+                                        className="w-full bg-red-600"
+                                    >
+                                        Delete
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -138,25 +158,26 @@ export default function Payments() {
                                             key={p._id}
                                             className="border-t border-white/10 hover:bg-white/5"
                                         >
-                                            <td className="p-3">
-                                                {p.residentId?.email}
-                                            </td>
+                                            <td className="p-3">{p.residentId?.email}</td>
                                             <td className="p-3 text-right font-semibold">
                                                 ₹{Number(p.amount).toLocaleString()}
                                             </td>
                                             <td className="p-3 text-center">
                                                 <StatusBadge status={p.status} />
                                             </td>
-                                            <td className="p-3 text-center">
-                                                {p.status !== "paid" ? (
-                                                    <Button
-                                                        onClick={() => markAsPaid(p._id)}
-                                                    >
+                                            <td className="p-3 text-center space-x-2">
+                                                {p.status !== "paid" && (
+                                                    <Button onClick={() => markAsPaid(p._id)}>
                                                         Mark Paid
                                                     </Button>
-                                                ) : (
-                                                    <span className="text-gray-500">—</span>
                                                 )}
+
+                                                <Button
+                                                    onClick={() => deletePayment(p._id)}
+                                                    className="bg-red-600"
+                                                >
+                                                    Delete
+                                                </Button>
                                             </td>
                                         </tr>
                                     ))}
