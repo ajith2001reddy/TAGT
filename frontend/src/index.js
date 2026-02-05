@@ -1,5 +1,6 @@
 ﻿import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import "./index.css";
@@ -11,10 +12,14 @@ if (rootElement) {
     const root = ReactDOM.createRoot(rootElement);
 
     root.render(
-        <AuthProvider>
-            <App />
-        </AuthProvider>
+        <BrowserRouter>
+            <AuthProvider>
+                <App />
+            </AuthProvider>
+        </BrowserRouter>
     );
 } else {
-    console.error("Root element not found. Make sure there's a <div id='root'></div> in your HTML.");
+    console.error(
+        "Root element not found. Make sure there's a <div id='root'></div> in your HTML."
+    );
 }

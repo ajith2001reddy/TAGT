@@ -1,5 +1,4 @@
 ﻿import {
-    BrowserRouter,
     Routes,
     Route,
     Navigate,
@@ -38,8 +37,6 @@ function AnimatedRoutes() {
                     <Route path="/admin/residents" element={<AdminResidents />} />
                     <Route path="/admin/rooms" element={<AdminRooms />} />
                     <Route path="/admin/payments" element={<Payments />} />
-
-                    {/* Admin root redirect */}
                     <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 </Route>
 
@@ -47,8 +44,6 @@ function AnimatedRoutes() {
                 <Route element={<ProtectedRoute />}>
                     <Route path="/resident/dashboard" element={<ResidentDashboard />} />
                     <Route path="/resident/payments" element={<ResidentPayments />} />
-
-                    {/* Resident root redirect */}
                     <Route path="/resident" element={<Navigate to="/resident/dashboard" replace />} />
                 </Route>
 
@@ -62,9 +57,9 @@ function AnimatedRoutes() {
 
 export default function App() {
     return (
-        <BrowserRouter>
+        <>
             <ToastProvider />
             <AnimatedRoutes />
-        </BrowserRouter>
+        </>
     );
 }
