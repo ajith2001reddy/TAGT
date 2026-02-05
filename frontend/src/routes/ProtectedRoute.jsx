@@ -5,9 +5,13 @@ export default function ProtectedRoute() {
     const { isAuthenticated, loading } = useAuth();
     const location = useLocation();
 
-    // Wait for auth to resolve (render nothing)
+    // While auth state is resolving
     if (loading) {
-        return null;
+        return (
+            <div className="flex items-center justify-center h-screen text-gray-500">
+                Checking authentication...
+            </div>
+        );
     }
 
     // Not authenticated → redirect to login

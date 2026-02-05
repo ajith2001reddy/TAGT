@@ -2,166 +2,166 @@
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
+import AppLayout from "../components/AppLayout";
 import Button from "../components/Button";
 import api from "../api/axios";
+
+const STATUS_FLOW = {
+    pending: ["in-progress"],
+    "in-progress": ["on-hold", "done"],
+    "on-hold": ["in-progress"],
+};
+
+const STATUS_COLORS = {
+    pending: "bg-yellow-600/20 text-yellow-400 border-yellow-500/30",
+    "in-progress": "bg-blue-600/20 text-blue-400 border-blue-500/30",
+    "on-hold": "bg-orange-600/20 text-orange-400 border-orange-500/30",
+    done: "bg-green-600/20 text-green-400 border-green-500/30",
+};
 
 export default function AdminRequests() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selected, setSelected] = useState(null);
+    const [status, setStatus] = useState("");
+    const [saving, setSaving] = useState(false);
 
-    const [selectedRequest, setSelectedRequest] = useState(null);
-    const [workflowStatus, setWorkflowStatus] = useState("");
-    const [adminNote, setAdminNote] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-
-    const [archiveTarget, setArchiveTarget] = useState(null);
-    const [finalResolution, setFinalResolution] = useState("");
-    const [archiving, setArchiving] = useState(false);
-
-    const WORKFLOW_FLOW = {
-        Received: ["In-Progress"],
-        "In-Progress": ["On Hold", "Done"],
-        "On Hold": ["In-Progress"],
-    };
-
-    const WORKFLOW_COLORS = {
-        Received: "bg-yellow-600/20 text-yellow-400 border-yellow-500/30",
-        "In-Progress": "bg-blue-600/20 text-blue-400 border-blue-500/30",
-        "On Hold": "bg-orange-600/20 text-orange-400 border-orange-500/30",
-        Done: "bg-green-600/20 text-green-400 border-green-500/30",
+    // ================= FETCH =================
+    const fetchRequests = async () => {
+        try {
+            setLoading(true);
+            const res = await api.get("/resident/requests");
+            setRequests(Array.isArray(res.data) ? res.data : []);
+        } catch {
+            toast.error("Failed to load maintenance requests");
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
         fetchRequests();
     }, []);
 
-    const fetchRequests = async () => {
-        try {
-            setLoading(true);
-            const res = await api.get("/admin/requests");
-            setRequests(Array.isArray(res.data) ? res.data : []);
-        } catch {
-            toast.error("Failed to load requests");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const getStatusBadge = (status = "Received") => (
-        <span
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${WORKFLOW_COLORS[status] ||
-                "bg-gray-500/20 text-gray-300 border-gray-500/30"
-                }`}
-        >
-            {status}
-        </span>
-    );
-
-    /* ================= WORKFLOW ================= */
-    const openWorkflowModal = (req) => {
-        setSelectedRequest(req);
-        setWorkflowStatus("");
-        setAdminNote("");
-    };
-
-    const closeWorkflowModal = () => {
-        setSelectedRequest(null);
-        setWorkflowStatus("");
-        setAdminNote("");
-    };
-
-    const updateWorkflowStatus = async () => {
-        if (!workflowStatus || !adminNote.trim()) {
-            toast.error("Status and admin note are required");
+    // ================= UPDATE =================
+    const updateStatus = async () => {
+        if (!status) {
+            toast.error("Select a status");
             return;
         }
 
-        setSubmitting(true);
+        setSaving(true);
         try {
-            await api.put(
-                `/admin/requests/${selectedRequest._id}/workflow-status`,
-                { workflowStatus, note: adminNote.trim() }
-            );
+            await api.put(`/resident/request/${selected._id}`, {
+                status,
+            });
 
             toast.success("Status updated");
-            closeWorkflowModal();
+            setSelected(null);
+            setStatus("");
             fetchRequests();
         } catch {
             toast.error("Failed to update status");
         } finally {
-            setSubmitting(false);
+            setSaving(false);
         }
     };
 
-    /* ================= ARCHIVE ================= */
-    const openArchiveModal = (req) => {
-        if (req.workflowStatus !== "Done") {
-            toast.error("Only completed requests can be archived");
-            return;
-        }
-        setArchiveTarget(req);
-        setFinalResolution("");
-    };
-
-    const closeArchiveModal = () => {
-        setArchiveTarget(null);
-        setFinalResolution("");
-    };
-
-    const archiveRequest = async () => {
-        if (!finalResolution.trim()) {
-            toast.error("Final resolution is required");
-            return;
-        }
-
-        setArchiving(true);
-        try {
-            await api.post(
-                `/admin/requests/${archiveTarget._id}/archive`,
-                { finalResolution: finalResolution.trim() }
-            );
-
-            toast.success("Request archived");
-            closeArchiveModal();
-            fetchRequests();
-        } catch {
-            toast.error("Failed to archive request");
-        } finally {
-            setArchiving(false);
-        }
-    };
+    const badge = (s) => (
+        <span
+            className={`px-3 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[s]}`}
+        >
+            {s}
+        </span>
+    );
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl sm:text-3xl font-bold">
-                Maintenance Requests
-            </h1>
+        <AppLayout>
+            <div className="space-y-6">
+                <h1 className="text-2xl font-bold">Maintenance Requests</h1>
 
-            {loading ? (
-                <p className="text-gray-400 text-center">Loading…</p>
-            ) : requests.length === 0 ? (
-                <p className="text-gray-400 text-center">No requests found</p>
-            ) : (
-                <>
-                    {/* content unchanged */}
-                </>
-            )}
+                {loading ? (
+                    <p className="text-gray-400 text-center">Loading…</p>
+                ) : requests.length === 0 ? (
+                    <p className="text-gray-400 text-center">No requests found</p>
+                ) : (
+                    <div className="overflow-x-auto rounded-xl bg-white/10 border border-white/10">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-gray-400 border-b border-white/10">
+                                    <th className="px-4 py-3 text-left">Issue</th>
+                                    <th className="px-4 py-3 text-left">Resident</th>
+                                    <th className="px-4 py-3 text-left">Status</th>
+                                    <th className="px-4 py-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {requests.map((r) => (
+                                    <tr key={r._id} className="border-t border-white/5">
+                                        <td className="px-4 py-3">{r.issue}</td>
+                                        <td className="px-4 py-3">
+                                            {r.residentId?.email}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {badge(r.status)}
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            {r.status !== "done" && (
+                                                <Button onClick={() => setSelected(r)}>
+                                                    Update
+                                                </Button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
 
-            {/* MODALS */}
+            {/* STATUS MODAL */}
             <AnimatePresence>
-                {(selectedRequest || archiveTarget) && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                {selected && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white/10 border border-white/10 rounded-2xl p-6 w-full max-w-md"
+                            className="bg-white/10 border border-white/10 rounded-xl p-6 w-full max-w-md"
                         >
-                            {/* modal content */}
+                            <h3 className="text-lg font-semibold mb-4">
+                                Update Request Status
+                            </h3>
+
+                            <select
+                                className="w-full mb-4 bg-black/30 border border-white/10 rounded p-2"
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value)}
+                            >
+                                <option value="">Select status</option>
+                                {STATUS_FLOW[selected.status]?.map((s) => (
+                                    <option key={s} value={s}>
+                                        {s}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <div className="flex justify-end gap-2">
+                                <Button
+                                    className="bg-gray-600"
+                                    onClick={() => setSelected(null)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button disabled={saving} onClick={updateStatus}>
+                                    {saving ? "Saving…" : "Save"}
+                                </Button>
+                            </div>
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </AppLayout>
     );
 }

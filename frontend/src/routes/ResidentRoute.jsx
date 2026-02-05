@@ -1,27 +1,35 @@
-import { Navigate } from "react-router-dom";
+﻿import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 /**
  * ResidentRoute
- * Phase 4 � Route Protection
- *
- * - Allows access ONLY if user role === "resident"
- * - Redirects others appropriately
+ * - Allows access ONLY to authenticated residents
+ * - Redirects admin → admin dashboard
+ * - Redirects unauthenticated → login
  */
 
-export default function ResidentRoute({ children }) {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
+export default function ResidentRoute() {
+    const { isAuthenticated, isAdmin, loading } = useAuth();
 
-    // Not logged in
-    if (!token) {
+    // While auth state is resolving
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen text-gray-500">
+                Checking resident access...
+            </div>
+        );
+    }
+
+    // Not logged in → login
+    if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
 
-    // Logged in but not resident
-    if (role !== "resident") {
-        return <Navigate to={role === "admin" ? "/admin" : "/"} replace />;
+    // Logged in but admin → admin dashboard
+    if (isAdmin) {
+        return <Navigate to="/admin/dashboard" replace />;
     }
 
-    // Resident allowed
-    return children;
+    // Resident → allow access
+    return <Outlet />;
 }

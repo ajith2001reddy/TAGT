@@ -1,11 +1,14 @@
 ﻿import axios from "axios";
 
 // ✅ CRA-compatible env variable
-const API_URL =
+const RAW_API_URL =
     process.env.REACT_APP_API_URL || "https://api.tagt.website/api";
 
+// Normalize (remove trailing slash)
+const API_URL = RAW_API_URL.replace(/\/$/, "");
+
 const api = axios.create({
-    baseURL: API_URL.replace(/\/$/, ""),
+    baseURL: API_URL,
     timeout: 15000,
     headers: {
         "Content-Type": "application/json",
@@ -30,27 +33,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        const status = error.response?.status;
-        const url = error.config?.url;
-        const hadToken = Boolean(localStorage.getItem("token"));
+        const status = error?.response?.status;
+        const requestUrl = error?.config?.url || "";
+        const hadToken = !!localStorage.getItem("token");
 
-        // Only redirect if token existed (session expired)
-        if (
-            status === 401 &&
-            hadToken &&
-            !url?.includes("/auth/login")
-        ) {
+        // Avoid redirect loops & allow login failure handling
+        const isAuthRoute = requestUrl.includes("/auth");
+
+        if (status === 401 && hadToken && !isAuthRoute) {
             localStorage.removeItem("token");
-            window.location.href = "/login";
+            localStorage.removeItem("user"); // safety
+            window.location.replace("/login");
         }
 
-        return Promise.reject({
-            status,
-            message:
-                error.response?.data?.message ||
-                error.message ||
-                "Request failed",
-        });
+        return Promise.reject(error);
     }
 );
 

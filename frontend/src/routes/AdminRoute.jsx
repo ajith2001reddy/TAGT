@@ -4,9 +4,13 @@ import { useAuth } from "../context/AuthContext";
 export default function AdminRoute() {
     const { isAuthenticated, isAdmin, loading } = useAuth();
 
-    // Wait for auth to resolve
+    // While auth state is resolving
     if (loading) {
-        return null;
+        return (
+            <div className="flex items-center justify-center h-screen text-gray-500">
+                Checking admin access...
+            </div>
+        );
     }
 
     // Not logged in → login

@@ -8,7 +8,11 @@ function decodeToken(token) {
         const payloadBase64 = token.split(".")[1];
         if (!payloadBase64) return null;
 
-        const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+        const base64 = payloadBase64
+            .replace(/-/g, "+")
+            .replace(/_/g, "/")
+            .padEnd(payloadBase64.length + (4 - (payloadBase64.length % 4)) % 4, "=");
+
         const payload = JSON.parse(atob(base64));
 
         // Expiry check
@@ -39,25 +43,29 @@ export function AuthProvider({ children }) {
 
         if (!decoded) {
             localStorage.removeItem("token");
+            localStorage.removeItem("user");
             setUser(null);
         } else {
             setUser(decoded);
+            localStorage.setItem("user", JSON.stringify(decoded));
         }
 
         setLoading(false);
     }, []);
 
-    // Login: store token + set user
+    // Login: store token + user
     const login = (token) => {
         const decoded = decodeToken(token);
 
         if (!decoded) {
             localStorage.removeItem("token");
+            localStorage.removeItem("user");
             setUser(null);
             return false;
         }
 
         localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(decoded));
         setUser(decoded);
         return true;
     };
@@ -65,13 +73,14 @@ export function AuthProvider({ children }) {
     // Logout: clear auth state
     const logout = () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         setUser(null);
     };
 
     const value = {
         user,
         loading,
-        isAuthenticated: Boolean(user),
+        isAuthenticated: !!user,
         isAdmin: user?.role === "admin",
         login,
         logout,

@@ -1,251 +1,156 @@
 ﻿import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
+import AppLayout from "../components/AppLayout";
 import Button from "../components/Button";
 import api from "../api/axios";
 
-export default function AdminRequests() {
-    const [requests, setRequests] = useState([]);
+export default function AdminResidents() {
+    const [residents, setResidents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
-    const [selectedRequest, setSelectedRequest] = useState(null);
-    const [workflowStatus, setWorkflowStatus] = useState("");
-    const [adminNote, setAdminNote] = useState("");
-    const [submitting, setSubmitting] = useState(false);
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        roomNumber: "",
+    });
 
-    const [archiveTarget, setArchiveTarget] = useState(null);
-    const [finalResolution, setFinalResolution] = useState("");
-    const [archiving, setArchiving] = useState(false);
-
-    const WORKFLOW_FLOW = {
-        Received: ["In-Progress"],
-        "In-Progress": ["On Hold", "Done"],
-        "On Hold": ["In-Progress"],
-    };
-
-    const WORKFLOW_COLORS = {
-        Received: "bg-yellow-600/20 text-yellow-400 border-yellow-500/30",
-        "In-Progress": "bg-blue-600/20 text-blue-400 border-blue-500/30",
-        "On Hold": "bg-orange-600/20 text-orange-400 border-orange-500/30",
-        Done: "bg-green-600/20 text-green-400 border-green-500/30",
-    };
-
-    useEffect(() => {
-        fetchRequests();
-    }, []);
-
-    const fetchRequests = async () => {
+    // ================= FETCH =================
+    const fetchResidents = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/admin/requests");
-            setRequests(Array.isArray(res.data) ? res.data : []);
+            const res = await api.get("/resident");
+            setResidents(Array.isArray(res.data) ? res.data : []);
         } catch {
-            toast.error("Failed to load requests");
+            toast.error("Failed to load residents");
         } finally {
             setLoading(false);
         }
     };
 
-    const getStatusBadge = (status = "Received") => (
-        <span
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${WORKFLOW_COLORS[status] ||
-                "bg-gray-500/20 text-gray-300 border-gray-500/30"
-                }`}
-        >
-            {status}
-        </span>
-    );
+    useEffect(() => {
+        fetchResidents();
+    }, []);
 
-    /* ================= WORKFLOW ================= */
-    const openWorkflowModal = (req) => {
-        setSelectedRequest(req);
-        setWorkflowStatus("");
-        setAdminNote("");
-    };
-
-    const closeWorkflowModal = () => {
-        setSelectedRequest(null);
-        setWorkflowStatus("");
-        setAdminNote("");
-    };
-
-    const updateWorkflowStatus = async () => {
-        if (!workflowStatus || !adminNote.trim()) {
-            toast.error("Status and admin note are required");
+    // ================= ADD =================
+    const addResident = async () => {
+        if (!form.name || !form.email || !form.roomNumber) {
+            toast.error("All fields are required");
             return;
         }
 
-        setSubmitting(true);
+        setSaving(true);
         try {
-            await api.put(
-                `/admin/requests/${selectedRequest._id}/workflow-status`,
-                { workflowStatus, note: adminNote.trim() }
+            await api.post("/resident", form);
+            toast.success("Resident added");
+            setForm({ name: "", email: "", roomNumber: "" });
+            fetchResidents();
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message || "Failed to add resident"
             );
-
-            toast.success("Status updated");
-            closeWorkflowModal();
-            fetchRequests();
-        } catch {
-            toast.error("Failed to update status");
         } finally {
-            setSubmitting(false);
+            setSaving(false);
         }
     };
 
-    /* ================= ARCHIVE ================= */
-    const openArchiveModal = (req) => {
-        if (req.workflowStatus !== "Done") {
-            toast.error("Only completed requests can be archived");
-            return;
-        }
-        setArchiveTarget(req);
-        setFinalResolution("");
-    };
+    // ================= DELETE =================
+    const deleteResident = async (id) => {
+        if (!window.confirm("Delete this resident?")) return;
 
-    const closeArchiveModal = () => {
-        setArchiveTarget(null);
-        setFinalResolution("");
-    };
-
-    const archiveRequest = async () => {
-        if (!finalResolution.trim()) {
-            toast.error("Final resolution is required");
-            return;
-        }
-
-        setArchiving(true);
         try {
-            await api.post(
-                `/admin/requests/${archiveTarget._id}/archive`,
-                { finalResolution: finalResolution.trim() }
-            );
-
-            toast.success("Request archived");
-            closeArchiveModal();
-            fetchRequests();
+            await api.delete(`/resident/${id}`);
+            toast.success("Resident deleted");
+            fetchResidents();
         } catch {
-            toast.error("Failed to archive request");
-        } finally {
-            setArchiving(false);
+            toast.error("Failed to delete resident");
         }
     };
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl sm:text-3xl font-bold">
-                Maintenance Requests
-            </h1>
+        <AppLayout>
+            <div className="space-y-6">
+                <h1 className="text-2xl font-bold">Residents</h1>
 
-            {loading ? (
-                <p className="text-gray-400 text-center">Loading…</p>
-            ) : requests.length === 0 ? (
-                <p className="text-gray-400 text-center">No requests found</p>
-            ) : (
-                <>
-                    {/* MOBILE */}
-                    <div className="space-y-4 sm:hidden">
-                        {requests.map((req) => {
-                            const status = req.workflowStatus || "Received";
-                            const isDone = status === "Done";
+                {/* ADD FORM */}
+                <div className="bg-white/10 border border-white/10 rounded-xl p-4 space-y-3">
+                    <h2 className="font-semibold">Add Resident</h2>
 
-                            return (
-                                <div
-                                    key={req._id}
-                                    className="bg-white/10 border border-white/10 rounded-xl p-4"
-                                >
-                                    <p className="text-gray-200 mb-2">{req.message}</p>
-                                    <p className="text-sm text-gray-400 mb-2">
-                                        {req.residentId?.email}
-                                    </p>
+                    <input
+                        className="w-full p-2 rounded bg-black/30 border border-white/10"
+                        placeholder="Name"
+                        value={form.name}
+                        onChange={(e) =>
+                            setForm({ ...form, name: e.target.value })
+                        }
+                    />
 
-                                    <div className="flex justify-between items-center mb-3">
-                                        {getStatusBadge(status)}
-                                    </div>
+                    <input
+                        className="w-full p-2 rounded bg-black/30 border border-white/10"
+                        placeholder="Email"
+                        value={form.email}
+                        onChange={(e) =>
+                            setForm({ ...form, email: e.target.value })
+                        }
+                    />
 
-                                    {!isDone ? (
-                                        <Button
-                                            onClick={() => openWorkflowModal(req)}
-                                            className="w-full"
-                                        >
-                                            Update Status
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            onClick={() => openArchiveModal(req)}
-                                            className="w-full"
-                                        >
-                                            Archive
-                                        </Button>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <input
+                        className="w-full p-2 rounded bg-black/30 border border-white/10"
+                        placeholder="Room Number"
+                        value={form.roomNumber}
+                        onChange={(e) =>
+                            setForm({ ...form, roomNumber: e.target.value })
+                        }
+                    />
 
-                    {/* DESKTOP */}
-                    <div className="hidden sm:block overflow-x-auto rounded-2xl bg-white/10 border border-white/10">
+                    <Button disabled={saving} onClick={addResident}>
+                        {saving ? "Saving..." : "Add Resident"}
+                    </Button>
+                </div>
+
+                {/* LIST */}
+                {loading ? (
+                    <p className="text-gray-400 text-center">Loading…</p>
+                ) : residents.length === 0 ? (
+                    <p className="text-gray-400 text-center">No residents found</p>
+                ) : (
+                    <div className="overflow-x-auto rounded-xl bg-white/10 border border-white/10">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="text-gray-400 border-b border-white/10">
-                                    <th className="px-6 py-4 text-left">Message</th>
-                                    <th className="px-6 py-4 text-left">Resident</th>
-                                    <th className="px-6 py-4 text-left">Status</th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
+                                    <th className="px-4 py-3 text-left">Name</th>
+                                    <th className="px-4 py-3 text-left">Email</th>
+                                    <th className="px-4 py-3 text-left">Room</th>
+                                    <th className="px-4 py-3 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {requests.map((req) => {
-                                    const status = req.workflowStatus || "Received";
-                                    const isDone = status === "Done";
-
-                                    return (
-                                        <tr
-                                            key={req._id}
-                                            className="border-t border-white/5 hover:bg-white/5"
-                                        >
-                                            <td className="px-6 py-4">{req.message}</td>
-                                            <td className="px-6 py-4">
-                                                {req.residentId?.email}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {getStatusBadge(status)}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                {!isDone ? (
-                                                    <Button onClick={() => openWorkflowModal(req)}>
-                                                        Update
-                                                    </Button>
-                                                ) : (
-                                                    <Button onClick={() => openArchiveModal(req)}>
-                                                        Archive
-                                                    </Button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
+                                {residents.map((r) => (
+                                    <tr
+                                        key={r._id}
+                                        className="border-t border-white/5"
+                                    >
+                                        <td className="px-4 py-3">{r.name}</td>
+                                        <td className="px-4 py-3">{r.email}</td>
+                                        <td className="px-4 py-3">
+                                            {r.roomNumber || "-"}
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <Button
+                                                className="bg-red-600"
+                                                onClick={() => deleteResident(r._id)}
+                                            >
+                                                Delete
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
-                </>
-            )}
-
-            {/* MODALS */}
-            <AnimatePresence>
-                {(selectedRequest || archiveTarget) && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white/10 border border-white/10 rounded-2xl p-6 w-full max-w-md"
-                        >
-                            {/* modal content unchanged */}
-                        </motion.div>
-                    </div>
                 )}
-            </AnimatePresence>
-        </div>
+            </div>
+        </AppLayout>
     );
 }
