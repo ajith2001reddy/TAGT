@@ -1,4 +1,5 @@
 ﻿import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext(null);
 
@@ -11,7 +12,7 @@ function decodeToken(token) {
         const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
         const payload = JSON.parse(atob(base64));
 
-        // ⏰ Optional: token expiry check
+        // ⏰ Expiry check
         if (payload.exp && Date.now() >= payload.exp * 1000) {
             return null;
         }
@@ -26,6 +27,7 @@ function decodeToken(token) {
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     // 🔄 Restore auth state on app load
     useEffect(() => {
@@ -62,10 +64,11 @@ export const AuthProvider = ({ children }) => {
         setUser(decoded);
     };
 
+    // ✅ Proper SPA logout (no hard refresh)
     const logout = () => {
         localStorage.removeItem("token");
         setUser(null);
-        window.location.href = "/login";
+        navigate("/login", { replace: true });
     };
 
     return (
@@ -76,7 +79,7 @@ export const AuthProvider = ({ children }) => {
                 isAdmin: user?.role === "admin",
                 loading,
                 login,
-                logout
+                logout,
             }}
         >
             {children}

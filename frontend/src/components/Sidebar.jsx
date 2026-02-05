@@ -19,10 +19,10 @@ export default function Sidebar({ onNavigate }) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="
-                h-full flex flex-col px-4 py-6 space-y-6
-                bg-black/40 backdrop-blur-2xl
-                border-r border-white/10
-            "
+        h-full flex flex-col px-4 py-6 space-y-6
+        bg-black/40 backdrop-blur-2xl
+        border-r border-white/10
+      "
         >
             {/* Brand */}
             <div className="px-2">
@@ -36,13 +36,14 @@ export default function Sidebar({ onNavigate }) {
 
             {/* Navigation */}
             <nav className="flex-1 space-y-6">
+                {/* Dashboard */}
                 <div>
                     <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
                         Dashboard
                     </p>
 
                     <NavLink
-                        to={role === "admin" ? "/admin" : "/resident"}
+                        to={role === "admin" ? "/admin/dashboard" : "/resident/dashboard"}
                         end
                         onClick={onNavigate}
                         className={({ isActive }) =>
@@ -53,6 +54,7 @@ export default function Sidebar({ onNavigate }) {
                     </NavLink>
                 </div>
 
+                {/* Admin */}
                 {role === "admin" && (
                     <div>
                         <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
@@ -63,7 +65,7 @@ export default function Sidebar({ onNavigate }) {
                             { to: "/admin/requests", label: "Requests" },
                             { to: "/admin/residents", label: "Residents" },
                             { to: "/admin/rooms", label: "Rooms" },
-                            { to: "/payments", label: "Payments" }
+                            { to: "/admin/payments", label: "Payments" }
                         ].map((item) => (
                             <NavLink
                                 key={item.to}
@@ -79,6 +81,7 @@ export default function Sidebar({ onNavigate }) {
                     </div>
                 )}
 
+                {/* Resident */}
                 {role === "resident" && (
                     <div>
                         <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
@@ -86,7 +89,7 @@ export default function Sidebar({ onNavigate }) {
                         </p>
 
                         <NavLink
-                            to="/resident"
+                            to="/resident/dashboard"
                             end
                             onClick={onNavigate}
                             className={({ isActive }) =>
@@ -116,10 +119,10 @@ export default function Sidebar({ onNavigate }) {
                     onNavigate?.();
                 }}
                 className="
-                    mt-auto px-4 py-2 rounded-xl text-sm font-medium
-                    text-red-400 hover:bg-red-500/10
-                    transition
-                "
+          mt-auto px-4 py-2 rounded-xl text-sm font-medium
+          text-red-400 hover:bg-red-500/10
+          transition
+        "
             >
                 Logout
             </button>

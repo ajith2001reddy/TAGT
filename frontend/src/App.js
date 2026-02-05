@@ -1,4 +1,10 @@
-﻿import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+﻿import {
+    BrowserRouter,
+    Routes,
+    Route,
+    Navigate,
+    useLocation,
+} from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 import Login from "./pages/Login";
@@ -24,26 +30,31 @@ function AnimatedRoutes() {
                 {/* ================= PUBLIC ================= */}
                 <Route path="/login" element={<Login />} />
 
-                {/* ================= ADMIN ROUTES ================= */}
+                {/* ================= ADMIN ================= */}
                 <Route element={<AdminRoute />}>
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/admin/requests" element={<AdminRequests />} />
                     <Route path="/admin/history" element={<RequestHistory />} />
                     <Route path="/admin/residents" element={<AdminResidents />} />
                     <Route path="/admin/rooms" element={<AdminRooms />} />
-                    <Route path="/payments" element={<Payments />} />
+                    <Route path="/admin/payments" element={<Payments />} />
+
+                    {/* Admin root redirect */}
                     <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 </Route>
 
-                {/* ================= RESIDENT ROUTES ================= */}
+                {/* ================= RESIDENT ================= */}
                 <Route element={<ProtectedRoute />}>
                     <Route path="/resident/dashboard" element={<ResidentDashboard />} />
                     <Route path="/resident/payments" element={<ResidentPayments />} />
+
+                    {/* Resident root redirect */}
                     <Route path="/resident" element={<Navigate to="/resident/dashboard" replace />} />
                 </Route>
 
-                {/* ================= DEFAULT ================= */}
+                {/* ================= FALLBACK ================= */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </AnimatePresence>
     );

@@ -1,5 +1,5 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-04 12:43:53
+Generated: 2026-02-04 21:40:31
 Project Path: E:\TAGT
 ```
 TAGT
@@ -126,7 +126,7 @@ TAGT
 ## File Statistics
 
 Total Files: 87
-Total Size: 1135.46 KB
+Total Size: 1136.24 KB
 
 ## File Type Distribution
 
@@ -27677,13 +27677,13 @@ export const pageVariants = {
 
 // ##########################################
 // FILE 44 of 87: frontend\src\api\axios.js
-// SIZE: 1257 bytes
-// MODIFIED: 2026-02-04 12:09:42
+// SIZE: 1440 bytes
+// MODIFIED: 2026-02-04 13:04:21
 // ##########################################
 
 import axios from "axios";
 
-// ✅ Vite-compatible env variable
+// ✅ CRA-compatible env variable
 const API_URL =
     process.env.REACT_APP_API_URL || "https://api.tagt.website/api";
 
@@ -27709,14 +27709,20 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// 🚫 Handle auth expiration (NOT login)
+// 🚫 Handle auth expiration safely
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         const status = error.response?.status;
         const url = error.config?.url;
+        const hadToken = Boolean(localStorage.getItem("token"));
 
-        if (status === 401 && !url?.includes("/auth/login")) {
+        // Only redirect if token existed (session expired)
+        if (
+            status === 401 &&
+            hadToken &&
+            !url?.includes("/auth/login")
+        ) {
             localStorage.removeItem("token");
             window.location.href = "/login";
         }
@@ -27803,8 +27809,8 @@ export default api;
 
 // ##########################################
 // FILE 46 of 87: frontend\src\App.js
-// SIZE: 2472 bytes
-// MODIFIED: 2026-02-03 12:47:31
+// SIZE: 2576 bytes
+// MODIFIED: 2026-02-04 13:00:46
 // ##########################################
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -27821,6 +27827,7 @@ import ResidentPayments from "./pages/ResidentPayments";
 import AdminRooms from "./pages/AdminRooms";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminRoute from "./routes/AdminRoute";
 import ToastProvider from "./components/ToastProvider";
 
 function AnimatedRoutes() {
@@ -27829,11 +27836,11 @@ function AnimatedRoutes() {
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-                {/* PUBLIC */}
+                {/* ================= PUBLIC ================= */}
                 <Route path="/login" element={<Login />} />
 
                 {/* ================= ADMIN ROUTES ================= */}
-                <Route element={<ProtectedRoute adminOnly />}>
+                <Route element={<AdminRoute />}>
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/admin/requests" element={<AdminRequests />} />
                     <Route path="/admin/history" element={<RequestHistory />} />
@@ -27850,7 +27857,7 @@ function AnimatedRoutes() {
                     <Route path="/resident" element={<Navigate to="/resident/dashboard" replace />} />
                 </Route>
 
-                {/* DEFAULT */}
+                {/* ================= DEFAULT ================= */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
         </AnimatePresence>
@@ -27872,17 +27879,15 @@ export default function App() {
 
 // ##########################################
 // FILE 47 of 87: frontend\src\components\AppLayout.jsx
-// SIZE: 344 bytes
-// MODIFIED: 2026-02-03 12:15:15
+// SIZE: 310 bytes
+// MODIFIED: 2026-02-04 13:08:07
 // ##########################################
 
-import { Outlet } from "react-router-dom";
-
-export default function AppLayout() {
+export default function AppLayout({ children }) {
     return (
         <div className="min-h-screen bg-black text-white antialiased">
             <div className="min-h-screen bg-gradient-to-br from-black via-gray-900/80 to-black">
-                <Outlet />
+                {children}
             </div>
         </div>
     );
@@ -29141,11 +29146,10 @@ export default function Sidebar({ onNavigate }) {
 
 // ##########################################
 // FILE 60 of 87: frontend\src\components\SidebarContent.jsx
-// SIZE: 1906 bytes
-// MODIFIED: 2026-02-03 12:51:04
+// SIZE: 2238 bytes
+// MODIFIED: 2026-02-04 13:08:23
 // ##########################################
 
-// frontend/src/components/SidebarContent.jsx
 import { NavLink } from "react-router-dom";
 
 export default function SidebarContent({ role, linkClass }) {
@@ -29157,7 +29161,11 @@ export default function SidebarContent({ role, linkClass }) {
                 </p>
 
                 <NavLink
-                    to={role === "admin" ? "/admin" : "/resident"}
+                    to={
+                        role === "admin"
+                            ? "/admin/dashboard"
+                            : "/resident/dashboard"
+                    }
                     end
                     className={linkClass}
                 >
@@ -29171,7 +29179,10 @@ export default function SidebarContent({ role, linkClass }) {
                         Management
                     </p>
 
-                    {[{ to: "/admin/requests", label: "Requests" }, { to: "/admin/residents", label: "Residents" }].map((item) => (
+                    {[
+                        { to: "/admin/requests", label: "Requests" },
+                        { to: "/admin/residents", label: "Residents" },
+                    ].map((item) => (
                         <NavLink
                             key={item.to}
                             to={item.to}
@@ -29189,11 +29200,18 @@ export default function SidebarContent({ role, linkClass }) {
                         My Space
                     </p>
 
-                    <NavLink to="/resident" end className={linkClass}>
+                    <NavLink
+                        to="/resident/dashboard"
+                        end
+                        className={linkClass}
+                    >
                         My Requests
                     </NavLink>
 
-                    <NavLink to="/resident/payments" className={linkClass}>
+                    <NavLink
+                        to="/resident/payments"
+                        className={linkClass}
+                    >
                         My Payments
                     </NavLink>
                 </div>
@@ -29442,26 +29460,31 @@ export default function ToastProvider() {
 
 // ##########################################
 // FILE 64 of 87: frontend\src\context\AuthContext.jsx
-// SIZE: 2091 bytes
-// MODIFIED: 2026-02-03 22:11:37
+// SIZE: 2361 bytes
+// MODIFIED: 2026-02-04 12:57:24
 // ##########################################
 
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
+// ✅ Safe JWT decode (base64url compatible)
 function decodeToken(token) {
     try {
-        const base64 = token.split(".")[1];
-        if (!base64) return null;
+        const payloadBase64 = token.split(".")[1];
+        if (!payloadBase64) return null;
 
+        const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
         const payload = JSON.parse(atob(base64));
 
-        return {
-            id: payload.id,
-            role: payload.role
-        };
-    } catch {
+        // ⏰ Optional: token expiry check
+        if (payload.exp && Date.now() >= payload.exp * 1000) {
+            return null;
+        }
+
+        return payload;
+    } catch (err) {
+        console.error("Token decode failed:", err);
         return null;
     }
 }
@@ -29470,7 +29493,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // 🔄 Initialize auth state from JWT once
+    // 🔄 Restore auth state on app load
     useEffect(() => {
         const token = localStorage.getItem("token");
 
@@ -29491,7 +29514,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    // ✅ Called AFTER successful login
+    // ✅ Call this after successful login
     const login = (token) => {
         const decoded = decodeToken(token);
 
@@ -29515,7 +29538,7 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider
             value={{
                 user,
-                isAuthenticated: Boolean(user),
+                isAuthenticated: !!user,
                 isAdmin: user?.role === "admin",
                 loading,
                 login,
@@ -29719,29 +29742,21 @@ if (rootElement) {
 
 // ##########################################
 // FILE 68 of 87: frontend\src\layouts\DashboardLayout.jsx
-// SIZE: 3483 bytes
-// MODIFIED: 2026-02-03 12:26:02
+// SIZE: 3588 bytes
+// MODIFIED: 2026-02-04 13:05:48
 // ##########################################
 
-import { useEffect, useState, useMemo } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NavLink } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import SidebarContent from "../components/SidebarContent"; // Assuming SidebarContent is in a separate file for reusability
+import SidebarContent from "../components/SidebarContent";
+import { useAuth } from "../context/AuthContext";
 
 export default function DashboardLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { user } = useAuth();
 
-    const role = useMemo(() => {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) return null;
-            const payload = JSON.parse(atob(token.split(".")[1]));
-            return payload.role;
-        } catch {
-            return null;
-        }
-    }, []);
+    const role = user?.role ?? null;
 
     const baseLink =
         "flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all";
@@ -29758,7 +29773,12 @@ export default function DashboardLayout({ children }) {
             <div className="flex min-h-[calc(100vh-64px)]">
                 {/* Desktop Sidebar */}
                 <aside className="hidden lg:block w-64 border-r border-white/10 bg-white/5 backdrop-blur-xl">
-                    <SidebarContent role={role} linkClass={(props) => `${baseLink} ${props.isActive ? active : idle}`} />
+                    <SidebarContent
+                        role={role}
+                        linkClass={(props) =>
+                            `${baseLink} ${props.isActive ? active : idle}`
+                        }
+                    />
                 </aside>
 
                 {/* Mobile Sidebar */}
@@ -29780,12 +29800,20 @@ export default function DashboardLayout({ children }) {
                                 initial={{ x: -300 }}
                                 animate={{ x: 0 }}
                                 exit={{ x: -300 }}
-                                transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 120,
+                                    damping: 20,
+                                }}
                             >
                                 <SidebarContent
                                     role={role}
-                                    linkClass={(props) => `${baseLink} ${props.isActive ? active : idle}`}
-                                    onNavigate={() => setSidebarOpen(false)}
+                                    linkClass={(props) =>
+                                        `${baseLink} ${props.isActive ? active : idle}`
+                                    }
+                                    onNavigate={() =>
+                                        setSidebarOpen(false)
+                                    }
                                 />
                             </motion.aside>
                         </>
@@ -29809,8 +29837,8 @@ export default function DashboardLayout({ children }) {
 
 // ##########################################
 // FILE 69 of 87: frontend\src\pages\AdminDashboard.jsx
-// SIZE: 7753 bytes
-// MODIFIED: 2026-02-03 12:26:51
+// SIZE: 7910 bytes
+// MODIFIED: 2026-02-04 13:07:18
 // ##########################################
 
 import { motion } from "framer-motion";
@@ -29832,7 +29860,7 @@ import { getRequests } from "../services/adminService";
 import api from "../api/axios";
 
 export default function AdminDashboard() {
-    const { stats = {}, loading } = useAdminStats();
+    const { stats = {}, loading: statsLoading } = useAdminStats();
 
     const [allRequests, setAllRequests] = useState([]);
     const [activeRequests, setActiveRequests] = useState([]);
@@ -29857,7 +29885,8 @@ export default function AdminDashboard() {
             );
 
             setActiveRequests(active.slice(0, 5));
-        } catch {
+        } catch (err) {
+            console.error("Failed to load requests:", err);
             toast.error("Failed to load requests");
             setAllRequests([]);
             setActiveRequests([]);
@@ -29872,7 +29901,8 @@ export default function AdminDashboard() {
             setRevenueLoading(true);
             const res = await api.get("/payments");
             setPayments(Array.isArray(res.data) ? res.data : []);
-        } catch {
+        } catch (err) {
+            console.error("Failed to load payments:", err);
             toast.error("Failed to load revenue data");
             setPayments([]);
         } finally {
@@ -29891,20 +29921,20 @@ export default function AdminDashboard() {
             status: "Pending",
             count: allRequests.filter(
                 (r) => r.status === "pending"
-            ).length
+            ).length,
         },
         {
             status: "In Progress",
             count: allRequests.filter(
                 (r) => r.status === "in-progress"
-            ).length
+            ).length,
         },
         {
             status: "Resolved",
             count: allRequests.filter(
                 (r) => r.status === "resolved"
-            ).length
-        }
+            ).length,
+        },
     ];
 
     /* ================= REVENUE METRICS ================= */
@@ -29943,7 +29973,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* CORE METRICS */}
-                {loading || revenueLoading ? (
+                {statsLoading || revenueLoading ? (
                     <Loader />
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -31080,8 +31110,8 @@ export default function AdminRooms() {
 
 // ##########################################
 // FILE 73 of 87: frontend\src\pages\Login.jsx
-// SIZE: 5383 bytes
-// MODIFIED: 2026-02-04 12:05:39
+// SIZE: 5283 bytes
+// MODIFIED: 2026-02-04 13:02:17
 // ##########################################
 
 import { useState, useRef } from "react";
@@ -31093,14 +31123,6 @@ import Card from "../components/Card";
 import { useAuth } from "../context/AuthContext";
 import { login as loginService } from "../services/authService";
 
-function decodeToken(token) {
-    try {
-        return JSON.parse(atob(token.split(".")[1]));
-    } catch {
-        return null;
-    }
-}
-
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -31109,7 +31131,7 @@ export default function Login() {
 
     const isSubmitting = useRef(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, user } = useAuth();
 
     const validateEmail = (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -31140,7 +31162,6 @@ export default function Login() {
         setLoading(true);
 
         try {
-            // ✅ SINGLE source of truth
             const data = await loginService({
                 email: email.trim().toLowerCase(),
                 password,
@@ -31153,19 +31174,20 @@ export default function Login() {
                 return;
             }
 
-            // ✅ Update global auth state
+            // ✅ Single source of truth
             login(token);
-
-            const decoded = decodeToken(token);
 
             toast.success("Login successful");
 
-            navigate(
-                decoded?.role === "admin"
-                    ? "/admin/dashboard"
-                    : "/resident/dashboard",
-                { replace: true }
-            );
+            // ⏳ Allow AuthContext to update, then redirect
+            setTimeout(() => {
+                navigate(
+                    user?.role === "admin"
+                        ? "/admin/dashboard"
+                        : "/resident/dashboard",
+                    { replace: true }
+                );
+            }, 0);
         } catch (err) {
             toast.error(err?.message || "Invalid email or password");
             setPassword("");
@@ -32308,56 +32330,22 @@ export default function Roomss() {
 
 // ##########################################
 // FILE 79 of 87: frontend\src\routes\AdminRoute.jsx
-// SIZE: 658 bytes
-// MODIFIED: 2026-02-03 12:36:30
+// SIZE: 875 bytes
+// MODIFIED: 2026-02-04 12:59:59
 // ##########################################
 
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 /**
  * AdminRoute
- * Phase 4 – Route Protection
- *
  * - Allows access ONLY if user role === "admin"
- * - Redirects others to login or resident dashboard
+ * - Relies on AuthContext (single source of truth)
  */
+export default function AdminRoute() {
+    const { isAuthenticated, isAdmin, loading } = useAuth();
 
-export default function AdminRoute({ children }) {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-
-    // Not logged in
-    if (!token) {
-        return <Navigate to="/" replace />;
-    }
-
-    // Logged in but not admin or role is missing/invalid
-    if (role !== "admin") {
-        return <Navigate to="/resident" replace />;
-    }
-
-    // Admin allowed
-    return children;
-}
-
-
-
-
-
-// ##########################################
-// FILE 80 of 87: frontend\src\routes\ProtectedRoute.jsx
-// SIZE: 1074 bytes
-// MODIFIED: 2026-02-03 22:10:51
-// ##########################################
-
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-
-export default function ProtectedRoute({ adminOnly = false }) {
-    const { user, loading } = useAuth();
-    const location = useLocation();
-
-    // ⏳ Prevent flicker while auth state is loading
+    // ⏳ Wait until auth state is ready
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center text-gray-400">
@@ -32366,8 +32354,48 @@ export default function ProtectedRoute({ adminOnly = false }) {
         );
     }
 
-    // 🔒 Not authenticated → login
-    if (!user) {
+    // 🔒 Not logged in
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // 🛑 Logged in but not admin
+    if (!isAdmin) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // ✅ Admin access granted
+    return <Outlet />;
+}
+
+
+
+
+
+// ##########################################
+// FILE 80 of 87: frontend\src\routes\ProtectedRoute.jsx
+// SIZE: 820 bytes
+// MODIFIED: 2026-02-04 12:59:05
+// ##########################################
+
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+export default function ProtectedRoute() {
+    const { isAuthenticated, loading } = useAuth();
+    const location = useLocation();
+
+    // ⏳ Wait until auth state is resolved
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-gray-400">
+                Loading...
+            </div>
+        );
+    }
+
+    // 🔒 Not logged in → login page
+    if (!isAuthenticated) {
         return (
             <Navigate
                 to="/login"
@@ -32377,17 +32405,7 @@ export default function ProtectedRoute({ adminOnly = false }) {
         );
     }
 
-    // 🛑 Admin-only route but user is not admin
-    if (adminOnly && user.role !== "admin") {
-        return (
-            <Navigate
-                to="/resident/dashboard"
-                replace
-            />
-        );
-    }
-
-    // ✅ Auth OK → render nested routes
+    // ✅ Authenticated → allow access
     return <Outlet />;
 }
 
@@ -32632,8 +32650,8 @@ export const optimizeRevenue = async () => {
 
 // ##########################################
 // FILE 84 of 87: frontend\src\services\authService.js
-// SIZE: 1364 bytes
-// MODIFIED: 2026-02-04 12:04:04
+// SIZE: 1180 bytes
+// MODIFIED: 2026-02-04 12:58:16
 // ##########################################
 
 import api from "../api/axios";
@@ -32651,25 +32669,19 @@ export const login = async ({ email, password }) => {
             password,
         });
 
-        // Expected backend response:
+        // Backend response example:
         // {
-        //   token: "jwt",
-        //   user: { id, email, role, ... }
+        //   token: "jwt"
         // }
-
-        if (response.data?.token) {
-            localStorage.setItem("token", response.data.token);
-        }
 
         return response.data;
     } catch (error) {
-        // Error already normalized by axios interceptor
         throw error;
     }
 };
 
 /**
- * Register user (optional, if you have signup)
+ * Register user (optional)
  */
 export const register = async (data) => {
     try {
@@ -32681,7 +32693,7 @@ export const register = async (data) => {
 };
 
 /**
- * Get current logged-in user
+ * Get current logged-in user (optional)
  */
 export const getCurrentUser = async () => {
     try {
@@ -32694,9 +32706,10 @@ export const getCurrentUser = async () => {
 
 /**
  * Logout user
+ * NOTE: AuthContext handles state + redirect
  */
-export const logout = () => {
-    localStorage.removeItem("token");
+export const logout = async () => {
+    return Promise.resolve();
 };
 
 
