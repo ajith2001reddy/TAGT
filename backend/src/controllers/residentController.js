@@ -27,7 +27,7 @@ export const getAllResidents = async (req, res, next) => {
 
 /**
  * =============================
- * ADD RESIDENT  + CREATE RENT
+ * ADD RESIDENT + CREATE RENT
  * =============================
  */
 export const addResident = async (req, res, next) => {
@@ -37,11 +37,21 @@ export const addResident = async (req, res, next) => {
     try {
         const { name, email, password, roomId, rent } = req.body;
 
+        /* ---------- VALIDATION ---------- */
         if (!name || !email || !password) {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: "Name, email, and password are required",
+            });
+        }
+
+        /* ---------- AUTH SAFETY ---------- */
+        if (!req.user?.id) {
+            await session.abortTransaction();
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
             });
         }
 
@@ -59,9 +69,7 @@ export const addResident = async (req, res, next) => {
         let room = null;
         let finalRent = 0;
 
-        /**
-         * OPTIONAL ROOM
-         */
+        /* ---------- ROOM LOGIC (OPTIONAL) ---------- */
         if (roomId) {
             room = await Room.findById(roomId).session(session);
 
@@ -84,11 +92,10 @@ export const addResident = async (req, res, next) => {
             finalRent = room.rent || 0;
         }
 
-        /**
-         * MANUAL RENT (if no room)
-         */
+        /* ---------- MANUAL RENT (NO ROOM) ---------- */
         if (!room && rent) {
             const parsedRent = Number(rent);
+
             if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
                 await session.abortTransaction();
                 return res.status(400).json({
@@ -96,17 +103,14 @@ export const addResident = async (req, res, next) => {
                     message: "Invalid rent amount",
                 });
             }
+
             finalRent = parsedRent;
         }
 
-        /**
-         * HASH PASSWORD
-         */
+        /* ---------- HASH PASSWORD ---------- */
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        /**
-         * CREATE RESIDENT
-         */
+        /* ---------- CREATE RESIDENT ---------- */
         const [resident] = await User.create(
             [
                 {
@@ -120,17 +124,13 @@ export const addResident = async (req, res, next) => {
             { session }
         );
 
-        /**
-         * UPDATE ROOM OCCUPANCY
-         */
+        /* ---------- UPDATE ROOM OCCUPANCY ---------- */
         if (room) {
             room.occupiedBeds += 1;
             await room.save({ session });
         }
 
-        /**
-         * CREATE INITIAL UNPAID RENT
-         */
+        /* ---------- CREATE INITIAL RENT PAYMENT ---------- */
         if (finalRent > 0) {
             await Payment.create(
                 [
@@ -141,7 +141,7 @@ export const addResident = async (req, res, next) => {
                         type: "rent",
                         status: "unpaid",
                         month: new Date().toISOString().slice(0, 7),
-                        createdBy: req.user.id,
+                        createdBy: req.user?.id || null, // SAFE
                     },
                 ],
                 { session }
@@ -151,7 +151,8 @@ export const addResident = async (req, res, next) => {
         await session.commitTransaction();
 
         logger.info(
-            `Resident added: ${resident.name}, Rent: ${finalRent}, Room: ${room ? room.roomNumber : "None"}`
+            `Resident added: ${resident.name}, Rent: ${finalRent}, Room: ${room ? room.roomNumber : "None"
+            }`
         );
 
         return res.status(201).json({
@@ -189,9 +190,7 @@ export const deleteResident = async (req, res, next) => {
             });
         }
 
-        /**
-         * Reduce room occupancy
-         */
+        /* ---------- REDUCE ROOM OCCUPANCY ---------- */
         if (resident.roomId) {
             const room = await Room.findById(resident.roomId).session(session);
 
@@ -201,9 +200,7 @@ export const deleteResident = async (req, res, next) => {
             }
         }
 
-        /**
-         * Delete payments of resident
-         */
+        /* ---------- DELETE RESIDENT PAYMENTS ---------- */
         await Payment.deleteMany({ residentId: resident._id }).session(session);
 
         await resident.deleteOne({ session });
