@@ -86,9 +86,7 @@ const PaymentSchema = new mongoose.Schema(
     }
 );
 
----
 
-# 🚫 Prevent duplicate monthly rent
 
 // Ensures ONE rent payment per resident per month
 PaymentSchema.index(
@@ -96,8 +94,6 @@ PaymentSchema.index(
     { unique: true }
 );
 
----
 
-# 📤 Export model
 
 export default mongoose.model("Payment", PaymentSchema);
