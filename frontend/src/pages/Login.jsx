@@ -15,7 +15,7 @@ export default function Login() {
 
     const isSubmitting = useRef(false);
     const navigate = useNavigate();
-    const { login, user } = useAuth();
+    const { login } = useAuth();
 
     const validateEmail = (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -58,20 +58,20 @@ export default function Login() {
                 return;
             }
 
-            // ✅ Single source of truth
+            // ✅ Save token + decoded user in AuthContext/localStorage
             login(token);
 
             toast.success("Login successful");
 
-            // ⏳ Allow AuthContext to update, then redirect
-            setTimeout(() => {
-                navigate(
-                    user?.role === "admin"
-                        ? "/admin/dashboard"
-                        : "/resident/dashboard",
-                    { replace: true }
-                );
-            }, 0);
+            // ✅ Redirect using fresh stored user (NOT React state)
+            const storedUser = JSON.parse(localStorage.getItem("user"));
+
+            navigate(
+                storedUser?.role === "admin"
+                    ? "/admin/dashboard"
+                    : "/resident/dashboard",
+                { replace: true }
+            );
         } catch (err) {
             toast.error(err?.message || "Invalid email or password");
             setPassword("");
