@@ -14,16 +14,14 @@ export default function AdminResidents() {
         name: "",
         email: "",
         password: "",
-        roomId: "",
+        rent: "",     // ✅ manual rent support
     });
 
-    // ================= FETCH =================
+    /* ================= FETCH ================= */
     const fetchResidents = async () => {
         try {
             setLoading(true);
             const res = await api.get("/resident");
-
-            // ✅ Correct response handling
             setResidents(res.data?.residents || []);
         } catch {
             toast.error("Failed to load residents");
@@ -36,27 +34,38 @@ export default function AdminResidents() {
         fetchResidents();
     }, []);
 
-    // ================= ADD =================
+    /* ================= ADD ================= */
     const addResident = async () => {
         if (!form.name || !form.email || !form.password) {
             toast.error("Name, email, and password are required");
             return;
         }
 
-        setSaving(true);
-        try {
-            await api.post("/resident", form);
+        if (form.rent && Number(form.rent) <= 0) {
+            toast.error("Rent must be greater than 0");
+            return;
+        }
 
-            toast.success("Resident added");
+        setSaving(true);
+
+        try {
+            await api.post("/resident", {
+                name: form.name,
+                email: form.email,
+                password: form.password,
+                rent: form.rent ? Number(form.rent) : undefined,
+            });
+
+            toast.success("Resident added & rent created");
 
             setForm({
                 name: "",
                 email: "",
                 password: "",
-                roomId: "",
+                rent: "",
             });
 
-            fetchResidents(); // ✅ refresh list
+            fetchResidents();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to add resident");
         } finally {
@@ -64,7 +73,7 @@ export default function AdminResidents() {
         }
     };
 
-    // ================= DELETE =================
+    /* ================= DELETE ================= */
     const deleteResident = async (id) => {
         if (!window.confirm("Delete this resident?")) return;
 
@@ -82,7 +91,7 @@ export default function AdminResidents() {
             <div className="space-y-6">
                 <h1 className="text-2xl font-bold">Residents</h1>
 
-                {/* ADD FORM */}
+                {/* ================= ADD FORM ================= */}
                 <div className="bg-white/10 border border-white/10 rounded-xl p-4 space-y-3">
                     <h2 className="font-semibold">Add Resident</h2>
 
@@ -100,7 +109,6 @@ export default function AdminResidents() {
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                     />
 
-                    {/* ✅ Password field added */}
                     <input
                         type="password"
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
@@ -109,12 +117,13 @@ export default function AdminResidents() {
                         onChange={(e) => setForm({ ...form, password: e.target.value })}
                     />
 
-                    {/* Optional roomId */}
+                    {/* ✅ NEW: Manual rent */}
                     <input
+                        type="number"
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
-                        placeholder="Room ID (optional)"
-                        value={form.roomId}
-                        onChange={(e) => setForm({ ...form, roomId: e.target.value })}
+                        placeholder="Monthly Rent (optional)"
+                        value={form.rent}
+                        onChange={(e) => setForm({ ...form, rent: e.target.value })}
                     />
 
                     <Button disabled={saving} onClick={addResident}>
@@ -122,7 +131,7 @@ export default function AdminResidents() {
                     </Button>
                 </div>
 
-                {/* LIST */}
+                {/* ================= LIST ================= */}
                 {loading ? (
                     <p className="text-gray-400 text-center">Loading…</p>
                 ) : residents.length === 0 ? (
@@ -143,12 +152,9 @@ export default function AdminResidents() {
                                     <tr key={r._id} className="border-t border-white/5">
                                         <td className="px-4 py-3">{r.name}</td>
                                         <td className="px-4 py-3">{r.email}</td>
-
-                                        {/* ✅ Correct room display */}
                                         <td className="px-4 py-3">
                                             {r.roomId?.roomNumber || "-"}
                                         </td>
-
                                         <td className="px-4 py-3 text-right">
                                             <Button
                                                 className="bg-red-600"

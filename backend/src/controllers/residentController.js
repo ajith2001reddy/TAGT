@@ -4,14 +4,17 @@ import bcrypt from "bcrypt";
 
 import User from "../models/User.js";
 import Room from "../models/rooms.js";
+import Payment from "../models/Payment.js";
 
 /**
+ * =============================
  * GET ALL RESIDENTS
+ * =============================
  */
 export const getAllResidents = async (req, res, next) => {
     try {
         const residents = await User.find({ role: "resident" })
-            .populate("roomId", "roomNumber totalBeds occupiedBeds")
+            .populate("roomId", "roomNumber totalBeds occupiedBeds rent")
             .sort({ createdAt: -1 })
             .lean();
 
@@ -23,14 +26,16 @@ export const getAllResidents = async (req, res, next) => {
 };
 
 /**
- * ADD RESIDENT
+ * =============================
+ * ADD RESIDENT  + CREATE RENT
+ * =============================
  */
 export const addResident = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-        const { name, email, password, roomId } = req.body;
+        const { name, email, password, roomId, rent } = req.body;
 
         if (!name || !email || !password) {
             await session.abortTransaction();
@@ -52,7 +57,11 @@ export const addResident = async (req, res, next) => {
         }
 
         let room = null;
+        let finalRent = 0;
 
+        /**
+         * OPTIONAL ROOM
+         */
         if (roomId) {
             room = await Room.findById(roomId).session(session);
 
@@ -71,11 +80,33 @@ export const addResident = async (req, res, next) => {
                     message: "No beds available in this room",
                 });
             }
+
+            finalRent = room.rent || 0;
         }
 
-        // ✅ HASH PASSWORD (main missing fix)
+        /**
+         * MANUAL RENT (if no room)
+         */
+        if (!room && rent) {
+            const parsedRent = Number(rent);
+            if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid rent amount",
+                });
+            }
+            finalRent = parsedRent;
+        }
+
+        /**
+         * HASH PASSWORD
+         */
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        /**
+         * CREATE RESIDENT
+         */
         const [resident] = await User.create(
             [
                 {
@@ -89,15 +120,38 @@ export const addResident = async (req, res, next) => {
             { session }
         );
 
+        /**
+         * UPDATE ROOM OCCUPANCY
+         */
         if (room) {
             room.occupiedBeds += 1;
             await room.save({ session });
         }
 
+        /**
+         * CREATE INITIAL UNPAID RENT
+         */
+        if (finalRent > 0) {
+            await Payment.create(
+                [
+                    {
+                        residentId: resident._id,
+                        amount: finalRent,
+                        description: "Monthly Rent",
+                        type: "rent",
+                        status: "unpaid",
+                        month: new Date().toISOString().slice(0, 7),
+                        createdBy: req.user.id,
+                    },
+                ],
+                { session }
+            );
+        }
+
         await session.commitTransaction();
 
         logger.info(
-            `Resident added: ${resident.name}, Room: ${room ? room.roomNumber : "None"}`
+            `Resident added: ${resident.name}, Rent: ${finalRent}, Room: ${room ? room.roomNumber : "None"}`
         );
 
         return res.status(201).json({
@@ -114,7 +168,9 @@ export const addResident = async (req, res, next) => {
 };
 
 /**
+ * =============================
  * DELETE RESIDENT
+ * =============================
  */
 export const deleteResident = async (req, res, next) => {
     const session = await mongoose.startSession();
@@ -133,6 +189,9 @@ export const deleteResident = async (req, res, next) => {
             });
         }
 
+        /**
+         * Reduce room occupancy
+         */
         if (resident.roomId) {
             const room = await Room.findById(resident.roomId).session(session);
 
@@ -141,6 +200,11 @@ export const deleteResident = async (req, res, next) => {
                 await room.save({ session });
             }
         }
+
+        /**
+         * Delete payments of resident
+         */
+        await Payment.deleteMany({ residentId: resident._id }).session(session);
 
         await resident.deleteOne({ session });
 
