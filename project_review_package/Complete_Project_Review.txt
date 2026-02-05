@@ -1,5 +1,5 @@
 ﻿# PROJECT TREE STRUCTURE
-Generated: 2026-02-05 10:05:39
+Generated: 2026-02-05 11:37:17
 Project Path: E:\TAGT
 ```
 TAGT
@@ -15,6 +15,8 @@ TAGT
 │   │   │   └── db.js
 │   │   ├── controllers
 │   │   │   ├── adminController.js
+│   │   │   ├── paymentController.js
+│   │   │   ├── requestController.js
 │   │   │   ├── residentController.js
 │   │   │   └── roomController.js
 │   │   ├── middleware
@@ -36,6 +38,7 @@ TAGT
 │   │   │   ├── auth.js
 │   │   │   ├── index.js
 │   │   │   ├── payments.js
+│   │   │   ├── requests.js
 │   │   │   ├── resident.js
 │   │   │   └── rooms.js
 │   │   ├── utils
@@ -115,6 +118,7 @@ TAGT
 │   ├── README.md
 │   └── tailwind.config.js
 ├── project_review_package
+│   └── Complete_Project_Review.txt
 ├── bundle_code.py
 ├── combine.ps1
 ├── full_project_dump.txt
@@ -126,14 +130,14 @@ TAGT
 
 ## File Statistics
 
-Total Files: 89
-Total Size: 2938.92 KB
+Total Files: 92
+Total Size: 2948.63 KB
 
 ## File Type Distribution
 
 | Extension | Count |
 |-----------|-------|
-| .js | 44 |
+| .js | 47 |
 | .jsx | 32 |
 | .json | 6 |
 | .css | 2 |
@@ -155,85 +159,88 @@ Total Size: 2938.92 KB
 8. backend\src\app.js
 9. backend\src\config\db.js
 10. backend\src\controllers\adminController.js
-11. backend\src\controllers\residentController.js
-12. backend\src\controllers\roomController.js
-13. backend\src\middleware\auth.js
-14. backend\src\middleware\errorHandler.js
-15. backend\src\middleware\isAdmin.js
-16. backend\src\middleware\validate.js
-17. backend\src\models\ActivityLog.js
-18. backend\src\models\Payment.js
-19. backend\src\models\Request.js
-20. backend\src\models\RequestHistory.js
-21. backend\src\models\resident.js
-22. backend\src\models\rooms.js
-23. backend\src\models\User.js
-24. backend\src\routes\adminRoutes.js
-25. backend\src\routes\analytics.js
-26. backend\src\routes\auth.js
-27. backend\src\routes\index.js
-28. backend\src\routes\payments.js
-29. backend\src\routes\resident.js
-30. backend\src\routes\rooms.js
-31. backend\src\server.js
-32. backend\src\swagger.js
-33. backend\src\utils\emailService.js
-34. backend\src\utils\generateToken.js
-35. backend\src\utils\logger.js
-36. bundle_code.py
-37. frontend\package.json
-38. frontend\package-lock.json
-39. frontend\postcss.config.js
-40. frontend\public\index.html
-41. frontend\public\manifest.json
-42. frontend\public\robots.txt
-43. frontend\README.md
-44. frontend\src\animations\pageTransition.js
-45. frontend\src\api\axios.js
-46. frontend\src\App.css
-47. frontend\src\App.js
-48. frontend\src\components\AppLayout.jsx
-49. frontend\src\components\Button.jsx
-50. frontend\src\components\Card.jsx
-51. frontend\src\components\ChurnRiskTable.jsx
-52. frontend\src\components\KpiCards.jsx
-53. frontend\src\components\Loader.jsx
-54. frontend\src\components\MaintenanceCostForecast.jsx
-55. frontend\src\components\Navbar.jsx
-56. frontend\src\components\OccupancyForecast.jsx
-57. frontend\src\components\RequestsChart.jsx
-58. frontend\src\components\RequestTable.jsx
-59. frontend\src\components\RevenueOptimization.jsx
-60. frontend\src\components\Sidebar.jsx
-61. frontend\src\components\SidebarContent.jsx
-62. frontend\src\components\StatCard.jsx
-63. frontend\src\components\StatusModal.jsx
-64. frontend\src\components\ToastProvider.jsx
-65. frontend\src\context\AuthContext.jsx
-66. frontend\src\hooks\useAdminStats.js
-67. frontend\src\index.css
-68. frontend\src\index.js
-69. frontend\src\layouts\DashboardLayout.jsx
-70. frontend\src\pages\AdminDashboard.jsx
-71. frontend\src\pages\AdminRequests.jsx
-72. frontend\src\pages\AdminResidents.jsx
-73. frontend\src\pages\AdminRooms.jsx
-74. frontend\src\pages\Login.jsx
-75. frontend\src\pages\Payments.jsx
-76. frontend\src\pages\RequestHistory.jsx
-77. frontend\src\pages\ResidentDashboard.jsx
-78. frontend\src\pages\ResidentPayments.jsx
-79. frontend\src\pages\Rooms.jsx
-80. frontend\src\routes\AdminRoute.jsx
-81. frontend\src\routes\ProtectedRoute.jsx
-82. frontend\src\routes\ResidentRoute.jsx
-83. frontend\src\services\adminService.js
-84. frontend\src\services\analyticsService.js
-85. frontend\src\services\authService.js
-86. frontend\src\services\residentService.js
-87. frontend\tailwind.config.js
-88. full_project_dump.txt
-89. package-lock.json
+11. backend\src\controllers\paymentController.js
+12. backend\src\controllers\requestController.js
+13. backend\src\controllers\residentController.js
+14. backend\src\controllers\roomController.js
+15. backend\src\middleware\auth.js
+16. backend\src\middleware\errorHandler.js
+17. backend\src\middleware\isAdmin.js
+18. backend\src\middleware\validate.js
+19. backend\src\models\ActivityLog.js
+20. backend\src\models\Payment.js
+21. backend\src\models\Request.js
+22. backend\src\models\RequestHistory.js
+23. backend\src\models\resident.js
+24. backend\src\models\rooms.js
+25. backend\src\models\User.js
+26. backend\src\routes\adminRoutes.js
+27. backend\src\routes\analytics.js
+28. backend\src\routes\auth.js
+29. backend\src\routes\index.js
+30. backend\src\routes\payments.js
+31. backend\src\routes\requests.js
+32. backend\src\routes\resident.js
+33. backend\src\routes\rooms.js
+34. backend\src\server.js
+35. backend\src\swagger.js
+36. backend\src\utils\emailService.js
+37. backend\src\utils\generateToken.js
+38. backend\src\utils\logger.js
+39. bundle_code.py
+40. frontend\package.json
+41. frontend\package-lock.json
+42. frontend\postcss.config.js
+43. frontend\public\index.html
+44. frontend\public\manifest.json
+45. frontend\public\robots.txt
+46. frontend\README.md
+47. frontend\src\animations\pageTransition.js
+48. frontend\src\api\axios.js
+49. frontend\src\App.css
+50. frontend\src\App.js
+51. frontend\src\components\AppLayout.jsx
+52. frontend\src\components\Button.jsx
+53. frontend\src\components\Card.jsx
+54. frontend\src\components\ChurnRiskTable.jsx
+55. frontend\src\components\KpiCards.jsx
+56. frontend\src\components\Loader.jsx
+57. frontend\src\components\MaintenanceCostForecast.jsx
+58. frontend\src\components\Navbar.jsx
+59. frontend\src\components\OccupancyForecast.jsx
+60. frontend\src\components\RequestsChart.jsx
+61. frontend\src\components\RequestTable.jsx
+62. frontend\src\components\RevenueOptimization.jsx
+63. frontend\src\components\Sidebar.jsx
+64. frontend\src\components\SidebarContent.jsx
+65. frontend\src\components\StatCard.jsx
+66. frontend\src\components\StatusModal.jsx
+67. frontend\src\components\ToastProvider.jsx
+68. frontend\src\context\AuthContext.jsx
+69. frontend\src\hooks\useAdminStats.js
+70. frontend\src\index.css
+71. frontend\src\index.js
+72. frontend\src\layouts\DashboardLayout.jsx
+73. frontend\src\pages\AdminDashboard.jsx
+74. frontend\src\pages\AdminRequests.jsx
+75. frontend\src\pages\AdminResidents.jsx
+76. frontend\src\pages\AdminRooms.jsx
+77. frontend\src\pages\Login.jsx
+78. frontend\src\pages\Payments.jsx
+79. frontend\src\pages\RequestHistory.jsx
+80. frontend\src\pages\ResidentDashboard.jsx
+81. frontend\src\pages\ResidentPayments.jsx
+82. frontend\src\pages\Rooms.jsx
+83. frontend\src\routes\AdminRoute.jsx
+84. frontend\src\routes\ProtectedRoute.jsx
+85. frontend\src\routes\ResidentRoute.jsx
+86. frontend\src\services\adminService.js
+87. frontend\src\services\analyticsService.js
+88. frontend\src\services\authService.js
+89. frontend\src\services\residentService.js
+90. frontend\tailwind.config.js
+91. full_project_dump.txt
+92. package-lock.json
 
 
 
@@ -243,9 +250,9 @@ Total Size: 2938.92 KB
 
 
 // ##########################################
-// FILE 1 of 89: backend\package.json
-// SIZE: 791 bytes
-// MODIFIED: 2026-02-03 12:55:02
+// FILE 1 of 92: backend\package.json
+// SIZE: 815 bytes
+// MODIFIED: 2026-02-05 10:43:07
 // ##########################################
 
 {
@@ -264,6 +271,7 @@ Total Size: 2938.92 KB
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.0",
@@ -290,9 +298,9 @@ Total Size: 2938.92 KB
 
 
 // ##########################################
-// FILE 2 of 89: backend\package-lock.json
-// SIZE: 242719 bytes
-// MODIFIED: 2026-02-03 12:55:02
+// FILE 2 of 92: backend\package-lock.json
+// SIZE: 244037 bytes
+// MODIFIED: 2026-02-05 10:43:07
 // ##########################################
 
 {
@@ -305,6 +313,7 @@ Total Size: 2938.92 KB
       "name": "tagt-backend",
       "version": "1.0.0",
       "dependencies": {
+        "bcrypt": "^6.0.0",
         "bcryptjs": "^2.4.3",
         "cors": "^2.8.5",
         "dotenv": "^16.4.0",
@@ -2002,6 +2011,20 @@ Total Size: 2938.92 KB
       "license": "Apache-2.0",
       "bin": {
         "baseline-browser-mapping": "dist/cli.js"
+      }
+    },
+    "node_modules/bcrypt": {
+      "version": "6.0.0",
+      "resolved": "https://registry.npmjs.org/bcrypt/-/bcrypt-6.0.0.tgz",
+      "integrity": "sha512-cU8v/EGSrnH+HnxV2z0J7/blxH8gq7Xh2JFT6Aroax7UohdmiJJlxApMxtKfuI7z68NvvVcmR78k2LbT6efhRg==",
+      "hasInstallScript": true,
+      "license": "MIT",
+      "dependencies": {
+        "node-addon-api": "^8.3.0",
+        "node-gyp-build": "^4.8.4"
+      },
+      "engines": {
+        "node": ">= 18"
       }
     },
     "node_modules/bcryptjs": {
@@ -5138,6 +5161,26 @@ Total Size: 2938.92 KB
         "node": ">= 0.6"
       }
     },
+    "node_modules/node-addon-api": {
+      "version": "8.5.0",
+      "resolved": "https://registry.npmjs.org/node-addon-api/-/node-addon-api-8.5.0.tgz",
+      "integrity": "sha512-/bRZty2mXUIFY/xU5HLvveNHlswNJej+RnxBjOMkidWfwZzgTbPG1E3K5TOxRLOR+5hX7bSofy8yf1hZevMS8A==",
+      "license": "MIT",
+      "engines": {
+        "node": "^18 || ^20 || >= 21"
+      }
+    },
+    "node_modules/node-gyp-build": {
+      "version": "4.8.4",
+      "resolved": "https://registry.npmjs.org/node-gyp-build/-/node-gyp-build-4.8.4.tgz",
+      "integrity": "sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==",
+      "license": "MIT",
+      "bin": {
+        "node-gyp-build": "bin.js",
+        "node-gyp-build-optional": "optional.js",
+        "node-gyp-build-test": "build-test.js"
+      }
+    },
     "node_modules/node-int64": {
       "version": "0.4.0",
       "resolved": "https://registry.npmjs.org/node-int64/-/node-int64-0.4.0.tgz",
@@ -6969,7 +7012,7 @@ Total Size: 2938.92 KB
 
 
 // ##########################################
-// FILE 3 of 89: backend\src\analytics\churnEngine.js
+// FILE 3 of 92: backend\src\analytics\churnEngine.js
 // SIZE: 2808 bytes
 // MODIFIED: 2026-02-03 21:42:41
 // ##########################################
@@ -7077,7 +7120,7 @@ export { calculateResidentChurn, predictChurn };
 
 
 // ##########################################
-// FILE 4 of 89: backend\src\analytics\forecastEngine.js
+// FILE 4 of 92: backend\src\analytics\forecastEngine.js
 // SIZE: 1768 bytes
 // MODIFIED: 2026-02-03 21:42:22
 // ##########################################
@@ -7158,9 +7201,9 @@ export { predictOccupancy };
 
 
 // ##########################################
-// FILE 5 of 89: backend\src\analytics\kpiCalculator.js
-// SIZE: 2515 bytes
-// MODIFIED: 2026-02-03 13:06:51
+// FILE 5 of 92: backend\src\analytics\kpiCalculator.js
+// SIZE: 3394 bytes
+// MODIFIED: 2026-02-05 10:31:57
 // ##########################################
 
 import Room from "../models/rooms.js";
@@ -7168,86 +7211,113 @@ import Payment from "../models/Payment.js";
 import Request from "../models/Request.js";
 
 export const getKPIs = async ({ fromDate, toDate } = {}) => {
-    const dateFilter =
+    const paymentDateFilter =
+        fromDate && toDate
+            ? { paidAt: { $gte: fromDate, $lte: toDate } }
+            : {};
+
+    const requestDateFilter =
         fromDate && toDate
             ? { createdAt: { $gte: fromDate, $lte: toDate } }
             : {};
 
-    const [rooms, payments, resolvedRequests] = await Promise.all([
-        Room.find({}, "totalBeds occupiedBeds").lean(),
-        Payment.find(dateFilter, "amount status").lean(),
-        Request.find(
-            { status: "resolved", ...dateFilter },
-            "createdAt updatedAt"
-        ).lean()
+    /* ================= OCCUPANCY ================= */
+    const roomTotals = await Room.aggregate([
+        {
+            $group: {
+                _id: null,
+                totalBeds: { $sum: "$totalBeds" },
+                occupiedBeds: { $sum: "$occupiedBeds" },
+            },
+        },
     ]);
 
-    const totals = rooms.reduce(
-        (acc, room) => {
-            acc.totalBeds += room.totalBeds || 0;
-            acc.occupiedBeds += room.occupiedBeds || 0;
-            return acc;
-        },
-        { totalBeds: 0, occupiedBeds: 0 }
-    );
+    const totalBeds = roomTotals[0]?.totalBeds || 0;
+    const occupiedBeds = roomTotals[0]?.occupiedBeds || 0;
 
     const occupancyRate =
-        totals.totalBeds === 0
-            ? 0
-            : Number(
-                ((totals.occupiedBeds / totals.totalBeds) * 100).toFixed(2)
-            );
+        totalBeds === 0 ? 0 : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
 
-    let totalBilled = 0;
-    let totalCollected = 0;
+    /* ================= PAYMENTS ================= */
+    const paymentStats = await Payment.aggregate([
+        { $match: paymentDateFilter },
+        {
+            $group: {
+                _id: null,
+                totalBilled: { $sum: "$amount" },
+                totalCollected: {
+                    $sum: {
+                        $cond: [{ $eq: ["$status", "paid"] }, "$amount", 0],
+                    },
+                },
+            },
+        },
+    ]);
 
-    for (const payment of payments) {
-        totalBilled += payment.amount || 0;
-        if (payment.status === "paid") {
-            totalCollected += payment.amount || 0;
-        }
-    }
+    const totalBilled = paymentStats[0]?.totalBilled || 0;
+    const totalCollected = paymentStats[0]?.totalCollected || 0;
 
     const collectionRate =
         totalBilled === 0
             ? 0
             : Number(((totalCollected / totalBilled) * 100).toFixed(2));
 
-    let totalResolutionHours = 0;
-
-    for (const req of resolvedRequests) {
-        totalResolutionHours +=
-            (new Date(req.updatedAt) - new Date(req.createdAt)) / (1000 * 60 * 60);
-    }
+    /* ================= MAINTENANCE ================= */
+    const resolvedRequests = await Request.aggregate([
+        {
+            $match: {
+                status: "done", // ✅ correct final status
+                ...requestDateFilter,
+            },
+        },
+        {
+            $project: {
+                resolutionHours: {
+                    $divide: [
+                        { $subtract: ["$updatedAt", "$createdAt"] },
+                        1000 * 60 * 60,
+                    ],
+                },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                avgResolutionTime: { $avg: "$resolutionHours" },
+                resolvedCount: { $sum: 1 },
+            },
+        },
+    ]);
 
     const avgResolutionTime =
-        resolvedRequests.length === 0
-            ? 0
-            : Number(
-                (totalResolutionHours / resolvedRequests.length).toFixed(2)
-            );
+        resolvedRequests[0]?.avgResolutionTime
+            ? Number(resolvedRequests[0].avgResolutionTime.toFixed(2))
+            : 0;
 
+    const resolvedCount = resolvedRequests[0]?.resolvedCount || 0;
+
+    /* ================= RESULT ================= */
     return {
         occupancy: {
             rate: occupancyRate,
-            occupiedBeds: totals.occupiedBeds,
-            totalBeds: totals.totalBeds
+            occupiedBeds,
+            totalBeds,
         },
         payments: {
             collectionRate,
             totalBilled,
-            totalCollected
+            totalCollected,
         },
         maintenance: {
             avgResolutionTime,
-            resolvedCount: resolvedRequests.length
+            resolvedCount,
         },
         meta: {
             mode: "snapshot",
             fromDate: fromDate || null,
             toDate: toDate || null,
-            generatedAt: new Date()
-        }
+            generatedAt: new Date(),
+        },
     };
 };
 
@@ -7256,7 +7326,7 @@ export const getKPIs = async ({ fromDate, toDate } = {}) => {
 
 
 // ##########################################
-// FILE 6 of 89: backend\src\analytics\maintenanceForecast.js
+// FILE 6 of 92: backend\src\analytics\maintenanceForecast.js
 // SIZE: 3177 bytes
 // MODIFIED: 2026-02-03 21:54:14
 // ##########################################
@@ -7387,7 +7457,7 @@ export { predictMaintenanceCost };
 
 
 // ##########################################
-// FILE 7 of 89: backend\src\analytics\revenueOptimizer.js
+// FILE 7 of 92: backend\src\analytics\revenueOptimizer.js
 // SIZE: 3488 bytes
 // MODIFIED: 2026-02-03 21:53:10
 // ##########################################
@@ -7512,9 +7582,9 @@ export const optimizeRevenue = async () => {
 
 
 // ##########################################
-// FILE 8 of 89: backend\src\app.js
-// SIZE: 1343 bytes
-// MODIFIED: 2026-02-03 22:02:46
+// FILE 8 of 92: backend\src\app.js
+// SIZE: 2237 bytes
+// MODIFIED: 2026-02-05 10:37:08
 // ##########################################
 
 import express from "express";
@@ -7528,18 +7598,27 @@ import { swaggerSpec, swaggerUi } from "./swagger.js";
 
 const app = express();
 
+/* ================= SECURITY ================= */
+
 app.set("trust proxy", 1);
 app.use(helmet());
 
 const allowedOrigins = [
     "https://tagt.website",
-    "https://www.tagt.website"
+    "https://www.tagt.website",
+    "http://localhost:3000",        // ✅ local dev
 ];
 
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
+            // allow server-to-server or curl
+            if (!origin) return callback(null, true);
+
+            // allow Vercel preview deployments
+            if (origin.includes(".vercel.app")) return callback(null, true);
+
+            if (allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
                 callback(new Error("Not allowed by CORS"));
@@ -7547,23 +7626,43 @@ app.use(
         },
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"]
+        allowedHeaders: ["Content-Type", "Authorization"],
     })
 );
 
+/* ================= RATE LIMIT ================= */
+
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 500, // ✅ safer for dashboards
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
 });
-app.use(limiter);
+
+app.use("/api", limiter); // limit only API, not docs
+
+/* ================= BODY PARSER ================= */
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+/* ================= HEALTH CHECK ================= */
+
+// root health for Render / uptime monitors
+app.get("/", (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        service: "TAGT Backend",
+        time: new Date().toISOString(),
+    });
+});
+
+/* ================= ROUTES ================= */
+
 app.use("/api", apiRoutes);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+/* ================= ERRORS ================= */
 
 app.use(notFound);
 app.use(errorHandler);
@@ -7575,9 +7674,9 @@ export default app;
 
 
 // ##########################################
-// FILE 9 of 89: backend\src\config\db.js
-// SIZE: 1208 bytes
-// MODIFIED: 2026-02-03 12:00:37
+// FILE 9 of 92: backend\src\config\db.js
+// SIZE: 1675 bytes
+// MODIFIED: 2026-02-05 10:07:59
 // ##########################################
 
 import mongoose from "mongoose";
@@ -7589,14 +7688,14 @@ const logger = winston.createLogger({
         winston.format.colorize(),
         winston.format.simple()
     ),
-    transports: [new winston.transports.Console()]
+    transports: [new winston.transports.Console()],
 });
 
 export const connectDB = async () => {
     const mongoUri = process.env.MONGO_URI;
 
     if (!mongoUri) {
-        logger.error("MONGO_URI is not defined");
+        logger.error("❌ MONGO_URI is not defined in environment variables");
         process.exit(1);
     }
 
@@ -7608,20 +7707,33 @@ export const connectDB = async () => {
         try {
             await mongoose.connect(mongoUri, {
                 autoIndex: true,
-                serverSelectionTimeoutMS: 5000
+                serverSelectionTimeoutMS: 5000,
             });
 
-            logger.info("MongoDB connected successfully");
+            logger.info("✅ MongoDB connected successfully");
+
+            // Handle runtime DB errors
+            mongoose.connection.on("error", (err) => {
+                logger.error("❌ MongoDB runtime error:", err);
+            });
+
+            mongoose.connection.on("disconnected", () => {
+                logger.warn("⚠️ MongoDB disconnected");
+            });
+
             return;
         } catch (err) {
             attempts--;
-            logger.error(`MongoDB connection failed: ${err.message}`);
+
+            logger.error(`❌ MongoDB connection failed: ${err.message}`);
+            logger.info(`🔁 Retries left: ${attempts}`);
 
             if (attempts === 0) {
-                logger.error("MongoDB connection failed after retries");
+                logger.error("❌ MongoDB connection failed after all retries");
                 process.exit(1);
             }
 
+            // Wait before retry
             await new Promise((res) => setTimeout(res, 5000));
         }
     }
@@ -7632,7 +7744,7 @@ export const connectDB = async () => {
 
 
 // ##########################################
-// FILE 10 of 89: backend\src\controllers\adminController.js
+// FILE 10 of 92: backend\src\controllers\adminController.js
 // SIZE: 2941 bytes
 // MODIFIED: 2026-02-04 12:28:29
 // ##########################################
@@ -7739,42 +7851,345 @@ export const addResident = async (req, res, next) => {
 
 
 // ##########################################
-// FILE 11 of 89: backend\src\controllers\residentController.js
-// SIZE: 4439 bytes
-// MODIFIED: 2026-02-03 13:04:18
+// FILE 11 of 92: backend\src\controllers\paymentController.js
+// SIZE: 2832 bytes
+// MODIFIED: 2026-02-05 10:24:30
 // ##########################################
 
-import logger from "../utils/logger.js";  // Correct import for default export
-import mongoose from "mongoose";
+import Payment from "../models/Payment.js";
 import User from "../models/User.js";
-import Room from "../models/rooms.js";
+import logger from "../utils/logger.js";
 
-export const getAllResidents = async (req, res, next) => {
+/**
+ * CREATE PAYMENT (Admin)
+ */
+export const createPayment = async (req, res, next) => {
     try {
-        const residents = await User.find({ role: "resident" })
-            .populate("roomId", "roomNumber totalBeds occupiedBeds")
+        const { residentId, amount, method, note } = req.body;
+
+        if (!residentId || !amount) {
+            return res.status(400).json({
+                success: false,
+                message: "Resident and amount are required",
+            });
+        }
+
+        const resident = await User.findById(residentId);
+
+        if (!resident || resident.role !== "resident") {
+            return res.status(404).json({
+                success: false,
+                message: "Resident not found",
+            });
+        }
+
+        const payment = await Payment.create({
+            resident: residentId,
+            amount,
+            method: method || "cash",
+            note: note || "",
+            status: "paid",
+            createdBy: req.user.id,
+        });
+
+        return res.status(201).json({
+            success: true,
+            payment,
+        });
+    } catch (err) {
+        logger.error(`CREATE PAYMENT ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * GET ALL PAYMENTS (Admin)
+ */
+export const getAllPayments = async (req, res, next) => {
+    try {
+        const payments = await Payment.find()
+            .populate("resident", "name email")
             .sort({ createdAt: -1 })
             .lean();
 
-        res.json({ success: true, residents });
+        return res.json({
+            success: true,
+            payments,
+        });
+    } catch (err) {
+        logger.error(`GET PAYMENTS ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * GET MY PAYMENTS (Resident)
+ */
+export const getMyPayments = async (req, res, next) => {
+    try {
+        const payments = await Payment.find({ resident: req.user.id })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({
+            success: true,
+            payments,
+        });
+    } catch (err) {
+        logger.error(`GET MY PAYMENTS ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * DELETE PAYMENT (Admin)
+ */
+export const deletePayment = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const payment = await Payment.findById(id);
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: "Payment not found",
+            });
+        }
+
+        await payment.deleteOne();
+
+        return res.json({
+            success: true,
+            message: "Payment deleted successfully",
+        });
+    } catch (err) {
+        logger.error(`DELETE PAYMENT ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE 12 of 92: backend\src\controllers\requestController.js
+// SIZE: 3665 bytes
+// MODIFIED: 2026-02-05 10:19:08
+// ##########################################
+
+import Request from "../models/Request.js";
+import RequestHistory from "../models/RequestHistory.js";
+import logger from "../utils/logger.js";
+
+/**
+ * CREATE REQUEST (Resident)
+ */
+export const createRequest = async (req, res, next) => {
+    try {
+        const { title, description, priority } = req.body;
+
+        if (!title || !description) {
+            return res.status(400).json({
+                success: false,
+                message: "Title and description are required",
+            });
+        }
+
+        const request = await Request.create({
+            resident: req.user.id,
+            title,
+            description,
+            priority: priority || "medium",
+            status: "pending",
+        });
+
+        // Save history
+        await RequestHistory.create({
+            request: request._id,
+            action: "created",
+            performedBy: req.user.id,
+        });
+
+        return res.status(201).json({
+            success: true,
+            request,
+        });
+    } catch (err) {
+        logger.error(`CREATE REQUEST ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * GET ALL REQUESTS (Admin)
+ */
+export const getAllRequests = async (req, res, next) => {
+    try {
+        const requests = await Request.find()
+            .populate("resident", "name email")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({
+            success: true,
+            requests,
+        });
+    } catch (err) {
+        logger.error(`GET REQUESTS ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * GET MY REQUESTS (Resident)
+ */
+export const getMyRequests = async (req, res, next) => {
+    try {
+        const requests = await Request.find({ resident: req.user.id })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({
+            success: true,
+            requests,
+        });
+    } catch (err) {
+        logger.error(`GET MY REQUESTS ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * UPDATE REQUEST STATUS (Admin)
+ */
+export const updateRequestStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const request = await Request.findById(id);
+
+        if (!request) {
+            return res.status(404).json({
+                success: false,
+                message: "Request not found",
+            });
+        }
+
+        request.status = status || request.status;
+        await request.save();
+
+        // Save history
+        await RequestHistory.create({
+            request: request._id,
+            action: `status_changed_to_${request.status}`,
+            performedBy: req.user.id,
+        });
+
+        return res.json({
+            success: true,
+            request,
+        });
+    } catch (err) {
+        logger.error(`UPDATE REQUEST ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * DELETE REQUEST (Admin)
+ */
+export const deleteRequest = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const request = await Request.findById(id);
+
+        if (!request) {
+            return res.status(404).json({
+                success: false,
+                message: "Request not found",
+            });
+        }
+
+        await request.deleteOne();
+
+        return res.json({
+            success: true,
+            message: "Request deleted successfully",
+        });
+    } catch (err) {
+        logger.error(`DELETE REQUEST ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+
+
+
+
+// ##########################################
+// FILE 13 of 92: backend\src\controllers\residentController.js
+// SIZE: 6811 bytes
+// MODIFIED: 2026-02-05 11:32:25
+// ##########################################
+
+import logger from "../utils/logger.js";
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+
+import User from "../models/User.js";
+import Room from "../models/rooms.js";
+import Payment from "../models/Payment.js";
+
+/**
+ * =============================
+ * GET ALL RESIDENTS
+ * =============================
+ */
+export const getAllResidents = async (req, res, next) => {
+    try {
+        const residents = await User.find({ role: "resident" })
+            .populate("roomId", "roomNumber totalBeds occupiedBeds rent")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({ success: true, residents });
     } catch (err) {
         logger.error(`GET RESIDENTS ERROR: ${err.message}`);
         next(err);
     }
 };
 
+/**
+ * =============================
+ * ADD RESIDENT + CREATE RENT
+ * =============================
+ */
 export const addResident = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-        const { name, email, password, roomId } = req.body;
+        const { name, email, password, roomId, rent } = req.body;
 
+        /* ---------- VALIDATION ---------- */
         if (!name || !email || !password) {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Name, email, and password are required"
+                message: "Name, email, and password are required",
+            });
+        }
+
+        /* ---------- AUTH SAFETY ---------- */
+        if (!req.user?.id) {
+            await session.abortTransaction();
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
             });
         }
 
@@ -7785,11 +8200,14 @@ export const addResident = async (req, res, next) => {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Email already exists"
+                message: "Email already exists",
             });
         }
 
         let room = null;
+        let finalRent = 0;
+
+        /* ---------- ROOM LOGIC (OPTIONAL) ---------- */
         if (roomId) {
             room = await Room.findById(roomId).session(session);
 
@@ -7797,7 +8215,7 @@ export const addResident = async (req, res, next) => {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
-                    message: "Invalid room selected"
+                    message: "Invalid room selected",
                 });
             }
 
@@ -7805,13 +8223,32 @@ export const addResident = async (req, res, next) => {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
-                    message: "No beds available in this room"
+                    message: "No beds available in this room",
                 });
             }
+
+            finalRent = room.rent || 0;
         }
 
+        /* ---------- MANUAL RENT (NO ROOM) ---------- */
+        if (!room && rent) {
+            const parsedRent = Number(rent);
+
+            if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid rent amount",
+                });
+            }
+
+            finalRent = parsedRent;
+        }
+
+        /* ---------- HASH PASSWORD ---------- */
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        /* ---------- CREATE RESIDENT ---------- */
         const [resident] = await User.create(
             [
                 {
@@ -7819,26 +8256,46 @@ export const addResident = async (req, res, next) => {
                     email: normalizedEmail,
                     password: hashedPassword,
                     role: "resident",
-                    roomId: room ? room._id : null
-                }
+                    roomId: room ? room._id : null,
+                },
             ],
             { session }
         );
 
+        /* ---------- UPDATE ROOM OCCUPANCY ---------- */
         if (room) {
             room.occupiedBeds += 1;
             await room.save({ session });
         }
 
+        /* ---------- CREATE INITIAL RENT PAYMENT ---------- */
+        if (finalRent > 0) {
+            await Payment.create(
+                [
+                    {
+                        residentId: resident._id,
+                        amount: finalRent,
+                        description: "Monthly Rent",
+                        type: "rent",
+                        status: "unpaid",
+                        month: new Date().toISOString().slice(0, 7),
+                        createdBy: req.user?.id || null, // SAFE
+                    },
+                ],
+                { session }
+            );
+        }
+
         await session.commitTransaction();
 
         logger.info(
-            `Resident added: ${resident.name}, Room: ${room ? room.roomNumber : "None"}`
+            `Resident added: ${resident.name}, Rent: ${finalRent}, Room: ${room ? room.roomNumber : "None"
+            }`
         );
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
-            resident
+            resident,
         });
     } catch (err) {
         await session.abortTransaction();
@@ -7849,6 +8306,11 @@ export const addResident = async (req, res, next) => {
     }
 };
 
+/**
+ * =============================
+ * DELETE RESIDENT
+ * =============================
+ */
 export const deleteResident = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -7857,21 +8319,27 @@ export const deleteResident = async (req, res, next) => {
         const { id } = req.params;
 
         const resident = await User.findById(id).session(session);
+
         if (!resident) {
             await session.abortTransaction();
             return res.status(404).json({
                 success: false,
-                message: "Resident not found"
+                message: "Resident not found",
             });
         }
 
+        /* ---------- REDUCE ROOM OCCUPANCY ---------- */
         if (resident.roomId) {
             const room = await Room.findById(resident.roomId).session(session);
+
             if (room && room.occupiedBeds > 0) {
                 room.occupiedBeds -= 1;
                 await room.save({ session });
             }
         }
+
+        /* ---------- DELETE RESIDENT PAYMENTS ---------- */
+        await Payment.deleteMany({ residentId: resident._id }).session(session);
 
         await resident.deleteOne({ session });
 
@@ -7879,9 +8347,9 @@ export const deleteResident = async (req, res, next) => {
 
         logger.info(`Resident deleted: ${resident.name}`);
 
-        res.json({
+        return res.json({
             success: true,
-            message: "Resident deleted successfully"
+            message: "Resident deleted successfully",
         });
     } catch (err) {
         await session.abortTransaction();
@@ -7897,16 +8365,18 @@ export const deleteResident = async (req, res, next) => {
 
 
 // ##########################################
-// FILE 12 of 89: backend\src\controllers\roomController.js
-// SIZE: 2676 bytes
-// MODIFIED: 2026-02-03 13:01:07
+// FILE 14 of 92: backend\src\controllers\roomController.js
+// SIZE: 3951 bytes
+// MODIFIED: 2026-02-05 10:14:29
 // ##########################################
 
 import Room from "../models/rooms.js";
-import logger from "../utils/logger.js";  // Corrected import
+import logger from "../utils/logger.js";
 import mongoose from "mongoose";
 
-// Add room function
+/**
+ * ADD ROOM
+ */
 export const addRoom = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -7918,7 +8388,7 @@ export const addRoom = async (req, res, next) => {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Room number, rent, and total beds are required"
+                message: "Room number, rent, and total beds are required",
             });
         }
 
@@ -7926,7 +8396,7 @@ export const addRoom = async (req, res, next) => {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Rent must be a positive number"
+                message: "Rent must be a positive number",
             });
         }
 
@@ -7934,7 +8404,7 @@ export const addRoom = async (req, res, next) => {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Total beds must be a positive number"
+                message: "Total beds must be a positive number",
             });
         }
 
@@ -7943,10 +8413,11 @@ export const addRoom = async (req, res, next) => {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Room number already exists"
+                message: "Room number already exists",
             });
         }
 
+        // ✅ create single document (NOT array)
         const room = await Room.create(
             [
                 {
@@ -7954,16 +8425,20 @@ export const addRoom = async (req, res, next) => {
                     rent,
                     totalBeds,
                     occupiedBeds: 0,
-                    note: typeof note === "string" ? note : ""
-                }
+                    note: typeof note === "string" ? note : "",
+                },
             ],
             { session }
         );
 
         await session.commitTransaction();
 
-        logger.info(`Room added: ${room.roomNumber}`);
-        res.status(201).json({ success: true, room });
+        logger.info(`Room added: ${room[0].roomNumber}`);
+
+        return res.status(201).json({
+            success: true,
+            room: room[0],
+        });
     } catch (err) {
         await session.abortTransaction();
         logger.error(`ADD ROOM ERROR: ${err.message}`);
@@ -7973,20 +8448,65 @@ export const addRoom = async (req, res, next) => {
     }
 };
 
-// Other controller functions (getAllRooms, deleteRoom, etc.)
-
+/**
+ * GET ALL ROOMS
+ */
 export const getAllRooms = async (req, res, next) => {
     try {
         const rooms = await Room.find().sort({ createdAt: -1 }).lean();
-        res.json({ success: true, rooms });
+        return res.json({ success: true, rooms });
     } catch (err) {
         logger.error(`GET ROOMS ERROR: ${err.message}`);
         next(err);
     }
 };
 
+/**
+ * DELETE ROOM
+ */
 export const deleteRoom = async (req, res, next) => {
-    // deleteRoom logic
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { id } = req.params;
+
+        const room = await Room.findById(id).session(session);
+
+        if (!room) {
+            await session.abortTransaction();
+            return res.status(404).json({
+                success: false,
+                message: "Room not found",
+            });
+        }
+
+        // ❗ Prevent deleting room with residents
+        if (room.occupiedBeds > 0) {
+            await session.abortTransaction();
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete room with assigned residents",
+            });
+        }
+
+        await room.deleteOne({ session });
+
+        await session.commitTransaction();
+
+        logger.info(`Room deleted: ${room.roomNumber}`);
+
+        return res.json({
+            success: true,
+            message: "Room deleted successfully",
+        });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`DELETE ROOM ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
 };
 
 
@@ -7994,7 +8514,7 @@ export const deleteRoom = async (req, res, next) => {
 
 
 // ##########################################
-// FILE 13 of 89: backend\src\middleware\auth.js
+// FILE 15 of 92: backend\src\middleware\auth.js
 // SIZE: 1226 bytes
 // MODIFIED: 2026-02-03 21:46:07
 // ##########################################
@@ -8054,7 +8574,7 @@ export default authMiddleware;
 
 
 // ##########################################
-// FILE 14 of 89: backend\src\middleware\errorHandler.js
+// FILE 16 of 92: backend\src\middleware\errorHandler.js
 // SIZE: 548 bytes
 // MODIFIED: 2026-02-03 12:03:46
 // ##########################################
@@ -8085,7 +8605,7 @@ export const errorHandler = (err, req, res, next) => {
 
 
 // ##########################################
-// FILE 15 of 89: backend\src\middleware\isAdmin.js
+// FILE 17 of 92: backend\src\middleware\isAdmin.js
 // SIZE: 405 bytes
 // MODIFIED: 2026-02-03 12:04:01
 // ##########################################
@@ -8115,7 +8635,7 @@ export default isAdmin;
 
 
 // ##########################################
-// FILE 16 of 89: backend\src\middleware\validate.js
+// FILE 18 of 92: backend\src\middleware\validate.js
 // SIZE: 369 bytes
 // MODIFIED: 2026-02-03 12:04:20
 // ##########################################
@@ -8142,7 +8662,7 @@ export default (schema) => (req, res, next) => {
 
 
 // ##########################################
-// FILE 17 of 89: backend\src\models\ActivityLog.js
+// FILE 19 of 92: backend\src\models\ActivityLog.js
 // SIZE: 715 bytes
 // MODIFIED: 2026-02-03 12:04:39
 // ##########################################
@@ -8186,7 +8706,7 @@ export default mongoose.model("ActivityLog", ActivityLogSchema);
 
 
 // ##########################################
-// FILE 18 of 89: backend\src\models\Payment.js
+// FILE 20 of 92: backend\src\models\Payment.js
 // SIZE: 1343 bytes
 // MODIFIED: 2026-02-03 12:05:01
 // ##########################################
@@ -8255,7 +8775,7 @@ export default mongoose.model("Payment", paymentSchema);
 
 
 // ##########################################
-// FILE 19 of 89: backend\src\models\Request.js
+// FILE 21 of 92: backend\src\models\Request.js
 // SIZE: 1940 bytes
 // MODIFIED: 2026-02-03 12:05:20
 // ##########################################
@@ -8340,7 +8860,7 @@ export default mongoose.model("Request", requestSchema);
 
 
 // ##########################################
-// FILE 20 of 89: backend\src\models\RequestHistory.js
+// FILE 22 of 92: backend\src\models\RequestHistory.js
 // SIZE: 1597 bytes
 // MODIFIED: 2026-02-03 12:05:36
 // ##########################################
@@ -8414,7 +8934,7 @@ export default mongoose.model("RequestHistory", requestHistorySchema);
 
 
 // ##########################################
-// FILE 21 of 89: backend\src\models\resident.js
+// FILE 23 of 92: backend\src\models\resident.js
 // SIZE: 2113 bytes
 // MODIFIED: 2026-02-03 12:06:00
 // ##########################################
@@ -8512,7 +9032,7 @@ export default router;
 
 
 // ##########################################
-// FILE 22 of 89: backend\src\models\rooms.js
+// FILE 24 of 92: backend\src\models\rooms.js
 // SIZE: 1337 bytes
 // MODIFIED: 2026-02-03 21:43:48
 // ##########################################
@@ -8577,7 +9097,7 @@ export default mongoose.model("Room", roomSchema);
 
 
 // ##########################################
-// FILE 23 of 89: backend\src\models\User.js
+// FILE 25 of 92: backend\src\models\User.js
 // SIZE: 1570 bytes
 // MODIFIED: 2026-02-04 12:29:03
 // ##########################################
@@ -8648,7 +9168,7 @@ export default mongoose.model("User", userSchema);
 
 
 // ##########################################
-// FILE 24 of 89: backend\src\routes\adminRoutes.js
+// FILE 26 of 92: backend\src\routes\adminRoutes.js
 // SIZE: 2067 bytes
 // MODIFIED: 2026-02-03 12:07:11
 // ##########################################
@@ -8738,7 +9258,7 @@ export default router;
 
 
 // ##########################################
-// FILE 25 of 89: backend\src\routes\analytics.js
+// FILE 27 of 92: backend\src\routes\analytics.js
 // SIZE: 2770 bytes
 // MODIFIED: 2026-02-03 21:47:17
 // ##########################################
@@ -8842,7 +9362,7 @@ export default router;
 
 
 // ##########################################
-// FILE 26 of 89: backend\src\routes\auth.js
+// FILE 28 of 92: backend\src\routes\auth.js
 // SIZE: 1666 bytes
 // MODIFIED: 2026-02-04 12:28:47
 // ##########################################
@@ -8912,9 +9432,9 @@ export default router;
 
 
 // ##########################################
-// FILE 27 of 89: backend\src\routes\index.js
-// SIZE: 896 bytes
-// MODIFIED: 2026-02-03 12:08:28
+// FILE 29 of 92: backend\src\routes\index.js
+// SIZE: 1008 bytes
+// MODIFIED: 2026-02-05 10:20:14
 // ##########################################
 
 import { Router } from "express";
@@ -8925,6 +9445,7 @@ import roomRoutes from "./rooms.js";
 import paymentRoutes from "./payments.js";
 import residentRoutes from "./resident.js";
 import analyticsRoutes from "./analytics.js";
+import requestRoutes from "./requests.js"; // ✅ NEW
 
 const router = Router();
 
@@ -8934,11 +9455,12 @@ router.use("/rooms", roomRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/resident", residentRoutes);
 router.use("/analytics", analyticsRoutes);
+router.use("/requests", requestRoutes); // ✅ NEW
 
 router.get("/", (req, res) => {
     res.json({
         success: true,
-        message: "TAGT API is running"
+        message: "TAGT API is running",
     });
 });
 
@@ -8946,7 +9468,7 @@ router.get("/health", (req, res) => {
     res.status(200).json({
         status: "OK",
         uptime: process.uptime(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
 });
 
@@ -8957,9 +9479,9 @@ export default router;
 
 
 // ##########################################
-// FILE 28 of 89: backend\src\routes\payments.js
-// SIZE: 3931 bytes
-// MODIFIED: 2026-02-03 12:09:00
+// FILE 30 of 92: backend\src\routes\payments.js
+// SIZE: 4564 bytes
+// MODIFIED: 2026-02-05 10:26:44
 // ##########################################
 
 import { Router } from "express";
@@ -8981,30 +9503,35 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
         const amount = Number(req.body.amount);
 
         if (!mongoose.Types.ObjectId.isValid(residentId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid resident"
-            });
+            return res.status(400).json({ success: false, message: "Invalid resident" });
         }
 
         if (!Number.isFinite(amount) || amount <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid amount"
-            });
+            return res.status(400).json({ success: false, message: "Invalid amount" });
         }
 
         const resident = await User.findOne({
             _id: residentId,
             role: "resident",
-            isActive: true
+            isActive: true,
         }).lean();
 
         if (!resident) {
             return res.status(400).json({
                 success: false,
-                message: "Resident not found or inactive"
+                message: "Resident not found or inactive",
             });
+        }
+
+        // ❗ Prevent duplicate monthly bill
+        if (month) {
+            const exists = await Payment.findOne({ residentId, month });
+            if (exists) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Bill already exists for this month",
+                });
+            }
         }
 
         const payment = await Payment.create({
@@ -9015,7 +9542,7 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
             month: month || null,
             adminNote: adminNote || "",
             status: "unpaid",
-            createdBy: req.user.id
+            createdBy: req.user.id,
         });
 
         res.status(201).json({ success: true, payment });
@@ -9045,15 +9572,7 @@ router.get("/", auth, isAdmin, async (req, res, next) => {
 ========================= */
 router.get("/my", auth, async (req, res, next) => {
     try {
-        res.set({
-            "Cache-Control": "no-store, no-cache, must-revalidate, private",
-            Pragma: "no-cache",
-            Expires: "0"
-        });
-
-        const payments = await Payment.find({
-            residentId: req.user.id
-        })
+        const payments = await Payment.find({ residentId: req.user.id })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -9071,35 +9590,49 @@ router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid payment ID"
-            });
+            return res.status(400).json({ success: false, message: "Invalid payment ID" });
         }
 
         const payment = await Payment.findById(id);
+
         if (!payment) {
-            return res.status(404).json({
-                success: false,
-                message: "Payment not found"
-            });
+            return res.status(404).json({ success: false, message: "Payment not found" });
         }
 
         if (payment.status === "paid") {
-            return res.json({
-                success: true,
-                message: "Payment already marked as paid"
-            });
+            return res.json({ success: true, message: "Payment already marked as paid" });
         }
 
         payment.status = "paid";
         payment.paidAt = new Date();
         await payment.save();
 
-        res.json({
-            success: true,
-            message: "Payment marked as paid"
-        });
+        res.json({ success: true, message: "Payment marked as paid" });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/* =========================
+   ADMIN → DELETE PAYMENT
+========================= */
+router.delete("/:id", auth, isAdmin, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid payment ID" });
+        }
+
+        const payment = await Payment.findById(id);
+
+        if (!payment) {
+            return res.status(404).json({ success: false, message: "Payment not found" });
+        }
+
+        await payment.deleteOne();
+
+        res.json({ success: true, message: "Payment deleted successfully" });
     } catch (err) {
         next(err);
     }
@@ -9112,7 +9645,82 @@ export default router;
 
 
 // ##########################################
-// FILE 29 of 89: backend\src\routes\resident.js
+// FILE 31 of 92: backend\src\routes\requests.js
+// SIZE: 1382 bytes
+// MODIFIED: 2026-02-05 10:19:53
+// ##########################################
+
+import { Router } from "express";
+import mongoose from "mongoose";
+
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+
+import {
+    createRequest,
+    getAllRequests,
+    getMyRequests,
+    updateRequestStatus,
+    deleteRequest,
+} from "../controllers/requestController.js";
+
+const router = Router();
+
+/**
+ * Resident creates request
+ */
+router.post("/", auth, createRequest);
+
+/**
+ * Resident views own requests
+ */
+router.get("/me", auth, getMyRequests);
+
+/**
+ * Admin views all requests
+ */
+router.get("/", auth, isAdmin, getAllRequests);
+
+/**
+ * Admin updates request status
+ */
+router.put("/:id/status", auth, isAdmin, (req, res, next) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid request ID",
+        });
+    }
+
+    return updateRequestStatus(req, res, next);
+});
+
+/**
+ * Admin deletes request
+ */
+router.delete("/:id", auth, isAdmin, (req, res, next) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid request ID",
+        });
+    }
+
+    return deleteRequest(req, res, next);
+});
+
+export default router;
+
+
+
+
+
+// ##########################################
+// FILE 32 of 92: backend\src\routes\resident.js
 // SIZE: 777 bytes
 // MODIFIED: 2026-02-03 12:09:23
 // ##########################################
@@ -9155,43 +9763,46 @@ export default router;
 
 
 // ##########################################
-// FILE 30 of 89: backend\src\routes\rooms.js
-// SIZE: 1050 bytes
-// MODIFIED: 2026-02-03 13:01:53
+// FILE 33 of 92: backend\src\routes\rooms.js
+// SIZE: 867 bytes
+// MODIFIED: 2026-02-05 10:15:25
 // ##########################################
 
 import { Router } from "express";
 import mongoose from "mongoose";
+
 import auth from "../middleware/auth.js";
 import isAdmin from "../middleware/isAdmin.js";
 import { getAllRooms, addRoom, deleteRoom } from "../controllers/roomController.js";
 
 const router = Router();
 
-// Get all rooms
+/**
+ * GET ALL ROOMS
+ */
 router.get("/", auth, isAdmin, getAllRooms);
 
-// Add new room
+/**
+ * ADD ROOM
+ */
 router.post("/", auth, isAdmin, addRoom);
 
-// Delete room by ID
-router.delete("/:id", auth, isAdmin, async (req, res, next) => {
+/**
+ * DELETE ROOM
+ */
+router.delete("/:id", auth, isAdmin, (req, res, next) => {
     const { id } = req.params;
 
-    // Validate if the ID is a valid ObjectId
+    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
             success: false,
-            message: "Invalid room ID"
+            message: "Invalid room ID",
         });
     }
 
-    try {
-        // Call the controller function to delete the room
-        await deleteRoom(req, res, next);  // Pass the request, response, and next function
-    } catch (error) {
-        next(error); // Pass the error to the error handler middleware
-    }
+    // Direct controller call (clean pattern)
+    return deleteRoom(req, res, next);
 });
 
 export default router;
@@ -9201,9 +9812,9 @@ export default router;
 
 
 // ##########################################
-// FILE 31 of 89: backend\src\server.js
-// SIZE: 924 bytes
-// MODIFIED: 2026-02-03 22:03:04
+// FILE 34 of 92: backend\src\server.js
+// SIZE: 1267 bytes
+// MODIFIED: 2026-02-05 10:07:05
 // ##########################################
 
 import dotenv from "dotenv";
@@ -9218,7 +9829,9 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
     try {
+        // Connect Database first
         await connectDB();
+        console.log("✅ Database connected");
 
         const server = http.createServer(app);
 
@@ -9226,13 +9839,20 @@ async function startServer() {
             console.log(`🚀 Server running on port ${PORT}`);
         });
 
+        // Handle unhandled promise rejections
         process.on("unhandledRejection", (err) => {
-            console.error("UNHANDLED REJECTION:", err);
+            console.error("❌ UNHANDLED REJECTION:", err);
             server.close(() => process.exit(1));
         });
 
+        // Graceful shutdown
         process.on("SIGTERM", () => {
-            console.log("SIGTERM received. Shutting down gracefully.");
+            console.log("⚠️ SIGTERM received. Shutting down gracefully.");
+            server.close(() => process.exit(0));
+        });
+
+        process.on("SIGINT", () => {
+            console.log("⚠️ SIGINT received. Shutting down.");
             server.close(() => process.exit(0));
         });
     } catch (err) {
@@ -9248,7 +9868,7 @@ startServer();
 
 
 // ##########################################
-// FILE 32 of 89: backend\src\swagger.js
+// FILE 35 of 92: backend\src\swagger.js
 // SIZE: 943 bytes
 // MODIFIED: 2026-02-03 12:11:50
 // ##########################################
@@ -9299,7 +9919,7 @@ export { swaggerUi, swaggerSpec };
 
 
 // ##########################################
-// FILE 33 of 89: backend\src\utils\emailService.js
+// FILE 36 of 92: backend\src\utils\emailService.js
 // SIZE: 2953 bytes
 // MODIFIED: 2026-02-03 12:10:24
 // ##########################################
@@ -9405,7 +10025,7 @@ export {
 
 
 // ##########################################
-// FILE 34 of 89: backend\src\utils\generateToken.js
+// FILE 37 of 92: backend\src\utils\generateToken.js
 // SIZE: 513 bytes
 // MODIFIED: 2026-02-04 12:30:54
 // ##########################################
@@ -9440,7 +10060,7 @@ export default generateToken;
 
 
 // ##########################################
-// FILE 35 of 89: backend\src\utils\logger.js
+// FILE 38 of 92: backend\src\utils\logger.js
 // SIZE: 300 bytes
 // MODIFIED: 2026-02-03 13:04:05
 // ##########################################
@@ -9462,7 +10082,7 @@ export default logger; // Default export
 
 
 // ##########################################
-// FILE 36 of 89: bundle_code.py
+// FILE 39 of 92: bundle_code.py
 // SIZE: 2462 bytes
 // MODIFIED: 2026-02-04 23:15:07
 // ##########################################
@@ -9532,7 +10152,7 @@ if __name__ == "__main__":
 
 
 // ##########################################
-// FILE 37 of 89: frontend\package.json
+// FILE 40 of 92: frontend\package.json
 // SIZE: 1116 bytes
 // MODIFIED: 2026-02-02 21:54:30
 // ##########################################
@@ -9592,7 +10212,7 @@ if __name__ == "__main__":
 
 
 // ##########################################
-// FILE 38 of 89: frontend\package-lock.json
+// FILE 41 of 92: frontend\package-lock.json
 // SIZE: 677229 bytes
 // MODIFIED: 2026-02-03 12:47:57
 // ##########################################
@@ -27524,7 +28144,7 @@ if __name__ == "__main__":
 
 
 // ##########################################
-// FILE 39 of 89: frontend\postcss.config.js
+// FILE 42 of 92: frontend\postcss.config.js
 // SIZE: 99 bytes
 // MODIFIED: 2026-01-27 00:41:10
 // ##########################################
@@ -27541,7 +28161,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 40 of 89: frontend\public\index.html
+// FILE 43 of 92: frontend\public\index.html
 // SIZE: 1445 bytes
 // MODIFIED: 2026-02-02 17:38:54
 // ##########################################
@@ -27583,7 +28203,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 41 of 89: frontend\public\manifest.json
+// FILE 44 of 92: frontend\public\manifest.json
 // SIZE: 492 bytes
 // MODIFIED: 2026-01-27 16:34:59
 // ##########################################
@@ -27619,7 +28239,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 42 of 89: frontend\public\robots.txt
+// FILE 45 of 92: frontend\public\robots.txt
 // SIZE: 67 bytes
 // MODIFIED: 2026-01-22 18:14:44
 // ##########################################
@@ -27633,7 +28253,7 @@ Disallow:
 
 
 // ##########################################
-// FILE 43 of 89: frontend\README.md
+// FILE 46 of 92: frontend\README.md
 // SIZE: 3359 bytes
 // MODIFIED: 2026-01-22 18:14:42
 // ##########################################
@@ -27714,7 +28334,7 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 
 // ##########################################
-// FILE 44 of 89: frontend\src\animations\pageTransition.js
+// FILE 47 of 92: frontend\src\animations\pageTransition.js
 // SIZE: 528 bytes
 // MODIFIED: 2026-02-03 12:14:23
 // ##########################################
@@ -27750,7 +28370,7 @@ export const pageVariants = {
 
 
 // ##########################################
-// FILE 45 of 89: frontend\src\api\axios.js
+// FILE 48 of 92: frontend\src\api\axios.js
 // SIZE: 1408 bytes
 // MODIFIED: 2026-02-04 23:01:35
 // ##########################################
@@ -27814,7 +28434,7 @@ export default api;
 
 
 // ##########################################
-// FILE 46 of 89: frontend\src\App.css
+// FILE 49 of 92: frontend\src\App.css
 // SIZE: 853 bytes
 // MODIFIED: 2026-02-03 12:40:39
 // ##########################################
@@ -27878,7 +28498,7 @@ export default api;
 
 
 // ##########################################
-// FILE 47 of 89: frontend\src\App.js
+// FILE 50 of 92: frontend\src\App.js
 // SIZE: 2584 bytes
 // MODIFIED: 2026-02-04 22:11:05
 // ##########################################
@@ -27957,7 +28577,7 @@ export default function App() {
 
 
 // ##########################################
-// FILE 48 of 89: frontend\src\components\AppLayout.jsx
+// FILE 51 of 92: frontend\src\components\AppLayout.jsx
 // SIZE: 310 bytes
 // MODIFIED: 2026-02-04 13:08:07
 // ##########################################
@@ -27977,7 +28597,7 @@ export default function AppLayout({ children }) {
 
 
 // ##########################################
-// FILE 49 of 89: frontend\src\components\Button.jsx
+// FILE 52 of 92: frontend\src\components\Button.jsx
 // SIZE: 1199 bytes
 // MODIFIED: 2026-02-03 12:15:37
 // ##########################################
@@ -28027,7 +28647,7 @@ export default function Button({
 
 
 // ##########################################
-// FILE 50 of 89: frontend\src\components\Card.jsx
+// FILE 53 of 92: frontend\src\components\Card.jsx
 // SIZE: 769 bytes
 // MODIFIED: 2026-02-03 12:15:57
 // ##########################################
@@ -28065,7 +28685,7 @@ export default function Card({ children, className = "", variant = "glass" }) {
 
 
 // ##########################################
-// FILE 51 of 89: frontend\src\components\ChurnRiskTable.jsx
+// FILE 54 of 92: frontend\src\components\ChurnRiskTable.jsx
 // SIZE: 7040 bytes
 // MODIFIED: 2026-02-03 12:16:40
 // ##########################################
@@ -28238,7 +28858,7 @@ export default function ChurnRiskTable() {
 
 
 // ##########################################
-// FILE 52 of 89: frontend\src\components\KpiCards.jsx
+// FILE 55 of 92: frontend\src\components\KpiCards.jsx
 // SIZE: 2927 bytes
 // MODIFIED: 2026-02-03 12:43:04
 // ##########################################
@@ -28342,7 +28962,7 @@ export default function KpiCards() {
 
 
 // ##########################################
-// FILE 53 of 89: frontend\src\components\Loader.jsx
+// FILE 56 of 92: frontend\src\components\Loader.jsx
 // SIZE: 566 bytes
 // MODIFIED: 2026-02-03 12:17:36
 // ##########################################
@@ -28364,7 +28984,7 @@ export default function Loader({ label = "Loading…" }) {
 
 
 // ##########################################
-// FILE 54 of 89: frontend\src\components\MaintenanceCostForecast.jsx
+// FILE 57 of 92: frontend\src\components\MaintenanceCostForecast.jsx
 // SIZE: 6425 bytes
 // MODIFIED: 2026-02-03 12:19:06
 // ##########################################
@@ -28542,7 +29162,7 @@ export default function MaintenanceCostForecast() {
 
 
 // ##########################################
-// FILE 55 of 89: frontend\src\components\Navbar.jsx
+// FILE 58 of 92: frontend\src\components\Navbar.jsx
 // SIZE: 2789 bytes
 // MODIFIED: 2026-02-04 22:14:40
 // ##########################################
@@ -28640,7 +29260,7 @@ export default function Navbar({ onMenuClick }) {
 
 
 // ##########################################
-// FILE 56 of 89: frontend\src\components\OccupancyForecast.jsx
+// FILE 59 of 92: frontend\src\components\OccupancyForecast.jsx
 // SIZE: 5329 bytes
 // MODIFIED: 2026-02-03 12:20:08
 // ##########################################
@@ -28790,7 +29410,7 @@ export default function OccupancyForecast() {
 
 
 // ##########################################
-// FILE 57 of 89: frontend\src\components\RequestsChart.jsx
+// FILE 60 of 92: frontend\src\components\RequestsChart.jsx
 // SIZE: 2929 bytes
 // MODIFIED: 2026-02-03 12:20:37
 // ##########################################
@@ -28875,7 +29495,7 @@ export default function RequestsChart({ data = [] }) {
 
 
 // ##########################################
-// FILE 58 of 89: frontend\src\components\RequestTable.jsx
+// FILE 61 of 92: frontend\src\components\RequestTable.jsx
 // SIZE: 4011 bytes
 // MODIFIED: 2026-02-03 12:21:11
 // ##########################################
@@ -28980,7 +29600,7 @@ export default function RequestTable({ requests = [], refresh }) {
 
 
 // ##########################################
-// FILE 59 of 89: frontend\src\components\RevenueOptimization.jsx
+// FILE 62 of 92: frontend\src\components\RevenueOptimization.jsx
 // SIZE: 4467 bytes
 // MODIFIED: 2026-02-03 12:21:47
 // ##########################################
@@ -29111,7 +29731,7 @@ export default function RevenueOptimization() {
 
 
 // ##########################################
-// FILE 60 of 89: frontend\src\components\Sidebar.jsx
+// FILE 63 of 92: frontend\src\components\Sidebar.jsx
 // SIZE: 4749 bytes
 // MODIFIED: 2026-02-04 21:52:33
 // ##########################################
@@ -29253,9 +29873,9 @@ export default function Sidebar({ onNavigate }) {
 
 
 // ##########################################
-// FILE 61 of 89: frontend\src\components\SidebarContent.jsx
-// SIZE: 2238 bytes
-// MODIFIED: 2026-02-04 22:13:53
+// FILE 64 of 92: frontend\src\components\SidebarContent.jsx
+// SIZE: 2391 bytes
+// MODIFIED: 2026-02-05 11:04:31
 // ##########################################
 
 import { NavLink } from "react-router-dom";
@@ -29263,17 +29883,14 @@ import { NavLink } from "react-router-dom";
 export default function SidebarContent({ role, linkClass }) {
     return (
         <nav className="px-4 py-6 space-y-6">
+            {/* DASHBOARD */}
             <div>
                 <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
                     Dashboard
                 </p>
 
                 <NavLink
-                    to={
-                        role === "admin"
-                            ? "/admin/dashboard"
-                            : "/resident/dashboard"
-                    }
+                    to={role === "admin" ? "/admin/dashboard" : "/resident/dashboard"}
                     end
                     className={linkClass}
                 >
@@ -29281,6 +29898,7 @@ export default function SidebarContent({ role, linkClass }) {
                 </NavLink>
             </div>
 
+            {/* ADMIN MENU */}
             {role === "admin" && (
                 <div>
                     <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
@@ -29290,36 +29908,36 @@ export default function SidebarContent({ role, linkClass }) {
                     {[
                         { to: "/admin/requests", label: "Requests" },
                         { to: "/admin/residents", label: "Residents" },
+                        { to: "/admin/rooms", label: "Rooms" },
+                        { to: "/admin/payments", label: "Payments" },
                     ].map((item) => (
-                        <NavLink
-                            key={item.to}
-                            to={item.to}
-                            className={linkClass}
-                        >
+                        <NavLink key={item.to} to={item.to} className={linkClass}>
                             {item.label}
                         </NavLink>
                     ))}
+
+                    <p className="px-4 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase">
+                        Analytics
+                    </p>
+
+                    <NavLink to="/admin/dashboard" className={linkClass}>
+                        AI Insights
+                    </NavLink>
                 </div>
             )}
 
+            {/* RESIDENT MENU */}
             {role === "resident" && (
                 <div>
                     <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase">
                         My Space
                     </p>
 
-                    <NavLink
-                        to="/resident/dashboard"
-                        end
-                        className={linkClass}
-                    >
+                    <NavLink to="/resident/dashboard" end className={linkClass}>
                         My Requests
                     </NavLink>
 
-                    <NavLink
-                        to="/resident/payments"
-                        className={linkClass}
-                    >
+                    <NavLink to="/resident/payments" className={linkClass}>
                         My Payments
                     </NavLink>
                 </div>
@@ -29333,7 +29951,7 @@ export default function SidebarContent({ role, linkClass }) {
 
 
 // ##########################################
-// FILE 62 of 89: frontend\src\components\StatCard.jsx
+// FILE 65 of 92: frontend\src\components\StatCard.jsx
 // SIZE: 2132 bytes
 // MODIFIED: 2026-02-03 12:22:49
 // ##########################################
@@ -29410,7 +30028,7 @@ export default function StatCard({
 
 
 // ##########################################
-// FILE 63 of 89: frontend\src\components\StatusModal.jsx
+// FILE 66 of 92: frontend\src\components\StatusModal.jsx
 // SIZE: 3489 bytes
 // MODIFIED: 2026-02-03 12:23:47
 // ##########################################
@@ -29519,7 +30137,7 @@ export default function StatusModal({ request, onClose, onSave }) {
 
 
 // ##########################################
-// FILE 64 of 89: frontend\src\components\ToastProvider.jsx
+// FILE 67 of 92: frontend\src\components\ToastProvider.jsx
 // SIZE: 1174 bytes
 // MODIFIED: 2026-02-03 12:24:19
 // ##########################################
@@ -29567,16 +30185,16 @@ export default function ToastProvider() {
 
 
 // ##########################################
-// FILE 65 of 89: frontend\src\context\AuthContext.jsx
-// SIZE: 2608 bytes
-// MODIFIED: 2026-02-04 23:02:20
+// FILE 68 of 92: frontend\src\context\AuthContext.jsx
+// SIZE: 2894 bytes
+// MODIFIED: 2026-02-05 10:11:13
 // ##########################################
 
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
-// Decode JWT safely (base64url compatible)
+// Decode JWT safely
 function decodeToken(token) {
     try {
         const payloadBase64 = token.split(".")[1];
@@ -29604,7 +30222,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Restore auth state on app load
+    // Restore auth on app start
     useEffect(() => {
         const token = localStorage.getItem("token");
 
@@ -29620,14 +30238,20 @@ export function AuthProvider({ children }) {
             localStorage.removeItem("user");
             setUser(null);
         } else {
-            setUser(decoded);
-            localStorage.setItem("user", JSON.stringify(decoded));
+            // ✅ Ensure role exists
+            const safeUser = {
+                ...decoded,
+                role: decoded.role || "resident",
+            };
+
+            setUser(safeUser);
+            localStorage.setItem("user", JSON.stringify(safeUser));
         }
 
         setLoading(false);
     }, []);
 
-    // Login: store token + user
+    // Login handler
     const login = (token) => {
         const decoded = decodeToken(token);
 
@@ -29638,17 +30262,26 @@ export function AuthProvider({ children }) {
             return false;
         }
 
+        const safeUser = {
+            ...decoded,
+            role: decoded.role || "resident",
+        };
+
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(decoded));
-        setUser(decoded);
+        localStorage.setItem("user", JSON.stringify(safeUser));
+        setUser(safeUser);
+
         return true;
     };
 
-    // Logout: clear auth state
+    // Logout handler
     const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         setUser(null);
+
+        // ✅ force redirect to login page
+        window.location.href = "/login";
     };
 
     const value = {
@@ -29660,11 +30293,7 @@ export function AuthProvider({ children }) {
         logout,
     };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
@@ -29680,1273 +30309,9 @@ export function useAuth() {
 
 
 // ##########################################
-// FILE 66 of 89: frontend\src\hooks\useAdminStats.js
+// FILE 69 of 92: frontend\src\hooks\useAdminStats.js
 // SIZE: 1502 bytes
 // MODIFIED: 2026-02-03 12:25:21
-// ##########################################
-
-import { useEffect, useState } from "react";
-import { getAdminStats } from "../services/adminService";
-import toast from "react-hot-toast";
-
-/**
- * Admin Dashboard Stats Hook
- * - Returns full stats shape even if backend fails
- * - Ensures fallback data is safe (no undefined values)
- */
-
-export default function useAdminStats() {
-    const [stats, setStats] = useState({
-        totalResidents: 0,
-        pendingRequests: 0,
-        unpaidPayments: 0,
-        totalRevenue: 0,
-        outstandingBalance: 0
-    });
-
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const data = await getAdminStats();
-
-                setStats({
-                    totalResidents: data?.totalResidents ?? 0,
-                    pendingRequests: data?.pendingRequests ?? 0,
-                    unpaidPayments: data?.unpaidPayments ?? 0,
-                    totalRevenue: data?.totalRevenue ?? 0,
-                    outstandingBalance: data?.outstandingBalance ?? 0
-                });
-            } catch (err) {
-                console.error(err);
-                toast.error("Failed to load dashboard stats");
-
-                // Preserve previous data if fetching fails
-                setStats((prev) => prev);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchStats();
-    }, []);
-
-    return { stats, loading };
-}
-
-
-
-
-
-// ##########################################
-// FILE 67 of 89: frontend\src\index.css
-// SIZE: 2067 bytes
-// MODIFIED: 2026-02-03 12:41:41
-// ##########################################
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* ===============================
-   GLOBAL STYLES (MOBILE SAFE)
-================================ */
-
-html,
-body {
-    width: 100%;
-    min-height: 100dvh; /* ✅ Mobile-safe viewport height */
-    overflow-x: hidden; /* ✅ Prevent sideways scroll */
-}
-
-body {
-    margin: 0;
-    /* Animated gradient background */
-    background: linear-gradient( 270deg, #020617, #020617, #0f172a, #1e293b, #020617 );
-    background-size: 600% 600%;
-    animation: gradientFlow 25s ease infinite;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    color: #e5e7eb; /* Default text color for light mode */
-    padding: 0; /* Ensure no unwanted padding */
-}
-
-/* Smooth animated movement */
-@keyframes gradientFlow {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
-/* ===============================
-   MOBILE PERFORMANCE OPTIMIZATION
-================================ */
-
-/* Reduce animation intensity on small screens */
-@media (max-width: 768px) {
-    body {
-        animation-duration: 45s; /* ✅ smoother, less battery drain */
-    }
-}
-
-/* ===============================
-   DARK MODE SUPPORT (optional)
-================================ */
-
-@media (prefers-color-scheme: dark) {
-    body {
-        background: linear-gradient( 270deg, #0f172a, #020617, #1e293b, #020617, #0f172a );
-        color: #d1d5db; /* Lighter text for dark mode */
-    }
-}
-
-/* ===============================
-   CODE BLOCKS
-================================ */
-
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-    color: #f9fafb; /* Light text color for code */
-    background-color: #1f2937; /* Dark background for code */
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-}
-
-
-
-
-
-// ##########################################
-// FILE 68 of 89: frontend\src\index.js
-// SIZE: 640 bytes
-// MODIFIED: 2026-02-04 22:10:33
-// ##########################################
-
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
-import { AuthProvider } from "./context/AuthContext";
-import "./index.css";
-
-const root = document.getElementById("root");
-
-if (!root) {
-    throw new Error(
-        "Root element not found. Make sure there's a <div id='root'></div> in your HTML."
-    );
-}
-
-ReactDOM.createRoot(root).render(
-    <React.StrictMode>
-        <BrowserRouter>
-            <AuthProvider>
-                <App />
-            </AuthProvider>
-        </BrowserRouter>
-    </React.StrictMode>
-);
-
-
-
-
-
-// ##########################################
-// FILE 69 of 89: frontend\src\layouts\DashboardLayout.jsx
-// SIZE: 3588 bytes
-// MODIFIED: 2026-02-04 22:13:18
-// ##########################################
-
-import { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "../components/Navbar";
-import SidebarContent from "../components/SidebarContent";
-import { useAuth } from "../context/AuthContext";
-
-export default function DashboardLayout() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { user } = useAuth();
-    const location = useLocation();
-
-    const role = user?.role ?? null;
-
-    const baseLink =
-        "flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all";
-    const active =
-        "bg-blue-500/90 text-white shadow-lg shadow-blue-500/20";
-    const idle =
-        "text-gray-300 hover:bg-white/10";
-
-    // Close mobile sidebar on route change
-    useEffect(() => {
-        setSidebarOpen(false);
-    }, [location.pathname]);
-
-    return (
-        <div className="min-h-screen bg-black text-gray-100">
-            {/* Navbar */}
-            <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-            <div className="flex min-h-[calc(100vh-64px)]">
-                {/* Desktop Sidebar */}
-                <aside className="hidden lg:block w-64 border-r border-white/10 bg-white/5 backdrop-blur-xl">
-                    <SidebarContent
-                        role={role}
-                        linkClass={({ isActive }) =>
-                            `${baseLink} ${isActive ? active : idle}`
-                        }
-                    />
-                </aside>
-
-                {/* Mobile Sidebar */}
-                <AnimatePresence>
-                    {sidebarOpen && (
-                        <>
-                            <motion.div
-                                className="fixed inset-0 bg-black/60 z-40"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setSidebarOpen(false)}
-                            />
-
-                            <motion.aside
-                                className="fixed left-0 top-0 bottom-0 w-64 z-50
-                           bg-black/90 backdrop-blur-xl
-                           border-r border-white/10"
-                                initial={{ x: -300 }}
-                                animate={{ x: 0 }}
-                                exit={{ x: -300 }}
-                                transition={{ type: "spring", stiffness: 120, damping: 20 }}
-                            >
-                                <SidebarContent
-                                    role={role}
-                                    onNavigate={() => setSidebarOpen(false)}
-                                    linkClass={({ isActive }) =>
-                                        `${baseLink} ${isActive ? active : idle}`
-                                    }
-                                />
-                            </motion.aside>
-                        </>
-                    )}
-                </AnimatePresence>
-
-                {/* MAIN CONTENT */}
-                <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-                    <div className="rounded-2xl bg-white/10 backdrop-blur-xl
-                          border border-white/10 p-6 shadow-xl min-h-full">
-                        <Outlet />
-                    </div>
-                </main>
-            </div>
-        </div>
-    );
-}
-
-
-
-
-
-// ##########################################
-// FILE 70 of 89: frontend\src\pages\AdminDashboard.jsx
-// SIZE: 6270 bytes
-// MODIFIED: 2026-02-04 22:15:29
-// ##########################################
-
-import { motion } from "framer-motion";
-import { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
-import toast from "react-hot-toast";
-
-import StatCard from "../components/StatCard";
-import Loader from "../components/Loader";
-import RequestsChart from "../components/RequestsChart";
-import KpiCards from "../components/KpiCards";
-import OccupancyForecast from "../components/OccupancyForecast";
-import MaintenanceCostForecast from "../components/MaintenanceCostForecast";
-import ChurnRiskTable from "../components/ChurnRiskTable";
-
-import useAdminStats from "../hooks/useAdminStats";
-import { getRequests } from "../services/adminService";
-import api from "../api/axios";
-
-export default function AdminDashboard() {
-    const { stats = {}, loading: statsLoading } = useAdminStats();
-
-    const [allRequests, setAllRequests] = useState([]);
-    const [activeRequests, setActiveRequests] = useState([]);
-    const [reqLoading, setReqLoading] = useState(true);
-
-    const [payments, setPayments] = useState([]);
-    const [revenueLoading, setRevenueLoading] = useState(true);
-
-    /* ================= FETCH REQUESTS ================= */
-    const fetchRequests = useCallback(async () => {
-        try {
-            setReqLoading(true);
-            const data = await getRequests();
-            const safeData = Array.isArray(data) ? data : [];
-
-            setAllRequests(safeData);
-
-            const active = safeData.filter(
-                (r) => r.status !== "resolved" && r.workflowStatus !== "Done"
-            );
-
-            setActiveRequests(active.slice(0, 5));
-        } catch (err) {
-            toast.error("Failed to load requests");
-            setAllRequests([]);
-            setActiveRequests([]);
-        } finally {
-            setReqLoading(false);
-        }
-    }, []);
-
-    /* ================= FETCH PAYMENTS ================= */
-    const fetchPayments = useCallback(async () => {
-        try {
-            setRevenueLoading(true);
-            const res = await api.get("/payments");
-            setPayments(Array.isArray(res.data) ? res.data : []);
-        } catch (err) {
-            toast.error("Failed to load revenue data");
-            setPayments([]);
-        } finally {
-            setRevenueLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchRequests();
-        fetchPayments();
-    }, [fetchRequests, fetchPayments]);
-
-    /* ================= METRICS ================= */
-    const chartData = [
-        { status: "Pending", count: allRequests.filter(r => r.status === "pending").length },
-        { status: "In Progress", count: allRequests.filter(r => r.status === "in-progress").length },
-        { status: "Resolved", count: allRequests.filter(r => r.status === "resolved").length },
-    ];
-
-    const totalRevenue = payments
-        .filter(p => p.status === "paid")
-        .reduce((sum, p) => sum + p.amount, 0);
-
-    const outstandingBalance = payments
-        .filter(p => p.status === "unpaid")
-        .reduce((sum, p) => sum + p.amount, 0);
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="space-y-10"
-        >
-            {/* HEADER */}
-            <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">
-                    Admin Dashboard
-                </h1>
-                <p className="text-gray-400 mt-1">
-                    AI-powered analytics & operational insights
-                </p>
-            </div>
-
-            {/* AI ANALYTICS */}
-            <div className="space-y-8">
-                <KpiCards />
-                <OccupancyForecast />
-                <MaintenanceCostForecast />
-                <ChurnRiskTable />
-            </div>
-
-            {/* CORE METRICS */}
-            {statsLoading || revenueLoading ? (
-                <Loader />
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <StatCard title="Total Residents" value={stats.totalResidents || 0} accent="blue" />
-                    <StatCard title="Pending Requests" value={stats.pendingRequests || 0} accent="yellow" />
-                    <StatCard title="Total Revenue" value={`$${totalRevenue}`} accent="green" />
-                    <StatCard title="Outstanding Balance" value={`$${outstandingBalance}`} accent="red" />
-                </div>
-            )}
-
-            {/* REQUESTS OVERVIEW */}
-            {!reqLoading && chartData.some(d => d.count > 0) && (
-                <div className="glass rounded-2xl p-4 sm:p-6">
-                    <RequestsChart data={chartData} />
-                </div>
-            )}
-
-            {/* ACTIVE REQUESTS */}
-            <div className="glass rounded-2xl p-4 sm:p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold">
-                        Active Maintenance Requests
-                    </h2>
-                    <Link to="/admin/requests" className="text-sm text-blue-400">
-                        View all
-                    </Link>
-                </div>
-
-                {reqLoading ? (
-                    <Loader />
-                ) : activeRequests.length === 0 ? (
-                    <p className="text-gray-400 text-center">
-                        No active requests 🎉
-                    </p>
-                ) : (
-                    <ul className="divide-y divide-white/10">
-                        {activeRequests.map((r) => (
-                            <li key={r._id} className="py-3 flex justify-between">
-                                <p>{r.message}</p>
-                                <span className="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-400">
-                                    {r.status}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
-        </motion.div>
-    );
-}
-
-
-
-
-
-// ##########################################
-// FILE 71 of 89: frontend\src\pages\AdminRequests.jsx
-// SIZE: 6910 bytes
-// MODIFIED: 2026-02-04 23:07:19
-// ##########################################
-
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import toast from "react-hot-toast";
-
-import AppLayout from "../components/AppLayout";
-import Button from "../components/Button";
-import api from "../api/axios";
-
-const STATUS_FLOW = {
-    pending: ["in-progress"],
-    "in-progress": ["on-hold", "done"],
-    "on-hold": ["in-progress"],
-};
-
-const STATUS_COLORS = {
-    pending: "bg-yellow-600/20 text-yellow-400 border-yellow-500/30",
-    "in-progress": "bg-blue-600/20 text-blue-400 border-blue-500/30",
-    "on-hold": "bg-orange-600/20 text-orange-400 border-orange-500/30",
-    done: "bg-green-600/20 text-green-400 border-green-500/30",
-};
-
-export default function AdminRequests() {
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [selected, setSelected] = useState(null);
-    const [status, setStatus] = useState("");
-    const [saving, setSaving] = useState(false);
-
-    // ================= FETCH =================
-    const fetchRequests = async () => {
-        try {
-            setLoading(true);
-            const res = await api.get("/resident/requests");
-            setRequests(Array.isArray(res.data) ? res.data : []);
-        } catch {
-            toast.error("Failed to load maintenance requests");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchRequests();
-    }, []);
-
-    // ================= UPDATE =================
-    const updateStatus = async () => {
-        if (!status) {
-            toast.error("Select a status");
-            return;
-        }
-
-        setSaving(true);
-        try {
-            await api.put(`/resident/request/${selected._id}`, {
-                status,
-            });
-
-            toast.success("Status updated");
-            setSelected(null);
-            setStatus("");
-            fetchRequests();
-        } catch {
-            toast.error("Failed to update status");
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const badge = (s) => (
-        <span
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[s]}`}
-        >
-            {s}
-        </span>
-    );
-
-    return (
-        <AppLayout>
-            <div className="space-y-6">
-                <h1 className="text-2xl font-bold">Maintenance Requests</h1>
-
-                {loading ? (
-                    <p className="text-gray-400 text-center">Loading…</p>
-                ) : requests.length === 0 ? (
-                    <p className="text-gray-400 text-center">No requests found</p>
-                ) : (
-                    <div className="overflow-x-auto rounded-xl bg-white/10 border border-white/10">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="text-gray-400 border-b border-white/10">
-                                    <th className="px-4 py-3 text-left">Issue</th>
-                                    <th className="px-4 py-3 text-left">Resident</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
-                                    <th className="px-4 py-3 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {requests.map((r) => (
-                                    <tr key={r._id} className="border-t border-white/5">
-                                        <td className="px-4 py-3">{r.issue}</td>
-                                        <td className="px-4 py-3">
-                                            {r.residentId?.email}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {badge(r.status)}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            {r.status !== "done" && (
-                                                <Button onClick={() => setSelected(r)}>
-                                                    Update
-                                                </Button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-
-            {/* STATUS MODAL */}
-            <AnimatePresence>
-                {selected && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white/10 border border-white/10 rounded-xl p-6 w-full max-w-md"
-                        >
-                            <h3 className="text-lg font-semibold mb-4">
-                                Update Request Status
-                            </h3>
-
-                            <select
-                                className="w-full mb-4 bg-black/30 border border-white/10 rounded p-2"
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value)}
-                            >
-                                <option value="">Select status</option>
-                                {STATUS_FLOW[selected.status]?.map((s) => (
-                                    <option key={s} value={s}>
-                                        {s}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <div className="flex justify-end gap-2">
-                                <Button
-                                    className="bg-gray-600"
-                                    onClick={() => setSelected(null)}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button disabled={saving} onClick={updateStatus}>
-                                    {saving ? "Saving…" : "Save"}
-                                </Button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-        </AppLayout>
-    );
-}
-
-
-
-
-
-// ##########################################
-// FILE 72 of 89: frontend\src\pages\AdminResidents.jsx
-// SIZE: 6150 bytes
-// MODIFIED: 2026-02-04 23:06:26
-// ##########################################
-
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-
-import AppLayout from "../components/AppLayout";
-import Button from "../components/Button";
-import api from "../api/axios";
-
-export default function AdminResidents() {
-    const [residents, setResidents] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        roomNumber: "",
-    });
-
-    // ================= FETCH =================
-    const fetchResidents = async () => {
-        try {
-            setLoading(true);
-            const res = await api.get("/resident");
-            setResidents(Array.isArray(res.data) ? res.data : []);
-        } catch {
-            toast.error("Failed to load residents");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchResidents();
-    }, []);
-
-    // ================= ADD =================
-    const addResident = async () => {
-        if (!form.name || !form.email || !form.roomNumber) {
-            toast.error("All fields are required");
-            return;
-        }
-
-        setSaving(true);
-        try {
-            await api.post("/resident", form);
-            toast.success("Resident added");
-            setForm({ name: "", email: "", roomNumber: "" });
-            fetchResidents();
-        } catch (err) {
-            toast.error(
-                err.response?.data?.message || "Failed to add resident"
-            );
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    // ================= DELETE =================
-    const deleteResident = async (id) => {
-        if (!window.confirm("Delete this resident?")) return;
-
-        try {
-            await api.delete(`/resident/${id}`);
-            toast.success("Resident deleted");
-            fetchResidents();
-        } catch {
-            toast.error("Failed to delete resident");
-        }
-    };
-
-    return (
-        <AppLayout>
-            <div className="space-y-6">
-                <h1 className="text-2xl font-bold">Residents</h1>
-
-                {/* ADD FORM */}
-                <div className="bg-white/10 border border-white/10 rounded-xl p-4 space-y-3">
-                    <h2 className="font-semibold">Add Resident</h2>
-
-                    <input
-                        className="w-full p-2 rounded bg-black/30 border border-white/10"
-                        placeholder="Name"
-                        value={form.name}
-                        onChange={(e) =>
-                            setForm({ ...form, name: e.target.value })
-                        }
-                    />
-
-                    <input
-                        className="w-full p-2 rounded bg-black/30 border border-white/10"
-                        placeholder="Email"
-                        value={form.email}
-                        onChange={(e) =>
-                            setForm({ ...form, email: e.target.value })
-                        }
-                    />
-
-                    <input
-                        className="w-full p-2 rounded bg-black/30 border border-white/10"
-                        placeholder="Room Number"
-                        value={form.roomNumber}
-                        onChange={(e) =>
-                            setForm({ ...form, roomNumber: e.target.value })
-                        }
-                    />
-
-                    <Button disabled={saving} onClick={addResident}>
-                        {saving ? "Saving..." : "Add Resident"}
-                    </Button>
-                </div>
-
-                {/* LIST */}
-                {loading ? (
-                    <p className="text-gray-400 text-center">Loading…</p>
-                ) : residents.length === 0 ? (
-                    <p className="text-gray-400 text-center">No residents found</p>
-                ) : (
-                    <div className="overflow-x-auto rounded-xl bg-white/10 border border-white/10">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="text-gray-400 border-b border-white/10">
-                                    <th className="px-4 py-3 text-left">Name</th>
-                                    <th className="px-4 py-3 text-left">Email</th>
-                                    <th className="px-4 py-3 text-left">Room</th>
-                                    <th className="px-4 py-3 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {residents.map((r) => (
-                                    <tr
-                                        key={r._id}
-                                        className="border-t border-white/5"
-                                    >
-                                        <td className="px-4 py-3">{r.name}</td>
-                                        <td className="px-4 py-3">{r.email}</td>
-                                        <td className="px-4 py-3">
-                                            {r.roomNumber || "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <Button
-                                                className="bg-red-600"
-                                                onClick={() => deleteResident(r._id)}
-                                            >
-                                                Delete
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </AppLayout>
-    );
-}
-
-
-
-
-
-// ##########################################
-// FILE 73 of 89: frontend\src\pages\AdminRooms.jsx
-// SIZE: 12429 bytes
-// MODIFIED: 2026-02-03 12:30:44
-// ##########################################
-
-import { useEffect, useState, useCallback } from "react";
-import toast from "react-hot-toast";
-import DashboardLayout from "../layouts/DashboardLayout";
-import api from "../api/axios";
-
-export default function AdminRooms() {
-    const [rooms, setRooms] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    const [form, setForm] = useState({
-        roomNumber: "",
-        totalBeds: "",
-        note: ""
-    });
-
-    const [selectedRoom, setSelectedRoom] = useState(null);
-    const [occupiedBeds, setOccupiedBeds] = useState("");
-
-    /* ================= FETCH ROOMS ================= */
-    const fetchRooms = useCallback(async () => {
-        try {
-            setLoading(true);
-            const res = await api.get("/rooms");
-            setRooms(res.data?.rooms || res.data || []);
-        } catch {
-            toast.error("Failed to load rooms");
-            setRooms([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchRooms();
-    }, [fetchRooms]);
-
-    /* ================= ADD rooms ================= */
-    const addRoom = async () => {
-        if (!form.roomNumber || !form.totalBeds) {
-            toast.error("Room number and total beds are required");
-            return;
-        }
-
-        if (Number(form.totalBeds) <= 0) {
-            toast.error("Total beds must be greater than 0");
-            return;
-        }
-
-        try {
-            await api.post("/rooms", {
-                roomNumber: form.roomNumber,
-                totalBeds: Number(form.totalBeds),
-                note: form.note
-            });
-
-            toast.success("Room added successfully");
-            setForm({ roomNumber: "", totalBeds: "", note: "" });
-            fetchRooms();
-        } catch {
-            toast.error("Failed to add room");
-        }
-    };
-
-    /* ================= UPDATE OCCUPANCY ================= */
-    const updateOccupancy = async () => {
-        if (!selectedRoom) return;
-
-        const value = Number(occupiedBeds);
-
-        if (!Number.isInteger(value) || value < 0) {
-            toast.error("Enter a valid occupied beds value");
-            return;
-        }
-
-        if (value > selectedRoom.totalBeds) {
-            toast.error("Occupied beds cannot exceed total beds");
-            return;
-        }
-
-        try {
-            await api.put(
-                `/rooms/${selectedRoom._id}/occupancy`,
-                { occupiedBeds: value }
-            );
-
-            toast.success("Occupancy updated");
-            setSelectedRoom(null);
-            setOccupiedBeds("");
-            fetchRooms();
-        } catch {
-            toast.error("Failed to update occupancy");
-        }
-    };
-
-    /* ================= DELETE rooms ================= */
-    const deleteRoom = async (room) => {
-        if (room.occupiedBeds > 0) {
-            toast.error("Cannot delete a room with occupied beds");
-            return;
-        }
-
-        const confirm = window.confirm(
-            `Delete room ${room.roomNumber}? This cannot be undone.`
-        );
-
-        if (!confirm) return;
-
-        try {
-            await api.delete(`/rooms/${room._id}`);
-            toast.success("Room deleted");
-            fetchRooms();
-        } catch {
-            toast.error("Failed to delete room");
-        }
-    };
-
-    return (
-        <DashboardLayout>
-            <div className="space-y-10">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Rooms & Bed Management
-                    </h1>
-                    <p className="text-gray-500 mt-1">
-                        Manage rooms, capacity, and occupancy
-                    </p>
-                </div>
-
-                {/* ADD ROOM */}
-                <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Add New Room
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <input
-                            placeholder="Room Number"
-                            className="border rounded-lg p-2"
-                            value={form.roomNumber}
-                            onChange={(e) =>
-                                setForm({ ...form, roomNumber: e.target.value })
-                            }
-                        />
-
-                        <input
-                            type="number"
-                            placeholder="Total Beds"
-                            className="border rounded-lg p-2"
-                            value={form.totalBeds}
-                            onChange={(e) =>
-                                setForm({ ...form, totalBeds: e.target.value })
-                            }
-                        />
-
-                        <input
-                            placeholder="Note (optional)"
-                            className="border rounded-lg p-2"
-                            value={form.note}
-                            onChange={(e) =>
-                                setForm({ ...form, note: e.target.value })
-                            }
-                        />
-
-                        <button
-                            onClick={addRoom}
-                            className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
-                        >
-                            Add Room
-                        </button>
-                    </div>
-                </div>
-
-                {/* ROOMS TABLE */}
-                <div className="bg-white rounded-2xl border p-6">
-                    <h2 className="text-lg font-semibold mb-4">Rooms</h2>
-
-                    {loading ? (
-                        <p className="text-gray-500 text-center">
-                            Loading rooms…
-                        </p>
-                    ) : rooms.length === 0 ? (
-                        <p className="text-gray-500 text-center">
-                            No rooms added yet.
-                        </p>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b text-gray-500">
-                                        <th className="p-2 text-left">Room</th>
-                                        <th className="p-2 text-center">
-                                            Total Beds
-                                        </th>
-                                        <th className="p-2 text-center">
-                                            Occupied
-                                        </th>
-                                        <th className="p-2 text-center">
-                                            Available
-                                        </th>
-                                        <th className="p-2 text-center">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {rooms.map((room) => {
-                                        const availableBeds =
-                                            room.totalBeds - room.occupiedBeds;
-
-                                        return (
-                                            <tr
-                                                key={room._id}
-                                                className="border-b hover:bg-gray-50"
-                                            >
-                                                <td className="p-2">
-                                                    {room.roomNumber}
-                                                </td>
-                                                <td className="p-2 text-center">
-                                                    {room.totalBeds}
-                                                </td>
-                                                <td className="p-2 text-center">
-                                                    {room.occupiedBeds}
-                                                </td>
-                                                <td className="p-2 text-center font-semibold">
-                                                    {availableBeds}
-                                                </td>
-                                                <td className="p-2 text-center space-x-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedRoom(room);
-                                                            setOccupiedBeds(
-                                                                String(
-                                                                    room.occupiedBeds
-                                                                )
-                                                            );
-                                                        }}
-                                                        className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
-                                                    >
-                                                        Update
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            deleteRoom(room)
-                                                        }
-                                                        className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* OCCUPANCY MODAL */}
-            {selectedRoom && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-2xl p-6 w-96">
-                        <h3 className="text-lg font-semibold mb-4">
-                            Update Occupancy – Room{" "}
-                            {selectedRoom.roomNumber}
-                        </h3>
-
-                        <input
-                            type="number"
-                            className="w-full border rounded-lg p-2 mb-4"
-                            value={occupiedBeds}
-                            onChange={(e) =>
-                                setOccupiedBeds(e.target.value)
-                            }
-                        />
-
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setSelectedRoom(null)}
-                                className="px-4 py-2 border rounded-lg"
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                onClick={updateOccupancy}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                            >
-                                Save
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </DashboardLayout>
-    );
-}
-
-
-
-
-
-// ##########################################
-// FILE 74 of 89: frontend\src\pages\Login.jsx
-// SIZE: 5283 bytes
-// MODIFIED: 2026-02-04 13:02:17
-// ##########################################
-
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-
-import Button from "../components/Button";
-import Card from "../components/Card";
-import { useAuth } from "../context/AuthContext";
-import { login as loginService } from "../services/authService";
-
-export default function Login() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [errors, setErrors] = useState({});
-
-    const isSubmitting = useRef(false);
-    const navigate = useNavigate();
-    const { login, user } = useAuth();
-
-    const validateEmail = (value) =>
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
-    const handleLogin = async () => {
-        if (loading || isSubmitting.current) return;
-
-        const newErrors = {};
-
-        if (!email.trim()) {
-            newErrors.email = "Email is required";
-        } else if (!validateEmail(email.trim())) {
-            newErrors.email = "Invalid email format";
-        }
-
-        if (!password) {
-            newErrors.password = "Password is required";
-        }
-
-        setErrors(newErrors);
-
-        if (Object.keys(newErrors).length > 0) {
-            toast.error("Please fill in all fields correctly");
-            return;
-        }
-
-        isSubmitting.current = true;
-        setLoading(true);
-
-        try {
-            const data = await loginService({
-                email: email.trim().toLowerCase(),
-                password,
-            });
-
-            const token = data?.token;
-
-            if (!token) {
-                toast.error("Invalid login response");
-                return;
-            }
-
-            // ✅ Single source of truth
-            login(token);
-
-            toast.success("Login successful");
-
-            // ⏳ Allow AuthContext to update, then redirect
-            setTimeout(() => {
-                navigate(
-                    user?.role === "admin"
-                        ? "/admin/dashboard"
-                        : "/resident/dashboard",
-                    { replace: true }
-                );
-            }, 0);
-        } catch (err) {
-            toast.error(err?.message || "Invalid email or password");
-            setPassword("");
-            setErrors({});
-        } finally {
-            setLoading(false);
-            setTimeout(() => {
-                isSubmitting.current = false;
-            }, 300);
-        }
-    };
-
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-black to-slate-800">
-            <Card>
-                <div className="w-[360px]">
-                    <div className="mb-8 text-center">
-                        <h2 className="text-3xl font-bold text-blue-400">
-                            TAGT
-                        </h2>
-                        <p className="text-sm text-gray-400 mt-1">
-                            Property Management System
-                        </p>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-xs font-semibold text-gray-400 mb-1">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            value={email}
-                            disabled={loading}
-                            autoFocus
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white border border-white/10"
-                        />
-                        {errors.email && (
-                            <p className="text-xs text-red-500 mt-1">
-                                {errors.email}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="block text-xs font-semibold text-gray-400 mb-1">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            value={password}
-                            disabled={loading}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg bg-black/40 text-white border border-white/10"
-                        />
-                        {errors.password && (
-                            <p className="text-xs text-red-500 mt-1">
-                                {errors.password}
-                            </p>
-                        )}
-                    </div>
-
-                    <Button
-                        onClick={handleLogin}
-                        disabled={loading}
-                        className="w-full py-3 text-sm font-semibold"
-                    >
-                        {loading ? "Signing in..." : "Sign In"}
-                    </Button>
-                </div>
-            </Card>
-        </div>
-    );
-}
-
-
-
-
-
-// ##########################################
-// FILE 75 of 89: frontend\src\pages\Payments.jsx
-// SIZE: 7324 bytes
-// MODIFIED: 2026-02-04 23:08:13
 // ##########################################
 
 import { useEffect, useState } from "react";
@@ -30960,6 +30325,7 @@ import api from "../api/axios";
  * ADMIN PAYMENTS
  * - View all payments
  * - Mark payment as paid
+ * - Delete payment
  */
 
 export default function Payments() {
@@ -30970,8 +30336,10 @@ export default function Payments() {
     const fetchPayments = async () => {
         try {
             setLoading(true);
+
+            // ✅ correct parsing
             const res = await api.get("/payments");
-            setPayments(Array.isArray(res.data) ? res.data : []);
+            setPayments(res.data?.payments || []);
         } catch {
             toast.error("Failed to load payments");
             setPayments([]);
@@ -30988,11 +30356,24 @@ export default function Payments() {
         if (!window.confirm("Mark this payment as paid?")) return;
 
         try {
-            await api.put(`/payments/${id}`, { status: "paid" });
+            // ✅ correct endpoint
+            await api.put(`/payments/${id}/paid`);
             toast.success("Payment marked as paid");
             fetchPayments();
         } catch {
             toast.error("Failed to update payment");
+        }
+    };
+
+    const deletePayment = async (id) => {
+        if (!window.confirm("Delete this payment?")) return;
+
+        try {
+            await api.delete(`/payments/${id}`);
+            toast.success("Payment deleted");
+            fetchPayments();
+        } catch {
+            toast.error("Failed to delete payment");
         }
     };
 
@@ -31033,13 +30414,9 @@ export default function Payments() {
                 </div>
 
                 {loading ? (
-                    <p className="text-center text-gray-400">
-                        Loading payments…
-                    </p>
+                    <p className="text-center text-gray-400">Loading payments…</p>
                 ) : filteredPayments.length === 0 ? (
-                    <p className="text-center text-gray-400">
-                        No payments found.
-                    </p>
+                    <p className="text-center text-gray-400">No payments found.</p>
                 ) : (
                     <>
                         {/* MOBILE */}
@@ -31063,11 +30440,19 @@ export default function Payments() {
                                     {p.status !== "paid" && (
                                         <Button
                                             onClick={() => markAsPaid(p._id)}
-                                            className="w-full"
+                                            className="w-full mb-2"
                                         >
                                             Mark Paid
                                         </Button>
                                     )}
+
+                                    {/* ✅ delete button */}
+                                    <Button
+                                        onClick={() => deletePayment(p._id)}
+                                        className="w-full bg-red-600"
+                                    >
+                                        Delete
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -31089,25 +30474,26 @@ export default function Payments() {
                                             key={p._id}
                                             className="border-t border-white/10 hover:bg-white/5"
                                         >
-                                            <td className="p-3">
-                                                {p.residentId?.email}
-                                            </td>
+                                            <td className="p-3">{p.residentId?.email}</td>
                                             <td className="p-3 text-right font-semibold">
                                                 ₹{Number(p.amount).toLocaleString()}
                                             </td>
                                             <td className="p-3 text-center">
                                                 <StatusBadge status={p.status} />
                                             </td>
-                                            <td className="p-3 text-center">
-                                                {p.status !== "paid" ? (
-                                                    <Button
-                                                        onClick={() => markAsPaid(p._id)}
-                                                    >
+                                            <td className="p-3 text-center space-x-2">
+                                                {p.status !== "paid" && (
+                                                    <Button onClick={() => markAsPaid(p._id)}>
                                                         Mark Paid
                                                     </Button>
-                                                ) : (
-                                                    <span className="text-gray-500">—</span>
                                                 )}
+
+                                                <Button
+                                                    onClick={() => deletePayment(p._id)}
+                                                    className="bg-red-600"
+                                                >
+                                                    Delete
+                                                </Button>
                                             </td>
                                         </tr>
                                     ))}
@@ -31126,7 +30512,7 @@ export default function Payments() {
 
 
 // ##########################################
-// FILE 76 of 89: frontend\src\pages\RequestHistory.jsx
+// FILE 79 of 92: frontend\src\pages\RequestHistory.jsx
 // SIZE: 3595 bytes
 // MODIFIED: 2026-02-04 23:09:40
 // ##########################################
@@ -31232,36 +30618,28 @@ export default function RequestHistory() {
 
 
 // ##########################################
-// FILE 77 of 89: frontend\src\pages\ResidentDashboard.jsx
-// SIZE: 10063 bytes
-// MODIFIED: 2026-02-03 12:34:31
+// FILE 80 of 92: frontend\src\pages\ResidentDashboard.jsx
+// SIZE: 6457 bytes
+// MODIFIED: 2026-02-05 10:23:02
 // ##########################################
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import AppLayout from "../components/AppLayout";
 import Button from "../components/Button";
-import {
-    createRequest,
-    getMyRequests
-} from "../services/residentService";
-
-/**
- * RESIDENT DASHBOARD – MOBILE SAFE
- */
+import { createRequest, getMyRequests } from "../services/residentService";
 
 export default function ResidentDashboard() {
-    const [message, setMessage] = useState("");
+    const [description, setDescription] = useState("");
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [expandedId, setExpandedId] = useState(null);
 
     /* ================= LOAD REQUESTS ================= */
     const loadRequests = async () => {
         try {
             setLoading(true);
             const data = await getMyRequests();
-            setRequests(Array.isArray(data) ? data : []);
+            setRequests(data || []);
         } catch {
             toast.error("Failed to load requests");
             setRequests([]);
@@ -31272,15 +30650,19 @@ export default function ResidentDashboard() {
 
     /* ================= SUBMIT REQUEST ================= */
     const submitRequest = async () => {
-        if (!message.trim()) {
+        if (!description.trim()) {
             toast.error("Please describe your issue");
             return;
         }
 
         try {
-            await createRequest(message.trim());
+            await createRequest({
+                title: "Maintenance Issue",
+                description: description.trim(),
+            });
+
             toast.success("Your request has been submitted");
-            setMessage("");
+            setDescription("");
             loadRequests();
         } catch {
             toast.error("Failed to submit request");
@@ -31291,15 +30673,12 @@ export default function ResidentDashboard() {
         loadRequests();
     }, []);
 
-    /* ================= RESOLUTION LOGIC ================= */
-    const isResolved = (r) =>
-        r.status === "resolved" ||
-        r.workflowStatus === "Done";
+    /* ================= STATUS HELPERS ================= */
+    const isResolved = (r) => r.status === "done";
 
     const activeRequests = requests.filter((r) => !isResolved(r));
     const resolvedRequests = requests.filter((r) => isResolved(r));
 
-    /* ================= STATUS BADGE ================= */
     const StatusBadge = ({ status }) => {
         const base =
             "inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded";
@@ -31317,7 +30696,13 @@ export default function ResidentDashboard() {
                         In Progress
                     </span>
                 );
-            case "resolved":
+            case "on-hold":
+                return (
+                    <span className={`${base} bg-orange-600/20 text-orange-400`}>
+                        On Hold
+                    </span>
+                );
+            case "done":
                 return (
                     <span className={`${base} bg-green-600/20 text-green-400`}>
                         Resolved
@@ -31351,31 +30736,23 @@ export default function ResidentDashboard() {
                         className="w-full bg-black/30 text-gray-100 placeholder-gray-400 p-4 border border-white/10 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         rows={4}
                         placeholder="Describe the issue in detail…"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
                     />
 
                     <div className="flex justify-end mt-4">
-                        <Button onClick={submitRequest}>
-                            Submit Request
-                        </Button>
+                        <Button onClick={submitRequest}>Submit Request</Button>
                     </div>
                 </div>
 
                 {/* ACTIVE REQUESTS */}
                 <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Active Requests
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-4">Active Requests</h2>
 
                     {loading ? (
-                        <p className="text-gray-400">
-                            Loading requests…
-                        </p>
+                        <p className="text-gray-400">Loading requests…</p>
                     ) : activeRequests.length === 0 ? (
-                        <p className="text-gray-400">
-                            You have no active requests.
-                        </p>
+                        <p className="text-gray-400">You have no active requests.</p>
                     ) : (
                         <ul className="divide-y divide-white/10">
                             {activeRequests.map((r) => (
@@ -31383,12 +30760,8 @@ export default function ResidentDashboard() {
                                     key={r._id}
                                     className="py-3 flex flex-col sm:flex-row sm:justify-between gap-2"
                                 >
-                                    <p className="text-gray-200">
-                                        {r.message}
-                                    </p>
-                                    <StatusBadge
-                                        status={r.status || "pending"}
-                                    />
+                                    <p className="text-gray-200">{r.description}</p>
+                                    <StatusBadge status={r.status} />
                                 </li>
                             ))}
                         </ul>
@@ -31397,75 +30770,18 @@ export default function ResidentDashboard() {
 
                 {/* RESOLVED REQUESTS */}
                 <div className="bg-white/10 border border-white/10 rounded-2xl p-4 sm:p-6">
-                    <h2 className="text-lg font-semibold mb-4">
-                        Resolved Requests
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-4">Resolved Requests</h2>
 
                     {resolvedRequests.length === 0 ? (
-                        <p className="text-gray-400">
-                            No resolved requests yet.
-                        </p>
+                        <p className="text-gray-400">No resolved requests yet.</p>
                     ) : (
                         <ul className="divide-y divide-white/10">
-                            {resolvedRequests.map((r) => {
-                                const isOpen = expandedId === r._id;
-                                const lastNote =
-                                    r.adminNotes?.length > 0
-                                        ? r.adminNotes[r.adminNotes.length - 1]
-                                        : null;
-
-                                return (
-                                    <li key={r._id} className="py-4">
-                                        <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
-                                            <p className="text-gray-200">
-                                                {r.message}
-                                            </p>
-                                            <StatusBadge status="resolved" />
-                                        </div>
-
-                                        <button
-                                            onClick={() =>
-                                                setExpandedId(
-                                                    isOpen ? null : r._id
-                                                )
-                                            }
-                                            className="mt-2 text-sm text-blue-400 hover:underline"
-                                        >
-                                            {isOpen
-                                                ? "Hide details"
-                                                : "View details"}
-                                        </button>
-
-                                        {isOpen && (
-                                            <div className="mt-4 bg-black/30 border border-white/10 rounded-lg p-4 text-sm space-y-2 break-words">
-                                                {r.workflowStatus && (
-                                                    <p>
-                                                        <strong className="text-gray-300">
-                                                            Final Status:
-                                                        </strong>{" "}
-                                                        {r.workflowStatus}
-                                                    </p>
-                                                )}
-
-                                                {lastNote ? (
-                                                    <>
-                                                        <p className="font-medium text-gray-300">
-                                                            Admin Resolution
-                                                        </p>
-                                                        <p className="text-gray-400">
-                                                            {lastNote.note}
-                                                        </p>
-                                                    </>
-                                                ) : (
-                                                    <p className="text-gray-400">
-                                                        No admin notes available.
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </li>
-                                );
-                            })}
+                            {resolvedRequests.map((r) => (
+                                <li key={r._id} className="py-3 flex justify-between">
+                                    <p className="text-gray-200">{r.description}</p>
+                                    <StatusBadge status="done" />
+                                </li>
+                            ))}
                         </ul>
                     )}
                 </div>
@@ -31479,7 +30795,7 @@ export default function ResidentDashboard() {
 
 
 // ##########################################
-// FILE 78 of 89: frontend\src\pages\ResidentPayments.jsx
+// FILE 81 of 92: frontend\src\pages\ResidentPayments.jsx
 // SIZE: 5174 bytes
 // MODIFIED: 2026-02-04 23:08:58
 // ##########################################
@@ -31611,7 +30927,7 @@ export default function ResidentPayments() {
 
 
 // ##########################################
-// FILE 79 of 89: frontend\src\pages\Rooms.jsx
+// FILE 82 of 92: frontend\src\pages\Rooms.jsx
 // SIZE: 10032 bytes
 // MODIFIED: 2026-02-03 12:36:03
 // ##########################################
@@ -31886,7 +31202,7 @@ export default function Roomss() {
 
 
 // ##########################################
-// FILE 80 of 89: frontend\src\routes\AdminRoute.jsx
+// FILE 83 of 92: frontend\src\routes\AdminRoute.jsx
 // SIZE: 786 bytes
 // MODIFIED: 2026-02-04 23:03:11
 // ##########################################
@@ -31925,7 +31241,7 @@ export default function AdminRoute() {
 
 
 // ##########################################
-// FILE 81 of 89: frontend\src\routes\ProtectedRoute.jsx
+// FILE 84 of 92: frontend\src\routes\ProtectedRoute.jsx
 // SIZE: 826 bytes
 // MODIFIED: 2026-02-04 23:02:44
 // ##########################################
@@ -31966,7 +31282,7 @@ export default function ProtectedRoute() {
 
 
 // ##########################################
-// FILE 82 of 89: frontend\src\routes\ResidentRoute.jsx
+// FILE 85 of 92: frontend\src\routes\ResidentRoute.jsx
 // SIZE: 950 bytes
 // MODIFIED: 2026-02-04 23:03:45
 // ##########################################
@@ -32012,7 +31328,7 @@ export default function ResidentRoute() {
 
 
 // ##########################################
-// FILE 83 of 89: frontend\src\services\adminService.js
+// FILE 86 of 92: frontend\src\services\adminService.js
 // SIZE: 2295 bytes
 // MODIFIED: 2026-02-03 12:37:34
 // ##########################################
@@ -32092,7 +31408,7 @@ export const getResidents = async () => {
 
 
 // ##########################################
-// FILE 84 of 89: frontend\src\services\analyticsService.js
+// FILE 87 of 92: frontend\src\services\analyticsService.js
 // SIZE: 2795 bytes
 // MODIFIED: 2026-02-03 12:38:04
 // ##########################################
@@ -32209,7 +31525,7 @@ export const optimizeRevenue = async () => {
 
 
 // ##########################################
-// FILE 85 of 89: frontend\src\services\authService.js
+// FILE 88 of 92: frontend\src\services\authService.js
 // SIZE: 1180 bytes
 // MODIFIED: 2026-02-04 12:58:16
 // ##########################################
@@ -32277,7 +31593,7 @@ export const logout = async () => {
 
 
 // ##########################################
-// FILE 86 of 89: frontend\src\services\residentService.js
+// FILE 89 of 92: frontend\src\services\residentService.js
 // SIZE: 1676 bytes
 // MODIFIED: 2026-02-03 12:39:46
 // ##########################################
@@ -32342,7 +31658,7 @@ export const deleteRequest = async (id) => {
 
 
 // ##########################################
-// FILE 87 of 89: frontend\tailwind.config.js
+// FILE 90 of 92: frontend\tailwind.config.js
 // SIZE: 236 bytes
 // MODIFIED: 2026-01-28 15:49:48
 // ##########################################
@@ -32363,7 +31679,7 @@ module.exports = {
 
 
 // ##########################################
-// FILE 88 of 89: full_project_dump.txt
+// FILE 91 of 92: full_project_dump.txt
 // SIZE: 1868982 bytes
 // MODIFIED: 2026-02-04 23:15:21
 // ##########################################
@@ -68963,7 +68279,7 @@ export const deleteRequest = async (id) => {
 
 
 // ##########################################
-// FILE 89 of 89: package-lock.json
+// FILE 92 of 92: package-lock.json
 // SIZE: 83 bytes
 // MODIFIED: 2026-02-02 19:47:20
 // ##########################################

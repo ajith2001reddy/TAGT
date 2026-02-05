@@ -1,58 +1,103 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 
-const paymentSchema = new mongoose.Schema(
+const PaymentSchema = new mongoose.Schema(
     {
-        residentId: {
+        // 🔗 Resident reference
+        resident: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "Resident",
             required: true,
-            index: true
+            index: true,
         },
+
+        // 🔗 Room reference
+        room: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Room",
+            required: true,
+        },
+
+        // 💰 Amount to be paid
         amount: {
             type: Number,
             required: true,
-            min: 0
+            min: 0,
         },
-        description: {
-            type: String,
-            trim: true,
-            default: ""
-        },
-        type: {
-            type: String,
-            enum: ["manual", "auto"],
-            default: "manual",
-            index: true
-        },
+
+        // 📅 Month identifier (YYYY-MM) → used for cron + duplicate prevention
         month: {
             type: String,
+            required: true,
+            match: /^\d{4}-\d{2}$/, // e.g., 2026-02
             index: true,
-            default: null
         },
+
+        // 🧾 Payment type (FIXED ENUM — your bug was here)
+        type: {
+            type: String,
+            enum: ["rent", "deposit", "late_fee", "other"],
+            default: "rent",
+            required: true,
+            index: true,
+        },
+
+        // 📊 Payment status
         status: {
             type: String,
-            enum: ["unpaid", "paid"],
-            default: "unpaid",
-            index: true
+            enum: ["pending", "paid", "failed", "cancelled"],
+            default: "pending",
+            index: true,
         },
-        adminNote: {
+
+        // ⏰ Due date for reminders / late fee automation
+        dueDate: {
+            type: Date,
+            required: true,
+        },
+
+        // 💳 Payment method (future Stripe/cash support)
+        method: {
             type: String,
-            default: ""
+            enum: ["cash", "card", "bank", "online", null],
+            default: null,
         },
+
+        // 🧾 Optional transaction reference (Stripe ID, etc.)
+        transactionId: {
+            type: String,
+            default: null,
+        },
+
+        // 📝 Notes (admin comments, adjustments)
+        notes: {
+            type: String,
+            trim: true,
+            maxlength: 500,
+        },
+
+        // 📅 Actual paid timestamp
         paidAt: {
             type: Date,
-            default: null
+            default: null,
         },
-        createdBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
-        }
     },
     {
-        timestamps: true
+        timestamps: true, // createdAt, updatedAt
     }
 );
 
-paymentSchema.index({ residentId: 1, status: 1, month: 1 });
+---
 
-export default mongoose.model("Payment", paymentSchema);
+# 🚫 Prevent duplicate monthly rent
+
+// Ensures ONE rent payment per resident per month
+PaymentSchema.index(
+    { resident: 1, month: 1, type: 1 },
+    { unique: true }
+);
+
+---
+
+# 📤 Export model
+
+export default mongoose.model("Payment", PaymentSchema);
