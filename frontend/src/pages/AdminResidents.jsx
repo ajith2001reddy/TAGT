@@ -18,7 +18,7 @@ export default function AdminResidents() {
         roomId: "",
     });
 
-    /* ================= FETCH RESIDENTS ================= */
+    /* ================= FETCH DATA ================= */
     const fetchResidents = async () => {
         try {
             const res = await api.get("/resident");
@@ -28,7 +28,6 @@ export default function AdminResidents() {
         }
     };
 
-    /* ================= FETCH ROOMS ================= */
     const fetchRooms = async () => {
         try {
             const res = await api.get("/rooms");
@@ -47,8 +46,8 @@ export default function AdminResidents() {
 
     /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
-        if (!form.name || !form.email || !form.password) {
-            toast.error("Name, email, and password are required");
+        if (!form.name || !form.email || !form.password || !form.roomId) {
+            toast.error("All fields including room are required");
             return;
         }
 
@@ -56,21 +55,31 @@ export default function AdminResidents() {
 
         try {
             await api.post("/resident", form);
+            toast.success("Resident added & first bill created");
 
-            toast.success("Resident added & bill created");
-
-            setForm({
-                name: "",
-                email: "",
-                password: "",
-                roomId: "",
-            });
-
+            setForm({ name: "", email: "", password: "", roomId: "" });
             fetchResidents();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to add resident");
         } finally {
             setSaving(false);
+        }
+    };
+
+    /* ================= SEND BILL ================= */
+    const sendBill = async (resident) => {
+        try {
+            await api.post("/payments", {
+                residentId: resident._id,
+                amount: resident.roomId?.rent,
+                description: "Monthly Rent",
+                type: "rent",
+                month: new Date().toISOString().slice(0, 7),
+            });
+
+            toast.success("Bill sent successfully");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to send bill");
         }
     };
 
@@ -118,7 +127,7 @@ export default function AdminResidents() {
                         onChange={(e) => setForm({ ...form, password: e.target.value })}
                     />
 
-                    {/* ✅ ROOM SELECT */}
+                    {/* ROOM SELECT */}
                     <select
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
                         value={form.roomId}
@@ -137,11 +146,9 @@ export default function AdminResidents() {
                     </Button>
                 </div>
 
-                {/* ================= LIST ================= */}
+                {/* ================= RESIDENT TABLE ================= */}
                 {loading ? (
                     <p className="text-gray-400 text-center">Loading…</p>
-                ) : residents.length === 0 ? (
-                    <p className="text-gray-400 text-center">No residents found</p>
                 ) : (
                     <div className="overflow-x-auto rounded-xl bg-white/10 border border-white/10">
                         <table className="w-full text-sm">
@@ -150,8 +157,9 @@ export default function AdminResidents() {
                                     <th className="px-4 py-3 text-left">Name</th>
                                     <th className="px-4 py-3 text-left">Email</th>
                                     <th className="px-4 py-3 text-left">Room</th>
-                                    <th className="px-4 py-3 text-left">Rent</th>
-                                    <th className="px-4 py-3 text-right">Action</th>
+                                    <th className="px-4 py-3 text-left">Amount</th>
+                                    <th className="px-4 py-3 text-center">Send Bill</th>
+                                    <th className="px-4 py-3 text-right">Delete</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -159,12 +167,18 @@ export default function AdminResidents() {
                                     <tr key={r._id} className="border-t border-white/5">
                                         <td className="px-4 py-3">{r.name}</td>
                                         <td className="px-4 py-3">{r.email}</td>
-                                        <td className="px-4 py-3">
-                                            {r.roomId?.roomNumber || "-"}
-                                        </td>
+                                        <td className="px-4 py-3">{r.roomId?.roomNumber || "-"}</td>
                                         <td className="px-4 py-3">
                                             {r.roomId ? `₹${r.roomId.rent}` : "-"}
                                         </td>
+
+                                        {/* SEND BILL BUTTON */}
+                                        <td className="px-4 py-3 text-center">
+                                            <Button onClick={() => sendBill(r)}>
+                                                Send Bill
+                                            </Button>
+                                        </td>
+
                                         <td className="px-4 py-3 text-right">
                                             <Button
                                                 className="bg-red-600"
