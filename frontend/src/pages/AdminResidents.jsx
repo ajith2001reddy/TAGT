@@ -7,6 +7,7 @@ import api from "../api/axios";
 
 export default function AdminResidents() {
     const [residents, setResidents] = useState([]);
+    const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -14,17 +15,26 @@ export default function AdminResidents() {
         name: "",
         email: "",
         password: "",
-        rent: "",     // ✅ manual rent support
+        roomId: "",
     });
 
-    /* ================= FETCH ================= */
+    /* ================= FETCH RESIDENTS ================= */
     const fetchResidents = async () => {
         try {
-            setLoading(true);
             const res = await api.get("/resident");
             setResidents(res.data?.residents || []);
         } catch {
             toast.error("Failed to load residents");
+        }
+    };
+
+    /* ================= FETCH ROOMS ================= */
+    const fetchRooms = async () => {
+        try {
+            const res = await api.get("/rooms");
+            setRooms(res.data?.rooms || []);
+        } catch {
+            toast.error("Failed to load rooms");
         } finally {
             setLoading(false);
         }
@@ -32,37 +42,28 @@ export default function AdminResidents() {
 
     useEffect(() => {
         fetchResidents();
+        fetchRooms();
     }, []);
 
-    /* ================= ADD ================= */
+    /* ================= ADD RESIDENT ================= */
     const addResident = async () => {
         if (!form.name || !form.email || !form.password) {
             toast.error("Name, email, and password are required");
             return;
         }
 
-        if (form.rent && Number(form.rent) <= 0) {
-            toast.error("Rent must be greater than 0");
-            return;
-        }
-
         setSaving(true);
 
         try {
-            await api.post("/resident", {
-                name: form.name,
-                email: form.email,
-                password: form.password,
-                rent: form.rent ? Number(form.rent) : undefined,
-            });
+            await api.post("/resident", form);
 
-            toast.success("Resident added & rent created");
+            toast.success("Resident added & bill created");
 
             setForm({
                 name: "",
                 email: "",
                 password: "",
-                rent: "",
+                roomId: "",
             });
 
             fetchResidents();
@@ -88,7 +89,7 @@ export default function AdminResidents() {
 
     return (
         <AppLayout>
-            <div className="space-y-6">
+            <div className="space-y-6 text-white">
                 <h1 className="text-2xl font-bold">Residents</h1>
 
                 {/* ================= ADD FORM ================= */}
@@ -117,14 +118,19 @@ export default function AdminResidents() {
                         onChange={(e) => setForm({ ...form, password: e.target.value })}
                     />
 
-                    {/* ✅ NEW: Manual rent */}
-                    <input
-                        type="number"
+                    {/* ✅ ROOM SELECT */}
+                    <select
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
-                        placeholder="Monthly Rent (optional)"
-                        value={form.rent}
-                        onChange={(e) => setForm({ ...form, rent: e.target.value })}
-                    />
+                        value={form.roomId}
+                        onChange={(e) => setForm({ ...form, roomId: e.target.value })}
+                    >
+                        <option value="">Select Room</option>
+                        {rooms.map((room) => (
+                            <option key={room._id} value={room._id}>
+                                Room {room.roomNumber} — ₹{room.rent}
+                            </option>
+                        ))}
+                    </select>
 
                     <Button disabled={saving} onClick={addResident}>
                         {saving ? "Saving..." : "Add Resident"}
@@ -144,6 +150,7 @@ export default function AdminResidents() {
                                     <th className="px-4 py-3 text-left">Name</th>
                                     <th className="px-4 py-3 text-left">Email</th>
                                     <th className="px-4 py-3 text-left">Room</th>
+                                    <th className="px-4 py-3 text-left">Rent</th>
                                     <th className="px-4 py-3 text-right">Action</th>
                                 </tr>
                             </thead>
@@ -154,6 +161,9 @@ export default function AdminResidents() {
                                         <td className="px-4 py-3">{r.email}</td>
                                         <td className="px-4 py-3">
                                             {r.roomId?.roomNumber || "-"}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {r.roomId ? `₹${r.roomId.rent}` : "-"}
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <Button
