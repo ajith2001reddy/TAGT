@@ -105,6 +105,7 @@ export default function AdminResidents() {
                 <div className="bg-white/10 border border-white/10 rounded-xl p-4 space-y-3">
                     <h2 className="font-semibold">Add Resident</h2>
 
+                    {/* Name */}
                     <input
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
                         placeholder="Name"
@@ -112,6 +113,7 @@ export default function AdminResidents() {
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                     />
 
+                    {/* Email */}
                     <input
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
                         placeholder="Email"
@@ -119,6 +121,7 @@ export default function AdminResidents() {
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                     />
 
+                    {/* Password */}
                     <input
                         type="password"
                         className="w-full p-2 rounded bg-black/30 border border-white/10"
@@ -133,7 +136,7 @@ export default function AdminResidents() {
                         value={form.roomId}
                         onChange={(e) => setForm({ ...form, roomId: e.target.value })}
                     >
-                        <option value="">Select Room</option>
+                        <option value="">Select Room (optional)</option>
                         {rooms.map((room) => (
                             <option key={room._id} value={room._id}>
                                 Room {room.roomNumber} — ₹{room.rent}
@@ -141,10 +144,20 @@ export default function AdminResidents() {
                         ))}
                     </select>
 
+                    {/* MANUAL RENT */}
+                    <input
+                        type="number"
+                        className="w-full p-2 rounded bg-black/30 border border-white/10"
+                        placeholder="Manual Rent (if no room)"
+                        value={form.rent}
+                        onChange={(e) => setForm({ ...form, rent: e.target.value })}
+                    />
+
                     <Button disabled={saving} onClick={addResident}>
                         {saving ? "Saving..." : "Add Resident"}
                     </Button>
                 </div>
+
 
                 {/* ================= RESIDENT TABLE ================= */}
                 {loading ? (
