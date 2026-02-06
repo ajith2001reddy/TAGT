@@ -6,11 +6,9 @@ import User from "../models/User.js";
 import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
 
-/**
- * =============================
- * GET ALL RESIDENTS
- * =============================
- */
+/* =====================================================
+   GET ALL RESIDENTS
+===================================================== */
 export const getAllResidents = async (req, res, next) => {
     try {
         const residents = await User.find({ role: "resident" })
@@ -25,17 +23,15 @@ export const getAllResidents = async (req, res, next) => {
     }
 };
 
-/**
- * =============================
- * ADD RESIDENT + CREATE RENT
- * =============================
- */
+/* =====================================================
+   ADD RESIDENT (ROOM NUMBER OR MANUAL RENT)
+===================================================== */
 export const addResident = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-        const { name, email, password, roomId, rent } = req.body;
+        const { name, email, password, room, rent } = req.body;
 
         /* ---------- VALIDATION ---------- */
         if (!name || !email || !password) {
@@ -43,15 +39,6 @@ export const addResident = async (req, res, next) => {
             return res.status(400).json({
                 success: false,
                 message: "Name, email, and password are required",
-            });
-        }
-
-        /* ---------- AUTH SAFETY ---------- */
-        if (!req.user?.id) {
-            await session.abortTransaction();
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized",
             });
         }
 
@@ -66,22 +53,22 @@ export const addResident = async (req, res, next) => {
             });
         }
 
-        let room = null;
+        /* ---------- ROOM LOGIC (by room number) ---------- */
+        let roomDoc = null;
         let finalRent = 0;
 
-        /* ---------- ROOM LOGIC (OPTIONAL) ---------- */
-        if (roomId) {
-            room = await Room.findById(roomId).session(session);
+        if (room) {
+            roomDoc = await Room.findOne({ roomNumber: room }).session(session);
 
-            if (!room) {
+            if (!roomDoc) {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
-                    message: "Invalid room selected",
+                    message: "Room not found",
                 });
             }
 
-            if (room.occupiedBeds >= room.totalBeds) {
+            if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
@@ -89,11 +76,11 @@ export const addResident = async (req, res, next) => {
                 });
             }
 
-            finalRent = room.rent || 0;
+            finalRent = roomDoc.rent || 0;
         }
 
-        /* ---------- MANUAL RENT (NO ROOM) ---------- */
-        if (!room && rent) {
+        /* ---------- MANUAL RENT ---------- */
+        if (!roomDoc && rent) {
             const parsedRent = Number(rent);
 
             if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
@@ -118,32 +105,30 @@ export const addResident = async (req, res, next) => {
                     email: normalizedEmail,
                     password: hashedPassword,
                     role: "resident",
-                    roomId: room ? room._id : null,
+                    roomId: roomDoc ? roomDoc._id : null,
                 },
             ],
             { session }
         );
 
         /* ---------- UPDATE ROOM OCCUPANCY ---------- */
-        if (room) {
-            room.occupiedBeds += 1;
-            await room.save({ session });
+        if (roomDoc) {
+            roomDoc.occupiedBeds += 1;
+            await roomDoc.save({ session });
         }
 
-        /* ---------- CREATE INITIAL RENT PAYMENT ---------- */
+        /* ---------- CREATE FIRST RENT BILL ---------- */
         if (finalRent > 0) {
-            const now = new Date();
-
             await Payment.create(
                 [
                     {
-                        resident: resident._id,           // ✅ correct field
-                        room: room ? room._id : null,     // ✅ required by schema
+                        residentId: resident._id,
                         amount: finalRent,
-                        month: now.toISOString().slice(0, 7),
+                        description: "Monthly Rent",
                         type: "rent",
-                        status: "pending",                // ✅ valid enum
-                        dueDate: new Date(now.getFullYear(), now.getMonth(), 5), // ✅ required
+                        status: "unpaid",
+                        month: new Date().toISOString().slice(0, 7),
+                        createdBy: req.user.id,
                     },
                 ],
                 { session }
@@ -153,7 +138,7 @@ export const addResident = async (req, res, next) => {
         await session.commitTransaction();
 
         logger.info(
-            `Resident added: ${resident.name}, Rent: ${finalRent}, Room: ${room ? room.roomNumber : "None"
+            `Resident added: ${resident.name}, Rent: ${finalRent}, Room: ${roomDoc ? roomDoc.roomNumber : "Manual"
             }`
         );
 
@@ -170,11 +155,9 @@ export const addResident = async (req, res, next) => {
     }
 };
 
-/**
- * =============================
- * DELETE RESIDENT
- * =============================
- */
+/* =====================================================
+   DELETE RESIDENT
+===================================================== */
 export const deleteResident = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -192,7 +175,7 @@ export const deleteResident = async (req, res, next) => {
             });
         }
 
-        /* ---------- REDUCE ROOM OCCUPANCY ---------- */
+        /* ---------- Reduce room occupancy ---------- */
         if (resident.roomId) {
             const room = await Room.findById(resident.roomId).session(session);
 
@@ -202,7 +185,7 @@ export const deleteResident = async (req, res, next) => {
             }
         }
 
-        /* ---------- DELETE RESIDENT PAYMENTS ---------- */
+        /* ---------- Delete payments ---------- */
         await Payment.deleteMany({ residentId: resident._id }).session(session);
 
         await resident.deleteOne({ session });
