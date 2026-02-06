@@ -84,17 +84,31 @@ router.get("/", auth, isAdmin, async (req, res, next) => {
 /* =========================
    RESIDENT → GET OWN PAYMENTS
 ========================= */
-router.get("/my", auth, async (req, res, next) => {
+router.get("/", auth, isAdmin, async (req, res) => {
     try {
-        const payments = await Payment.find({ residentId: req.user.id })
+        const payments = await Payment.find()
+            .populate({
+                path: "residentId",
+                select: "email name",
+                options: { strictPopulate: false }, // prevents populate crash
+            })
             .sort({ createdAt: -1 })
             .lean();
 
-        res.json({ success: true, payments });
+        return res.json({
+            success: true,
+            payments: payments || [],
+        });
     } catch (err) {
-        next(err);
+        console.error("GET PAYMENTS ERROR:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to load payments",
+        });
     }
 });
+
 
 /* =========================
    ADMIN → MARK PAYMENT AS PAID
