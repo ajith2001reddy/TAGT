@@ -58,7 +58,7 @@ export const getKPIs = async ({ fromDate, toDate } = {}) => {
     const resolvedRequests = await Request.aggregate([
         {
             $match: {
-                status: "done", // ✅ correct final status
+                status: "resolved",
                 ...requestDateFilter,
             },
         },

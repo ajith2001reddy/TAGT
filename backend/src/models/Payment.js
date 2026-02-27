@@ -5,7 +5,7 @@ const PaymentSchema = new mongoose.Schema(
         // 🔗 Resident reference
         resident: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Resident",
+            ref: "User",
             required: true,
             index: true,
         },

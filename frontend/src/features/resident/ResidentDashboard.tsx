@@ -25,7 +25,7 @@ export default function ResidentDashboard() {
     const load = async () => {
         try {
             setLoading(true)
-            const [r, p] = await Promise.all([api.get("/requests/me"), api.get("/payments/mine")])
+            const [r, p] = await Promise.all([api.get("/requests/me"), api.get("/payments/my")])
             setRequests(r.data.requests ?? [])
             setPayments(p.data.payments ?? [])
         } catch { } finally { setLoading(false) }
