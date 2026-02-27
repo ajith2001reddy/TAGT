@@ -1,6 +1,5 @@
 ﻿import logger from "../utils/logger.js";
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
 
 import User from "../models/User.js";
 import Room from "../models/rooms.js";
@@ -24,14 +23,19 @@ export const getAllResidents = async (req, res, next) => {
 };
 
 /* =====================================================
-   ADD RESIDENT (ROOM NUMBER OR MANUAL RENT)
+   ADD RESIDENT
+   Accepts: { name, email, password, roomNumber OR roomId, rent }
+   - Looks up room by roomNumber if provided
+   - Falls back to manual rent
+   - Password is plain text — pre-save hook in User model hashes it
 ===================================================== */
 export const addResident = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-        const { name, email, password, room, rent } = req.body;
+        // Support both roomNumber (from form) and roomId (ObjectId)
+        const { name, email, password, roomNumber, roomId, rent } = req.body;
 
         /* ---------- VALIDATION ---------- */
         if (!name || !email || !password) {
@@ -53,21 +57,35 @@ export const addResident = async (req, res, next) => {
             });
         }
 
-        /* ---------- ROOM LOGIC (by room number) ---------- */
+        /* ---------- FIND ROOM ---------- */
         let roomDoc = null;
         let finalRent = 0;
 
-        if (room) {
-            roomDoc = await Room.findOne({ roomNumber: room }).session(session);
+        if (roomNumber) {
+            // Lookup by room number string (e.g. "101")
+            roomDoc = await Room.findOne({ roomNumber: String(roomNumber) }).session(session);
 
             if (!roomDoc) {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
-                    message: "Room not found",
+                    message: `Room "${roomNumber}" not found`,
                 });
             }
+        } else if (roomId && mongoose.Types.ObjectId.isValid(roomId)) {
+            // Lookup by ObjectId
+            roomDoc = await Room.findById(roomId).session(session);
 
+            if (!roomDoc) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid room selected",
+                });
+            }
+        }
+
+        if (roomDoc) {
             if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
                 await session.abortTransaction();
                 return res.status(400).json({
@@ -75,14 +93,12 @@ export const addResident = async (req, res, next) => {
                     message: "No beds available in this room",
                 });
             }
-
             finalRent = roomDoc.rent || 0;
         }
 
-        /* ---------- MANUAL RENT ---------- */
+        /* ---------- MANUAL RENT (no room) ---------- */
         if (!roomDoc && rent) {
             const parsedRent = Number(rent);
-
             if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
                 await session.abortTransaction();
                 return res.status(400).json({
@@ -90,22 +106,20 @@ export const addResident = async (req, res, next) => {
                     message: "Invalid rent amount",
                 });
             }
-
             finalRent = parsedRent;
         }
 
-        /* ---------- HASH PASSWORD ---------- */
-        const hashedPassword = await bcrypt.hash(password, 10);
-
         /* ---------- CREATE RESIDENT ---------- */
+        // Pass plain password — User model pre-save hook hashes it automatically
         const [resident] = await User.create(
             [
                 {
                     name,
                     email: normalizedEmail,
-                    password: hashedPassword,
+                    password,          // pre-save hook handles hashing
                     role: "resident",
                     roomId: roomDoc ? roomDoc._id : null,
+                    isActive: true,
                 },
             ],
             { session }
@@ -119,16 +133,18 @@ export const addResident = async (req, res, next) => {
 
         /* ---------- CREATE FIRST RENT BILL ---------- */
         if (finalRent > 0) {
+            const now = new Date();
+            const dueDate = new Date(now.getFullYear(), now.getMonth() + 1, 5);
+
             await Payment.create(
                 [
                     {
-                        residentId: resident._id,
+                        resident: resident._id,
                         amount: finalRent,
-                        description: "Monthly Rent",
                         type: "rent",
-                        status: "unpaid",
-                        month: new Date().toISOString().slice(0, 7),
-                        createdBy: req.user.id,
+                        status: "pending",
+                        month: now.toISOString().slice(0, 7),
+                        dueDate,
                     },
                 ],
                 { session }
@@ -137,10 +153,7 @@ export const addResident = async (req, res, next) => {
 
         await session.commitTransaction();
 
-        logger.info(
-            `Resident added: ${resident.name}, Rent: ${finalRent}, Room: ${roomDoc ? roomDoc.roomNumber : "Manual"
-            }`
-        );
+        logger.info(`Resident added: ${resident.name}, Room: ${roomDoc?.roomNumber || "None"}, Rent: ${finalRent}`);
 
         return res.status(201).json({
             success: true,
@@ -178,7 +191,6 @@ export const deleteResident = async (req, res, next) => {
         /* ---------- Reduce room occupancy ---------- */
         if (resident.roomId) {
             const room = await Room.findById(resident.roomId).session(session);
-
             if (room && room.occupiedBeds > 0) {
                 room.occupiedBeds -= 1;
                 await room.save({ session });
@@ -186,7 +198,7 @@ export const deleteResident = async (req, res, next) => {
         }
 
         /* ---------- Delete payments ---------- */
-        await Payment.deleteMany({ residentId: resident._id }).session(session);
+        await Payment.deleteMany({ resident: resident._id }).session(session);
 
         await resident.deleteOne({ session });
 

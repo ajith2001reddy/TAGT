@@ -20,7 +20,7 @@ export const addRoom = async (req, res, next) => {
             });
         }
 
-        if (typeof rent !== "number" || rent <= 0) {
+        if (!Number.isFinite(Number(rent)) || Number(rent) <= 0) {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
@@ -28,7 +28,7 @@ export const addRoom = async (req, res, next) => {
             });
         }
 
-        if (typeof totalBeds !== "number" || totalBeds <= 0) {
+        if (!Number.isFinite(Number(totalBeds)) || Number(totalBeds) <= 0) {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
@@ -45,13 +45,12 @@ export const addRoom = async (req, res, next) => {
             });
         }
 
-        // ✅ create single document (NOT array)
         const room = await Room.create(
             [
                 {
                     roomNumber,
-                    rent,
-                    totalBeds,
+                    rent: Number(rent),
+                    totalBeds: Number(totalBeds),
                     occupiedBeds: 0,
                     note: typeof note === "string" ? note : "",
                 },
@@ -109,7 +108,6 @@ export const deleteRoom = async (req, res, next) => {
             });
         }
 
-        // ❗ Prevent deleting room with residents
         if (room.occupiedBeds > 0) {
             await session.abortTransaction();
             return res.status(400).json({

@@ -37,9 +37,10 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
             });
         }
 
-        // ❗ Prevent duplicate monthly bill
+        // Prevent duplicate monthly bill
         if (month) {
-            const exists = await Payment.findOne({ residentId, month });
+            // FIX: Payment model uses 'resident' field, not 'residentId'
+            const exists = await Payment.findOne({ resident: residentId, month });
             if (exists) {
                 return res.status(400).json({
                     success: false,
@@ -48,15 +49,18 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
             }
         }
 
+        const dueDate = month
+            ? new Date(`${month}-05`) // 5th of the billed month
+            : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+
         const payment = await Payment.create({
-            residentId,
+            resident: residentId,       // FIX: was 'residentId', model field is 'resident'
             amount,
-            description: description || "",
-            type: type || "manual",
-            month: month || null,
-            adminNote: adminNote || "",
-            status: "unpaid",
-            createdBy: req.user.id,
+            notes: description || adminNote || "",
+            type: type || "other",
+            month: month || new Date().toISOString().slice(0, 7),
+            status: "pending",
+            dueDate,
         });
 
         res.status(201).json({ success: true, payment });
@@ -68,29 +72,14 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
 /* =========================
    ADMIN → GET ALL PAYMENTS
 ========================= */
+// FIX: Removed duplicate GET "/" handler (there were two, second one shadowed the first)
 router.get("/", auth, isAdmin, async (req, res, next) => {
     try {
         const payments = await Payment.find()
-            .populate("residentId", "email name")
-            .sort({ createdAt: -1 })
-            .lean();
-
-        res.json({ success: true, payments });
-    } catch (err) {
-        next(err);
-    }
-});
-
-/* =========================
-   RESIDENT → GET OWN PAYMENTS
-========================= */
-router.get("/", auth, isAdmin, async (req, res) => {
-    try {
-        const payments = await Payment.find()
             .populate({
-                path: "residentId",
+                path: "resident",       // FIX: was 'residentId'
                 select: "email name",
-                options: { strictPopulate: false }, // prevents populate crash
+                options: { strictPopulate: false },
             })
             .sort({ createdAt: -1 })
             .lean();
@@ -101,7 +90,6 @@ router.get("/", auth, isAdmin, async (req, res) => {
         });
     } catch (err) {
         console.error("GET PAYMENTS ERROR:", err);
-
         return res.status(500).json({
             success: false,
             message: "Failed to load payments",
@@ -109,6 +97,20 @@ router.get("/", auth, isAdmin, async (req, res) => {
     }
 });
 
+/* =========================
+   RESIDENT → GET OWN PAYMENTS
+========================= */
+router.get("/mine", auth, async (req, res, next) => {
+    try {
+        const payments = await Payment.find({ resident: req.user._id })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({ success: true, payments });
+    } catch (err) {
+        next(err);
+    }
+});
 
 /* =========================
    ADMIN → MARK PAYMENT AS PAID

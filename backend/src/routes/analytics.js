@@ -1,5 +1,6 @@
 ﻿import { Router } from "express";
-import auth, { isAdmin } from "../middleware/auth.js";
+import firebaseAuth from "../middleware/firebaseAuth.js"; // ✅
+import isAdmin from "../middleware/isAdmin.js";
 
 import { getKPIs } from "../analytics/kpiCalculator.js";
 import { predictOccupancy } from "../analytics/forecastEngine.js";
@@ -13,7 +14,7 @@ const router = Router();
 /* =========================
    KPIs
 ========================= */
-router.get("/kpis", auth, isAdmin, async (req, res, next) => {
+router.get("/kpis", firebaseAuth, isAdmin, async (req, res, next) => {
     try {
         const { fromDate, toDate } = req.query;
         const filters = {};
@@ -43,7 +44,7 @@ router.get("/kpis", auth, isAdmin, async (req, res, next) => {
 /* =========================
    OCCUPANCY FORECAST
 ========================= */
-router.get("/predict/occupancy", auth, isAdmin, async (req, res, next) => {
+router.get("/predict/occupancy", firebaseAuth, isAdmin, async (req, res, next) => {
     try {
         const months = Math.min(Number(req.query.months) || 6, 12);
         const forecast = await predictOccupancy(months);
@@ -56,7 +57,7 @@ router.get("/predict/occupancy", auth, isAdmin, async (req, res, next) => {
 /* =========================
    MAINTENANCE FORECAST
 ========================= */
-router.get("/predict/maintenance", auth, isAdmin, async (req, res, next) => {
+router.get("/predict/maintenance", firebaseAuth, isAdmin, async (req, res, next) => {
     try {
         const months = Math.min(Number(req.query.months) || 6, 12);
         const forecast = await predictMaintenanceCost(months);
@@ -69,7 +70,7 @@ router.get("/predict/maintenance", auth, isAdmin, async (req, res, next) => {
 /* =========================
    CHURN PREDICTION
 ========================= */
-router.get("/predict/churn", auth, isAdmin, async (req, res, next) => {
+router.get("/predict/churn", firebaseAuth, isAdmin, async (req, res, next) => {
     try {
         const churnData = await predictChurn();
         res.json({ success: true, data: churnData });
@@ -81,7 +82,7 @@ router.get("/predict/churn", auth, isAdmin, async (req, res, next) => {
 /* =========================
    REVENUE OPTIMIZATION
 ========================= */
-router.get("/optimize/revenue", auth, isAdmin, async (req, res, next) => {
+router.get("/optimize/revenue", firebaseAuth, isAdmin, async (req, res, next) => {
     try {
         const insights = await optimizeRevenue();
         res.json({ success: true, data: insights });

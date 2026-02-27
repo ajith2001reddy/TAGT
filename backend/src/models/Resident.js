@@ -1,11 +1,11 @@
 import { Router } from "express";
 import mongoose from "mongoose";
 import Request from "../models/Request.js";
-import auth from "../middleware/auth.js";
+import firebaseAuth from "../middleware/firebaseAuth.js";
 
 const router = Router();
 
-router.post("/request", auth, async (req, res, next) => {
+router.post("/request", firebaseAuth, async (req, res, next) => {
     try {
         const { message } = req.body;
 
@@ -33,7 +33,7 @@ router.post("/request", auth, async (req, res, next) => {
     }
 });
 
-router.get("/requests", auth, async (req, res, next) => {
+router.get("/requests", firebaseAuth, async (req, res, next) => {
     try {
         const requests = await Request.find({
             residentId: req.user.id
@@ -50,7 +50,7 @@ router.get("/requests", auth, async (req, res, next) => {
     }
 });
 
-router.delete("/request/:id", auth, async (req, res, next) => {
+router.delete("/request/:id", firebaseAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
 

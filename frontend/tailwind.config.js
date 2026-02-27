@@ -1,11 +1,11 @@
-module.exports = {
-    content: ["./src/**/*.{js,jsx}"],
-    theme: {
-        extend: {
-            colors: {
-                primary: "#2563eb", // Blue-600 used in Button.jsx
-            }
-        }
-    },
-    plugins: []
-};
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}"
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}

@@ -1,10 +1,16 @@
-﻿import dotenv from "dotenv";
+﻿import dns from "dns";
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+// ✅ Force IPv4 first (fix MongoDB SRV ECONNREFUSED issue)
+dns.setDefaultResultOrder("ipv4first");
+
+import dotenv from "dotenv";
+dotenv.config();
 import http from "http";
 
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
 
-dotenv.config();
+
 
 const PORT = process.env.PORT || 5000;
 

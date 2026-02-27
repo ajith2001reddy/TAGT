@@ -6,23 +6,20 @@ import roomRoutes from "./rooms.js";
 import paymentRoutes from "./payments.js";
 import residentRoutes from "./resident.js";
 import analyticsRoutes from "./analytics.js";
-import requestRoutes from "./requests.js"; // ✅ NEW
+import requestRoutes from "./requests.js";
 
 const router = Router();
 
-router.use("/auth", authRoutes);
+router.use("/auth", authRoutes);           // POST /api/auth/login
 router.use("/admin", adminRoutes);
 router.use("/rooms", roomRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/resident", residentRoutes);
 router.use("/analytics", analyticsRoutes);
-router.use("/requests", requestRoutes); // ✅ NEW
+router.use("/requests", requestRoutes);
 
 router.get("/", (req, res) => {
-    res.json({
-        success: true,
-        message: "TAGT API is running",
-    });
+    res.json({ success: true, message: "TAGT API is running" });
 });
 
 router.get("/health", (req, res) => {

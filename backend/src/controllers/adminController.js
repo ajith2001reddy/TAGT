@@ -1,7 +1,8 @@
-﻿import bcrypt from "bcryptjs";
+﻿
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Room from "../models/rooms.js";
+import admin from "../config/firebase.js";
 
 export const getAllResidents = async (req, res, next) => {
     try {

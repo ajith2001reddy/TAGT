@@ -17,8 +17,24 @@ app.use(helmet());
 const allowedOrigins = [
     "https://tagt.website",
     "https://www.tagt.website",
-    "http://localhost:3000",        // ✅ local dev
+    "http://localhost:3000",
+    "http://localhost:5173", // in case you ever use Vite
 ];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (origin.includes(".vercel.app")) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.options("*", cors(corsOptions)); // ✅ handle preflight
+app.use(cors(corsOptions));
 
 app.use(
     cors({

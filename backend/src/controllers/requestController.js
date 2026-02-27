@@ -1,5 +1,4 @@
 import Request from "../models/Request.js";
-import RequestHistory from "../models/RequestHistory.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -21,14 +20,6 @@ export const createRequest = async (req, res, next) => {
             title,
             description,
             priority: priority || "medium",
-            status: "pending",
-        });
-
-        // Save history
-        await RequestHistory.create({
-            request: request._id,
-            action: "created",
-            performedBy: req.user.id,
         });
 
         return res.status(201).json({
@@ -56,7 +47,7 @@ export const getAllRequests = async (req, res, next) => {
             requests,
         });
     } catch (err) {
-        logger.error(`GET REQUESTS ERROR: ${err.message}`);
+        logger.error(`GET ALL REQUESTS ERROR: ${err.message}`);
         next(err);
     }
 };
@@ -85,10 +76,20 @@ export const getMyRequests = async (req, res, next) => {
  */
 export const updateRequestStatus = async (req, res, next) => {
     try {
-        const { id } = req.params;
         const { status } = req.body;
 
-        const request = await Request.findById(id);
+        if (!["pending", "in-progress", "resolved"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid status value",
+            });
+        }
+
+        const request = await Request.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
 
         if (!request) {
             return res.status(404).json({
@@ -96,16 +97,6 @@ export const updateRequestStatus = async (req, res, next) => {
                 message: "Request not found",
             });
         }
-
-        request.status = status || request.status;
-        await request.save();
-
-        // Save history
-        await RequestHistory.create({
-            request: request._id,
-            action: `status_changed_to_${request.status}`,
-            performedBy: req.user.id,
-        });
 
         return res.json({
             success: true,
@@ -122,9 +113,7 @@ export const updateRequestStatus = async (req, res, next) => {
  */
 export const deleteRequest = async (req, res, next) => {
     try {
-        const { id } = req.params;
-
-        const request = await Request.findById(id);
+        const request = await Request.findById(req.params.id);
 
         if (!request) {
             return res.status(404).json({

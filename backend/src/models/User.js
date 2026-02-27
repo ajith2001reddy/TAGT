@@ -1,13 +1,23 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema(
     {
+        // Firebase UID - linked when user logs in via Firebase/Google
+        // sparse: true allows multiple documents to have null (for old password users)
+        firebaseUid: {
+            type: String,
+            unique: true,
+            sparse: true,
+            index: true,
+        },
+
         name: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
         },
+
         email: {
             type: String,
             required: true,
@@ -15,45 +25,46 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             trim: true,
             index: true,
-            match: [/\S+@\S+\.\S+/, "Please use a valid email address"]
+            match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
         },
+
+        // Password is optional — Google/Firebase users won't have one
         password: {
             type: String,
-            required: true,
             minlength: 6,
-            select: false
+            select: false,
         },
+
         role: {
             type: String,
             enum: ["admin", "resident"],
             default: "resident",
-            index: true
+            index: true,
         },
+
         roomId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Room",
             default: null,
-            index: true
+            index: true,
         },
+
         isActive: {
             type: Boolean,
             default: true,
-            index: true
-        }
+            index: true,
+        },
     },
-    {
-        timestamps: true
-    }
+    { timestamps: true }
 );
 
-// Hash password before save - ONLY HASHING POINT
+// Only hash if password exists and was modified
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
+    if (!this.password || !this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
-// Compare password for login
 userSchema.methods.comparePassword = function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 };

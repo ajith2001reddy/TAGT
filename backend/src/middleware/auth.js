@@ -1,49 +1,32 @@
-﻿import jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-const authMiddleware = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({
-            success: false,
-            message: "Authorization token missing"
-        });
-    }
-
-    if (!process.env.JWT_SECRET) {
-        return res.status(500).json({
-            success: false,
-            message: "Server configuration error"
-        });
-    }
-
+const auth = async (req, res, next) => {
     try {
-        const token = authHeader.split(" ")[1];
+        const header = req.headers.authorization;
+
+        if (!header || !header.startsWith("Bearer ")) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
+
+        const token = header.split(" ")[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const dbUser = await User.findById(decoded.id);
 
-        req.user = {
-            id: decoded.id,
-            role: decoded.role
-        };
+        if (!dbUser) {
+            return res.status(401).json({ success: false, message: "User not found" });
+        }
 
+        if (!dbUser.isActive) {
+            return res.status(403).json({ success: false, message: "Account inactive" });
+        }
+
+        req.user = dbUser;
         next();
-    } catch {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid or expired token"
-        });
+    } catch (error) {
+        console.error("auth middleware error:", error.message);
+        return res.status(401).json({ success: false, message: "Invalid or expired token" });
     }
 };
 
-// ✅ Admin-only guard
-export const isAdmin = (req, res, next) => {
-    if (!req.user || req.user.role !== "admin") {
-        return res.status(403).json({
-            success: false,
-            message: "Admin access required"
-        });
-    }
-    next();
-};
-
-export default authMiddleware;
+export default auth;

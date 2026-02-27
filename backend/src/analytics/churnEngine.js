@@ -7,12 +7,13 @@ async function calculateResidentChurn(resident) {
     let score = 0;
     const reasons = [];
 
+    // FIX: Payment model uses 'resident' field, not 'residentId'
     const [payments, requests] = await Promise.all([
-        Payment.find({ residentId: resident._id }).lean(),
-        Request.find({ residentId: resident._id }).lean()
+        Payment.find({ resident: resident._id }).lean(),
+        Request.find({ resident: resident._id }).lean()
     ]);
 
-    const unpaidCount = payments.filter(p => p.status === "unpaid").length;
+    const unpaidCount = payments.filter(p => p.status === "pending" || p.status === "failed").length;
 
     if (unpaidCount >= 2) {
         score += 30;

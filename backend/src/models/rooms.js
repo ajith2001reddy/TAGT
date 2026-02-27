@@ -12,12 +12,12 @@ const roomSchema = new mongoose.Schema(
         rent: {
             type: Number,
             required: true,
-            min: 1
+            min: 0
         },
         totalBeds: {
             type: Number,
             required: true,
-            min: 1
+            min: 0
         },
         occupiedBeds: {
             type: Number,
