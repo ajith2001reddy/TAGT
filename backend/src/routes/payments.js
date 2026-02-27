@@ -100,7 +100,7 @@ router.get("/", auth, isAdmin, async (req, res, next) => {
 /* =========================
    RESIDENT → GET OWN PAYMENTS
 ========================= */
-router.get("/mine", auth, async (req, res, next) => {
+const getMyPayments = async (req, res, next) => {
     try {
         const payments = await Payment.find({ resident: req.user._id })
             .sort({ createdAt: -1 })
@@ -110,7 +110,10 @@ router.get("/mine", auth, async (req, res, next) => {
     } catch (err) {
         next(err);
     }
-});
+};
+
+router.get("/my", auth, getMyPayments);
+router.get("/mine", auth, getMyPayments); // backward-compatible alias
 
 /* =========================
    ADMIN → MARK PAYMENT AS PAID
