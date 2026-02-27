@@ -42,15 +42,26 @@ export default function PaymentsPage() {
         try { await api.delete(`/payments/${id}`); load() } catch { }
     }
 
+    const exportCsv = async () => {
+        const r = await api.get("/payments/export/csv", { responseType: "blob" })
+        const blob = new Blob([r.data], { type: "text/csv" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `payments-${new Date().toISOString().slice(0, 10)}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
+    }
+
     const filtered = filter === "all" ? payments : payments.filter(p => p.status === filter)
     const totalCollected = payments.filter(p => p.status === "paid").reduce((s, p) => s + p.amount, 0)
     const totalPending = payments.filter(p => p.status === "pending").reduce((s, p) => s + p.amount, 0)
 
     return (
         <div className="space-y-6 max-w-5xl">
-            <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Payments</h1>
-                <p className="text-white/30 text-sm mt-0.5">{payments.length} total records</p>
+            <div className="flex items-center justify-between">
+                <div><h1 className="text-2xl font-bold text-white tracking-tight">Payments</h1><p className="text-white/30 text-sm mt-0.5">{payments.length} total records</p></div>
+                <button onClick={exportCsv} className="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-2 rounded-lg">Export CSV</button>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
