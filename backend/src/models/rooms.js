@@ -30,6 +30,17 @@ const roomSchema = new mongoose.Schema(
                 message: "Occupied beds cannot exceed total beds"
             }
         },
+        maintenanceMode: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+        maintenanceNote: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 300
+        },
         note: {
             type: String,
             default: ""
@@ -42,12 +53,11 @@ const roomSchema = new mongoose.Schema(
     }
 );
 
-// Virtual field for availability
 roomSchema.virtual("availableBeds").get(function () {
+    if (this.maintenanceMode) return 0;
     return Math.max(0, this.totalBeds - this.occupiedBeds);
 });
 
-// Indexes for analytics & queries
 roomSchema.index({ rent: 1 });
 roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
 
