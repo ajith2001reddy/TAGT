@@ -3,8 +3,10 @@
 import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
 import { predictChurn } from "./churnEngine.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
-export const optimizeRevenue = async () => {
+export const optimizeRevenue = async (req) => {
+    const scope = buildPropertyFilter(req.user);
     const [rooms, payments] = await Promise.all([
         Room.find({}, "totalBeds occupiedBeds rent").lean(),
         Payment.find({}, "amount status").lean()

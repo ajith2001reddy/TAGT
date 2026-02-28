@@ -4,14 +4,16 @@ import mongoose from "mongoose";
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
 import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
+
+import { authorize } from "../middleware/authorize.js";
 
 const router = Router();
 
 /* =========================
    ADMIN → CREATE BILL
 ========================= */
-router.post("/", auth, isAdmin, async (req, res, next) => {
+router.post("/", auth, authorize("owner"), async (req, res, next) => {
     try {
         const { residentId, description, type, month, adminNote } = req.body;
         const amount = Number(req.body.amount);
@@ -24,10 +26,12 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Invalid amount" });
         }
 
+        const scope = buildPropertyFilter(req.user);
         const resident = await User.findOne({
             _id: residentId,
             role: "resident",
             isActive: true,
+            ...scope
         }).lean();
 
         if (!resident) {
@@ -40,7 +44,8 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
         // Prevent duplicate monthly bill
         if (month) {
             // FIX: Payment model uses 'resident' field, not 'residentId'
-            const exists = await Payment.findOne({ resident: residentId, month });
+            const scope = buildPropertyFilter(req.user);
+            const exists = await Payment.findOne({ resident: residentId, month, ...scope });
             if (exists) {
                 return res.status(400).json({
                     success: false,
@@ -61,6 +66,7 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
             month: month || new Date().toISOString().slice(0, 7),
             status: "pending",
             dueDate,
+            ...scope
         });
 
         res.status(201).json({ success: true, payment });
@@ -73,9 +79,10 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
    ADMIN → GET ALL PAYMENTS
 ========================= */
 // FIX: Removed duplicate GET "/" handler (there were two, second one shadowed the first)
-router.get("/", auth, isAdmin, async (req, res, next) => {
+router.get("/", auth, authorize("owner"), async (req, res, next) => {
     try {
-        const payments = await Payment.find()
+        const scope = buildPropertyFilter(req.user);
+        const payments = await Payment.find({ ...scope })
             .populate({
                 path: "resident",       // FIX: was 'residentId'
                 select: "email name",
@@ -98,9 +105,10 @@ router.get("/", auth, isAdmin, async (req, res, next) => {
 });
 
 
-router.get("/export/csv", auth, isAdmin, async (req, res, next) => {
+router.get("/export/csv", auth, authorize("owner"), async (req, res, next) => {
     try {
-        const payments = await Payment.find()
+        const scope = buildPropertyFilter(req.user);
+        const payments = await Payment.find({ ...scope })
             .populate({ path: "resident", select: "name email", options: { strictPopulate: false } })
             .sort({ createdAt: -1 })
             .lean();
@@ -142,7 +150,8 @@ router.get("/export/csv", auth, isAdmin, async (req, res, next) => {
 ========================= */
 const getMyPayments = async (req, res, next) => {
     try {
-        const payments = await Payment.find({ resident: req.user._id })
+        const scope = buildPropertyFilter(req.user);
+        const payments = await Payment.find({ resident: req.user._id, ...scope })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -158,7 +167,7 @@ router.get("/mine", auth, getMyPayments); // backward-compatible alias
 /* =========================
    ADMIN → MARK PAYMENT AS PAID
 ========================= */
-router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
+router.put("/:id/paid", auth, authorize("owner"), async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -166,7 +175,8 @@ router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Invalid payment ID" });
         }
 
-        const payment = await Payment.findById(id);
+        const scope = buildPropertyFilter(req.user);
+        const payment = await Payment.findById(id, ...scope);
 
         if (!payment) {
             return res.status(404).json({ success: false, message: "Payment not found" });
@@ -189,7 +199,7 @@ router.put("/:id/paid", auth, isAdmin, async (req, res, next) => {
 /* =========================
    ADMIN → DELETE PAYMENT
 ========================= */
-router.delete("/:id", auth, isAdmin, async (req, res, next) => {
+router.delete("/:id", auth, authorize("owner"), async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -197,7 +207,8 @@ router.delete("/:id", auth, isAdmin, async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Invalid payment ID" });
         }
 
-        const payment = await Payment.findById(id);
+        const scope = buildPropertyFilter(req.user);
+        const payment = await Payment.findById(id, ...scope);
 
         if (!payment) {
             return res.status(404).json({ success: false, message: "Payment not found" });

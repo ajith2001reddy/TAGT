@@ -2,15 +2,14 @@ import { Router } from "express";
 import mongoose from "mongoose";
 
 import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
 import { getAllRooms, addRoom, updateRoom, deleteRoom } from "../controllers/roomController.js";
 
 const router = Router();
 
-router.get("/", auth, isAdmin, getAllRooms);
-router.post("/", auth, isAdmin, addRoom);
+router.get("/", auth, getAllRooms);
+router.post("/", auth, addRoom);
 
-router.put("/:id", auth, isAdmin, (req, res, next) => {
+router.put("/:id", auth, (req, res, next) => {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ success: false, message: "Invalid room ID" });
@@ -18,7 +17,7 @@ router.put("/:id", auth, isAdmin, (req, res, next) => {
     return updateRoom(req, res, next);
 });
 
-router.delete("/:id", auth, isAdmin, (req, res, next) => {
+router.delete("/:id", auth, (req, res, next) => {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ success: false, message: "Invalid room ID" });

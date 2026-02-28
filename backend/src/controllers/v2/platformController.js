@@ -4,6 +4,7 @@ import User from "../../models/User.js";
 import Room from "../../models/rooms.js";
 import Payment from "../../models/Payment.js";
 import Request from "../../models/Request.js";
+import { buildPropertyFilter } from "../../utils/tenantScope.js";
 
 const getPagination = (query) => {
     const page = Math.max(1, Number(query.page) || 1);
@@ -25,10 +26,11 @@ export const providerOverview = async (req, res, next) => {
 
 export const listProperties = async (req, res, next) => {
     try {
+        const scope = buildPropertyFilter(req.user);
         const { page, limit, skip } = getPagination(req.query);
         const [items, total] = await Promise.all([
-            Property.find().populate("owner", "name email").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-            Property.countDocuments({})
+            Property.find({ ...scope }).populate("owner", "name email").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+            Property.countDocuments({ ...scope })
         ]);
         res.json({ success: true, data: items, pagination: { page, limit, total } });
     } catch (err) { next(err); }
@@ -62,9 +64,10 @@ export const ownerOverview = async (req, res, next) => {
 
 export const ownerRooms = async (req, res, next) => {
     try {
+        const scope = buildPropertyFilter(req.user);
         const propertyId = req.user.propertyId;
         if (req.method === "GET") {
-            const rooms = await Room.find({ propertyId }).sort({ createdAt: -1 }).lean();
+            const rooms = await Room.find({ propertyId, ...scope }).sort({ createdAt: -1 }).lean();
             return res.json({ success: true, data: rooms });
         }
         if (req.method === "POST") {
@@ -78,11 +81,12 @@ export const ownerRooms = async (req, res, next) => {
 
 export const updateOwnerRoom = async (req, res, next) => {
     try {
+        const scope = buildPropertyFilter(req.user);
         const propertyId = req.user.propertyId;
         const { id } = req.params;
         const { roomNumber, totalBeds, occupiedBeds, rentAmount, status } = req.body;
         const room = await Room.findOneAndUpdate(
-            { _id: id, propertyId },
+            { _id: id, propertyId, ...scope },
             { roomNumber, totalBeds, occupiedBeds, rent: rentAmount, status },
             { new: true }
         );
@@ -93,9 +97,10 @@ export const updateOwnerRoom = async (req, res, next) => {
 
 export const ownerResidents = async (req, res, next) => {
     try {
+        const scope = buildPropertyFilter(req.user);
         const propertyId = req.user.propertyId;
         if (req.method === "GET") {
-            const residents = await User.find({ propertyId, role: "resident" }).populate("roomId", "roomNumber").lean();
+            const residents = await User.find({ propertyId, role: "resident", ...scope }).populate("roomId", "roomNumber").lean();
             return res.json({ success: true, data: residents });
         }
         const { name, email, password, roomId } = req.body;
@@ -106,21 +111,23 @@ export const ownerResidents = async (req, res, next) => {
 
 export const ownerPayments = async (req, res, next) => {
     try {
+        const scope = buildPropertyFilter(req.user);
         const propertyId = req.user.propertyId;
         if (req.method === "GET") {
-            const payments = await Payment.find({ propertyId }).populate("resident", "name email").sort({ createdAt: -1 }).lean();
+            const payments = await Payment.find({ propertyId, ...scope }).populate("resident", "name email").sort({ createdAt: -1 }).lean();
             return res.json({ success: true, data: payments });
         }
+
         const { resident, amount, month, type, dueDate } = req.body;
-        const payment = await Payment.create({ propertyId, resident, amount, month, type: type || "rent", status: "pending", dueDate });
+        const payment = await Payment.create({ propertyId, resident, amount, month, type: type || "rent", status: "pending", dueDate, ...scope });
         return res.status(201).json({ success: true, data: payment });
     } catch (err) { next(err); }
 };
 
 export const markPaymentPaid = async (req, res, next) => {
     try {
-        const propertyId = req.user.propertyId;
-        const payment = await Payment.findOneAndUpdate({ _id: req.params.id, propertyId }, { status: "paid", paidAt: new Date() }, { new: true });
+        const scope = buildPropertyFilter(req.user);
+        const payment = await Payment.findOneAndUpdate({ _id: req.params.id, ...scope }, { status: "paid", paidAt: new Date() }, { new: true });
         if (!payment) return res.status(404).json({ success: false, message: "Payment not found" });
         return res.json({ success: true, data: payment });
     } catch (err) { next(err); }
@@ -128,13 +135,14 @@ export const markPaymentPaid = async (req, res, next) => {
 
 export const ownerRequests = async (req, res, next) => {
     try {
+        const scope = buildPropertyFilter(req.user);
         const propertyId = req.user.propertyId;
         if (req.method === "GET") {
-            const requests = await Request.find({ propertyId }).populate("resident", "name email").sort({ createdAt: -1 }).lean();
+            const requests = await Request.find({ propertyId, ...scope }).populate("resident", "name email").sort({ createdAt: -1 }).lean();
             return res.json({ success: true, data: requests });
         }
         const { id } = req.params;
-        const request = await Request.findOneAndUpdate({ _id: id, propertyId }, req.body, { new: true });
+        const request = await Request.findOneAndUpdate({ _id: id, ...scope }, req.body, { new: true });
         if (!request) return res.status(404).json({ success: false, message: "Request not found" });
         return res.json({ success: true, data: request });
     } catch (err) { next(err); }
@@ -143,10 +151,11 @@ export const ownerRequests = async (req, res, next) => {
 export const residentDashboard = async (req, res, next) => {
     try {
         const residentId = req.user._id;
+        const scope = buildPropertyFilter(req.user);
         const [profile, payments, requests] = await Promise.all([
-            User.findById(residentId).populate("roomId", "roomNumber rent totalBeds occupiedBeds").lean(),
-            Payment.find({ resident: residentId }).sort({ createdAt: -1 }).limit(12).lean(),
-            Request.find({ resident: residentId }).sort({ createdAt: -1 }).limit(20).lean()
+            User.findById(residentId, ...scope).populate("roomId", "roomNumber rent totalBeds occupiedBeds").lean(),
+            Payment.find({ resident: residentId, ...scope }).sort({ createdAt: -1 }).limit(12).lean(),
+            Request.find({ resident: residentId, ...scope }).sort({ createdAt: -1 }).limit(20).lean()
         ]);
         return res.json({ success: true, data: { profile, payments, requests } });
     } catch (err) { next(err); }

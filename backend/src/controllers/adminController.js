@@ -3,10 +3,15 @@ import mongoose from "mongoose";
 import User from "../models/User.js";
 import Room from "../models/rooms.js";
 import admin from "../config/firebase.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 export const getAllResidents = async (req, res, next) => {
     try {
-        const residents = await User.find({ role: "resident" })
+        const scope = buildPropertyFilter(req.user);
+        const residents = await User.find({
+            role: "resident",
+            ...scope
+        })
             .populate("roomId", "roomNumber totalBeds occupiedBeds")
             .sort({ createdAt: -1 })
             .lean();
@@ -33,8 +38,8 @@ export const addResident = async (req, res, next) => {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-
-        const existing = await User.findOne({ email: normalizedEmail }).session(session);
+        const scope = buildPropertyFilter(req.user);
+        const existing = await User.findOne({ email: normalizedEmail, ...scope }).session(session);
         if (existing) {
             await session.abortTransaction();
             return res.status(400).json({
@@ -43,9 +48,11 @@ export const addResident = async (req, res, next) => {
             });
         }
 
+
         let room = null;
         if (roomId) {
-            room = await Room.findById(roomId).session(session);
+            const roomScope = buildPropertyFilter(req.user);
+            room = await Room.findById(roomId, ...roomScope).session(session);
 
             if (!room) {
                 await session.abortTransaction();

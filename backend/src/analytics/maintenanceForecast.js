@@ -1,4 +1,5 @@
 import Request from "../models/Request.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 // Function to get monthly maintenance costs for a specified number of months
 async function getMonthlyMaintenanceCosts(months = 6) {
@@ -22,10 +23,11 @@ async function getMonthlyMaintenanceCosts(months = 6) {
         return { start, end };
     });
 
+    const scope = buildPropertyFilter(req.user);
     const requestsByMonth = await Promise.all(
         ranges.map(({ start, end }) =>
             Request.find(
-                { createdAt: { $gte: start, $lte: end } },
+                { createdAt: { $gte: start, $lte: end }, ...scope },
                 "cost"
             ).lean()
         )

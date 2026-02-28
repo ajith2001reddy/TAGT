@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
+
 
 import {
     getAllResidents,
@@ -11,15 +11,18 @@ import {
 import Request from "../models/Request.js";
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
+import { authorize } from "../middleware/authorize.js";
 
 const router = Router();
 
-router.get("/residents", auth, isAdmin, getAllResidents);
-router.post("/residents", auth, isAdmin, addResident);
+router.get("/residents", auth, authorize("owner"), getAllResidents);
+router.post("/residents", auth, authorize("owner"), addResident);
 
-router.get("/requests", auth, isAdmin, async (req, res, next) => {
+router.get("/requests", auth, authorize("owner"), async (req, res, next) => {
     try {
-        const requests = await Request.find()
+        const scope = buildPropertyFilter(req.user);
+        const requests = await Request.find({ ...scope })
             .populate("resident", "name email")
             .sort({ createdAt: -1 })
             .lean();
@@ -29,12 +32,13 @@ router.get("/requests", auth, isAdmin, async (req, res, next) => {
     }
 });
 
-router.get("/stats", auth, isAdmin, async (req, res, next) => {
+router.get("/stats", auth, authorize("owner"), async (req, res, next) => {
     try {
+        const scope = buildPropertyFilter(req.user);
         const [totalResidents, pendingRequests, payments] = await Promise.all([
-            User.countDocuments({ role: "resident", isActive: true }),
-            Request.countDocuments({ status: { $ne: "resolved" } }),
-            Payment.find({}, "amount status").lean(),
+            User.countDocuments({ role: "resident", isActive: true, ...scope }),
+            Request.countDocuments({ status: { $ne: "resolved" }, ...scope }),
+            Payment.find({ ...scope }, "amount status").lean(),
         ]);
 
         let totalRevenue = 0;

@@ -12,7 +12,7 @@
   "dependencies": {
     "@firebase/auth": "^1.12.1",
     "axios": "^1.13.5",
-    "firebase": "^12.9.0",
+    "firebase": "^12.10.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1"
