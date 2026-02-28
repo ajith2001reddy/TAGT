@@ -37,8 +37,16 @@ const userSchema = new mongoose.Schema(
 
         role: {
             type: String,
-            enum: ["admin", "resident"],
+            enum: ["super_admin", "owner", "resident"],
             default: "resident",
+            index: true,
+        },
+
+
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            default: null,
             index: true,
         },
 
@@ -57,6 +65,19 @@ const userSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
+
+userSchema.pre("validate", function (next) {
+    if (this.role === "super_admin") {
+        this.propertyId = null;
+    }
+
+    if (["owner", "resident"].includes(this.role) && !this.propertyId) {
+        return next(new Error("propertyId is required for owner and resident"));
+    }
+
+    return next();
+});
 
 // Only hash if password exists and was modified
 userSchema.pre("save", async function (next) {

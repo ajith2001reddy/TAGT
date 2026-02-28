@@ -6,7 +6,7 @@
         });
     }
 
-    if (req.user.role !== "admin") {
+    if (!["super_admin", "owner"].includes(req.user.role)) {
         return res.status(403).json({
             success: false,
             message: "Admin access only"

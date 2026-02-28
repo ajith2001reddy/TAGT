@@ -10,11 +10,11 @@ type Stats = {
 
 function StatCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent: string }) {
     return (
-        <div className={`relative overflow-hidden rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 group hover:border-white/10 transition-all duration-300`}>
-            <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-10 ${accent}`} />
-            <p className="text-white/40 text-xs font-medium uppercase tracking-widest mb-3">{label}</p>
-            <p className="text-3xl font-bold text-white tracking-tight">{value}</p>
-            {sub && <p className="text-white/30 text-xs mt-1.5">{sub}</p>}
+        <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20">
+            <div className={`absolute right-0 top-0 h-24 w-24 rounded-full blur-3xl opacity-20 ${accent}`} />
+            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-white/40">{label}</p>
+            <p className="text-3xl font-bold tracking-tight text-white">{value}</p>
+            {sub && <p className="mt-1.5 text-xs text-white/30">{sub}</p>}
         </div>
     )
 }
@@ -61,11 +61,10 @@ export default function DashboardPage() {
     )
 
     return (
-        <div className="space-y-8 max-w-6xl">
-            {/* Header */}
-            <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Overview</h1>
-                <p className="text-white/30 text-sm mt-1">Property performance at a glance</p>
+        <div className="max-w-6xl space-y-8">
+            <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-indigo-500/15 via-violet-500/10 to-cyan-500/10 p-6">
+                <h1 className="text-3xl font-black tracking-tight text-white">Executive Overview</h1>
+                <p className="mt-2 text-sm text-white/60">Real-time intelligence across residents, operations, and revenue.</p>
             </div>
 
             {/* Stats Grid */}
