@@ -25,7 +25,7 @@ export const registerOwner = async (req, res, next) => {
         owner.propertyId = property._id;
         await owner.save();
 
-        const token = generateToken({ id: owner._id, role: owner.role, propertyId: owner.propertyId });
+        const token = generateToken(owner);
         return res.status(201).json({ success: true, token, user: { id: owner._id, name: owner.name, email: owner.email, role: owner.role, propertyId: owner.propertyId } });
     } catch (err) {
         next(err);
@@ -44,7 +44,7 @@ export const login = async (req, res, next) => {
         if (!ok) return res.status(401).json({ success: false, message: "Invalid credentials" });
         if (!user.isActive) return res.status(403).json({ success: false, message: "Account inactive" });
 
-        const token = generateToken({ id: user._id, role: user.role, propertyId: user.propertyId || null });
+        const token = generateToken(user);
         return res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role, propertyId: user.propertyId || null } });
     } catch (err) {
         next(err);

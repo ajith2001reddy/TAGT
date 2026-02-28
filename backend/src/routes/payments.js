@@ -5,10 +5,15 @@ import Payment from "../models/Payment.js";
 import User from "../models/User.js";
 import auth from "../middleware/auth.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
+import isAdmin from "../middleware/isAdmin.js";
+import { generateMonthlyRent } from "../controllers/paymentController.js";
 
-import { authorize } from "../middleware/authorize.js";
+
+
+import authorize from "../middleware/authorize.js";
 
 const router = Router();
+router.post("/generate-monthly", auth, isAdmin, generateMonthlyRent);
 
 /* =========================
    ADMIN → CREATE BILL
@@ -105,7 +110,7 @@ router.get("/", auth, authorize("owner"), async (req, res, next) => {
 });
 
 
-router.get("/export/csv", auth, isAdmin, async (req, res, next) => {
+router.get("/export/csv", auth, authorize("owner"), async (req, res, next) => {
     try {
         const payments = await Payment.find()
             .populate({ path: "resident", select: "name email", options: { strictPopulate: false } })

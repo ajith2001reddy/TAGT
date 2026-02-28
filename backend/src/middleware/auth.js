@@ -11,11 +11,11 @@ const auth = async (req, res, next) => {
                 message: "Unauthorized"
             });
         }
-
-        const token = header.split(" ")[1];
-
+        console.log("HEADER:", req.headers.authorization);
+        const token = req.headers.authorization?.split(" ")[1];
+        console.log("TOKEN:", token);
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+        console.log("DECODED:", decoded);
         const dbUser = await User.findById(decoded.id);
 
         if (!dbUser) {

@@ -21,7 +21,7 @@ const PaymentSchema = new mongoose.Schema(
         room: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Room",
-            default: null,  
+            default: null,
         },
 
         // 💰 Amount to be paid
@@ -113,15 +113,10 @@ PaymentSchema.pre("save", function (next) {
     this.totalPayable = Number((baseAmount + fee).toFixed(2));
     next();
 });
-
-// Ensures ONE rent payment per resident per month
-PaymentSchema.index({ propertyId: 1 });
-
 PaymentSchema.index(
-    { propertyId: 1, resident: 1, month: 1, type: 1 },
+    { propertyId: 1, resident: 1, month: 1 },
     { unique: true }
 );
-
 
 
 export default mongoose.model("Payment", PaymentSchema);

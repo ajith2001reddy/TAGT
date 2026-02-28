@@ -37,7 +37,14 @@ export const addRoom = async (req, res, next) => {
         }
 
         const room = await Room.create(
-            [{ roomNumber, rent: Number(rent), totalBeds: Number(totalBeds), occupiedBeds: 0, note: typeof note === "string" ? note : "" }],
+            [{
+                propertyId: req.user.propertyId,   // 🔥 REQUIRED
+                roomNumber,
+                rent: Number(rent),
+                totalBeds: Number(totalBeds),
+                occupiedBeds: 0,
+                note: typeof note === "string" ? note : ""
+            }],
             { session }
         );
 

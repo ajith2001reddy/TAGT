@@ -12,7 +12,7 @@ import Request from "../models/Request.js";
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
-import { authorize } from "../middleware/authorize.js";
+import authorize from "../middleware/authorize.js";
 
 const router = Router();
 
