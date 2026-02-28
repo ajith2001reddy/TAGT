@@ -8,6 +8,14 @@ import RoomsPage from "./features/rooms/RoomsPage"
 import PaymentsPage from "./features/payments/PaymentsPage"
 import RequestsPage from "./features/requests/RequestsPage"
 import ResidentDashboard from "./features/resident/ResidentDashboard"
+import PropertyManagementPage from "./features/advanced/PropertyManagementPage"
+import NotificationCenterPage from "./features/advanced/NotificationCenterPage"
+import BookingRequestsPage from "./features/advanced/BookingRequestsPage"
+import ResidentProfilesPage from "./features/advanced/ResidentProfilesPage"
+import RealTimeHubPage from "./features/advanced/RealTimeHubPage"
+import EmailAutomationPage from "./features/advanced/EmailAutomationPage"
+import AnalyticsPlusPage from "./features/advanced/AnalyticsPlusPage"
+import MarketplacePage from "./features/advanced/MarketplacePage"
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -27,16 +35,22 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-      {/* Admin routes */}
       <Route element={<RequireAuth><RequireAdmin><DashboardLayout /></RequireAdmin></RequireAuth>}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/residents" element={<ResidentsPage />} />
         <Route path="/rooms" element={<RoomsPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
         <Route path="/requests" element={<RequestsPage />} />
+        <Route path="/properties" element={<PropertyManagementPage />} />
+        <Route path="/notifications" element={<NotificationCenterPage />} />
+        <Route path="/bookings" element={<BookingRequestsPage />} />
+        <Route path="/resident-profiles" element={<ResidentProfilesPage />} />
+        <Route path="/realtime" element={<RealTimeHubPage />} />
+        <Route path="/email-center" element={<EmailAutomationPage />} />
+        <Route path="/analytics-plus" element={<AnalyticsPlusPage />} />
+        <Route path="/marketplace" element={<MarketplacePage />} />
       </Route>
 
-      {/* Resident routes */}
       <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
         <Route path="/resident" element={<ResidentDashboard />} />
       </Route>
