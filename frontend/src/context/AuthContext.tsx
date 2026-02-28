@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import type { ReactNode } from "react"
 import api from "../services/api"
 
-type Role = "super_admin" | "owner" | "resident" | "admin"
+type Role = "super_admin" | "owner" | "resident"
 
 type User = {
     id: string

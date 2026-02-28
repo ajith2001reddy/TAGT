@@ -27,7 +27,7 @@ const LoginPage = () => {
     const handleSuccess = (data: { token: string; user: { role: string } }) => {
         localStorage.setItem("token", data.token)
         localStorage.setItem("user", JSON.stringify(data.user))
-        if (data.user.role === "admin") {
+        if (data.user.role === "super_admin" || data.user.role === "owner") {
             navigate("/dashboard")
         } else {
             navigate("/resident")

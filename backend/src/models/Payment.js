@@ -82,6 +82,18 @@ const PaymentSchema = new mongoose.Schema(
             maxlength: 500,
         },
 
+        lateFee: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        totalPayable: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
         // 📅 Actual paid timestamp
         paidAt: {
             type: Date,
@@ -94,6 +106,13 @@ const PaymentSchema = new mongoose.Schema(
 );
 
 
+
+PaymentSchema.pre("save", function (next) {
+    const baseAmount = Number(this.amount || 0);
+    const fee = Number(this.lateFee || 0);
+    this.totalPayable = Number((baseAmount + fee).toFixed(2));
+    next();
+});
 
 // Ensures ONE rent payment per resident per month
 PaymentSchema.index({ propertyId: 1 });

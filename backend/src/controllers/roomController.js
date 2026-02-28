@@ -70,8 +70,8 @@ export const updateRoom = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { rent, totalBeds, note, maintenanceMode, maintenanceNote } = req.body;
-        const scope = buildPropertyFilter(req.user);
-        const room = await Room.findById(id, ...scope);
+
+        const room = await Room.findById(id);
         if (!room) {
             return res.status(404).json({ success: false, message: "Room not found" });
         }

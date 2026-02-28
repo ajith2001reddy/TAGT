@@ -105,10 +105,9 @@ router.get("/", auth, authorize("owner"), async (req, res, next) => {
 });
 
 
-router.get("/export/csv", auth, authorize("owner"), async (req, res, next) => {
+router.get("/export/csv", auth, isAdmin, async (req, res, next) => {
     try {
-        const scope = buildPropertyFilter(req.user);
-        const payments = await Payment.find({ ...scope })
+        const payments = await Payment.find()
             .populate({ path: "resident", select: "name email", options: { strictPopulate: false } })
             .sort({ createdAt: -1 })
             .lean();

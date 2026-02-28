@@ -24,7 +24,7 @@ const NAV_RESIDENT = [
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     const { user, logout } = useAuth()
     const navigate = useNavigate()
-    const links = user?.role === "admin" ? NAV_ADMIN : NAV_RESIDENT
+    const links = user?.role === "super_admin" || user?.role === "owner" ? NAV_ADMIN : NAV_RESIDENT
 
     return (
         <div className="h-full flex flex-col bg-[#0a0a0f] border-r border-white/5">
@@ -39,7 +39,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             </div>
 
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                <p className="px-3 mb-3 text-[10px] font-semibold text-white/20 uppercase tracking-widest">{user?.role === "admin" ? "Management" : "My Space"}</p>
+                <p className="px-3 mb-3 text-[10px] font-semibold text-white/20 uppercase tracking-widest">{user?.role === "super_admin" || user?.role === "owner" ? "Management" : "My Space"}</p>
                 {links.map((item) => (
                     <NavLink
                         key={item.to}

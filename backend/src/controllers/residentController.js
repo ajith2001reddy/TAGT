@@ -5,7 +5,6 @@ import User from "../models/User.js";
 import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
 import Request from "../models/Request.js";
-import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 export const getAllResidents = async (req, res, next) => {
     try {
@@ -27,8 +26,7 @@ export const getAllResidents = async (req, res, next) => {
 
 export const getResidentProfile = async (req, res, next) => {
     try {
-        const scope = buildPropertyFilter(req.user);
-        const resident = await User.findOne({ _id: req.params.id, role: "resident", ...scope })
+        const resident = await User.findOne({ _id: req.params.id, role: "resident" })
             .populate("roomId", "roomNumber rent")
             .lean();
 
@@ -38,7 +36,7 @@ export const getResidentProfile = async (req, res, next) => {
 
         const [paymentSummary, requestSummary] = await Promise.all([
             Payment.aggregate([
-                { $match: { resident: resident._id, ...scope } },
+                { $match: { resident: resident._id } },
                 { $group: { _id: "$status", count: { $sum: 1 }, total: { $sum: "$amount" } } }
             ]),
             Request.aggregate([
@@ -67,8 +65,7 @@ export const addResident = async (req, res, next) => {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        const scope = buildPropertyFilter(req.user);
-        const existingUser = await User.findOne({ email: normalizedEmail, ...scope }).session(session);
+        const existingUser = await User.findOne({ email: normalizedEmail }).session(session);
         if (existingUser) {
             await session.abortTransaction();
             return res.status(400).json({ success: false, message: "Email already exists" });
@@ -78,14 +75,13 @@ export const addResident = async (req, res, next) => {
         let finalRent = 0;
 
         if (roomNumber) {
-            roomDoc = await Room.findOne({ roomNumber: String(roomNumber), ...scope }).session(session);
+            roomDoc = await Room.findOne({ roomNumber: String(roomNumber) }).session(session);
             if (!roomDoc) {
                 await session.abortTransaction();
                 return res.status(400).json({ success: false, message: `Room "${roomNumber}" not found` });
             }
         } else if (roomId && mongoose.Types.ObjectId.isValid(roomId)) {
-
-            roomDoc = await Room.findById(roomId, ...scope).session(session);
+            roomDoc = await Room.findById(roomId).session(session);
             if (!roomDoc) {
                 await session.abortTransaction();
                 return res.status(400).json({ success: false, message: "Invalid room selected" });
@@ -114,7 +110,7 @@ export const addResident = async (req, res, next) => {
         }
 
         const [resident] = await User.create([
-            { name, email: normalizedEmail, password, role: "resident", roomId: roomDoc ? roomDoc._id : null, isActive: true, ...scope }
+            { name, email: normalizedEmail, password, role: "resident", roomId: roomDoc ? roomDoc._id : null, isActive: true }
         ], { session });
 
         if (roomDoc) {
@@ -149,8 +145,8 @@ export const updateResident = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { name, email, isActive } = req.body;
-        const scope = buildPropertyFilter(req.user);
-        const resident = await User.findOne({ _id: id, role: "resident", ...scope }).session(session);
+
+        const resident = await User.findOne({ _id: id, role: "resident" }).session(session);
         if (!resident) {
             await session.abortTransaction();
             return res.status(404).json({ success: false, message: "Resident not found" });
@@ -160,7 +156,7 @@ export const updateResident = async (req, res, next) => {
 
         if (typeof email === "string" && email.trim()) {
             const normalizedEmail = email.toLowerCase().trim();
-            const existing = await User.findOne({ email: normalizedEmail, _id: { $ne: id }, ...scope }).session(session);
+            const existing = await User.findOne({ email: normalizedEmail, _id: { $ne: id } }).session(session);
             if (existing) {
                 await session.abortTransaction();
                 return res.status(400).json({ success: false, message: "Email already exists" });
