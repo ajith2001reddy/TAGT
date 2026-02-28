@@ -1,0 +1,3 @@
+import { useEffect, useState } from "react"
+import api from "../../services/api"
+export default function OwnerPaymentsPage() { const [items,setItems]=useState<any[]>([]); useEffect(()=>{api.get('/v2/owner/payments').then(r=>setItems(r.data.data||[]))},[]); return <div className="space-y-2">{items.map(p=><div key={p._id} className="border border-white/10 rounded p-3 flex justify-between"><span>{p.resident?.name || 'Resident'} · ${p.amount} · {p.status}</span>{p.status!=='paid'&&<button onClick={async()=>{await api.patch(`/v2/owner/payments/${p._id}/paid`); const r=await api.get('/v2/owner/payments'); setItems(r.data.data||[])}} className="text-emerald-300">Mark paid</button>}</div>)}</div> }

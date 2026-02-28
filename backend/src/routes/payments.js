@@ -97,6 +97,46 @@ router.get("/", auth, isAdmin, async (req, res, next) => {
     }
 });
 
+
+router.get("/export/csv", auth, isAdmin, async (req, res, next) => {
+    try {
+        const payments = await Payment.find()
+            .populate({ path: "resident", select: "name email", options: { strictPopulate: false } })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const escapeCsv = (value) => {
+            if (value == null) return "";
+            const str = String(value).replace(/"/g, '""');
+            return /[",\n]/.test(str) ? `"${str}"` : str;
+        };
+
+        const rows = [
+            ["paymentId", "residentName", "residentEmail", "amount", "type", "status", "month", "dueDate", "paidAt", "createdAt"],
+            ...payments.map((payment) => [
+                payment._id,
+                payment.resident?.name || "",
+                payment.resident?.email || "",
+                payment.amount,
+                payment.type,
+                payment.status,
+                payment.month || "",
+                payment.dueDate ? new Date(payment.dueDate).toISOString() : "",
+                payment.paidAt ? new Date(payment.paidAt).toISOString() : "",
+                payment.createdAt ? new Date(payment.createdAt).toISOString() : ""
+            ])
+        ];
+
+        const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
+
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=payments-${new Date().toISOString().slice(0, 10)}.csv`);
+        return res.status(200).send(csv);
+    } catch (err) {
+        next(err);
+    }
+});
+
 /* =========================
    RESIDENT → GET OWN PAYMENTS
 ========================= */

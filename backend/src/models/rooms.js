@@ -2,10 +2,14 @@ import mongoose from "mongoose";
 
 const roomSchema = new mongoose.Schema(
     {
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            index: true
+        },
         roomNumber: {
             type: String,
             required: true,
-            unique: true,
             trim: true,
             index: true
         },
@@ -30,6 +34,17 @@ const roomSchema = new mongoose.Schema(
                 message: "Occupied beds cannot exceed total beds"
             }
         },
+        maintenanceMode: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+        maintenanceNote: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 300
+        },
         note: {
             type: String,
             default: ""
@@ -42,12 +57,13 @@ const roomSchema = new mongoose.Schema(
     }
 );
 
-// Virtual field for availability
 roomSchema.virtual("availableBeds").get(function () {
+    if (this.maintenanceMode) return 0;
     return Math.max(0, this.totalBeds - this.occupiedBeds);
 });
 
-// Indexes for analytics & queries
+roomSchema.index({ propertyId: 1 });
+roomSchema.index({ propertyId: 1, roomNumber: 1 }, { unique: true, sparse: true });
 roomSchema.index({ rent: 1 });
 roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
 

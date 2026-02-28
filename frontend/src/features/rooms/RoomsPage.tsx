@@ -1,173 +1,82 @@
 import { useEffect, useState } from "react"
 import api from "../../services/api"
 
-type Room = { _id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; rent: number; note?: string }
+type Room = { _id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; rent: number; note?: string; maintenanceMode?: boolean; maintenanceNote?: string }
+
 type FormState = { roomNumber: string; totalBeds: string; rent: string; note: string }
+type EditState = { rent: string; totalBeds: string; note: string; maintenanceMode: boolean; maintenanceNote: string }
 
 export default function RoomsPage() {
     const [rooms, setRooms] = useState<Room[]>([])
     const [loading, setLoading] = useState(true)
-    const [saving, setSaving] = useState(false)
-    const [error, setError] = useState("")
     const [showForm, setShowForm] = useState(false)
     const [form, setForm] = useState<FormState>({ roomNumber: "", totalBeds: "", rent: "", note: "" })
-    const f = (k: keyof FormState, v: string) => setForm(p => ({ ...p, [k]: v }))
+    const [editing, setEditing] = useState<Room | null>(null)
+    const [edit, setEdit] = useState<EditState>({ rent: "", totalBeds: "", note: "", maintenanceMode: false, maintenanceNote: "" })
 
     const load = async () => {
         try { setLoading(true); const r = await api.get("/rooms"); setRooms(r.data.rooms ?? []) }
-        catch { } finally { setLoading(false) }
+        finally { setLoading(false) }
     }
     useEffect(() => { load() }, [])
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError("")
-
-        const totalBeds = Number(form.totalBeds)
-        const rent = Number(form.rent)
-
-        if (!form.roomNumber.trim()) return setError("Room number is required")
-        if (!Number.isFinite(totalBeds) || totalBeds <= 0) return setError("Total beds must be a positive number")
-        if (!Number.isFinite(rent) || rent <= 0) return setError("Rent must be a positive number")
-
-        setSaving(true)
-        try {
-            await api.post("/rooms", {
-                roomNumber: form.roomNumber.trim(),
-                totalBeds,
-                rent,
-                note: form.note.trim()
-            })
-            setShowForm(false)
-            setForm({ roomNumber: "", totalBeds: "", rent: "", note: "" })
-            load()
-        } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Failed to add room"
-            setError(msg)
-        } finally { setSaving(false) }
+        await api.post("/rooms", { roomNumber: form.roomNumber, totalBeds: Number(form.totalBeds), rent: Number(form.rent), note: form.note })
+        setShowForm(false)
+        setForm({ roomNumber: "", totalBeds: "", rent: "", note: "" })
+        load()
     }
 
-    const handleDelete = async (room: Room) => {
-        if (room.occupiedBeds > 0) return alert("Cannot delete a room with residents. Remove residents first.")
-        if (!confirm(`Delete Room ${room.roomNumber}?`)) return
-        try { await api.delete(`/rooms/${room._id}`); load() } catch { }
+    const openEdit = (room: Room) => {
+        setEditing(room)
+        setEdit({ rent: String(room.rent), totalBeds: String(room.totalBeds), note: room.note ?? "", maintenanceMode: Boolean(room.maintenanceMode), maintenanceNote: room.maintenanceNote ?? "" })
     }
 
-    const occupancyPct = (r: Room) => r.totalBeds === 0 ? 0 : Math.round((r.occupiedBeds / r.totalBeds) * 100)
+    const saveEdit = async () => {
+        if (!editing) return
+        await api.put(`/rooms/${editing._id}`, { ...edit, rent: Number(edit.rent), totalBeds: Number(edit.totalBeds) })
+        setEditing(null)
+        load()
+    }
 
-    const fields: { label: string; key: keyof FormState; placeholder: string; type?: string }[] = [
-        { label: "Room Number *", key: "roomNumber", placeholder: "101" },
-        { label: "Total Beds *", key: "totalBeds", placeholder: "2", type: "number" },
-        { label: "Monthly Rent ($) *", key: "rent", placeholder: "1200", type: "number" },
-        { label: "Note", key: "note", placeholder: "Optional..." },
-    ]
-
-    return (
-        <div className="space-y-6 max-w-5xl">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">Rooms</h1>
-                    <p className="text-white/30 text-sm mt-0.5">
-                        {rooms.length} rooms · {rooms.reduce((s, r) => s + (r.occupiedBeds ?? 0), 0)} occupied beds
-                    </p>
-                </div>
-                <button
-                    onClick={() => { setShowForm(!showForm); setError("") }}
-                    className="flex items-center gap-2 bg-violet-500 hover:bg-violet-400 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
-                >
-                    <span className="text-lg leading-none">{showForm ? "✕" : "+"}</span>
-                    {showForm ? "Cancel" : "Add Room"}
-                </button>
-            </div>
-
-            {showForm && (
-                <form onSubmit={handleAdd} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
-                    <h3 className="text-white/70 font-medium text-sm mb-4">New Room</h3>
-                    {error && (
-                        <p className="text-rose-400 text-xs bg-rose-400/10 border border-rose-400/20 px-3 py-2 rounded-lg mb-4">
-                            {error}
-                        </p>
-                    )}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        {fields.map(({ label, key, placeholder, type }) => (
-                            <div key={key}>
-                                <label className="block text-white/30 text-xs mb-1.5">{label}</label>
-                                <input
-                                    type={type ?? "text"}
-                                    placeholder={placeholder}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white/80 text-sm placeholder:text-white/20 focus:outline-none focus:border-violet-500/50 transition"
-                                    value={form[key]}
-                                    onChange={e => f(key, e.target.value)}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="bg-violet-500 hover:bg-violet-400 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition"
-                    >
-                        {saving ? "Saving..." : "Add Room"}
-                    </button>
-                </form>
-            )}
-
-            {loading ? (
-                <div className="flex justify-center py-16">
-                    <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
-                </div>
-            ) : rooms.length === 0 ? (
-                <div className="text-center py-16 text-white/20">
-                    <p className="text-4xl mb-3">▣</p>
-                    <p className="text-sm">No rooms yet</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {rooms.map((room) => {
-                        const pct = occupancyPct(room)
-                        const available = room.totalBeds - room.occupiedBeds
-                        return (
-                            <div
-                                key={room._id}
-                                className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 hover:border-white/10 transition-all group"
-                            >
-                                <div className="flex items-start justify-between mb-4">
-                                    <div>
-                                        <p className="text-white font-bold text-lg">Room {room.roomNumber}</p>
-                                        <p className="text-white/30 text-xs mt-0.5">
-                                            ${(room.rent ?? 0).toLocaleString()} / mo
-                                        </p>
-                                    </div>
-                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${available === 0 ? "text-rose-400 bg-rose-400/10" : "text-emerald-400 bg-emerald-400/10"}`}>
-                                        {available === 0 ? "Full" : `${available} free`}
-                                    </span>
-                                </div>
-                                <div className="mb-4">
-                                    <div className="flex justify-between text-[10px] text-white/30 mb-1.5">
-                                        <span>{room.occupiedBeds} / {room.totalBeds} beds</span>
-                                        <span>{pct}%</span>
-                                    </div>
-                                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? "bg-rose-500" : pct > 60 ? "bg-amber-500" : "bg-emerald-500"}`}
-                                            style={{ width: `${pct}%` }}
-                                        />
-                                    </div>
-                                </div>
-                                {room.note && (
-                                    <p className="text-white/25 text-xs mb-4 truncate">{room.note}</p>
-                                )}
-                                <button
-                                    onClick={() => handleDelete(room)}
-                                    className="text-white/20 hover:text-rose-400 text-xs transition opacity-0 group-hover:opacity-100"
-                                >
-                                    Delete room
-                                </button>
-                            </div>
-                        )
-                    })}
-                </div>
-            )}
+    return <div className="space-y-6 max-w-5xl">
+        <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-white">Rooms & Maintenance</h1>
+            <button onClick={() => setShowForm(v => !v)} className="bg-violet-500 text-white px-4 py-2 rounded-xl">{showForm ? "Cancel" : "Add Room"}</button>
         </div>
-    )
+
+        {showForm && <form onSubmit={handleAdd} className="grid grid-cols-2 gap-3 rounded-2xl bg-white/[0.03] p-4 border border-white/10">
+            <input className="bg-white/5 p-2 rounded-lg text-white" placeholder="Room #" value={form.roomNumber} onChange={e => setForm({ ...form, roomNumber: e.target.value })} />
+            <input className="bg-white/5 p-2 rounded-lg text-white" placeholder="Beds" type="number" value={form.totalBeds} onChange={e => setForm({ ...form, totalBeds: e.target.value })} />
+            <input className="bg-white/5 p-2 rounded-lg text-white" placeholder="Rent" type="number" value={form.rent} onChange={e => setForm({ ...form, rent: e.target.value })} />
+            <input className="bg-white/5 p-2 rounded-lg text-white" placeholder="Note" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
+            <button className="col-span-2 bg-violet-500 py-2 rounded-lg text-white">Save</button>
+        </form>}
+
+        <div className="rounded-2xl border border-white/10 overflow-hidden">
+            {loading ? <div className="p-10 text-white/40">Loading...</div> : <table className="w-full text-sm">
+                <thead><tr className="border-b border-white/10 text-white/40"><th className="p-3 text-left">Room</th><th className="p-3 text-left">Occupancy</th><th className="p-3 text-left">Rent</th><th className="p-3 text-left">Mode</th><th className="p-3"></th></tr></thead>
+                <tbody>{rooms.map(r => <tr key={r._id} className="border-b border-white/5 text-white/75">
+                    <td className="p-3">{r.roomNumber}</td>
+                    <td className="p-3">{r.occupiedBeds}/{r.totalBeds}</td>
+                    <td className="p-3">${r.rent}</td>
+                    <td className="p-3">{r.maintenanceMode ? "Maintenance" : "Live"}</td>
+                    <td className="p-3 text-right"><button onClick={() => openEdit(r)} className="text-violet-300">Edit</button></td>
+                </tr>)}</tbody>
+            </table>}
+        </div>
+
+        {editing && <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
+            <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111320] p-5 space-y-3">
+                <h3 className="text-white font-semibold">Edit Room {editing.roomNumber}</h3>
+                <input className="w-full bg-white/5 p-2 rounded text-white" type="number" value={edit.rent} onChange={e => setEdit({ ...edit, rent: e.target.value })} />
+                <input className="w-full bg-white/5 p-2 rounded text-white" type="number" value={edit.totalBeds} onChange={e => setEdit({ ...edit, totalBeds: e.target.value })} />
+                <input className="w-full bg-white/5 p-2 rounded text-white" value={edit.note} onChange={e => setEdit({ ...edit, note: e.target.value })} placeholder="Note" />
+                <label className="text-white/70 text-sm flex items-center gap-2"><input type="checkbox" checked={edit.maintenanceMode} onChange={e => setEdit({ ...edit, maintenanceMode: e.target.checked })} /> Maintenance mode</label>
+                {edit.maintenanceMode && <input className="w-full bg-white/5 p-2 rounded text-white" value={edit.maintenanceNote} onChange={e => setEdit({ ...edit, maintenanceNote: e.target.value })} placeholder="Maintenance reason" />}
+                <div className="flex justify-end gap-2"><button onClick={() => setEditing(null)} className="px-3 py-2 text-white/60">Cancel</button><button onClick={saveEdit} className="px-3 py-2 bg-violet-500 text-white rounded">Update</button></div>
+            </div>
+        </div>}
+    </div>
 }
