@@ -10,7 +10,6 @@ import {
 } from "../controllers/residentController.js";
 
 import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
 
 const router = express.Router();
 

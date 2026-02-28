@@ -31,8 +31,9 @@ export const getKPIs = async ({ fromDate, toDate } = {}) => {
         totalBeds === 0 ? 0 : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
 
     /* ================= PAYMENTS ================= */
+    const scope = buildPropertyFilter(req.user);
     const paymentStats = await Payment.aggregate([
-        { $match: paymentDateFilter },
+        { $match: { ...paymentDateFilter, ...scope } },
         {
             $group: {
                 _id: null,

@@ -1,6 +1,7 @@
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
 import logger from "../utils/logger.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 /**
  * CREATE PAYMENT (Admin)
@@ -15,8 +16,8 @@ export const createPayment = async (req, res, next) => {
                 message: "Resident and amount are required",
             });
         }
-
-        const resident = await User.findById(residentId);
+        const scope = buildPropertyFilter(req.user);
+        const resident = await User.findById(residentId, ...scope);
 
         if (!resident || resident.role !== "resident") {
             return res.status(404).json({
@@ -24,6 +25,7 @@ export const createPayment = async (req, res, next) => {
                 message: "Resident not found",
             });
         }
+
 
         const payment = await Payment.create({
             resident: residentId,
@@ -49,7 +51,8 @@ export const createPayment = async (req, res, next) => {
  */
 export const getAllPayments = async (req, res, next) => {
     try {
-        const payments = await Payment.find()
+        const scope = buildPropertyFilter(req.user);
+        const payments = await Payment.find({ ...scope })
             .populate("resident", "name email")
             .sort({ createdAt: -1 })
             .lean();
@@ -69,7 +72,8 @@ export const getAllPayments = async (req, res, next) => {
  */
 export const getMyPayments = async (req, res, next) => {
     try {
-        const payments = await Payment.find({ resident: req.user.id })
+        const scope = buildPropertyFilter(req.user);
+        const payments = await Payment.find({ ...scope, resident: req.user.id })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -89,8 +93,8 @@ export const getMyPayments = async (req, res, next) => {
 export const deletePayment = async (req, res, next) => {
     try {
         const { id } = req.params;
-
-        const payment = await Payment.findById(id);
+        const scope = buildPropertyFilter(req.user);
+        const payment = await Payment.findById(id, ...scope);
 
         if (!payment) {
             return res.status(404).json({

@@ -29,7 +29,6 @@ export default function ResidentsPage() {
             setLoading(false)
         }
     }
-
     useEffect(() => { load() }, [])
 
     const filteredResidents = useMemo(() => {

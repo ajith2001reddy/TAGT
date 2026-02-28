@@ -1,5 +1,6 @@
 import admin from "../config/firebase.js";
 import User from "../models/User.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 const firebaseAuth = async (req, res, next) => {
   try {
@@ -15,11 +16,14 @@ const firebaseAuth = async (req, res, next) => {
     const decoded = await admin.auth().verifyIdToken(token);
 
     // Find user in MongoDB by firebaseUid OR email
+    const scope = buildPropertyFilter(req.user);
+
     let dbUser = await User.findOne({
       $or: [
         { firebaseUid: decoded.uid },
         { email: decoded.email?.toLowerCase() }
-      ]
+      ],
+      ...scope
     });
 
     if (!dbUser) {

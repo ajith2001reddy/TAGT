@@ -1,13 +1,16 @@
 ﻿import Room from "../models/rooms.js";
 import logger from "../utils/logger.js";
 import mongoose from "mongoose";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 export const addRoom = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
+        const scope = buildPropertyFilter(req.user);
         const { roomNumber, rent, totalBeds, note } = req.body;
+
 
         if (!roomNumber || rent == null || totalBeds == null) {
             await session.abortTransaction();
@@ -27,7 +30,7 @@ export const addRoom = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Total beds must be a positive number" });
         }
 
-        const exists = await Room.findOne({ roomNumber }).session(session);
+        const exists = await Room.findOne({ roomNumber, ...scope }).session(session);
         if (exists) {
             await session.abortTransaction();
             return res.status(400).json({ success: false, message: "Room number already exists" });
@@ -54,7 +57,8 @@ export const addRoom = async (req, res, next) => {
 
 export const getAllRooms = async (req, res, next) => {
     try {
-        const rooms = await Room.find().sort({ createdAt: -1 }).lean();
+        const scope = buildPropertyFilter(req.user);
+        const rooms = await Room.find(scope).sort({ createdAt: -1 }).lean();
         return res.json({ success: true, rooms });
     } catch (err) {
         logger.error(`GET ROOMS ERROR: ${err.message}`);
@@ -110,8 +114,8 @@ export const deleteRoom = async (req, res, next) => {
 
     try {
         const { id } = req.params;
-
-        const room = await Room.findById(id).session(session);
+        const scope = buildPropertyFilter(req.user);
+        const room = await Room.findById(id, ...scope).session(session);
 
         if (!room) {
             await session.abortTransaction();

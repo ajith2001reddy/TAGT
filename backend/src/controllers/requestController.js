@@ -1,6 +1,6 @@
 import Request from "../models/Request.js";
 import logger from "../utils/logger.js";
-
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 /**
  * CREATE REQUEST (Resident)
  */
@@ -37,7 +37,8 @@ export const createRequest = async (req, res, next) => {
  */
 export const getAllRequests = async (req, res, next) => {
     try {
-        const requests = await Request.find()
+        const scope = buildPropertyFilter(req.user);
+        const requests = await Request.find({ ...scope })
             .populate("resident", "name email")
             .sort({ createdAt: -1 })
             .lean();
@@ -57,7 +58,8 @@ export const getAllRequests = async (req, res, next) => {
  */
 export const getMyRequests = async (req, res, next) => {
     try {
-        const requests = await Request.find({ resident: req.user.id })
+        const scope = buildPropertyFilter(req.user);
+        const requests = await Request.find({ ...scope, resident: req.user.id })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -113,7 +115,8 @@ export const updateRequestStatus = async (req, res, next) => {
  */
 export const deleteRequest = async (req, res, next) => {
     try {
-        const request = await Request.findById(req.params.id);
+        const scope = buildPropertyFilter(req.user);
+        const request = await Request.findById(req.params.id, ...scope);
 
         if (!request) {
             return res.status(404).json({

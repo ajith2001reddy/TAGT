@@ -8,7 +8,11 @@ import Request from "../models/Request.js";
 
 export const getAllResidents = async (req, res, next) => {
     try {
-        const residents = await User.find({ role: "resident" })
+        const scope = buildPropertyFilter(req.user);
+        const residents = await User.find({
+            role: "resident",
+            ...scope
+        })
             .populate("roomId", "roomNumber totalBeds occupiedBeds rent")
             .sort({ createdAt: -1 })
             .lean();

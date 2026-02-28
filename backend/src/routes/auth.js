@@ -38,8 +38,10 @@ router.post("/firebase", async (req, res, next) => {
         }
 
         // Find by firebaseUid OR email (handles pre-existing accounts)
+        const scope = buildPropertyFilter(req.user);
         let user = await User.findOne({
             $or: [{ firebaseUid: uid }, { email: email.toLowerCase() }],
+            ...scope
         });
 
         if (user) {
@@ -85,7 +87,8 @@ router.post("/login", async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Email and password are required" });
         }
 
-        const user = await User.findOne({ email }).select("+password");
+        const scope = buildPropertyFilter(req.user);
+        const user = await User.findOne({ email, ...scope }).select("+password");
 
         if (!user || !user.isActive) {
             return res.status(401).json({ success: false, message: "Invalid credentials" });

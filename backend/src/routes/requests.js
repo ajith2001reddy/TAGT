@@ -2,8 +2,6 @@ import { Router } from "express";
 import mongoose from "mongoose";
 
 import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
-
 import {
     createRequest,
     getAllRequests,
@@ -27,12 +25,12 @@ router.get("/me", auth, getMyRequests);
 /**
  * Admin views all requests
  */
-router.get("/", auth, isAdmin, getAllRequests);
+router.get("/", auth, getAllRequests);
 
 /**
  * Admin updates request status
  */
-router.put("/:id/status", auth, isAdmin, (req, res, next) => {
+router.put("/:id/status", auth, (req, res, next) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -48,7 +46,7 @@ router.put("/:id/status", auth, isAdmin, (req, res, next) => {
 /**
  * Admin deletes request
  */
-router.delete("/:id", auth, isAdmin, (req, res, next) => {
+router.delete("/:id", auth, (req, res, next) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {

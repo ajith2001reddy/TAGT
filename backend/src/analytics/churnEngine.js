@@ -1,16 +1,18 @@
 import User from "../models/User.js";
 import Payment from "../models/Payment.js";
 import Request from "../models/Request.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 // Function to calculate the churn score for each resident
-async function calculateResidentChurn(resident) {
+async function calculateResidentChurn(resident, req) {
     let score = 0;
     const reasons = [];
 
     // FIX: Payment model uses 'resident' field, not 'residentId'
+    const scope = buildPropertyFilter(req.user);
     const [payments, requests] = await Promise.all([
-        Payment.find({ resident: resident._id }).lean(),
-        Request.find({ resident: resident._id }).lean()
+        Payment.find({ resident: resident._id, ...scope }).lean(),
+        Request.find({ resident: resident._id, ...scope }).lean()
     ]);
 
     const unpaidCount = payments.filter(p => p.status === "pending" || p.status === "failed").length;
@@ -74,6 +76,7 @@ async function calculateResidentChurn(resident) {
 
 // Function to predict churn for all residents
 async function predictChurn() {
+    const scope = buildPropertyFilter(req.user);
     const residents = await User.find({
         role: "resident",
         isActive: true
