@@ -1,61 +1,66 @@
-import { Routes, Route, Navigate } from "react-router-dom"
-import { useAuth } from "./context/AuthContext"
-import DashboardLayout from "./layouts/DashboardLayout"
-import LoginPage from "./features/auth/LoginPage"
-import DashboardPage from "./features/dashboard/DashboardPage"
-import ResidentsPage from "./features/residents/ResidentsPage"
-import RoomsPage from "./features/rooms/RoomsPage"
-import PaymentsPage from "./features/payments/PaymentsPage"
-import RequestsPage from "./features/requests/RequestsPage"
-import ResidentDashboard from "./features/resident/ResidentDashboard"
-import PropertyManagementPage from "./features/advanced/PropertyManagementPage"
-import NotificationCenterPage from "./features/advanced/NotificationCenterPage"
-import BookingRequestsPage from "./features/advanced/BookingRequestsPage"
-import ResidentProfilesPage from "./features/advanced/ResidentProfilesPage"
-import RealTimeHubPage from "./features/advanced/RealTimeHubPage"
-import EmailAutomationPage from "./features/advanced/EmailAutomationPage"
-import AnalyticsPlusPage from "./features/advanced/AnalyticsPlusPage"
-import MarketplacePage from "./features/advanced/MarketplacePage"
+import { Navigate, Route, Routes } from "react-router-dom"
+import ProtectedRoute from "./routes/ProtectedRoute"
+import RoleRoute from "./routes/RoleRoute"
+import SaasLayout from "./layouts/SaasLayout"
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen bg-[#060608]" />
-  return user ? <>{children}</> : <Navigate to="/login" replace />
-}
+import LandingPage from "./pages/public/LandingPage"
+import LoginPage from "./pages/public/LoginPage"
+import RegisterPage from "./pages/public/RegisterPage"
 
-function RequireAdmin({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
-  if (user?.role !== "admin") return <Navigate to="/resident" replace />
-  return <>{children}</>
-}
+import ProviderOverviewPage from "./pages/provider/OverviewPage"
+import ProviderPropertiesPage from "./pages/provider/PropertiesPage"
+import ProviderUsersPage from "./pages/provider/UsersPage"
+import ProviderRevenuePage from "./pages/provider/RevenuePage"
+import ProviderSettingsPage from "./pages/provider/SettingsPage"
 
-function App() {
+import OwnerOverviewPage from "./pages/owner/OverviewPage"
+import OwnerRoomsPage from "./pages/owner/RoomsPage"
+import OwnerResidentsPage from "./pages/owner/ResidentsPage"
+import OwnerPaymentsPage from "./pages/owner/PaymentsPage"
+import OwnerRequestsPage from "./pages/owner/RequestsPage"
+import OwnerAnalyticsPage from "./pages/owner/AnalyticsPage"
+
+import ResidentDashboardPage from "./pages/resident/DashboardPage"
+import ResidentPaymentsPage from "./pages/resident/PaymentsPage"
+import ResidentRequestsPage from "./pages/resident/RequestsPage"
+import ResidentProfilePage from "./pages/resident/ProfilePage"
+
+export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/register" element={<RegisterPage />} />
 
-      <Route element={<RequireAuth><RequireAdmin><DashboardLayout /></RequireAdmin></RequireAuth>}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/residents" element={<ResidentsPage />} />
-        <Route path="/rooms" element={<RoomsPage />} />
-        <Route path="/payments" element={<PaymentsPage />} />
-        <Route path="/requests" element={<RequestsPage />} />
-        <Route path="/properties" element={<PropertyManagementPage />} />
-        <Route path="/notifications" element={<NotificationCenterPage />} />
-        <Route path="/bookings" element={<BookingRequestsPage />} />
-        <Route path="/resident-profiles" element={<ResidentProfilesPage />} />
-        <Route path="/realtime" element={<RealTimeHubPage />} />
-        <Route path="/email-center" element={<EmailAutomationPage />} />
-        <Route path="/analytics-plus" element={<AnalyticsPlusPage />} />
-        <Route path="/marketplace" element={<MarketplacePage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<SaasLayout />}>
+          <Route element={<RoleRoute allowedRoles={["super_admin"]} />}>
+            <Route path="/provider-dashboard" element={<ProviderOverviewPage />} />
+            <Route path="/provider-dashboard/properties" element={<ProviderPropertiesPage />} />
+            <Route path="/provider-dashboard/users" element={<ProviderUsersPage />} />
+            <Route path="/provider-dashboard/revenue" element={<ProviderRevenuePage />} />
+            <Route path="/provider-dashboard/settings" element={<ProviderSettingsPage />} />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={["owner"]} />}>
+            <Route path="/owner-dashboard" element={<OwnerOverviewPage />} />
+            <Route path="/owner-dashboard/rooms" element={<OwnerRoomsPage />} />
+            <Route path="/owner-dashboard/residents" element={<OwnerResidentsPage />} />
+            <Route path="/owner-dashboard/payments" element={<OwnerPaymentsPage />} />
+            <Route path="/owner-dashboard/requests" element={<OwnerRequestsPage />} />
+            <Route path="/owner-dashboard/analytics" element={<OwnerAnalyticsPage />} />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={["resident"]} />}>
+            <Route path="/resident-dashboard" element={<ResidentDashboardPage />} />
+            <Route path="/resident-dashboard/payments" element={<ResidentPaymentsPage />} />
+            <Route path="/resident-dashboard/requests" element={<ResidentRequestsPage />} />
+            <Route path="/resident-dashboard/profile" element={<ResidentProfilePage />} />
+          </Route>
+        </Route>
       </Route>
 
-      <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
-        <Route path="/resident" element={<ResidentDashboard />} />
-      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
-
-export default App

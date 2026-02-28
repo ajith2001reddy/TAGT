@@ -2,10 +2,14 @@ import mongoose from "mongoose";
 
 const roomSchema = new mongoose.Schema(
     {
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            index: true
+        },
         roomNumber: {
             type: String,
             required: true,
-            unique: true,
             trim: true,
             index: true
         },
@@ -58,6 +62,8 @@ roomSchema.virtual("availableBeds").get(function () {
     return Math.max(0, this.totalBeds - this.occupiedBeds);
 });
 
+roomSchema.index({ propertyId: 1 });
+roomSchema.index({ propertyId: 1, roomNumber: 1 }, { unique: true, sparse: true });
 roomSchema.index({ rent: 1 });
 roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
 

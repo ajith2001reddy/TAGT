@@ -1,0 +1,1 @@
+export default function OwnerAnalyticsPage() { return <div className="border border-white/10 rounded-2xl p-6 text-white/70">Analytics module scaffolded: occupancy forecast, revenue trend, payment performance.</div> }

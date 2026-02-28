@@ -7,6 +7,7 @@ import paymentRoutes from "./payments.js";
 import residentRoutes from "./resident.js";
 import analyticsRoutes from "./analytics.js";
 import requestRoutes from "./requests.js";
+import v2Routes from "./v2/index.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use("/payments", paymentRoutes);
 router.use("/resident", residentRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/requests", requestRoutes);
+router.use("/v2", v2Routes);
 
 router.get("/", (req, res) => {
     res.json({ success: true, message: "TAGT API is running" });

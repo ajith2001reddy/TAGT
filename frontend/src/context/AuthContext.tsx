@@ -1,70 +1,65 @@
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import type { ReactNode } from "react"
-import { signOut } from "firebase/auth"
-import { auth } from "../lib/firebase"
+import api from "../services/api"
+
+type Role = "super_admin" | "owner" | "resident" | "admin"
 
 type User = {
     id: string
     name: string
     email: string
-    role: "admin" | "resident"
-    roomId?: string | null
+    role: Role
+    propertyId?: string | null
 }
 
 type AuthContextType = {
     user: User | null
     loading: boolean
-    logout: () => Promise<void>
+    login: (email: string, password: string) => Promise<User>
+    registerOwner: (payload: { name: string; email: string; password: string; propertyName: string; propertyType: "pg" | "hotel"; propertyAddress: string }) => Promise<User>
+    logout: () => void
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
-
-function decodeToken(token: string): User | null {
-    try {
-        const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")
-        const payload = JSON.parse(atob(base64))
-        if (payload.exp && Date.now() >= payload.exp * 1000) return null
-        return payload
-    } catch {
-        return null
-    }
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const token = localStorage.getItem("token")
-        if (token) {
-            const decoded = decodeToken(token)
-            if (decoded) {
-                const stored = localStorage.getItem("user")
-                setUser(stored ? JSON.parse(stored) : decoded)
-            } else {
-                localStorage.removeItem("token")
-                localStorage.removeItem("user")
-            }
-        }
+        const stored = localStorage.getItem("user")
+        if (stored) setUser(JSON.parse(stored))
         setLoading(false)
     }, [])
 
-    const logout = async () => {
-        await signOut(auth).catch(() => { })
+    const persist = (token: string, nextUser: User) => {
+        localStorage.setItem("token", token)
+        localStorage.setItem("user", JSON.stringify(nextUser))
+        setUser(nextUser)
+    }
+
+    const login = async (email: string, password: string) => {
+        const { data } = await api.post("/v2/auth/login", { email, password })
+        persist(data.token, data.user)
+        return data.user
+    }
+
+    const registerOwner = async (payload: { name: string; email: string; password: string; propertyName: string; propertyType: "pg" | "hotel"; propertyAddress: string }) => {
+        const { data } = await api.post("/v2/auth/register-owner", payload)
+        persist(data.token, data.user)
+        return data.user
+    }
+
+    const logout = () => {
         localStorage.removeItem("token")
         localStorage.removeItem("user")
         setUser(null)
-        window.location.href = "/login"
     }
 
-    return (
-        <AuthContext.Provider value={{ user, loading, logout }}>
-            {children}
-        </AuthContext.Provider>
-    )
+    return <AuthContext.Provider value={{ user, loading, login, registerOwner, logout }}>{children}</AuthContext.Provider>
 }
 
-export function useAuth() {
+export const useAuth = () => {
     const ctx = useContext(AuthContext)
     if (!ctx) throw new Error("useAuth must be used inside AuthProvider")
     return ctx
