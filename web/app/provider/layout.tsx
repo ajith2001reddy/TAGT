@@ -1,7 +1,7 @@
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
-export default function OwnerLayout({
+export default function ProviderLayout({
     children,
 }: {
     children: React.ReactNode;

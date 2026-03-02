@@ -7,29 +7,29 @@ import { useAuth } from "@/context/AuthContext";
 export default function DashboardPage() {
     const { role, loading } = useAuth();
     const router = useRouter();
-    console.log("ROLE:", role);
-    console.log("LOADING:", loading);
 
     useEffect(() => {
         if (loading) return;
-
-        if (!role) {
-            router.replace("/login");
-            return;
-        }
-
+        if (!role) { router.replace("/login"); return; }
         if (role === "owner") router.replace("/owner");
         else if (role === "resident") router.replace("/resident");
         else if (role === "super_admin") router.replace("/provider");
     }, [role, loading, router]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-white">
-                Loading...
-            </div>
-        );
-    }
-
-    return null;
+    return (
+        <div style={{
+            minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+            background: "var(--bg-base)", flexDirection: "column", gap: "20px",
+        }}>
+            <div style={{
+                width: "44px", height: "44px",
+                border: "2px solid var(--border-default)",
+                borderTopColor: "var(--accent-primary)",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+            }} />
+            <p className="label-text">Redirecting to your workspace...</p>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
 }

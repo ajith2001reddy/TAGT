@@ -6,22 +6,23 @@ import { Navbar } from "./Navbar";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
     return (
-        <div className="flex min-h-screen bg-black text-white">
-
-            {/* Sidebar */}
+        <div style={{
+            display: "flex",
+            minHeight: "100vh",
+            background: "var(--bg-base)",
+            color: "var(--text-primary)",
+            fontFamily: "var(--font-body)",
+        }}>
             <Sidebar />
-
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col">
-
-                {/* Top Navbar */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <Navbar />
-
-                {/* Page Content */}
-                <main className="flex-1 p-6 overflow-y-auto">
+                <main style={{
+                    flex: 1,
+                    padding: "28px 32px",
+                    overflowY: "auto",
+                }}>
                     {children}
                 </main>
-
             </div>
         </div>
     );
