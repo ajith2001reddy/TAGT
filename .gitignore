@@ -1,5 +1,69 @@
-node_modules
+# ==================================================
+# GLOBAL
+# ==================================================
+
+node_modules/
 .env
-.vs
-.vscode
-.txt
+.env.*
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# ==================================================
+# IDE / EDITOR
+# ==================================================
+
+.vscode/
+.idea/
+.vs/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ==================================================
+# BACKEND (Express)
+# ==================================================
+
+backend/node_modules/
+backend/.env
+backend/dist/
+backend/build/
+backend/coverage/
+
+# 🔥 CRITICAL — NEVER COMMIT FIREBASE KEY
+backend/serviceAccountKey.json
+backend/serviceAccountKey.json.json
+*.pem
+
+# ==================================================
+# FRONTEND (Next.js)
+# ==================================================
+
+tagt-next/node_modules/
+tagt-next/.next/
+tagt-next/out/
+tagt-next/build/
+tagt-next/.env*
+tagt-next/*.tsbuildinfo
+tagt-next/coverage/
+tagt-next/.vercel/
+
+# ==================================================
+# BUILD / CACHE
+# ==================================================
+
+dist/
+build/
+coverage/
+
+# ==================================================
+# LOCKFILES (Keep only one if needed)
+# ==================================================
+
+# If using npm everywhere, keep lockfiles
+# If not, uncomment below to ignore duplicates
+# yarn.lock
+# pnpm-lock.yaml
