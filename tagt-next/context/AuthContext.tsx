@@ -1,95 +1,100 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { STORAGE_KEYS } from "@/lib/constants";
-import { fetchMyProfile, loginWithFirebase, logoutFirebase } from "@/services/auth.service";
-import type { AppUser } from "@/types/user";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  type User as FirebaseUser,
+} from "firebase/auth";
+import { auth } from "../lib/firebase";
+import api from "../services/api";
+
+type Role = "super_admin" | "owner" | "resident";
+
+type AppUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  propertyId?: string | null;
+  roomId?: string | null;
+};
 
 type AuthContextType = {
   user: AppUser | null;
   loading: boolean;
-  error: string | null;
   login: (email: string, password: string) => Promise<AppUser>;
   logout: () => Promise<void>;
-  clearError: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-function persistUser(user: AppUser | null) {
-  if (!user) {
-    localStorage.removeItem(STORAGE_KEYS.user);
-    return;
-  }
-
-  localStorage.setItem(
-    STORAGE_KEYS.user,
-    JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }),
-  );
+async function fetchProfile(firebaseUser: FirebaseUser): Promise<AppUser> {
+  await firebaseUser.getIdToken(true);
+  const response = await api.get("/auth/me");
+  return response.data.data;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
+        localStorage.removeItem("user");
         setUser(null);
-        persistUser(null);
         setLoading(false);
         return;
       }
 
       try {
-        const profile = await fetchMyProfile(firebaseUser);
+        const profile = await fetchProfile(firebaseUser);
         setUser(profile);
-        persistUser(profile);
+        localStorage.setItem("user", JSON.stringify({
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          role: profile.role,
+        }));
       } catch {
+        await signOut(auth);
+        localStorage.removeItem("user");
         setUser(null);
-        persistUser(null);
-        await logoutFirebase();
       } finally {
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    setError(null);
-    const firebaseUser = await loginWithFirebase(email, password);
-    const profile = await fetchMyProfile(firebaseUser);
+  const login = async (email: string, password: string) => {
+    const credentials = await signInWithEmailAndPassword(auth, email, password);
+    const profile = await fetchProfile(credentials.user);
     setUser(profile);
-    persistUser(profile);
+    localStorage.setItem("user", JSON.stringify({
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      role: profile.role,
+    }));
     return profile;
-  }, []);
+  };
 
-  const logout = useCallback(async () => {
-    await logoutFirebase();
+  const logout = async () => {
+    await signOut(auth);
+    localStorage.removeItem("user");
     setUser(null);
-    persistUser(null);
-  }, []);
+  };
 
-  const clearError = useCallback(() => setError(null), []);
-
-  const value = useMemo(
-    () => ({ user, loading, error, login, logout, clearError }),
-    [user, loading, error, login, logout, clearError],
-  );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
 }
 
-export function useAuthContext() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuthContext must be used inside AuthProvider");
-  }
-  return context;
-}
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  return ctx;
+};
