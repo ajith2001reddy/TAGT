@@ -1,200 +1,211 @@
 TS PROJECT PART 10 of 20
 ==============================
---- FILE: .\backend\package.json ---
-{
-  "name": "tagt-backend",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "main": "src/server.js",
-  "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "test": "jest",
-    "lint": "eslint src/**/*.js"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^4.18.3",
-    "express-rate-limit": "^7.0.0",
-    "firebase-admin": "^13.7.0",
-    "google-auth-library": "^10.6.1",
-    "helmet": "^7.0.0",
-    "mongoose": "^8.1.0",
-    "nodemailer": "^6.9.8",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "winston": "^3.11.0"
-  },
-  "devDependencies": {
-    "eslint": "^8.56.0",
-    "jest": "^29.7.0",
-    "nodemon": "^3.0.3",
-    "supertest": "^6.3.4"
-  }
-}
+--- FILE: .\backend\eslint.config.js ---
+import js from "@eslint/js";
+import globals from "globals";
+import { defineConfig } from "eslint/config";
 
---- END OF .\backend\package.json ---
+export default defineConfig([
+  { files: ["**/*.{js,mjs,cjs}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: globals.browser } },
+]);
 
---- FILE: .\backend\src\middleware\firebaseAuth.js ---
+--- END OF .\backend\eslint.config.js ---
+
+--- FILE: .\backend\src\middleware\auth.js ---
 import admin from "../config/firebase.js";
 import User from "../models/User.js";
 
 const firebaseAuth = async (req, res, next) => {
-  try {
-    const header = req.headers.authorization;
+    let token; // ✅ declare outside
 
-    if (!header || !header.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+    try {
+        const header = req.headers.authorization;
+
+        if (!header || !header.startsWith("Bearer ")) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized"
+            });
+        }
+
+        token = header.split(" ")[1]; // assign here
+
+        // 1️⃣ Verify Firebase token
+        const decoded = await admin.auth().verifyIdToken(token);
+
+        // 2️⃣ Find user in DB
+        const dbUser = await User.findOne({
+            $or: [
+                { firebaseUid: decoded.uid },
+                { email: decoded.email?.toLowerCase() }
+            ]
+        });
+
+        if (!dbUser) {
+            return res.status(401).json({
+                success: false,
+                message: "User not registered in system"
+            });
+        }
+
+        if (!dbUser.isActive) {
+            return res.status(403).json({
+                success: false,
+                message: "Account inactive"
+            });
+        }
+
+        // 3️⃣ Link firebaseUid if missing
+        if (!dbUser.firebaseUid) {
+            await User.findByIdAndUpdate(dbUser._id, {
+                firebaseUid: decoded.uid
+            });
+        }
+
+        // 4️⃣ Attach user
+        req.user = dbUser;
+
+        next();
+
+    } catch (error) {
+        console.log("Token received:", token);
+        console.error("firebaseAuth error:", error.message);
+
+        return res.status(401).json({
+            success: false,
+            message: "Invalid or expired token"
+        });
     }
-
-    const token = header.split(" ")[1];
-
-    // Verify Firebase ID token
-    const decoded = await admin.auth().verifyIdToken(token);
-
-    // Find user in MongoDB by firebaseUid OR email
-    let dbUser = await User.findOne({
-      $or: [
-        { firebaseUid: decoded.uid },
-        { email: decoded.email?.toLowerCase() }
-      ]
-    });
-
-    if (!dbUser) {
-      return res.status(401).json({
-        success: false,
-        message: "User not found. Please contact your administrator."
-      });
-    }
-
-    // Link firebaseUid if missing (first login)
-    if (!dbUser.firebaseUid) {
-      dbUser.firebaseUid = decoded.uid;
-      await dbUser.save();
-    }
-
-    if (!dbUser.isActive) {
-      return res.status(403).json({ success: false, message: "Account inactive" });
-    }
-
-    req.user = dbUser;
-    next();
-  } catch (error) {
-    console.error("firebaseAuth error:", error.message);
-    return res.status(401).json({ success: false, message: "Invalid or expired token" });
-  }
 };
 
 export default firebaseAuth;
---- END OF .\backend\src\middleware\firebaseAuth.js ---
+--- END OF .\backend\src\middleware\auth.js ---
 
---- FILE: .\frontend\.env ---
-VITE_FIREBASE_API_KEY=AIzaSyCBDTqRB3T1bLJOWmkl5Y0-8drauN1cJWs
-VITE_FIREBASE_AUTH_DOMAIN=tagt-auth.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=tagt-auth
-VITE_FIREBASE_STORAGE_BUCKET=tagt-auth.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=1011855826997
-VITE_FIREBASE_APP_ID=1:1011855826997:web:c8e200b2c3ea5de27cd17c
---- END OF .\frontend\.env ---
+--- FILE: .\backend\src\routes\resident.js ---
+import express from "express";
+import mongoose from "mongoose";
 
---- FILE: .\frontend\src\components\Sidebar.tsx ---
-import { NavLink, useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
+import {
+    getAllResidents,
+    addResident,
+    getResidentProfile,
+    updateResident,
+    deleteResident
+} from "../controllers/residentController.js";
 
-const NAV_ADMIN = [
-    { to: "/dashboard", label: "Overview", icon: "⬡" },
-    { to: "/residents", label: "Residents", icon: "◈" },
-    { to: "/rooms", label: "Rooms", icon: "▣" },
-    { to: "/payments", label: "Payments", icon: "◎" },
-    { to: "/requests", label: "Requests", icon: "◇" },
-    { to: "/properties", label: "Properties", icon: "⌂" },
-    { to: "/notifications", label: "Notifications", icon: "✦" },
-    { to: "/bookings", label: "Bookings", icon: "☰" },
-    { to: "/resident-profiles", label: "Profiles", icon: "☻" },
-    { to: "/realtime", label: "Real-Time", icon: "◉" },
-    { to: "/email-center", label: "Email Center", icon: "✉" },
-    { to: "/analytics-plus", label: "Analytics+", icon: "△" },
-    { to: "/marketplace", label: "Marketplace", icon: "⬢" },
-]
+import auth from "../middleware/auth.js";
+import authorize from "../middleware/authorize.js";
 
-const NAV_RESIDENT = [
-    { to: "/resident", label: "My Dashboard", icon: "⬡" },
-]
+const router = express.Router();
 
-export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-    const { user, logout } = useAuth()
-    const navigate = useNavigate()
-    const links = user?.role === "admin" ? NAV_ADMIN : NAV_RESIDENT
+router.get("/", auth, authorize("owner"), getAllResidents);
+router.post("/", auth, authorize("owner"), addResident);
 
+router.get("/:id", auth, authorize("owner"), (req, res, next) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ success: false, message: "Invalid resident ID" });
+    }
+    return getResidentProfile(req, res, next);
+});
+
+router.put("/:id", auth, authorize("owner"), (req, res, next) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ success: false, message: "Invalid resident ID" });
+    }
+    return updateResident(req, res, next);
+});
+
+router.delete("/:id", auth, authorize("owner"), (req, res, next) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: "Invalid resident ID" });
+    }
+    return deleteResident(req, res, next);
+});
+
+export default router;
+
+--- END OF .\backend\src\routes\resident.js ---
+
+--- FILE: .\web\app\(auth)\layout.tsx ---
+"use client";
+
+import Link from "next/link";
+
+export default function AuthLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
     return (
-        <div className="h-full flex flex-col bg-[#0a0a0f] border-r border-white/5">
-            <div className="px-6 py-7 border-b border-white/5">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-xs font-black text-white">T</div>
-                    <div>
-                        <p className="text-white font-bold tracking-tight text-sm">TAGT</p>
-                        <p className="text-[10px] text-white/30 uppercase tracking-widest">Property Mgmt</p>
-                    </div>
+        <div className="min-h-screen bg-gradient-to-br from-black via-neutral-950 to-black text-white">
+
+            {/* Top Header */}
+            <div className="w-full flex justify-between items-center px-8 py-6 border-b border-neutral-800">
+                <Link href="/" className="text-xl font-bold tracking-wide">
+                    TAGT
+                </Link>
+                <span className="text-sm text-neutral-500">
+                    Property Management Platform
+                </span>
+            </div>
+
+            {/* Centered Content */}
+            <div className="flex items-center justify-center min-h-[calc(100vh-120px)] px-4">
+                <div className="w-full max-w-md bg-neutral-900 p-8 rounded-2xl shadow-2xl border border-neutral-800">
+                    {children}
                 </div>
             </div>
 
-            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                <p className="px-3 mb-3 text-[10px] font-semibold text-white/20 uppercase tracking-widest">{user?.role === "admin" ? "Management" : "My Space"}</p>
-                {links.map((item) => (
-                    <NavLink
-                        key={item.to}
-                        to={item.to}
-                        end={item.to === "/dashboard" || item.to === "/resident"}
-                        onClick={onNavigate}
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${isActive ? "bg-violet-500/15 text-violet-300 border border-violet-500/20" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`
-                        }
-                    >
-                        <span className="text-base leading-none">{item.icon}</span>
-                        <span className="font-medium">{item.label}</span>
-                    </NavLink>
-                ))}
-            </nav>
-
-            <div className="p-4 border-t border-white/5">
-                <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500/30 to-indigo-600/30 border border-white/10 flex items-center justify-center text-xs font-bold text-white/60">{user?.name?.[0]?.toUpperCase() ?? "U"}</div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-white/70 text-xs font-medium truncate">{user?.name}</p>
-                        <p className="text-white/25 text-[10px] capitalize">{user?.role}</p>
-                    </div>
-                    <button onClick={() => { logout(); navigate("/login") }} className="text-white/20 hover:text-red-400 transition text-xs" title="Sign out">⏻</button>
-                </div>
+            {/* Footer */}
+            <div className="w-full text-center text-xs text-neutral-600 py-6 border-t border-neutral-800">
+                © {new Date().getFullYear()} TAGT. All rights reserved.
             </div>
         </div>
-    )
+    );
 }
+--- END OF .\web\app\(auth)\layout.tsx ---
 
---- END OF .\frontend\src\components\Sidebar.tsx ---
+--- FILE: .\web\components\ui\BarChartCard.tsx ---
+"use client";
 
---- FILE: .\frontend\src\services\api.ts ---
-import axios from "axios"
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+} from "recharts";
 
-const api = axios.create({
-    baseURL: "http://localhost:5000/api",
-})
+export function BarChartCard({
+    title,
+    data,
+    dataKey,
+}: {
+    title: string;
+    data: any[];
+    dataKey: string;
+}) {
+    return (
+        <div className="bg-neutral-900 p-6 rounded-xl border border-white/10">
+            <h3 className="mb-4 font-semibold">{title}</h3>
+            <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data}>
+                        <XAxis dataKey="name" stroke="#aaa" />
+                        <YAxis stroke="#aaa" />
+                        <Tooltip />
+                        <Bar dataKey={dataKey} fill="#8b5cf6" />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+    );
+}
+--- END OF .\web\components\ui\BarChartCard.tsx ---
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token")
-
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-    }
-
-    return config
-})
-
-export default api
---- END OF .\frontend\src\services\api.ts ---
+--- FILE: .\web\public\vercel.svg ---
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+--- END OF .\web\public\vercel.svg ---
 

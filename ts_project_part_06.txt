@@ -626,7 +626,11 @@ import Request from "../models/Request.js";
 
 export const getAllResidents = async (req, res, next) => {
     try {
-        const residents = await User.find({ role: "resident" })
+        const scope = buildPropertyFilter(req.user);
+        const residents = await User.find({
+            role: "resident",
+            ...scope
+        })
             .populate("roomId", "roomNumber totalBeds occupiedBeds rent")
             .sort({ createdAt: -1 })
             .lean();
@@ -671,78 +675,75 @@ export const addResident = async (req, res, next) => {
     session.startTransaction();
 
     try {
-        const { name, email, password, roomNumber, roomId, rent } = req.body;
+        const { name, email, password, roomId } = req.body;
 
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !roomId) {
             await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Name, email, and password are required" });
+            return res.status(400).json({
+                success: false,
+                message: "Name, email, password, and room are required"
+            });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
+
         const existingUser = await User.findOne({ email: normalizedEmail }).session(session);
         if (existingUser) {
             await session.abortTransaction();
             return res.status(400).json({ success: false, message: "Email already exists" });
         }
 
-        let roomDoc = null;
-        let finalRent = 0;
+        const roomDoc = await Room.findOne({
+            _id: roomId,
+            propertyId: req.user.propertyId
+        }).session(session);
 
-        if (roomNumber) {
-            roomDoc = await Room.findOne({ roomNumber: String(roomNumber) }).session(session);
-            if (!roomDoc) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: `Room "${roomNumber}" not found` });
-            }
-        } else if (roomId && mongoose.Types.ObjectId.isValid(roomId)) {
-            roomDoc = await Room.findById(roomId).session(session);
-            if (!roomDoc) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "Invalid room selected" });
-            }
+        if (!roomDoc) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Invalid room selected" });
         }
 
-        if (roomDoc) {
-            if (roomDoc.maintenanceMode) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "Room is currently in maintenance mode" });
-            }
-            if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "No beds available in this room" });
-            }
-            finalRent = roomDoc.rent || 0;
+        if (roomDoc.maintenanceMode) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Room in maintenance mode" });
         }
 
-        if (!roomDoc && rent) {
-            const parsedRent = Number(rent);
-            if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "Invalid rent amount" });
-            }
-            finalRent = parsedRent;
+        if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Room is full" });
         }
 
-        const [resident] = await User.create([
-            { name, email: normalizedEmail, password, role: "resident", roomId: roomDoc ? roomDoc._id : null, isActive: true }
-        ], { session });
+        const resident = await User.create([{
+            name,
+            email: normalizedEmail,
+            password,
+            role: "resident",
+            propertyId: req.user.propertyId,
+            roomId: roomDoc._id,
+            isActive: true
+        }], { session });
 
-        if (roomDoc) {
-            roomDoc.occupiedBeds += 1;
-            await roomDoc.save({ session });
-        }
+        roomDoc.occupiedBeds += 1;
+        await roomDoc.save({ session });
 
-        if (finalRent > 0) {
-            const now = new Date();
-            const dueDate = new Date(now.getFullYear(), now.getMonth() + 1, 5);
-            await Payment.create([
-                { resident: resident._id, amount: finalRent, type: "rent", status: "pending", month: now.toISOString().slice(0, 7), dueDate }
-            ], { session });
-        }
+        const now = new Date();
+        const dueDate = new Date(now.getFullYear(), now.getMonth(), 5);
+
+        await Payment.create([{
+            propertyId: req.user.propertyId,
+            resident: resident[0]._id,
+            room: roomDoc._id,
+            amount: roomDoc.rent,
+            type: "rent",
+            status: "pending",
+            month: now.toISOString().slice(0, 7),
+            dueDate
+        }], { session });
 
         await session.commitTransaction();
 
-        return res.status(201).json({ success: true, resident });
+        return res.status(201).json({ success: true, resident: resident[0] });
+
     } catch (err) {
         await session.abortTransaction();
         logger.error(`ADD RESIDENT ERROR: ${err.message}`);
@@ -830,158 +831,131 @@ export const deleteResident = async (req, res, next) => {
 
 --- END OF .\backend\src\controllers\residentController.js ---
 
---- FILE: .\backend\src\routes\rooms.js ---
-import { Router } from "express";
-import mongoose from "mongoose";
+--- FILE: .\backend\src\routes\index.js ---
+﻿import { Router } from "express";
 
-import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
-import { getAllRooms, addRoom, updateRoom, deleteRoom } from "../controllers/roomController.js";
+import authRoutes from "./auth.js";
+import ownerRoutes from "./owner.js";
+import roomRoutes from "./rooms.js";
+import paymentRoutes from "./payments.js";
+import residentRoutes from "./resident.js";
+import analyticsRoutes from "./analytics.js";
+import requestRoutes from "./requests.js";
+import v2Routes from "./v2/index.js";
+import adminRoutes from "./admin.js";
+import residentDashboardRoutes from "./residentDashboard.js";
 
 const router = Router();
 
-router.get("/", auth, isAdmin, getAllRooms);
-router.post("/", auth, isAdmin, addRoom);
+router.use("/auth", authRoutes);           // POST /api/auth/login
+router.use("/owner", ownerRoutes);
+router.use("/admin", adminRoutes);
+router.use("/rooms", roomRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/owner/resident", residentRoutes);
+router.use("/analytics", analyticsRoutes);
+router.use("/requests", requestRoutes);
+router.use("/v2", v2Routes);
+router.use("/resident", residentDashboardRoutes);
 
-router.put("/:id", auth, isAdmin, (req, res, next) => {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ success: false, message: "Invalid room ID" });
-    }
-    return updateRoom(req, res, next);
+router.get("/", (req, res) => {
+    res.json({ success: true, message: "TAGT API is running" });
 });
 
-router.delete("/:id", auth, isAdmin, (req, res, next) => {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ success: false, message: "Invalid room ID" });
-    }
-    return deleteRoom(req, res, next);
+router.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+    });
 });
 
 export default router;
+--- END OF .\backend\src\routes\index.js ---
 
---- END OF .\backend\src\routes\rooms.js ---
-
---- FILE: .\frontend\src\main.tsx ---
-import React from "react"
-import ReactDOM from "react-dom/client"
-import { BrowserRouter } from "react-router-dom"
-import App from "./App"
-import { AuthProvider } from "./context/AuthContext"
-import "./index.css"
-
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-)
---- END OF .\frontend\src\main.tsx ---
-
---- FILE: .\frontend\src\features\residents\ResidentsPage.tsx ---
-import { useEffect, useState } from "react"
-import api from "../../services/api"
-
-type Room = { _id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; rent: number }
-type Resident = { _id: string; name: string; email: string; isActive: boolean; createdAt: string; roomId?: { roomNumber: string; rent: number } | null }
-
-type Profile = {
-    resident: Resident
-    paymentSummary: { _id: string; count: number; total: number }[]
-    requestSummary: { _id: string; count: number }[]
+--- FILE: .\web\tsconfig.json ---
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
 }
 
-export default function ResidentsPage() {
-    const [residents, setResidents] = useState<Resident[]>([])
-    const [rooms, setRooms] = useState<Room[]>([])
-    const [profile, setProfile] = useState<Profile | null>(null)
-    const [editing, setEditing] = useState<Resident | null>(null)
-    const [form, setForm] = useState({ name: "", email: "", password: "", roomNumber: "", rent: "" })
-    const [editForm, setEditForm] = useState({ name: "", email: "", isActive: true })
+--- END OF .\web\tsconfig.json ---
 
-    const load = async () => {
-        const [r, rm] = await Promise.all([api.get("/admin/residents"), api.get("/rooms")])
-        setResidents(r.data.residents ?? [])
-        setRooms(rm.data.rooms ?? [])
-    }
-    useEffect(() => { load() }, [])
+--- FILE: .\web\components\layout\DashboardShell.tsx ---
+"use client";
 
-    const addResident = async (e: React.FormEvent) => {
-        e.preventDefault()
-        await api.post("/admin/residents", { ...form, rent: form.rent ? Number(form.rent) : undefined })
-        setForm({ name: "", email: "", password: "", roomNumber: "", rent: "" })
-        load()
-    }
+import { ReactNode } from "react";
+import { Sidebar } from "./Sidebar";
+import { Navbar } from "./Navbar";
 
-    const openProfile = async (id: string) => {
-        const r = await api.get(`/resident/${id}`)
-        setProfile(r.data)
-    }
+export function DashboardShell({ children }: { children: ReactNode }) {
+    return (
+        <div className="flex min-h-screen bg-black text-white">
 
-    const openEdit = (r: Resident) => {
-        setEditing(r)
-        setEditForm({ name: r.name, email: r.email, isActive: r.isActive })
-    }
+            {/* Sidebar */}
+            <Sidebar />
 
-    const saveEdit = async () => {
-        if (!editing) return
-        await api.put(`/resident/${editing._id}`, editForm)
-        setEditing(null)
-        load()
-    }
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col">
 
-    return <div className="space-y-6 max-w-6xl">
-        <h1 className="text-2xl font-bold text-white">Residents</h1>
-        <form onSubmit={addResident} className="grid md:grid-cols-6 gap-2 rounded-2xl border border-white/10 p-3">
-            <input className="bg-white/5 p-2 rounded text-white" placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-            <input className="bg-white/5 p-2 rounded text-white" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-            <input className="bg-white/5 p-2 rounded text-white" placeholder="Password" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
-            <select className="bg-white/5 p-2 rounded text-white" value={form.roomNumber} onChange={e => setForm({ ...form, roomNumber: e.target.value })}>
-                <option value="">No room</option>
-                {rooms.map(r => <option key={r._id} value={r.roomNumber}>Room {r.roomNumber}</option>)}
-            </select>
-            <input className="bg-white/5 p-2 rounded text-white" type="number" placeholder="Rent" value={form.rent} onChange={e => setForm({ ...form, rent: e.target.value })} />
-            <button className="bg-violet-500 rounded text-white">Add</button>
-        </form>
+                {/* Top Navbar */}
+                <Navbar />
 
-        <div className="rounded-2xl border border-white/10 overflow-hidden">
-            <table className="w-full text-sm">
-                <thead><tr className="text-white/40 border-b border-white/10"><th className="p-3 text-left">Name</th><th className="p-3 text-left">Room</th><th className="p-3 text-left">Status</th><th className="p-3"></th></tr></thead>
-                <tbody>{residents.map(r => <tr key={r._id} className="border-b border-white/5 text-white/80">
-                    <td className="p-3"><p>{r.name}</p><p className="text-xs text-white/40">{r.email}</p></td>
-                    <td className="p-3">{r.roomId?.roomNumber ?? "—"}</td>
-                    <td className="p-3">{r.isActive ? "Active" : "Inactive"}</td>
-                    <td className="p-3 text-right space-x-3"><button onClick={() => openProfile(r._id)} className="text-sky-300">Profile</button><button onClick={() => openEdit(r)} className="text-violet-300">Edit</button></td>
-                </tr>)}</tbody>
-            </table>
+                {/* Page Content */}
+                <main className="flex-1 p-6 overflow-y-auto">
+                    {children}
+                </main>
+
+            </div>
         </div>
-
-        {profile && <div className="fixed inset-0 bg-black/70 p-4 flex justify-end" onClick={() => setProfile(null)}>
-            <div className="w-full max-w-md bg-[#111320] border border-white/10 rounded-2xl p-5" onClick={e => e.stopPropagation()}>
-                <h3 className="text-white font-semibold">{profile.resident.name}</h3>
-                <p className="text-sm text-white/50">{profile.resident.email}</p>
-                <div className="mt-4 space-y-2 text-sm text-white/70">
-                    {profile.paymentSummary.map(p => <p key={p._id}>{p._id}: {p.count} (${p.total})</p>)}
-                    {profile.requestSummary.map(r => <p key={r._id}>Requests {r._id}: {r.count}</p>)}
-                </div>
-            </div>
-        </div>}
-
-        {editing && <div className="fixed inset-0 bg-black/70 p-4 flex items-center justify-center">
-            <div className="w-full max-w-md bg-[#111320] border border-white/10 rounded-2xl p-5 space-y-3">
-                <h3 className="text-white font-semibold">Edit Resident</h3>
-                <input className="w-full bg-white/5 p-2 rounded text-white" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
-                <input className="w-full bg-white/5 p-2 rounded text-white" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
-                <label className="text-white/70 flex items-center gap-2"><input type="checkbox" checked={editForm.isActive} onChange={e => setEditForm({ ...editForm, isActive: e.target.checked })} /> Active</label>
-                <div className="flex justify-end gap-2"><button onClick={() => setEditing(null)} className="text-white/60">Cancel</button><button onClick={saveEdit} className="bg-violet-500 px-3 py-1 rounded text-white">Save</button></div>
-            </div>
-        </div>}
-    </div>
+    );
 }
+--- END OF .\web\components\layout\DashboardShell.tsx ---
 
---- END OF .\frontend\src\features\residents\ResidentsPage.tsx ---
+--- FILE: .\web\lib\firebase.ts ---
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+--- END OF .\web\lib\firebase.ts ---
 

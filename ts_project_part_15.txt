@@ -4,16 +4,18 @@ TS PROJECT PART 15 of 20
 import User from "../models/User.js";
 import Payment from "../models/Payment.js";
 import Request from "../models/Request.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 // Function to calculate the churn score for each resident
-async function calculateResidentChurn(resident) {
+async function calculateResidentChurn(resident, req) {
     let score = 0;
     const reasons = [];
 
     // FIX: Payment model uses 'resident' field, not 'residentId'
+    const scope = buildPropertyFilter(req.user);
     const [payments, requests] = await Promise.all([
-        Payment.find({ resident: resident._id }).lean(),
-        Request.find({ resident: resident._id }).lean()
+        Payment.find({ resident: resident._id, ...scope }).lean(),
+        Request.find({ resident: resident._id, ...scope }).lean()
     ]);
 
     const unpaidCount = payments.filter(p => p.status === "pending" || p.status === "failed").length;
@@ -77,6 +79,7 @@ async function calculateResidentChurn(resident) {
 
 // Function to predict churn for all residents
 async function predictChurn() {
+    const scope = buildPropertyFilter(req.user);
     const residents = await User.find({
         role: "resident",
         isActive: true
@@ -101,73 +104,168 @@ async function predictChurn() {
 export { calculateResidentChurn, predictChurn };
 --- END OF .\backend\src\analytics\churnEngine.js ---
 
---- FILE: .\backend\src\models\Request.js ---
-import mongoose from "mongoose";
+--- FILE: .\backend\src\middleware\validate.js ---
+export default (schema) => (req, res, next) => {
+    const { error, value } = schema.validate(req.body, {
+        abortEarly: true,
+        stripUnknown: true
+    });
 
-const RequestSchema = new mongoose.Schema(
-    {
-        resident: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true
-        },
+    if (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.details[0].message
+        });
+    }
 
-        title: {
-            type: String,
-            required: true,
-            trim: true
-        },
+    req.body = value;
+    next();
+};
 
-        description: {
-            type: String,
-            required: true,
-            trim: true
-        },
+--- END OF .\backend\src\middleware\validate.js ---
 
-        priority: {
-            type: String,
-            enum: ["low", "medium", "high", "urgent"],
-            default: "medium"
-        },
+--- FILE: .\backend\src\utils\emailService.js ---
+import nodemailer from "nodemailer";
 
-        status: {
-            type: String,
-            enum: ["pending", "in-progress", "resolved"],
-            default: "pending",
-            index: true
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+let transporter = null;
+
+if (EMAIL_USER && EMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+        service: "gmail",
+        firebaseAuth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS
         }
-    },
-    { timestamps: true }
-);
-
-export default mongoose.model("Request", RequestSchema);
---- END OF .\backend\src\models\Request.js ---
-
---- FILE: .\frontend\postcss.config.js ---
-export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
+    });
 }
 
---- END OF .\frontend\postcss.config.js ---
+async function sendEmail(to, subject, html) {
+    if (!transporter) return;
 
---- FILE: .\frontend\src\features\advanced\MarketplacePage.tsx ---
-import { PageShell, SectionCard } from "./Shared"
-
-export default function MarketplacePage() {
-  return (
-    <PageShell title="Marketplace" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
-        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
-        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
-      </div>
-    </PageShell>
-  )
+    await transporter.sendMail({
+        from: `"TAGT Property Management" <${EMAIL_USER}>`,
+        to,
+        subject,
+        html
+    });
 }
 
---- END OF .\frontend\src\features\advanced\MarketplacePage.tsx ---
+function sendWelcomeEmail(email, name, password) {
+    return sendEmail(
+        email,
+        "Welcome to TAGT - Your Account Details",
+        `
+        <div style="font-family:Arial,max-width:600px;margin:auto">
+            <h2 style="color:#2563eb">Welcome to TAGT</h2>
+            <p>Hello ${name},</p>
+            <p>Your account has been created.</p>
+            <div style="background:#f3f4f6;padding:16px;border-radius:6px">
+                <p><b>Email:</b> ${email}</p>
+                <p><b>Password:</b> ${password}</p>
+            </div>
+            <a href="${FRONTEND_URL}"
+               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">
+                Login
+            </a>
+        </div>
+        `
+    );
+}
+
+function sendStatusUpdateEmail(email, requestMessage, newStatus, adminNote) {
+    return sendEmail(
+        email,
+        "Maintenance Request Update",
+        `
+        <div style="font-family:Arial,max-width:600px;margin:auto">
+            <h2 style="color:#2563eb">Request Update</h2>
+            <p><b>Request:</b> ${requestMessage}</p>
+            <p><b>Status:</b> ${newStatus}</p>
+            <p><b>Note:</b> ${adminNote || "No notes"}</p>
+            <a href="${FRONTEND_URL}/resident"
+               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">
+                View Request
+            </a>
+        </div>
+        `
+    );
+}
+
+function sendPaymentReminder(email, name, amount, dueDate) {
+    return sendEmail(
+        email,
+        "Payment Reminder",
+        `
+        <div style="font-family:Arial,max-width:600px;margin:auto">
+            <h2 style="color:#dc2626">Payment Reminder</h2>
+            <p>Hello ${name},</p>
+            <p><b>Amount:</b> $${amount}</p>
+            <p><b>Due:</b> ${new Date(dueDate).toLocaleDateString()}</p>
+            <a href="${FRONTEND_URL}/resident/payments"
+               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#dc2626;color:#fff;border-radius:6px;text-decoration:none">
+                Pay Now
+            </a>
+        </div>
+        `
+    );
+}
+
+export {
+    sendEmail,
+    sendWelcomeEmail,
+    sendStatusUpdateEmail,
+    sendPaymentReminder
+};
+
+--- END OF .\backend\src\utils\emailService.js ---
+
+--- FILE: .\web\app\owner\layout.tsx ---
+import { PropertyProvider } from "@/context/PropertyContext";
+import { RoleGuard } from "@/components/auth/RoleGuard";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+
+export default function OwnerLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return (
+        <RoleGuard allowed={["owner"]}>
+            <PropertyProvider>
+                <DashboardShell>{children}</DashboardShell>
+            </PropertyProvider>
+        </RoleGuard>
+    );
+}
+--- END OF .\web\app\owner\layout.tsx ---
+
+--- FILE: .\web\features\owner\analytics.service.ts ---
+import api from "@/lib/api";
+
+export type KPIResponse = {
+    occupancy: {
+        rate: number;
+        occupiedBeds: number;
+        totalBeds: number;
+    };
+    payments: {
+        collectionRate: number;
+        totalBilled: number;
+        totalCollected: number;
+    };
+    maintenance: {
+        avgResolutionTime: number;
+        resolvedCount: number;
+    };
+};
+
+export async function fetchKPIs(): Promise<KPIResponse> {
+    const { data } = await api.get("/analytics/kpis");
+    return data.data;
+}
+--- END OF .\web\features\owner\analytics.service.ts ---
 

@@ -1,12 +1,12 @@
 ﻿import { Router } from "express";
 import auth from "../middleware/auth.js";
-import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 import { getKPIs } from "../analytics/kpiCalculator.js";
 import { predictOccupancy } from "../analytics/forecastEngine.js";
 import { predictMaintenanceCost } from "../analytics/maintenanceForecast.js";
 import { predictChurn } from "../analytics/churnEngine.js";
 import { optimizeRevenue } from "../analytics/revenueOptimizer.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 const router = Router();
 
@@ -34,7 +34,7 @@ router.get("/kpis", auth, async (req, res, next) => {
             filters.toDate = to;
         }
 
-        const kpis = await getKPIs(filters);
+        const kpis = await getKPIs(filters, req.user);
         res.json({ success: true, data: kpis });
     } catch (err) {
         next(err);

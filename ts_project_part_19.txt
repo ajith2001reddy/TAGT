@@ -6,8 +6,10 @@ TS PROJECT PART 19 of 20
 import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
 import { predictChurn } from "./churnEngine.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
-export const optimizeRevenue = async () => {
+export const optimizeRevenue = async (req) => {
+    const scope = buildPropertyFilter(req.user);
     const [rooms, payments] = await Promise.all([
         Room.find({}, "totalBeds occupiedBeds rent").lean(),
         Payment.find({}, "amount status").lean()
@@ -118,90 +120,231 @@ export const optimizeRevenue = async () => {
 
 --- END OF .\backend\src\analytics\revenueOptimizer.js ---
 
---- FILE: .\backend\src\routes\adminRoutes.js ---
-import { Router } from "express";
+--- FILE: .\backend\src\models\Request.js ---
+import mongoose from "mongoose";
 
-import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
+const RequestSchema = new mongoose.Schema(
+    {
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            required: true,
+            index: true
+        },
 
-import {
-    getAllResidents,
-    addResident,
-} from "../controllers/residentController.js";
+        resident: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
 
-import Request from "../models/Request.js";
-import Payment from "../models/Payment.js";
-import User from "../models/User.js";
+        message: {
+            type: String,
+            trim: true,
+            default: ""
+        },
 
-const router = Router();
+        title: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-router.get("/residents", auth, isAdmin, getAllResidents);
-router.post("/residents", auth, isAdmin, addResident);
+        description: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-router.get("/requests", auth, isAdmin, async (req, res, next) => {
-    try {
-        const requests = await Request.find()
-            .populate("resident", "name email")
-            .sort({ createdAt: -1 })
-            .lean();
-        res.json({ success: true, requests });
-    } catch (err) {
-        next(err);
-    }
-});
+        priority: {
+            type: String,
+            enum: ["low", "medium", "high", "urgent"],
+            default: "medium"
+        },
 
-router.get("/stats", auth, isAdmin, async (req, res, next) => {
-    try {
-        const [totalResidents, pendingRequests, payments] = await Promise.all([
-            User.countDocuments({ role: "resident", isActive: true }),
-            Request.countDocuments({ status: { $ne: "resolved" } }),
-            Payment.find({}, "amount status").lean(),
-        ]);
-
-        let totalRevenue = 0;
-        let outstandingBalance = 0;
-        for (const p of payments) {
-            if (p.status === "paid") totalRevenue += p.amount || 0;
-            else outstandingBalance += p.amount || 0;
+        status: {
+            type: String,
+            enum: ["pending", "in-progress", "resolved"],
+            default: "pending",
+            index: true
         }
+    },
+    { timestamps: true }
 
-        res.json({
-            success: true,
-            stats: { totalResidents, pendingRequests, totalRevenue, outstandingBalance },
-        });
-    } catch (err) {
-        next(err);
+);
+
+RequestSchema.pre("validate", function (next) {
+    if (!this.propertyId || !this.resident) {
+        return next(new Error("Invalid tenant association"));
     }
+    next();
 });
 
-export default router;
---- END OF .\backend\src\routes\adminRoutes.js ---
+RequestSchema.index({ propertyId: 1, status: 1 });
 
---- FILE: .\frontend\tsconfig.json ---
-{
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+export default mongoose.model("Request", RequestSchema);
+--- END OF .\backend\src\models\Request.js ---
+
+--- FILE: .\web\.gitignore ---
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+--- END OF .\web\.gitignore ---
+
+--- FILE: .\web\app\owner\rooms\page.tsx ---
+"use client";
+
+import { useState } from "react";
+import { useRooms } from "@/features/owner/useRooms";
+import { createRoom, deleteRoom } from "@/features/owner/rooms.service";
+
+export default function RoomsPage() {
+    const { rooms, loading, reload } = useRooms();
+
+    const [roomNumber, setRoomNumber] = useState("");
+    const [rent, setRent] = useState("");
+    const [beds, setBeds] = useState("");
+
+    async function handleCreate(e: React.FormEvent) {
+        e.preventDefault();
+
+        await createRoom({
+            roomNumber,
+            rent: Number(rent),
+            totalBeds: Number(beds),
+        });
+
+        setRoomNumber("");
+        setRent("");
+        setBeds("");
+        reload();
+    }
+
+    async function handleDelete(id: string) {
+        await deleteRoom(id);
+        reload();
+    }
+
+    if (loading) return <p>Loading rooms...</p>;
+
+    return (
+        <div className="space-y-8">
+            <h1 className="text-2xl font-bold">Rooms</h1>
+
+            <form onSubmit={handleCreate} className="space-y-3 max-w-md">
+                <input
+                    placeholder="Room Number"
+                    className="w-full p-2 bg-neutral-800 rounded"
+                    value={roomNumber}
+                    onChange={(e) => setRoomNumber(e.target.value)}
+                    required
+                />
+
+                <input
+                    placeholder="Rent"
+                    type="number"
+                    className="w-full p-2 bg-neutral-800 rounded"
+                    value={rent}
+                    onChange={(e) => setRent(e.target.value)}
+                    required
+                />
+
+                <input
+                    placeholder="Total Beds"
+                    type="number"
+                    className="w-full p-2 bg-neutral-800 rounded"
+                    value={beds}
+                    onChange={(e) => setBeds(e.target.value)}
+                    required
+                />
+
+                <button className="bg-violet-600 px-4 py-2 rounded">
+                    Add Room
+                </button>
+            </form>
+
+            <div className="space-y-3">
+                {rooms.map((room) => (
+                    <div
+                        key={room._id}
+                        className="flex justify-between items-center bg-neutral-900 p-4 rounded"
+                    >
+                        <div>
+                            <p className="font-semibold">{room.roomNumber}</p>
+                            <p className="text-sm text-white/50">
+                                ₹{room.rent} | {room.occupiedBeds}/{room.totalBeds} beds
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={() => handleDelete(room._id)}
+                            className="text-red-500"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 }
+--- END OF .\web\app\owner\rooms\page.tsx ---
 
---- END OF .\frontend\tsconfig.json ---
+--- FILE: .\web\features\owner\useAnalytics.ts ---
+import { useEffect, useState } from "react";
+import { fetchKPIs, KPIResponse } from "./analytics.service";
 
---- FILE: .\frontend\src\features\advanced\ResidentProfilesPage.tsx ---
-import { PageShell, SectionCard } from "./Shared"
+export function useAnalytics() {
+    const [data, setData] = useState<KPIResponse | null>(null);
+    const [loading, setLoading] = useState(true);
 
-export default function ResidentProfilesPage() {
-  return (
-    <PageShell title="ResidentProfiles" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
-        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
-        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
-      </div>
-    </PageShell>
-  )
+    useEffect(() => {
+        fetchKPIs()
+            .then(setData)
+            .finally(() => setLoading(false));
+    }, []);
+
+    return { data, loading };
 }
-
---- END OF .\frontend\src\features\advanced\ResidentProfilesPage.tsx ---
+--- END OF .\web\features\owner\useAnalytics.ts ---
 

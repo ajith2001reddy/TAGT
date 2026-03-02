@@ -44,163 +44,215 @@ export { swaggerUi, swaggerSpec };
 
 --- END OF .\backend\src\swagger.js ---
 
---- FILE: .\backend\src\models\Payment.js ---
-﻿import mongoose from "mongoose";
-
-const PaymentSchema = new mongoose.Schema(
-    {
-        // 🔗 Resident reference
-        resident: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true,
-        },
-
-        // 🔗 Room reference
-        room: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Room",
-            default: null,  
-        },
-
-        // 💰 Amount to be paid
-        amount: {
-            type: Number,
-            required: true,
-            min: 0,
-        },
-
-        // 📅 Month identifier (YYYY-MM) → used for cron + duplicate prevention
-        month: {
-            type: String,
-            required: true,
-            match: /^\d{4}-\d{2}$/, // e.g., 2026-02
-            index: true,
-        },
-
-        // 🧾 Payment type (FIXED ENUM — your bug was here)
-        type: {
-            type: String,
-            enum: ["rent", "deposit", "late_fee", "other"],
-            default: "rent",
-            required: true,
-            index: true,
-        },
-
-        // 📊 Payment status
-        status: {
-            type: String,
-            enum: ["pending", "paid", "failed", "cancelled"],
-            default: "pending",
-            index: true,
-        },
-
-        // ⏰ Due date for reminders / late fee automation
-        dueDate: {
-            type: Date,
-            required: true,
-        },
-
-        // 💳 Payment method (future Stripe/cash support)
-        method: {
-            type: String,
-            enum: ["cash", "card", "bank", "online", null],
-            default: null,
-        },
-
-        // 🧾 Optional transaction reference (Stripe ID, etc.)
-        transactionId: {
-            type: String,
-            default: null,
-        },
-
-        // 📝 Notes (admin comments, adjustments)
-        notes: {
-            type: String,
-            trim: true,
-            maxlength: 500,
-        },
-
-        // 📅 Actual paid timestamp
-        paidAt: {
-            type: Date,
-            default: null,
-        },
-    },
-    {
-        timestamps: true, // createdAt, updatedAt
+--- FILE: .\backend\src\middleware\isAdmin.js ---
+﻿const isAdmin = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized"
+        });
     }
-);
+
+    if (!["super_admin", "owner"].includes(req.user.role)) {
+        return res.status(403).json({
+            success: false,
+            message: "Admin access only"
+        });
+    }
+
+    next();
+};
+
+export default isAdmin;
+
+--- END OF .\backend\src\middleware\isAdmin.js ---
+
+--- FILE: .\backend\src\services\rentAutomationService.js ---
+import Payment from "../models/Payment.js";
+import User from "../models/User.js";
 
 
+const getMonthKey = (date = new Date()) => date.toISOString().slice(0, 7);
 
-// Ensures ONE rent payment per resident per month
-PaymentSchema.index(
-    { resident: 1, month: 1, type: 1 },
-    { unique: true }
-);
+export const generateMonthlyRentPayments = async ({ targetDate = new Date(), propertyId = null } = {}) => {
+    const month = getMonthKey(targetDate);
+    const dueDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 5);
 
+    const residentFilter = {
+        role: "resident",
+        isActive: true,
+        ...(propertyId ? { propertyId } : {})
+    };
 
+    const residents = await User.find(residentFilter)
+        .populate("roomId", "rent")
+        .select("_id propertyId roomId")
+        .lean();
 
-export default mongoose.model("Payment", PaymentSchema);
+    let created = 0;
 
---- END OF .\backend\src\models\Payment.js ---
+    for (const resident of residents) {
 
---- FILE: .\frontend\package.json ---
-{
-  "name": "frontend",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "axios": "^1.13.5",
-    "firebase": "^12.9.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.13.1"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@types/node": "^24.10.1",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "autoprefixer": "^10.4.27",
-    "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.4",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.48.0",
-    "vite": "^7.3.1"
-  }
+        // 🚫 Skip if resident has no room assigned
+        if (!resident.roomId) continue;
+
+        // Extract rent safely
+        const rentAmount = Number(resident.roomId.rent);
+
+        // 🚫 Skip invalid rent values
+        if (!Number.isFinite(rentAmount) || rentAmount <= 0) continue;
+
+        // 🚫 Skip if propertyId missing
+        if (!resident.propertyId) continue;
+
+        const result = await Payment.updateOne(
+            {
+                propertyId: resident.propertyId,
+                resident: resident._id,
+                month,
+                type: "rent"
+            },
+            {
+                $setOnInsert: {
+                    propertyId: resident.propertyId,
+                    resident: resident._id,
+                    amount: rentAmount,
+                    dueDate,
+                    status: "pending",
+                    month,
+                    type: "rent",
+                    lateFee: 0,
+                    totalPayable: rentAmount
+                }
+            },
+            { upsert: true }
+        );
+
+        if (result.upsertedCount > 0) created += 1;
+    }
+
+    return { month, created, scannedResidents: residents.length };
+};
+
+export const applyLateFees = async ({ now = new Date(), lateFeePercent = 0.05, propertyId = null } = {}) => {
+    const filter = {
+        status: "pending",
+        dueDate: { $lt: now },
+        ...(propertyId ? { propertyId } : {})
+    };
+
+    const overduePayments = await Payment.find(filter).lean();
+    let updated = 0;
+
+    for (const payment of overduePayments) {
+        const currentLateFee = Number(payment.lateFee || 0);
+        if (currentLateFee > 0) continue;
+
+        const lateFee = Number((Number(payment.amount || 0) * lateFeePercent).toFixed(2));
+        const totalPayable = Number((Number(payment.amount || 0) + lateFee).toFixed(2));
+
+        await Payment.updateOne(
+            { _id: payment._id, status: "pending" },
+            {
+                $set: {
+                    lateFee,
+                    totalPayable,
+                    status: "overdue"
+                }
+            }
+        );
+        updated += 1;
+    }
+
+    return { overdueCount: overduePayments.length, lateFeeApplied: updated };
+};
+
+let lastRunMonth = null;
+
+export const runRentAutomationTick = async () => {
+    const now = new Date();
+    const month = getMonthKey(now);
+
+    const result = { generated: null, lateFees: null, skippedMonthlyGeneration: false };
+
+    if (now.getDate() === 1 && lastRunMonth !== month) {
+        result.generated = await generateMonthlyRentPayments({ targetDate: now });
+        lastRunMonth = month;
+    } else {
+        result.skippedMonthlyGeneration = true;
+    }
+
+    result.lateFees = await applyLateFees({ now });
+    return result;
+};
+--- END OF .\backend\src\services\rentAutomationService.js ---
+
+--- FILE: .\web\app\dashboard\page.tsx ---
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+
+export default function DashboardPage() {
+    const { role, loading } = useAuth();
+    const router = useRouter();
+    console.log("ROLE:", role);
+    console.log("LOADING:", loading);
+
+    useEffect(() => {
+        if (loading) return;
+
+        if (!role) {
+            router.replace("/login");
+            return;
+        }
+
+        if (role === "owner") router.replace("/owner");
+        else if (role === "resident") router.replace("/resident");
+        else if (role === "super_admin") router.replace("/provider");
+    }, [role, loading, router]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-white">
+                Loading...
+            </div>
+        );
+    }
+
+    return null;
+}
+--- END OF .\web\app\dashboard\page.tsx ---
+
+--- FILE: .\web\context\PropertyContext.tsx ---
+"use client";
+
+import { createContext, useContext, useState } from "react";
+
+type PropertyContextType = {
+    selectedProperty: string | null;
+    setSelectedProperty: (id: string | null) => void;
+};
+
+const PropertyContext = createContext<PropertyContextType | null>(null);
+
+export function PropertyProvider({ children }: { children: React.ReactNode }) {
+    const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
+
+    return (
+        <PropertyContext.Provider value={{ selectedProperty, setSelectedProperty }}>
+            {children}
+        </PropertyContext.Provider>
+    );
 }
 
---- END OF .\frontend\package.json ---
-
---- FILE: .\frontend\src\features\advanced\EmailAutomationPage.tsx ---
-import { PageShell, SectionCard } from "./Shared"
-
-export default function EmailAutomationPage() {
-  return (
-    <PageShell title="EmailAutomation" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
-        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
-        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
-      </div>
-    </PageShell>
-  )
+export function useProperty() {
+    const context = useContext(PropertyContext);
+    if (!context) {
+        throw new Error("useProperty must be used inside PropertyProvider");
+    }
+    return context;
 }
-
---- END OF .\frontend\src\features\advanced\EmailAutomationPage.tsx ---
+--- END OF .\web\context\PropertyContext.tsx ---
 

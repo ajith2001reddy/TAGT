@@ -37,7 +37,9 @@ export const updatePropertyStatus = async (req, res, next) => {
     try {
         const { id } = req.params;
         if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ success: false, message: "Invalid property id" });
-        const property = await Property.findOneAndUpdate({ _id: id }, { isActive: Boolean(req.body.isActive) }, { new: true });
+        const property = await Property.findByIdAndUpdate(propertyId, {
+            owner: ownerId
+        });
         if (!property) return res.status(404).json({ success: false, message: "Property not found" });
         return res.json({ success: true, data: property });
     } catch (err) { next(err); }

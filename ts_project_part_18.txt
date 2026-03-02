@@ -2,9 +2,10 @@ TS PROJECT PART 18 of 20
 ==============================
 --- FILE: .\backend\src\analytics\maintenanceForecast.js ---
 import Request from "../models/Request.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 // Function to get monthly maintenance costs for a specified number of months
-async function getMonthlyMaintenanceCosts(months = 6) {
+async function getMonthlyMaintenanceCosts(months = 6, req) {
     const now = new Date();
     const history = [];
 
@@ -25,10 +26,11 @@ async function getMonthlyMaintenanceCosts(months = 6) {
         return { start, end };
     });
 
+    const scope = buildPropertyFilter(req.user);
     const requestsByMonth = await Promise.all(
         ranges.map(({ start, end }) =>
             Request.find(
-                { createdAt: { $gte: start, $lte: end } },
+                { createdAt: { $gte: start, $lte: end }, ...scope },
                 "cost"
             ).lean()
         )
@@ -124,127 +126,107 @@ export { predictMaintenanceCost };
 
 --- END OF .\backend\src\analytics\maintenanceForecast.js ---
 
---- FILE: .\backend\src\models\User.js ---
+--- FILE: .\backend\src\models\Property.js ---
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
 
-const userSchema = new mongoose.Schema(
+const propertySchema = new mongoose.Schema(
     {
-        // Firebase UID - linked when user logs in via Firebase/Google
-        // sparse: true allows multiple documents to have null (for old password users)
-        firebaseUid: {
-            type: String,
-            unique: true,
-            sparse: true,
-            index: true,
-        },
-
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true,
-            index: true,
-            match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
-        },
-
-        // Password is optional — Google/Firebase users won't have one
-        password: {
-            type: String,
-            minlength: 6,
-            select: false,
-        },
-
-        role: {
-            type: String,
-            enum: ["admin", "resident"],
-            default: "resident",
-            index: true,
-        },
-
-        roomId: {
+        name: { type: String, required: true, trim: true, index: true },
+        type: { type: String, enum: ["pg", "hotel"], required: true, index: true },
+        owner: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Room",
+            ref: "User",
             default: null,
-            index: true,
+            index: true
         },
-
-        isActive: {
-            type: Boolean,
-            default: true,
-            index: true,
-        },
+        address: { type: String, required: true, trim: true },
+        isActive: { type: Boolean, default: true, index: true }
     },
     { timestamps: true }
 );
 
-// Only hash if password exists and was modified
-userSchema.pre("save", async function (next) {
-    if (!this.password || !this.isModified("password")) return next();
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
-});
+propertySchema.index({ owner: 1, isActive: 1 });
 
-userSchema.methods.comparePassword = function (candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
+export default mongoose.model("Property", propertySchema);
+
+--- END OF .\backend\src\models\Property.js ---
+
+--- FILE: .\web\.env.local ---
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAN4ROuHsxJSyazZq3ZGtQAT4BGvhfw3E8
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tagt-auth-a9c79.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=tagt-auth-a9c79
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tagt-auth-a9c79.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=1003146198453
+NEXT_PUBLIC_FIREBASE_APP_ID=1:1003146198453:web:44b3379351082f099aedfc
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+--- END OF .\web\.env.local ---
+
+--- FILE: .\web\app\owner\payments\page.tsx ---
+"use client";
+
+import { usePayments } from "@/features/owner/usePayments";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+export default function PaymentsPage() {
+    const { payments, loading } = usePayments();
+
+    if (loading) return <p>Loading payments...</p>;
+
+    return (
+        <div className="space-y-6">
+            <h1 className="text-2xl font-bold">Payments</h1>
+
+            <div className="space-y-3">
+                {payments.map((payment) => (
+                    <div
+                        key={payment._id}
+                        className="flex justify-between items-center bg-neutral-900 p-4 rounded border border-white/10"
+                    >
+                        <div>
+                            <p className="font-semibold">
+                                {payment.resident?.name || "Resident"}
+                            </p>
+                            <p className="text-sm text-white/50">
+                                {payment.month} • ₹{payment.amount}
+                            </p>
+                        </div>
+
+                        <StatusBadge status={payment.status} />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+--- END OF .\web\app\owner\payments\page.tsx ---
+
+--- FILE: .\web\features\owner\rooms.service.ts ---
+import api from "@/lib/api";
+
+export type Room = {
+    _id: string;
+    roomNumber: string;
+    rent: number;
+    totalBeds: number;
+    occupiedBeds: number;
 };
 
-export default mongoose.model("User", userSchema);
---- END OF .\backend\src\models\User.js ---
-
---- FILE: .\frontend\tsconfig.app.json ---
-{
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "types": ["vite/client"],
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
-  },
-  "include": ["src"]
+export async function fetchRooms(): Promise<Room[]> {
+    const { data } = await api.get("/rooms");
+    return data.rooms;
 }
 
---- END OF .\frontend\tsconfig.app.json ---
-
---- FILE: .\frontend\src\features\advanced\RealTimeHubPage.tsx ---
-import { PageShell, SectionCard } from "./Shared"
-
-export default function RealTimeHubPage() {
-  return (
-    <PageShell title="RealTimeHub" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
-        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
-        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
-      </div>
-    </PageShell>
-  )
+export async function createRoom(payload: {
+    roomNumber: string;
+    rent: number;
+    totalBeds: number;
+}) {
+    const { data } = await api.post("/rooms", payload);
+    return data.room;
 }
 
---- END OF .\frontend\src\features\advanced\RealTimeHubPage.tsx ---
+export async function deleteRoom(id: string) {
+    await api.delete(`/rooms/${id}`);
+}
+--- END OF .\web\features\owner\rooms.service.ts ---
 

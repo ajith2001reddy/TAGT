@@ -651,13 +651,16 @@ TS PROJECT PART 7 of 20
 ﻿import Room from "../models/rooms.js";
 import logger from "../utils/logger.js";
 import mongoose from "mongoose";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 export const addRoom = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
+        const scope = buildPropertyFilter(req.user);
         const { roomNumber, rent, totalBeds, note } = req.body;
+
 
         if (!roomNumber || rent == null || totalBeds == null) {
             await session.abortTransaction();
@@ -677,14 +680,21 @@ export const addRoom = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Total beds must be a positive number" });
         }
 
-        const exists = await Room.findOne({ roomNumber }).session(session);
+        const exists = await Room.findOne({ roomNumber, ...scope }).session(session);
         if (exists) {
             await session.abortTransaction();
             return res.status(400).json({ success: false, message: "Room number already exists" });
         }
 
         const room = await Room.create(
-            [{ roomNumber, rent: Number(rent), totalBeds: Number(totalBeds), occupiedBeds: 0, note: typeof note === "string" ? note : "" }],
+            [{
+                propertyId: req.user.propertyId,   // 🔥 REQUIRED
+                roomNumber,
+                rent: Number(rent),
+                totalBeds: Number(totalBeds),
+                occupiedBeds: 0,
+                note: typeof note === "string" ? note : ""
+            }],
             { session }
         );
 
@@ -704,7 +714,8 @@ export const addRoom = async (req, res, next) => {
 
 export const getAllRooms = async (req, res, next) => {
     try {
-        const rooms = await Room.find().sort({ createdAt: -1 }).lean();
+        const scope = buildPropertyFilter(req.user);
+        const rooms = await Room.find(scope).sort({ createdAt: -1 }).lean();
         return res.json({ success: true, rooms });
     } catch (err) {
         logger.error(`GET ROOMS ERROR: ${err.message}`);
@@ -760,8 +771,8 @@ export const deleteRoom = async (req, res, next) => {
 
     try {
         const { id } = req.params;
-
-        const room = await Room.findById(id).session(session);
+        const scope = buildPropertyFilter(req.user);
+        const room = await Room.findById(id, ...scope).session(session);
 
         if (!room) {
             await session.abortTransaction();
@@ -790,220 +801,145 @@ export const deleteRoom = async (req, res, next) => {
 
 --- END OF .\backend\src\controllers\roomController.js ---
 
---- FILE: .\backend\src\utils\emailService.js ---
-import nodemailer from "nodemailer";
+--- FILE: .\backend\src\routes\owner.js ---
+import { Router } from "express";
 
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
-const FRONTEND_URL = process.env.FRONTEND_URL;
+import auth from "../middleware/auth.js";
 
-let transporter = null;
 
-if (EMAIL_USER && EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
-        service: "gmail",
-        firebaseAuth: {
-            user: EMAIL_USER,
-            pass: EMAIL_PASS
+import {
+    getAllResidents,
+    addResident,
+} from "../controllers/residentController.js";
+
+import Request from "../models/Request.js";
+import Payment from "../models/Payment.js";
+import User from "../models/User.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
+import authorize from "../middleware/authorize.js";
+import Property from "../models/Property.js";
+
+const router = Router();
+
+router.get("/residents", auth, authorize("owner"), getAllResidents);
+router.post("/residents", auth, authorize("owner"), addResident);
+
+router.get("/requests", auth, authorize("owner"), async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
+        const requests = await Request.find({ ...scope })
+            .populate("resident", "name email")
+            .sort({ createdAt: -1 })
+            .lean();
+        res.json({ success: true, requests });
+    } catch (err) {
+        next(err);
+    }
+});
+router.get("/properties", auth, authorize("owner"), async (req, res) => {
+    const properties = await Property.find({
+        _id: { $in: req.user.propertyIds }
+    }).lean();
+
+    res.json({ success: true, data: properties });
+});
+
+router.get("/stats", auth, authorize("owner"), async (req, res, next) => {
+    try {
+        console.log("Owner user:", req.user);
+        const { propertyId } = req.query;
+
+        let scope;
+
+        if (propertyId) {
+            // 🔐 SECURITY CHECK
+            if (!req.user.propertyIds.includes(propertyId)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Unauthorized property access"
+                });
+            }
+
+            scope = { propertyId };
+        } else {
+            // All properties
+            scope = { propertyId: { $in: req.user.propertyIds } };
         }
-    });
-}
 
-async function sendEmail(to, subject, html) {
-    if (!transporter) return;
+        const [totalResidents, pendingRequests, payments] =
+            await Promise.all([
+                User.countDocuments({
+                    role: "resident",
+                    isActive: true,
+                    ...scope
+                }),
+                Request.countDocuments({
+                    status: { $ne: "resolved" },
+                    ...scope
+                }),
+                Payment.find(scope, "amount status").lean()
+            ]);
 
-    await transporter.sendMail({
-        from: `"TAGT Property Management" <${EMAIL_USER}>`,
-        to,
-        subject,
-        html
-    });
-}
+        let totalRevenue = 0;
+        let outstandingBalance = 0;
 
-function sendWelcomeEmail(email, name, password) {
-    return sendEmail(
-        email,
-        "Welcome to TAGT - Your Account Details",
-        `
-        <div style="font-family:Arial,max-width:600px;margin:auto">
-            <h2 style="color:#2563eb">Welcome to TAGT</h2>
-            <p>Hello ${name},</p>
-            <p>Your account has been created.</p>
-            <div style="background:#f3f4f6;padding:16px;border-radius:6px">
-                <p><b>Email:</b> ${email}</p>
-                <p><b>Password:</b> ${password}</p>
-            </div>
-            <a href="${FRONTEND_URL}"
-               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">
-                Login
-            </a>
-        </div>
-        `
-    );
-}
-
-function sendStatusUpdateEmail(email, requestMessage, newStatus, adminNote) {
-    return sendEmail(
-        email,
-        "Maintenance Request Update",
-        `
-        <div style="font-family:Arial,max-width:600px;margin:auto">
-            <h2 style="color:#2563eb">Request Update</h2>
-            <p><b>Request:</b> ${requestMessage}</p>
-            <p><b>Status:</b> ${newStatus}</p>
-            <p><b>Note:</b> ${adminNote || "No notes"}</p>
-            <a href="${FRONTEND_URL}/resident"
-               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">
-                View Request
-            </a>
-        </div>
-        `
-    );
-}
-
-function sendPaymentReminder(email, name, amount, dueDate) {
-    return sendEmail(
-        email,
-        "Payment Reminder",
-        `
-        <div style="font-family:Arial,max-width:600px;margin:auto">
-            <h2 style="color:#dc2626">Payment Reminder</h2>
-            <p>Hello ${name},</p>
-            <p><b>Amount:</b> $${amount}</p>
-            <p><b>Due:</b> ${new Date(dueDate).toLocaleDateString()}</p>
-            <a href="${FRONTEND_URL}/resident/payments"
-               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#dc2626;color:#fff;border-radius:6px;text-decoration:none">
-                Pay Now
-            </a>
-        </div>
-        `
-    );
-}
-
-export {
-    sendEmail,
-    sendWelcomeEmail,
-    sendStatusUpdateEmail,
-    sendPaymentReminder
-};
-
---- END OF .\backend\src\utils\emailService.js ---
-
---- FILE: .\frontend\src\api\axios.js ---
-import axios from "axios"
-
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
-})
-
-// Attach our backend JWT to every request
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token")
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-})
-
-// On 401 — clear storage and redirect to login
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem("token")
-            localStorage.removeItem("user")
-            window.location.href = "/login"
+        for (const p of payments) {
+            if (p.status === "paid") totalRevenue += p.amount || 0;
+            else outstandingBalance += p.amount || 0;
         }
-        return Promise.reject(error)
+
+        res.json({
+            success: true,
+            stats: {
+                totalResidents,
+                pendingRequests,
+                totalRevenue,
+                outstandingBalance
+            }
+        });
+    } catch (err) {
+        next(err);
     }
-)
+});
 
-export default api
---- END OF .\frontend\src\api\axios.js ---
+export default router;
+--- END OF .\backend\src\routes\owner.js ---
 
---- FILE: .\frontend\src\features\rooms\RoomsPage.tsx ---
-import { useEffect, useState } from "react"
-import api from "../../services/api"
+--- FILE: .\web\app\globals.css ---
+@import "tailwindcss";
 
-type Room = { _id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; rent: number; note?: string; maintenanceMode?: boolean; maintenanceNote?: string }
-
-type FormState = { roomNumber: string; totalBeds: string; rent: string; note: string }
-type EditState = { rent: string; totalBeds: string; note: string; maintenanceMode: boolean; maintenanceNote: string }
-
-export default function RoomsPage() {
-    const [rooms, setRooms] = useState<Room[]>([])
-    const [loading, setLoading] = useState(true)
-    const [showForm, setShowForm] = useState(false)
-    const [form, setForm] = useState<FormState>({ roomNumber: "", totalBeds: "", rent: "", note: "" })
-    const [editing, setEditing] = useState<Room | null>(null)
-    const [edit, setEdit] = useState<EditState>({ rent: "", totalBeds: "", note: "", maintenanceMode: false, maintenanceNote: "" })
-
-    const load = async () => {
-        try { setLoading(true); const r = await api.get("/rooms"); setRooms(r.data.rooms ?? []) }
-        finally { setLoading(false) }
-    }
-    useEffect(() => { load() }, [])
-
-    const handleAdd = async (e: React.FormEvent) => {
-        e.preventDefault()
-        await api.post("/rooms", { roomNumber: form.roomNumber, totalBeds: Number(form.totalBeds), rent: Number(form.rent), note: form.note })
-        setShowForm(false)
-        setForm({ roomNumber: "", totalBeds: "", rent: "", note: "" })
-        load()
-    }
-
-    const openEdit = (room: Room) => {
-        setEditing(room)
-        setEdit({ rent: String(room.rent), totalBeds: String(room.totalBeds), note: room.note ?? "", maintenanceMode: Boolean(room.maintenanceMode), maintenanceNote: room.maintenanceNote ?? "" })
-    }
-
-    const saveEdit = async () => {
-        if (!editing) return
-        await api.put(`/rooms/${editing._id}`, { ...edit, rent: Number(edit.rent), totalBeds: Number(edit.totalBeds) })
-        setEditing(null)
-        load()
-    }
-
-    return <div className="space-y-6 max-w-5xl">
-        <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-white">Rooms & Maintenance</h1>
-            <button onClick={() => setShowForm(v => !v)} className="bg-violet-500 text-white px-4 py-2 rounded-xl">{showForm ? "Cancel" : "Add Room"}</button>
-        </div>
-
-        {showForm && <form onSubmit={handleAdd} className="grid grid-cols-2 gap-3 rounded-2xl bg-white/[0.03] p-4 border border-white/10">
-            <input className="bg-white/5 p-2 rounded-lg text-white" placeholder="Room #" value={form.roomNumber} onChange={e => setForm({ ...form, roomNumber: e.target.value })} />
-            <input className="bg-white/5 p-2 rounded-lg text-white" placeholder="Beds" type="number" value={form.totalBeds} onChange={e => setForm({ ...form, totalBeds: e.target.value })} />
-            <input className="bg-white/5 p-2 rounded-lg text-white" placeholder="Rent" type="number" value={form.rent} onChange={e => setForm({ ...form, rent: e.target.value })} />
-            <input className="bg-white/5 p-2 rounded-lg text-white" placeholder="Note" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
-            <button className="col-span-2 bg-violet-500 py-2 rounded-lg text-white">Save</button>
-        </form>}
-
-        <div className="rounded-2xl border border-white/10 overflow-hidden">
-            {loading ? <div className="p-10 text-white/40">Loading...</div> : <table className="w-full text-sm">
-                <thead><tr className="border-b border-white/10 text-white/40"><th className="p-3 text-left">Room</th><th className="p-3 text-left">Occupancy</th><th className="p-3 text-left">Rent</th><th className="p-3 text-left">Mode</th><th className="p-3"></th></tr></thead>
-                <tbody>{rooms.map(r => <tr key={r._id} className="border-b border-white/5 text-white/75">
-                    <td className="p-3">{r.roomNumber}</td>
-                    <td className="p-3">{r.occupiedBeds}/{r.totalBeds}</td>
-                    <td className="p-3">${r.rent}</td>
-                    <td className="p-3">{r.maintenanceMode ? "Maintenance" : "Live"}</td>
-                    <td className="p-3 text-right"><button onClick={() => openEdit(r)} className="text-violet-300">Edit</button></td>
-                </tr>)}</tbody>
-            </table>}
-        </div>
-
-        {editing && <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111320] p-5 space-y-3">
-                <h3 className="text-white font-semibold">Edit Room {editing.roomNumber}</h3>
-                <input className="w-full bg-white/5 p-2 rounded text-white" type="number" value={edit.rent} onChange={e => setEdit({ ...edit, rent: e.target.value })} />
-                <input className="w-full bg-white/5 p-2 rounded text-white" type="number" value={edit.totalBeds} onChange={e => setEdit({ ...edit, totalBeds: e.target.value })} />
-                <input className="w-full bg-white/5 p-2 rounded text-white" value={edit.note} onChange={e => setEdit({ ...edit, note: e.target.value })} placeholder="Note" />
-                <label className="text-white/70 text-sm flex items-center gap-2"><input type="checkbox" checked={edit.maintenanceMode} onChange={e => setEdit({ ...edit, maintenanceMode: e.target.checked })} /> Maintenance mode</label>
-                {edit.maintenanceMode && <input className="w-full bg-white/5 p-2 rounded text-white" value={edit.maintenanceNote} onChange={e => setEdit({ ...edit, maintenanceNote: e.target.value })} placeholder="Maintenance reason" />}
-                <div className="flex justify-end gap-2"><button onClick={() => setEditing(null)} className="px-3 py-2 text-white/60">Cancel</button><button onClick={saveEdit} className="px-3 py-2 bg-violet-500 text-white rounded">Update</button></div>
-            </div>
-        </div>}
-    </div>
+/* Optional global styling */
+html,
+body {
+  height: 100%;
 }
 
---- END OF .\frontend\src\features\rooms\RoomsPage.tsx ---
+body {
+  background-color: #0a0a0a;
+  color: white;
+}
+--- END OF .\web\app\globals.css ---
+
+--- FILE: .\web\components\layout\Navbar.tsx ---
+import { useAuth } from "@/context/AuthContext";
+import { PropertySwitcher } from "./PropertySwitcher";
+
+export function Navbar() {
+    const { role } = useAuth();
+
+    return (
+        <div className="flex justify-between items-center p-4 border-b border-neutral-800">
+            <h1 className="text-xl font-semibold">Dashboard</h1>
+
+            {(role === "owner" || role === "super_admin") && (
+                <PropertySwitcher />
+            )}
+        </div>
+    );
+}
+--- END OF .\web\components\layout\Navbar.tsx ---
+
+--- FILE: .\web\public\file.svg ---
+<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
+--- END OF .\web\public\file.svg ---
 

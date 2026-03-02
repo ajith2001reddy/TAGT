@@ -52,9 +52,9 @@ const RequestSchema = new mongoose.Schema(
 );
 
 RequestSchema.pre("validate", function (next) {
-    if (!this.message && this.description) this.message = this.description;
-    if (!this.title && this.message) this.title = "Resident Request";
-    if (!this.description && this.message) this.description = this.message;
+    if (!this.propertyId || !this.resident) {
+        return next(new Error("Invalid tenant association"));
+    }
     next();
 });
 

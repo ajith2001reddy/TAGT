@@ -11,7 +11,6 @@ import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { swaggerSpec, swaggerUi } from "./swagger.js";
 
 const app = express();
-
 /* ================= SECURITY ================= */
 
 app.set("trust proxy", 1);
@@ -38,7 +37,7 @@ const corsOptions = {
         if (allowedOrigins.includes(origin)) return callback(null, true);
         callback(new Error("Not allowed by CORS"));
     },
-    credentials: true,
+    credentials: false,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
 };
@@ -86,67 +85,139 @@ export default app;
 
 --- END OF .\backend\src\app.js ---
 
---- FILE: .\backend\src\middleware\validate.js ---
-export default (schema) => (req, res, next) => {
-    const { error, value } = schema.validate(req.body, {
-        abortEarly: true,
-        stripUnknown: true
+--- FILE: .\backend\src\middleware\errorHandler.js ---
+﻿export const notFound = (req, res, next) => {
+    res.status(404).json({
+        success: false,
+        message: `Route not found: ${req.originalUrl}`
     });
-
-    if (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.details[0].message
-        });
-    }
-
-    req.body = value;
-    next();
 };
 
---- END OF .\backend\src\middleware\validate.js ---
+export const errorHandler = (err, req, res, next) => {
+    if (res.headersSent) {
+        return next(err);
+    }
 
---- FILE: .\frontend\eslint.config.js ---
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
+    const status = err.status || err.statusCode || 500;
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
-    ],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-    },
-  },
-])
+    res.status(status).json({
+        success: false,
+        message: err.message || "Server error",
+        ...(process.env.NODE_ENV === "development" && { stack: err.stack })
+    });
+};
 
---- END OF .\frontend\eslint.config.js ---
+--- END OF .\backend\src\middleware\errorHandler.js ---
 
---- FILE: .\frontend\src\features\advanced\AnalyticsPlusPage.tsx ---
-import { PageShell, SectionCard } from "./Shared"
+--- FILE: .\backend\src\routes\rooms.js ---
+import { Router } from "express";
+import mongoose from "mongoose";
 
-export default function AnalyticsPlusPage() {
-  return (
-    <PageShell title="AnalyticsPlus" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
-        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
-        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
-      </div>
-    </PageShell>
-  )
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+import { getAllRooms, addRoom, updateRoom, deleteRoom } from "../controllers/roomController.js";
+
+const router = Router();
+
+router.get("/", auth, isAdmin, getAllRooms);
+router.post("/", auth, isAdmin, addRoom);
+
+router.put("/:id", auth, isAdmin, (req, res, next) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: "Invalid room ID" });
+    }
+    return updateRoom(req, res, next);
+});
+
+router.delete("/:id", auth, isAdmin, (req, res, next) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: "Invalid room ID" });
+    }
+    return deleteRoom(req, res, next);
+});
+
+export default router;
+
+--- END OF .\backend\src\routes\rooms.js ---
+
+--- FILE: .\web\app\(auth)\login\page.tsx ---
+"use client";
+
+import { useState } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+export default function LoginPage() {
+    const router = useRouter();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    async function handleLogin(e: React.FormEvent) {
+        e.preventDefault();
+        await signInWithEmailAndPassword(auth, email, password);
+        router.push("/dashboard");
+    }
+
+    return (
+        <>
+            <h1 className="text-2xl font-bold mb-6">Login</h1>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+                <input
+                    type="email"
+                    placeholder="Email"
+                    className="w-full p-3 bg-neutral-800 rounded"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+
+                <input
+                    type="password"
+                    placeholder="Password"
+                    className="w-full p-3 bg-neutral-800 rounded"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+
+                <button className="bg-violet-600 w-full py-3 rounded font-semibold">
+                    Sign In
+                </button>
+            </form>
+
+            <div className="mt-6 text-sm text-neutral-400 flex justify-between">
+                <Link href="/signup" className="hover:text-white">
+                    Create account
+                </Link>
+
+                <Link href="/forgot-password" className="hover:text-white">
+                    Forgot password?
+                </Link>
+            </div>
+        </>
+    );
 }
+--- END OF .\web\app\(auth)\login\page.tsx ---
 
---- END OF .\frontend\src\features\advanced\AnalyticsPlusPage.tsx ---
+--- FILE: .\web\components\ui\StatusBadge.tsx ---
+export function StatusBadge({ status }: { status: string }) {
+    const styles = {
+        paid: "bg-green-500/20 text-green-400",
+        pending: "bg-yellow-500/20 text-yellow-400",
+        overdue: "bg-red-500/20 text-red-400",
+        failed: "bg-red-700/20 text-red-500",
+    };
+
+    return (
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status as keyof typeof styles] || "bg-neutral-700"}`}>
+            {status}
+        </span>
+    );
+}
+--- END OF .\web\components\ui\StatusBadge.tsx ---
 

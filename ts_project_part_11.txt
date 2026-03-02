@@ -1,144 +1,164 @@
 TS PROJECT PART 11 of 20
 ==============================
---- FILE: .\backend\serviceAccountKey.json ---
+--- FILE: .\backend\package.json ---
 {
-  "type": "service_account",
-  "project_id": "tagt-auth",
-  "private_key_id": "86a0cda0063eef722fefd8b483f13d76afceb614",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRKvXNw58AkgXL\nNtJocnumdOpAs4w/hC5ZvGNBXnPKcv1FztifxxXoGmEEFNCE/Z9aPh4OYMd5TBXY\nbapbVMM9AidmDqQquMubRjhzdxlz2slZ0/D+SzUnPEud/NMbaEWssk2GKE0oXPRz\nC+e/NOfAyJF3Rgej2ip9/wAnREpxQeT6Z5zXQSNKv1pPN0A62m1E+iZs9i2Qg4N1\nc0xbttcqpsa7kYMMvjtpIXzhtVysG+lU/2z2u5EyUE71i4ZxJ7d21kMuUY4PcM2J\nbqllBB/FpMRKz6NqEmtXGrmRm0kYpGVJCYBuy1kdgI1SZHvgEJ2YKm24H0C+Nn35\nmrOH2VpbAgMBAAECggEAAjN2HtldnACFESl5x7SfqMUMjdkmbBEgdJ/MpRALAkCV\nlnBkQiCuCLRB6a7cBKRQqDftCx2Ke9CSL5xmCQnGtVrTQylLsA8aWPD6TCF9vntj\nydZYETrkVQlc8lbfeh4O7QsJNOofDzZqAp5HrNRybjwpVAAggJo6EgTm2BqjkNyg\nXCwYARGK8nh6QEkbHSElMLNRBc/A6Aehy6VfD3fPAQYe99NOczaapLs4ONVeyXdG\nEF3zNQpBGFAaULsCYxJ39AVtKN5TJb2oeNyCtr8f+jR8WYCi0XMCvnorMlbZ8mmH\nW449QMyqkasQHQE1Vknyojq+FLvTECAcHVhdKf2XYQKBgQD31VkdbC3AKMH/TYzm\nVp4aAWbQQjgvN65aGMZ01ntbqzUDcZbTGnOgQEgjMp/NbQb4tn4BoeoeVR2vkyuO\njFDgRAW8Qunoo84lDAIDQiBJa/yFRtQI4U4hzSGeyhrVF83pNEfVGndbqBOVf+bx\nf9d1O/YAScxBxtg5F7sow0MP/wKBgQDYD3C1KBFmz/x7jhXeXmR9eYCMd8bGDtR7\n5uk2Exku2zKhyib+QiMlRx6QjIGnp/YnCEFJ4m/Pgw6PdNs1fDJiLjuaamnzNqbJ\nRDH2X80og3I6X3U+I5zW320EUWILfAAeWkgpLxlhV54hwg0kYespq1N+gj1nT0gg\nimtJcK/1pQKBgE4zBH5zLvBuK+Bp0OaxOAvOm2llK6NCd4I4RQ6CysO+/uhKRCPy\nOb+76McqZyADoeqCcroDJANUKhzHXDwLbE2HSSQBHRtp7FbmNhBfIh7osvI+yhLP\nPL8PoecfsF3CuBc4ht3oDvddzmgixnU3OH3mYJXws0GiA4HoSgbvrc5zAoGAD13B\nwVCRNEO0jEEFsyP5d6cNim/2Vh215P3+NhdToi56wmDzNwATKdKODO/BROBANHR0\n2EFffF2wymkgMgScPLlXCdtpn5+SaxwLhZ84oxn+JMKnPv0faXTIdxcmpvRxubbo\nDO3Jm0+08mevsZe5NuR1crjmjxNnaNEPYlC+YvUCgYEAhoX9IWc5li9SEVjw+ZXl\nM9Pgv5eFn391YXOdhQfo8iIS6HLSLEmd6PjTRmchoiEdVwedyffqIMUPHs8Yyd1O\no1n/7MNunZIGdUSM+J9n0fTY8BQJTyNooIZJlM9e1D1sibwoG/whyZC03unruT8+\nVTrYYgkMcsHTQyOlcG/veFY=\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-fbsvc@tagt-auth.iam.gserviceaccount.com",
-  "client_id": "108228289891682516467",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40tagt-auth.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
+  "name": "tagt-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest",
+    "lint": "eslint src/**/*.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.3",
+    "express-rate-limit": "^7.0.0",
+    "firebase-admin": "^13.7.0",
+    "google-auth-library": "^10.6.1",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.1.0",
+    "nodemailer": "^6.9.8",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^8.57.1",
+    "globals": "^17.4.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.3",
+    "supertest": "^6.3.4"
+  }
 }
 
---- END OF .\backend\serviceAccountKey.json ---
+--- END OF .\backend\package.json ---
 
---- FILE: .\backend\src\middleware\isAdmin.js ---
-﻿const isAdmin = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({
-            success: false,
-            message: "Unauthorized"
-        });
-    }
-
-    if (req.user.role !== "admin") {
-        return res.status(403).json({
-            success: false,
-            message: "Admin access only"
-        });
-    }
-
-    next();
+--- FILE: .\backend\src\middleware\authorize.js ---
+const authorize = (...roles) => (req, res, next) => {
+    if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
+    if (!roles.includes(req.user.role)) return res.status(403).json({ success: false, message: "Forbidden" });
+    return next();
 };
 
-export default isAdmin;
+export default authorize;
 
---- END OF .\backend\src\middleware\isAdmin.js ---
+--- END OF .\backend\src\middleware\authorize.js ---
 
---- FILE: .\frontend\.gitignore ---
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+--- FILE: .\backend\src\routes\residentDashboard.js ---
+import { Router } from "express";
+import firebaseAuth from "../middleware/firebaseAuth.js";
+import authorize from "../middleware/authorize.js";
+import Payment from "../models/Payment.js";
+import Request from "../models/Request.js";
 
-node_modules
-dist
-dist-ssr
-*.local
+const router = Router();
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+/**
+ * GET /api/resident/payments
+ */
+router.get("/payments", firebaseAuth, authorize("resident"), async (req, res) => {
+    const payments = await Payment.find({
+        resident: req.user._id
+    }).lean();
 
---- END OF .\frontend\.gitignore ---
+    res.json({ success: true, data: payments });
+});
 
---- FILE: .\frontend\src\context\AuthContext.tsx ---
-import { createContext, useContext, useState, useEffect } from "react"
-import type { ReactNode } from "react"
-import { signOut } from "firebase/auth"
-import { auth } from "../lib/firebase"
+/**
+ * GET /api/resident/requests
+ */
+router.get("/requests", firebaseAuth, authorize("resident"), async (req, res) => {
+    const requests = await Request.find({
+        resident: req.user._id
+    }).lean();
 
-type User = {
-    id: string
-    name: string
-    email: string
-    role: "admin" | "resident"
-    roomId?: string | null
-}
+    res.json({ success: true, data: requests });
+});
 
-type AuthContextType = {
-    user: User | null
-    loading: boolean
-    logout: () => Promise<void>
-}
+export default router;
+--- END OF .\backend\src\routes\residentDashboard.js ---
 
-const AuthContext = createContext<AuthContextType | null>(null)
+--- FILE: .\web\app\(auth)\forgot-password\page.tsx ---
+"use client";
 
-function decodeToken(token: string): User | null {
-    try {
-        const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")
-        const payload = JSON.parse(atob(base64))
-        if (payload.exp && Date.now() >= payload.exp * 1000) return null
-        return payload
-    } catch {
-        return null
-    }
-}
+import { useState } from "react";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import Link from "next/link";
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null)
-    const [loading, setLoading] = useState(true)
+export default function ForgotPasswordPage() {
+    const [email, setEmail] = useState("");
+    const [message, setMessage] = useState("");
 
-    useEffect(() => {
-        const token = localStorage.getItem("token")
-        if (token) {
-            const decoded = decodeToken(token)
-            if (decoded) {
-                const stored = localStorage.getItem("user")
-                setUser(stored ? JSON.parse(stored) : decoded)
-            } else {
-                localStorage.removeItem("token")
-                localStorage.removeItem("user")
-            }
-        }
-        setLoading(false)
-    }, [])
-
-    const logout = async () => {
-        await signOut(auth).catch(() => { })
-        localStorage.removeItem("token")
-        localStorage.removeItem("user")
-        setUser(null)
-        window.location.href = "/login"
+    async function handleReset(e: React.FormEvent) {
+        e.preventDefault();
+        await sendPasswordResetEmail(auth, email);
+        setMessage("Password reset email sent.");
     }
 
     return (
-        <AuthContext.Provider value={{ user, loading, logout }}>
-            {children}
-        </AuthContext.Provider>
-    )
-}
+        <>
+            <form onSubmit={handleReset} className="space-y-4">
+                <h1 className="text-2xl font-bold text-center">Reset Password</h1>
 
-export function useAuth() {
-    const ctx = useContext(AuthContext)
-    if (!ctx) throw new Error("useAuth must be used inside AuthProvider")
-    return ctx
+                <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="w-full p-3 bg-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+
+                <button className="bg-violet-600 hover:bg-violet-700 transition w-full py-3 rounded-lg font-semibold">
+                    Send Reset Link
+                </button>
+
+                {message && (
+                    <p className="text-green-400 text-sm text-center">{message}</p>
+                )}
+            </form>
+
+            <div className="mt-6 text-sm text-neutral-400 text-center">
+                Remember your password?{" "}
+                <Link href="/login" className="text-violet-500 hover:text-violet-400">
+                    Login
+                </Link>
+            </div>
+        </>
+    );
 }
---- END OF .\frontend\src\context\AuthContext.tsx ---
+--- END OF .\web\app\(auth)\forgot-password\page.tsx ---
+
+--- FILE: .\web\components\ui\StatCard.tsx ---
+export function StatCard({
+    label,
+    value,
+}: {
+    label: string;
+    value: string | number;
+}) {
+    return (
+        <div className="rounded-xl bg-neutral-900 p-6 border border-white/10">
+            <p className="text-sm text-white/50">{label}</p>
+            <p className="mt-2 text-2xl font-bold">{value}</p>
+        </div>
+    );
+}
+--- END OF .\web\components\ui\StatCard.tsx ---
+
+--- FILE: .\web\public\window.svg ---
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
+--- END OF .\web\public\window.svg ---
 

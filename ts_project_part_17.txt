@@ -4,8 +4,8 @@ TS PROJECT PART 17 of 20
 ﻿import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
 import Request from "../models/Request.js";
-
-export const getKPIs = async ({ fromDate, toDate } = {}) => {
+import { buildPropertyFilter } from "../utils/tenantScope.js";
+export const getKPIs = async ({ fromDate, toDate } = {}, user) => {
     const paymentDateFilter =
         fromDate && toDate
             ? { paidAt: { $gte: fromDate, $lte: toDate } }
@@ -34,8 +34,9 @@ export const getKPIs = async ({ fromDate, toDate } = {}) => {
         totalBeds === 0 ? 0 : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
 
     /* ================= PAYMENTS ================= */
+    const scope = buildPropertyFilter(user);
     const paymentStats = await Payment.aggregate([
-        { $match: paymentDateFilter },
+        { $match: { ...paymentDateFilter, ...scope } },
         {
             $group: {
                 _id: null,
@@ -118,102 +119,211 @@ export const getKPIs = async ({ fromDate, toDate } = {}) => {
 
 --- END OF .\backend\src\analytics\kpiCalculator.js ---
 
---- FILE: .\backend\src\models\rooms.js ---
-import mongoose from "mongoose";
+--- FILE: .\backend\src\models\Payment.js ---
+﻿import mongoose from "mongoose";
 
-const roomSchema = new mongoose.Schema(
+
+const PaymentSchema = new mongoose.Schema(
     {
-        roomNumber: {
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            index: true,
+            required: true,
+        },
+
+        // 🔗 Resident reference
+        resident: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true,
+        },
+
+        // 🔗 Room reference
+        room: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Room",
+            default: null,
+        },
+
+        // 💰 Amount to be paid
+        amount: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+
+        // 📅 Month identifier (YYYY-MM) → used for cron + duplicate prevention
+        month: {
             type: String,
             required: true,
-            unique: true,
+            match: /^\d{4}-\d{2}$/, // e.g., 2026-02
+            index: true,
+        },
+
+        // 🧾 Payment type (FIXED ENUM — your bug was here)
+        type: {
+            type: String,
+            enum: ["rent", "deposit", "late_fee", "other"],
+            default: "rent",
+            required: true,
+            index: true,
+        },
+
+        // 📊 Payment status
+        status: {
+            type: String,
+            enum: ["pending", "overdue", "paid", "failed", "cancelled"],
+            default: "pending",
+            index: true,
+        },
+
+        // ⏰ Due date for reminders / late fee automation
+        dueDate: {
+            type: Date,
+            required: true,
+        },
+
+        // 💳 Payment method (future Stripe/cash support)
+        method: {
+            type: String,
+            enum: ["cash", "card", "bank", "online", null],
+            default: null,
+        },
+
+        // 🧾 Optional transaction reference (Stripe ID, etc.)
+        transactionId: {
+            type: String,
+            default: null,
+        },
+
+        // 📝 Notes (admin comments, adjustments)
+        notes: {
+            type: String,
             trim: true,
-            index: true
+            maxlength: 500,
         },
-        rent: {
-            type: Number,
-            required: true,
-            min: 0
-        },
-        totalBeds: {
-            type: Number,
-            required: true,
-            min: 0
-        },
-        occupiedBeds: {
+
+        lateFee: {
             type: Number,
             default: 0,
             min: 0,
-            validate: {
-                validator(value) {
-                    return value <= this.totalBeds;
-                },
-                message: "Occupied beds cannot exceed total beds"
-            }
         },
-        maintenanceMode: {
-            type: Boolean,
-            default: false,
-            index: true
+
+
+        totalPayable: {
+            type: Number,
+            default: 0,
+            min: 0,
         },
-        maintenanceNote: {
-            type: String,
-            default: "",
-            trim: true,
-            maxlength: 300
+
+        // 📅 Actual paid timestamp
+        paidAt: {
+            type: Date,
+            default: null,
         },
-        note: {
-            type: String,
-            default: ""
-        }
     },
     {
-        timestamps: true,
-        toJSON: { virtuals: true },
-        toObject: { virtuals: true }
+        timestamps: true, // createdAt, updatedAt
     }
 );
 
-roomSchema.virtual("availableBeds").get(function () {
-    if (this.maintenanceMode) return 0;
-    return Math.max(0, this.totalBeds - this.occupiedBeds);
+
+
+PaymentSchema.pre("save", function (next) {
+    const baseAmount = Number(this.amount || 0);
+    const fee = Number(this.lateFee || 0);
+    this.totalPayable = Number((baseAmount + fee).toFixed(2));
+    next();
 });
+PaymentSchema.index(
+    { propertyId: 1, resident: 1, month: 1 },
+    { unique: true }
+);
 
-roomSchema.index({ rent: 1 });
-roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
 
-export default mongoose.model("Room", roomSchema);
+export default mongoose.model("Payment", PaymentSchema);
 
---- END OF .\backend\src\models\rooms.js ---
+--- END OF .\backend\src\models\Payment.js ---
 
---- FILE: .\frontend\tailwind.config.js ---
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}"
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
+--- FILE: .\backend\src\utils\tenantScope.js ---
+export const getPropertyScope = (user) => {
+    if (user.role === "super_admin") return {};
+
+    if (user.role === "owner") {
+        return { _id: { $in: user.propertyIds } };
+    }
+
+    return { _id: user.propertyId };
+};
+
+export const buildPropertyFilter = (user) => {
+    if (user.role === "super_admin") return {};
+
+    if (user.role === "owner") {
+        return { propertyId: { $in: user.propertyIds } };
+    }
+
+    return { resident: user._id, propertyId: user.propertyId };
+};
+--- END OF .\backend\src\utils\tenantScope.js ---
+
+--- FILE: .\web\app\owner\analytics\page.tsx ---
+"use client";
+
+import { useAnalytics } from "@/features/owner/useAnalytics";
+import { StatCard } from "@/components/ui/StatCard";
+import { BarChartCard } from "@/components/ui/BarChartCard";
+
+export default function OwnerAnalyticsPage() {
+    const { data, loading } = useAnalytics();
+
+    if (loading) return <p>Loading analytics...</p>;
+    if (!data) return <p>No analytics data.</p>;
+
+    const chartData = [
+        { name: "Occupied", value: data.occupancy.occupiedBeds },
+        { name: "Available", value: data.occupancy.totalBeds - data.occupancy.occupiedBeds },
+    ];
+
+    return (
+        <div className="space-y-8">
+            <h1 className="text-2xl font-bold">Analytics</h1>
+
+            <div className="grid md:grid-cols-3 gap-6">
+                <StatCard label="Occupancy Rate" value={`${data.occupancy.rate}%`} />
+                <StatCard label="Collection Rate" value={`${data.payments.collectionRate}%`} />
+                <StatCard label="Avg Resolution (hrs)" value={data.maintenance.avgResolutionTime} />
+            </div>
+
+            <BarChartCard
+                title="Occupancy Overview"
+                data={chartData}
+                dataKey="value"
+            />
+        </div>
+    );
 }
---- END OF .\frontend\tailwind.config.js ---
+--- END OF .\web\app\owner\analytics\page.tsx ---
 
---- FILE: .\frontend\src\features\advanced\PropertyManagementPage.tsx ---
-import { PageShell, SectionCard } from "./Shared"
+--- FILE: .\web\features\owner\payments.service.ts ---
+import api from "@/lib/api";
 
-export default function PropertyManagementPage() {
-  return (
-    <PageShell title="PropertyManagement" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
-        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
-        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
-      </div>
-    </PageShell>
-  )
+export type Payment = {
+    _id: string;
+    amount: number;
+    status: "pending" | "paid" | "overdue" | "failed";
+    month: string;
+    resident: {
+        name: string;
+        email: string;
+    };
+};
+
+export async function fetchPayments(): Promise<Payment[]> {
+    const { data } = await api.get("/payments"); // adjust if route differs
+    return data.payments || data.data || [];
 }
-
---- END OF .\frontend\src\features\advanced\PropertyManagementPage.tsx ---
+--- END OF .\web\features\owner\payments.service.ts ---
 

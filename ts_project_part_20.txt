@@ -64,155 +64,127 @@ export const connectDB = async () => {
 
 --- END OF .\backend\src\config\db.js ---
 
---- FILE: .\backend\src\routes\analytics.js ---
-﻿import { Router } from "express";
-import firebaseAuth from "../middleware/firebaseAuth.js"; // ✅
-import isAdmin from "../middleware/isAdmin.js";
+--- FILE: .\backend\src\models\RequestHistory.js ---
+import mongoose from "mongoose";
 
-import { getKPIs } from "../analytics/kpiCalculator.js";
-import { predictOccupancy } from "../analytics/forecastEngine.js";
-import { predictMaintenanceCost } from "../analytics/maintenanceForecast.js";
-import { predictChurn } from "../analytics/churnEngine.js";
-import { optimizeRevenue } from "../analytics/revenueOptimizer.js";
-
-const router = Router();
-
-
-/* =========================
-   KPIs
-========================= */
-router.get("/kpis", firebaseAuth, isAdmin, async (req, res, next) => {
-    try {
-        const { fromDate, toDate } = req.query;
-        const filters = {};
-
-        if (fromDate && toDate) {
-            const from = new Date(fromDate);
-            const to = new Date(toDate);
-
-            if (isNaN(from) || isNaN(to)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid date range"
-                });
+const requestHistorySchema = new mongoose.Schema(
+    {
+        requestId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Request",
+            index: true
+        },
+        residentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+        originalMessage: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        finalResolution: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        timeline: [
+            {
+                status: {
+                    type: String
+                },
+                note: {
+                    type: String
+                },
+                adminId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User"
+                },
+                createdAt: {
+                    type: Date,
+                    default: Date.now
+                }
             }
-
-            filters.fromDate = from;
-            filters.toDate = to;
+        ],
+        resolvedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+        resolvedAt: {
+            type: Date,
+            default: Date.now,
+            index: true
         }
-
-        const kpis = await getKPIs(filters);
-        res.json({ success: true, data: kpis });
-    } catch (err) {
-        next(err);
+    },
+    {
+        timestamps: true
     }
-});
+);
 
-/* =========================
-   OCCUPANCY FORECAST
-========================= */
-router.get("/predict/occupancy", firebaseAuth, isAdmin, async (req, res, next) => {
-    try {
-        const months = Math.min(Number(req.query.months) || 6, 12);
-        const forecast = await predictOccupancy(months);
-        res.json({ success: true, data: forecast });
-    } catch (err) {
-        next(err);
-    }
-});
+requestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
 
-/* =========================
-   MAINTENANCE FORECAST
-========================= */
-router.get("/predict/maintenance", firebaseAuth, isAdmin, async (req, res, next) => {
-    try {
-        const months = Math.min(Number(req.query.months) || 6, 12);
-        const forecast = await predictMaintenanceCost(months);
-        res.json({ success: true, data: forecast });
-    } catch (err) {
-        next(err);
-    }
-});
+export default mongoose.model("RequestHistory", requestHistorySchema);
 
-/* =========================
-   CHURN PREDICTION
-========================= */
-router.get("/predict/churn", firebaseAuth, isAdmin, async (req, res, next) => {
-    try {
-        const churnData = await predictChurn();
-        res.json({ success: true, data: churnData });
-    } catch (err) {
-        next(err);
-    }
-});
+--- END OF .\backend\src\models\RequestHistory.js ---
 
-/* =========================
-   REVENUE OPTIMIZATION
-========================= */
-router.get("/optimize/revenue", firebaseAuth, isAdmin, async (req, res, next) => {
-    try {
-        const insights = await optimizeRevenue();
-        res.json({ success: true, data: insights });
-    } catch (err) {
-        next(err);
-    }
-});
+--- FILE: .\web\eslint.config.mjs ---
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 
-export default router;
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
 
---- END OF .\backend\src\routes\analytics.js ---
+export default eslintConfig;
 
---- FILE: .\frontend\tsconfig.node.json ---
-{
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "ES2023",
-    "lib": ["ES2023"],
-    "module": "ESNext",
-    "types": ["node"],
-    "skipLibCheck": true,
+--- END OF .\web\eslint.config.mjs ---
 
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
+--- FILE: .\web\app\provider\layout.tsx ---
+import { RoleGuard } from "@/components/auth/RoleGuard";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
-  },
-  "include": ["vite.config.ts"]
-}
-
---- END OF .\frontend\tsconfig.node.json ---
-
---- FILE: .\frontend\src\features\advanced\Shared.tsx ---
-export function SectionCard({ title, subtitle }: { title: string; subtitle: string }) {
+export default function OwnerLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
     return (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-xs uppercase tracking-widest text-violet-300/70">{title}</p>
-            <p className="mt-2 text-sm text-white/60">{subtitle}</p>
-        </div>
-    )
+        <RoleGuard allowed={["super_admin"]}>
+            <DashboardShell>{children}</DashboardShell>
+        </RoleGuard>
+    );
 }
+--- END OF .\web\app\provider\layout.tsx ---
 
-export function PageShell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
-    return (
-        <div className="space-y-5 max-w-6xl">
-            <div>
-                <h1 className="text-2xl font-bold text-white">{title}</h1>
-                <p className="text-sm text-white/40">{description}</p>
-            </div>
-            {children}
-        </div>
-    )
+--- FILE: .\web\features\owner\useOwnerStats.ts ---
+import { useEffect, useState } from "react";
+import { fetchOwnerStats, OwnerStats } from "./owner.service";
+import { useProperty } from "@/context/PropertyContext";
+
+export function useOwnerStats() {
+    const [stats, setStats] = useState<OwnerStats | null>(null);
+    const [loading, setLoading] = useState(true);
+    const { selectedProperty } = useProperty();
+
+    useEffect(() => {
+        fetchOwnerStats(selectedProperty).then(setStats);
+    }, [selectedProperty]);
+
+    return { stats, loading };
 }
-
---- END OF .\frontend\src\features\advanced\Shared.tsx ---
+--- END OF .\web\features\owner\useOwnerStats.ts ---
 
