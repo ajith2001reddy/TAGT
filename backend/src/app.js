@@ -4,12 +4,10 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 import apiRoutes from "./routes/index.js";
-import cookieParser from "cookie-parser";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { swaggerSpec, swaggerUi } from "./swagger.js";
 
 const app = express();
-app.use(cookieParser());
 /* ================= SECURITY ================= */
 
 app.set("trust proxy", 1);
@@ -36,7 +34,7 @@ const corsOptions = {
         if (allowedOrigins.includes(origin)) return callback(null, true);
         callback(new Error("Not allowed by CORS"));
     },
-    credentials: true,
+    credentials: false,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
 };

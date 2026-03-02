@@ -1,32 +1,32 @@
 import { Router } from "express";
 import auth from "../../middleware/auth.js";
 import authorize from "../../middleware/authorize.js";
-import { login, registerOwner } from "../../controllers/v2/authController.js";
 import {
-    listRooms,
-    createRoom,
-    updateRoom,
-    listResidents,
-    createResident,
-    listPayments,
-    createPayment,
-    markPaymentPaid,
-    sendPaymentReminder,
-    listRequests,
-    updateRequest,
-    residentDashboard,
-    residentCreateRequest,
-    ownerDashboardAnalytics,
-    providerOverview,
-    listProperties,
-    updatePropertyStatus
+  listRooms,
+  createRoom,
+  updateRoom,
+  listResidents,
+  createResident,
+  listPayments,
+  createPayment,
+  markPaymentPaid,
+  sendPaymentReminder,
+  listRequests,
+  updateRequest,
+  residentDashboard,
+  residentCreateRequest,
+  ownerDashboardAnalytics,
+  providerOverview,
+  listProperties,
+  updatePropertyStatus,
 } from "../../controllers/v2/platformController.js";
-import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
+import {
+  runAutomationTickNow,
+  runLateFeeUpdate,
+  runMonthlyRentGeneration,
+} from "../../controllers/v2/automationController.js";
 
 const router = Router();
-
-router.post("/auth/login", login);
-router.post("/auth/register-owner", registerOwner);
 
 router.get("/provider/overview", auth, authorize("super_admin"), providerOverview);
 router.get("/provider/properties", auth, authorize("super_admin"), listProperties);
