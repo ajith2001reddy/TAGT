@@ -7,6 +7,8 @@ import apiRoutes from "./routes/index.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { swaggerSpec, swaggerUi } from "./swagger.js";
 
+
+
 const app = express();
 /* ================= SECURITY ================= */
 

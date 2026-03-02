@@ -7,9 +7,11 @@ import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 export const optimizeRevenue = async (req) => {
     const scope = buildPropertyFilter(req.user);
+
+    // 🔐 Apply property scope correctly
     const [rooms, payments] = await Promise.all([
-        Room.find({}, "totalBeds occupiedBeds rent").lean(),
-        Payment.find({}, "amount status").lean()
+        Room.find({ ...scope }, "totalBeds occupiedBeds rent").lean(),
+        Payment.find({ ...scope }, "amount status").lean()
     ]);
 
     const totals = rooms.reduce(
@@ -46,15 +48,21 @@ export const optimizeRevenue = async (req) => {
             ? 0
             : (totalCollected / totalBilled) * 100;
 
+    // 🔐 Pass req properly
     let highRiskResidents = 0;
     try {
-        const churnData = await predictChurn();
+        const churnData = await predictChurn(req);
         highRiskResidents = churnData?.highRisk || 0;
-    } catch { }
+    } catch {
+        highRiskResidents = 0;
+    }
 
     const insights = [];
     let revenueLeakEstimate = 0;
 
+    // --------------------------
+    // OCCUPANCY INSIGHT
+    // --------------------------
     if (occupancyRate < 70) {
         const emptyBeds = totals.totalBeds - totals.occupiedBeds;
         revenueLeakEstimate += emptyBeds * avgRent;
@@ -68,6 +76,9 @@ export const optimizeRevenue = async (req) => {
         });
     }
 
+    // --------------------------
+    // COLLECTION INSIGHT
+    // --------------------------
     if (collectionRate < 85) {
         revenueLeakEstimate += totalBilled - totalCollected;
 
@@ -80,6 +91,9 @@ export const optimizeRevenue = async (req) => {
         });
     }
 
+    // --------------------------
+    // CHURN INSIGHT
+    // --------------------------
     if (highRiskResidents > 0) {
         insights.push({
             type: "CHURN",

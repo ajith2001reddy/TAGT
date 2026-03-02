@@ -1,110 +1,217 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useOwnerStats } from "@/features/owner/useOwnerStats";
-import { StatCard } from "@/components/ui/StatCard";
+import { api } from "@/lib/api";
+import Link from "next/link";
+import { RevenueTrendChart, OccupancyPieChart } from "@/components/owner/DashboardCharts";
+import { ActivityTimeline } from "@/components/owner/ActivityTimeline";
+import { ArrowUpRight, TrendingUp, Users, Home, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
 
-const icons = {
-    residents: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
-    rooms: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
-    occupancy: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
-    pending: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-    overdue: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
-    revenue: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>,
-};
+function StatCard({ label, value, sub, color, icon }: {
+    label: string; value: string | number; sub?: string; color: string; icon: React.ReactNode;
+}) {
+    return (
+        <div style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-default)",
+            borderRadius: "18px",
+            padding: "24px",
+            position: "relative",
+            overflow: "hidden",
+            transition: "all 0.25s ease",
+            cursor: "default",
+        }}
+            onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)";
+                (e.currentTarget as HTMLElement).style.boxShadow = `0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px ${color}15`;
+            }}
+            onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.transform = "";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)";
+                (e.currentTarget as HTMLElement).style.boxShadow = "";
+            }}
+        >
+            {/* Gradient top edge */}
+            <div style={{
+                position: "absolute", top: 0, left: 0, right: 0, height: "1px",
+                background: `linear-gradient(90deg, transparent, ${color}50, transparent)`,
+            }} />
+            {/* Icon bg glow */}
+            <div style={{
+                position: "absolute", top: "16px", right: "16px",
+                width: "42px", height: "42px",
+                background: `${color}10`,
+                border: `1px solid ${color}20`,
+                borderRadius: "12px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: color,
+            }}>{icon}</div>
 
-export default function OwnerPage() {
-    const { stats, loading } = useOwnerStats();
-
-    if (loading) {
-        return (
-            <div>
-                <div style={{ marginBottom: "28px" }}>
-                    <div className="skeleton" style={{ height: "28px", width: "200px", marginBottom: "8px" }} />
-                    <div className="skeleton" style={{ height: "16px", width: "300px" }} />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
-                    {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="skeleton" style={{ height: "120px", borderRadius: "16px" }} />
-                    ))}
-                </div>
+            <div style={{ marginBottom: "8px" }}>
+                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>{label}</div>
             </div>
-        );
-    }
-
-    if (!stats) return (
-        <div style={{ color: "var(--text-secondary)", textAlign: "center", paddingTop: "60px" }}>
-            <p>Failed to load dashboard data.</p>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "30px", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--text-primary)", lineHeight: 1.1 }}>{value}</div>
+            {sub && <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--text-tertiary)" }}>{sub}</div>}
         </div>
     );
+}
+
+function InsightCard({ type, severity, message, recommendation }: any) {
+    const colors: Record<string, string> = { HIGH: "var(--red)", MEDIUM: "var(--yellow)", LOW: "var(--green)" };
+    const color = colors[severity] || "var(--text-secondary)";
+    return (
+        <div style={{
+            padding: "16px 20px",
+            borderRadius: "12px",
+            background: "var(--bg-card)",
+            border: `1px solid ${color}20`,
+            borderLeft: `3px solid ${color}`,
+        }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+                <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "4px" }}>{message}</div>
+                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)", lineHeight: 1.5 }}>{recommendation}</div>
+                </div>
+                <span style={{
+                    flexShrink: 0, padding: "4px 10px", borderRadius: "6px",
+                    fontSize: "10px", fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.08em",
+                    background: `${color}12`, color, border: `1px solid ${color}25`,
+                }}>{severity}</span>
+            </div>
+        </div>
+    );
+}
+
+export default function OwnerPage() {
+    const { stats, detailed, loading } = useOwnerStats();
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+    if (loading) return (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px" }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="skeleton" style={{ height: "130px", borderRadius: "18px" }} />
+            ))}
+        </div>
+    );
+
+    const statItems = stats ? [
+        { label: "Total Residents", value: stats.totalResidents, color: "var(--accent-primary)", sub: "Active tenants", icon: <Users size={18} /> },
+        { label: "Total Rooms", value: stats.totalRooms, color: "#a78bfa", sub: "Configured units", icon: <Home size={18} /> },
+        { label: "Occupancy Rate", value: `${stats.occupancyRate}%`, color: "#34d399", sub: "Current fill rate", icon: <TrendingUp size={18} /> },
+        { label: "Pending Payments", value: stats.pendingPayments, color: "#fbbf24", sub: "Awaiting collection", icon: <Clock size={18} /> },
+        { label: "Overdue Payments", value: stats.overduePayments, color: "var(--red)", sub: "Past due date", icon: <AlertTriangle size={18} /> },
+        { label: "Monthly Revenue", value: `₹${((stats.monthlyRevenue || 0) / 1000).toFixed(1)}k`, color: "#34d399", sub: "Collected this month", icon: <TrendingUp size={18} /> },
+    ] : [];
 
     return (
         <div className="animate-fade-in">
             {/* Header */}
-            <div style={{ marginBottom: "32px" }}>
-                <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "6px" }}>
-                    Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"} 👋
-                </h1>
-                <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-                    Here's what's happening across your properties today.
-                </p>
+            <div style={{ marginBottom: "36px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                        <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>
+                            {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+                        </div>
+                        <h1 className="display-text" style={{ fontSize: "32px", marginBottom: "6px" }}>
+                            {greeting} 👋
+                        </h1>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+                            Here's your property portfolio at a glance.
+                        </p>
+                    </div>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                        <Link href="/owner/residents" className="btn-ghost" style={{ fontSize: "13px", padding: "9px 18px" }}>
+                            Add Resident
+                        </Link>
+                        <Link href="/owner/rooms" className="btn-primary" style={{ fontSize: "13px", padding: "9px 18px" }}>
+                            Manage Rooms
+                        </Link>
+                    </div>
+                </div>
             </div>
 
-            {/* Stats grid */}
-            <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                gap: "16px",
-                marginBottom: "40px",
-            }}>
-                <StatCard label="Total Residents" value={stats.totalResidents} icon={icons.residents} accent="var(--accent-primary)" />
-                <StatCard label="Total Rooms" value={stats.totalRooms} icon={icons.rooms} accent="#7c3aed" />
-                <StatCard label="Occupancy Rate" value={`${stats.occupancyRate}%`} icon={icons.occupancy} accent="#059669" />
-                <StatCard label="Pending Payments" value={stats.pendingPayments} icon={icons.pending} accent="#d97706" />
-                <StatCard label="Overdue Payments" value={stats.overduePayments} icon={icons.overdue} accent="var(--red)" />
-                <StatCard label="Monthly Revenue" value={`₹${(stats.monthlyRevenue / 1000).toFixed(1)}k`} icon={icons.revenue} accent="var(--green)" />
-            </div>
+            {/* Main Content Layout */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "24px", alignItems: "start" }}>
 
-            {/* Quick links */}
-            <div style={{ marginBottom: "8px" }}>
-                <div className="label-text" style={{ marginBottom: "14px" }}>QUICK ACTIONS</div>
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                    {[
-                        { href: "/owner/rooms", label: "Manage Rooms", desc: "Add or configure rooms" },
-                        { href: "/owner/payments", label: "View Payments", desc: "Billing & collections" },
-                        { href: "/owner/analytics", label: "Analytics", desc: "KPIs & forecasts" },
-                    ].map((item) => (
-                        <a
-                            key={item.href}
-                            href={item.href}
-                            style={{
-                                display: "flex", alignItems: "center", gap: "12px",
-                                padding: "14px 18px",
-                                background: "var(--bg-card)",
-                                border: "1px solid var(--border-default)",
-                                borderRadius: "12px",
-                                textDecoration: "none",
-                                color: "var(--text-primary)",
-                                transition: "all 0.18s ease",
-                                minWidth: "200px",
-                            }}
-                            onMouseEnter={e => {
-                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-strong)";
-                                (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-card-hover)";
-                            }}
-                            onMouseLeave={e => {
-                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-default)";
-                                (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-card)";
-                            }}
-                        >
-                            <div>
-                                <div style={{ fontSize: "14px", fontWeight: 500 }}>{item.label}</div>
-                                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>{item.desc}</div>
+                {/* LEFT COLUMN: Charts & Stats */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                    {/* Stats Grid */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "16px" }}>
+                        {statItems.map((s, i) => (
+                            <div key={i} className={`animate-fade-up delay-${i + 1}`}>
+                                <StatCard {...s} />
                             </div>
-                            <svg style={{ marginLeft: "auto", color: "var(--text-tertiary)" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </a>
-                    ))}
+                        ))}
+                    </div>
+
+                    {/* Revenue Chart */}
+                    <div className="glass-card" style={{ padding: "28px", borderRadius: "24px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                            <div>
+                                <h3 style={{ fontSize: "16px", fontWeight: 700, margin: 0 }}>Revenue Trend</h3>
+                                <p style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>Monthly rent collection performance</p>
+                            </div>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                                <span style={{ fontSize: "11px", color: "var(--green)", background: "rgba(52,211,153,0.1)", padding: "4px 8px", borderRadius: "6px", fontWeight: 600 }}>
+                                    +12.5% vs last month
+                                </span>
+                            </div>
+                        </div>
+                        <RevenueTrendChart data={detailed?.trend || []} />
+                    </div>
+                </div>
+
+                {/* RIGHT COLUMN: Activity & Intelligence */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                    {/* Occupancy Chart */}
+                    <div className="glass-card" style={{ padding: "24px", borderRadius: "24px", textAlign: "center" }}>
+                        <div style={{ textAlign: "left", marginBottom: "16px" }}>
+                            <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0 }}>Portfolio Occupancy</h3>
+                        </div>
+                        <OccupancyPieChart
+                            occupied={detailed?.occupiedBeds || 0}
+                            total={detailed?.totalBeds || 0}
+                        />
+                        <div style={{ marginTop: "16px", display: "flex", justifyContent: "center", gap: "20px" }}>
+                            <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: "16px", fontWeight: 700 }}>{detailed?.occupiedBeds || 0}</div>
+                                <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Occupied</div>
+                            </div>
+                            <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: "16px", fontWeight: 700 }}>{(detailed?.totalBeds || 0) - (detailed?.occupiedBeds || 0)}</div>
+                                <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Vacant</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Smart Alerts */}
+                    <div className="glass-card" style={{ padding: "24px", borderRadius: "24px" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                            <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0 }}>Smart Alerts</h3>
+                            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--red)", boxShadow: "0 0 10px var(--red)" }} />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            {stats?.insights?.map((ins: any, i: number) => (
+                                <InsightCard key={i} {...ins} />
+                            )) || (
+                                    <div style={{ color: "var(--text-tertiary)", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>
+                                        No alerts at the moment.
+                                    </div>
+                                )}
+                        </div>
+                    </div>
+
+                    {/* Recent Activity */}
+                    <div className="glass-card" style={{ padding: "24px", borderRadius: "24px" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                            <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0 }}>Activity Timeline</h3>
+                            <Link href="/owner/activity" style={{ fontSize: "12px", color: "var(--accent-primary)", textDecoration: "none" }}>View All</Link>
+                        </div>
+                        <ActivityTimeline />
+                    </div>
                 </div>
             </div>
         </div>

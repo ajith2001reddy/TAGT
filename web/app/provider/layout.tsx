@@ -7,8 +7,10 @@ export default function ProviderLayout({
     children: React.ReactNode;
 }) {
     return (
-        <RoleGuard allowed={["super_admin"]}>
-            <DashboardShell>{children}</DashboardShell>
+        <RoleGuard allowed={["super_admin", "provider", "resident"]}>
+            <DashboardShell>
+                {children}
+            </DashboardShell>
         </RoleGuard>
     );
 }

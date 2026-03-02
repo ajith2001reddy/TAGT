@@ -1,350 +1,849 @@
 TS PROJECT PART 19 of 20
 ==============================
---- FILE: .\backend\src\analytics\revenueOptimizer.js ---
-﻿// src/analytics/revenueOptimizer.js
-
-import Room from "../models/rooms.js";
+--- FILE: .\backend\src\analytics\kpiCalculator.js ---
+﻿import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
-import { predictChurn } from "./churnEngine.js";
+import Request from "../models/Request.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
+export const getKPIs = async ({ fromDate, toDate } = {}, user) => {
+    const paymentDateFilter =
+        fromDate && toDate
+            ? { paidAt: { $gte: fromDate, $lte: toDate } }
+            : {};
 
-export const optimizeRevenue = async (req) => {
-    const scope = buildPropertyFilter(req.user);
-    const [rooms, payments] = await Promise.all([
-        Room.find({}, "totalBeds occupiedBeds rent").lean(),
-        Payment.find({}, "amount status").lean()
+    const requestDateFilter =
+        fromDate && toDate
+            ? { createdAt: { $gte: fromDate, $lte: toDate } }
+            : {};
+
+    /* ================= OCCUPANCY ================= */
+    const roomTotals = await Room.aggregate([
+        {
+            $group: {
+                _id: null,
+                totalBeds: { $sum: "$totalBeds" },
+                occupiedBeds: { $sum: "$occupiedBeds" },
+            },
+        },
     ]);
 
-    const totals = rooms.reduce(
-        (acc, room) => {
-            const beds = room.totalBeds || 0;
-            acc.totalBeds += beds;
-            acc.occupiedBeds += room.occupiedBeds || 0;
-            acc.totalRent += (room.rent || 0) * beds;
-            return acc;
-        },
-        { totalBeds: 0, occupiedBeds: 0, totalRent: 0 }
-    );
+    const totalBeds = roomTotals[0]?.totalBeds || 0;
+    const occupiedBeds = roomTotals[0]?.occupiedBeds || 0;
 
     const occupancyRate =
-        totals.totalBeds === 0
-            ? 0
-            : (totals.occupiedBeds / totals.totalBeds) * 100;
+        totalBeds === 0 ? 0 : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
 
-    const avgRent =
-        totals.totalBeds === 0
-            ? 0
-            : totals.totalRent / totals.totalBeds;
+    /* ================= PAYMENTS ================= */
+    const scope = buildPropertyFilter(user);
+    const paymentStats = await Payment.aggregate([
+        { $match: { ...paymentDateFilter, ...scope } },
+        {
+            $group: {
+                _id: null,
+                totalBilled: { $sum: "$amount" },
+                totalCollected: {
+                    $sum: {
+                        $cond: [{ $eq: ["$status", "paid"] }, "$amount", 0],
+                    },
+                },
+            },
+        },
+    ]);
 
-    let totalBilled = 0;
-    let totalCollected = 0;
-
-    for (const p of payments) {
-        totalBilled += p.amount || 0;
-        if (p.status === "paid") totalCollected += p.amount || 0;
-    }
+    const totalBilled = paymentStats[0]?.totalBilled || 0;
+    const totalCollected = paymentStats[0]?.totalCollected || 0;
 
     const collectionRate =
         totalBilled === 0
             ? 0
-            : (totalCollected / totalBilled) * 100;
+            : Number(((totalCollected / totalBilled) * 100).toFixed(2));
 
-    let highRiskResidents = 0;
-    try {
-        const churnData = await predictChurn();
-        highRiskResidents = churnData?.highRisk || 0;
-    } catch { }
-
-    const insights = [];
-    let revenueLeakEstimate = 0;
-
-    if (occupancyRate < 70) {
-        const emptyBeds = totals.totalBeds - totals.occupiedBeds;
-        revenueLeakEstimate += emptyBeds * avgRent;
-
-        insights.push({
-            type: "OCCUPANCY",
-            severity: "HIGH",
-            message: "Low occupancy detected",
-            recommendation:
-                "Offer promotions, flexible pricing, or partnerships to increase occupancy."
-        });
-    }
-
-    if (collectionRate < 85) {
-        revenueLeakEstimate += totalBilled - totalCollected;
-
-        insights.push({
-            type: "PAYMENTS",
-            severity: "MEDIUM",
-            message: "Low payment collection rate",
-            recommendation:
-                "Enable automated reminders, enforce deadlines, or introduce incentives."
-        });
-    }
-
-    if (highRiskResidents > 0) {
-        insights.push({
-            type: "CHURN",
-            severity: "HIGH",
-            message: `${highRiskResidents} residents at high churn risk`,
-            recommendation:
-                "Proactively engage residents and offer retention incentives."
-        });
-    }
-
-    if (!insights.length) {
-        insights.push({
-            type: "HEALTHY",
-            severity: "LOW",
-            message: "Revenue performance is healthy",
-            recommendation:
-                "Maintain current pricing and operational strategy."
-        });
-    }
-
-    return {
-        generatedAt: new Date(),
-        metrics: {
-            occupancyRate: Number(occupancyRate.toFixed(2)),
-            collectionRate: Number(collectionRate.toFixed(2)),
-            avgRent: Number(avgRent.toFixed(2)),
-            totalBeds: totals.totalBeds,
-            occupiedBeds: totals.occupiedBeds
+    /* ================= MAINTENANCE ================= */
+    const resolvedRequests = await Request.aggregate([
+        {
+            $match: {
+                status: "resolved",
+                ...requestDateFilter,
+            },
         },
-        revenueLeakEstimate: Math.round(revenueLeakEstimate),
-        insights,
-        meta: { mode: "snapshot" }
+        {
+            $project: {
+                resolutionHours: {
+                    $divide: [
+                        { $subtract: ["$updatedAt", "$createdAt"] },
+                        1000 * 60 * 60,
+                    ],
+                },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                avgResolutionTime: { $avg: "$resolutionHours" },
+                resolvedCount: { $sum: 1 },
+            },
+        },
+    ]);
+
+    const avgResolutionTime =
+        resolvedRequests[0]?.avgResolutionTime
+            ? Number(resolvedRequests[0].avgResolutionTime.toFixed(2))
+            : 0;
+
+    const resolvedCount = resolvedRequests[0]?.resolvedCount || 0;
+
+    /* ================= RESULT ================= */
+    return {
+        occupancy: {
+            rate: occupancyRate,
+            occupiedBeds,
+            totalBeds,
+        },
+        payments: {
+            collectionRate,
+            totalBilled,
+            totalCollected,
+        },
+        maintenance: {
+            avgResolutionTime,
+            resolvedCount,
+        },
+        meta: {
+            mode: "snapshot",
+            fromDate: fromDate || null,
+            toDate: toDate || null,
+            generatedAt: new Date(),
+        },
     };
 };
 
---- END OF .\backend\src\analytics\revenueOptimizer.js ---
+--- END OF .\backend\src\analytics\kpiCalculator.js ---
 
---- FILE: .\backend\src\models\Request.js ---
+--- FILE: .\backend\src\middleware\authorize.js ---
+const authorize = (...roles) => (req, res, next) => {
+    if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
+    if (!roles.includes(req.user.role)) return res.status(403).json({ success: false, message: "Forbidden" });
+    return next();
+};
+
+export default authorize;
+
+--- END OF .\backend\src\middleware\authorize.js ---
+
+--- FILE: .\backend\src\routes\resident.js ---
+import express from "express";
 import mongoose from "mongoose";
 
-const RequestSchema = new mongoose.Schema(
-    {
-        propertyId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Property",
-            required: true,
-            index: true
-        },
+import {
+    getAllResidents,
+    addResident,
+    getResidentProfile,
+    updateResident,
+    deleteResident
+} from "../controllers/residentController.js";
 
-        resident: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true
-        },
+import auth from "../middleware/auth.js";
+import authorize from "../middleware/authorize.js";
 
-        message: {
-            type: String,
-            trim: true,
-            default: ""
-        },
+const router = express.Router();
 
-        title: {
-            type: String,
-            required: true,
-            trim: true
-        },
+router.get("/", auth, authorize("owner"), getAllResidents);
+router.post("/", auth, authorize("owner"), addResident);
 
-        description: {
-            type: String,
-            required: true,
-            trim: true
-        },
-
-        priority: {
-            type: String,
-            enum: ["low", "medium", "high", "urgent"],
-            default: "medium"
-        },
-
-        status: {
-            type: String,
-            enum: ["pending", "in-progress", "resolved"],
-            default: "pending",
-            index: true
-        }
-    },
-    { timestamps: true }
-
-);
-
-RequestSchema.pre("validate", function (next) {
-    if (!this.propertyId || !this.resident) {
-        return next(new Error("Invalid tenant association"));
+router.get("/:id", auth, authorize("owner"), (req, res, next) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ success: false, message: "Invalid resident ID" });
     }
-    next();
+    return getResidentProfile(req, res, next);
 });
 
-RequestSchema.index({ propertyId: 1, status: 1 });
-
-export default mongoose.model("Request", RequestSchema);
---- END OF .\backend\src\models\Request.js ---
-
---- FILE: .\web\.gitignore ---
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
---- END OF .\web\.gitignore ---
-
---- FILE: .\web\app\owner\rooms\page.tsx ---
-"use client";
-
-import { useState } from "react";
-import { useRooms } from "@/features/owner/useRooms";
-import { createRoom, deleteRoom } from "@/features/owner/rooms.service";
-
-export default function RoomsPage() {
-    const { rooms, loading, reload } = useRooms();
-
-    const [roomNumber, setRoomNumber] = useState("");
-    const [rent, setRent] = useState("");
-    const [beds, setBeds] = useState("");
-
-    async function handleCreate(e: React.FormEvent) {
-        e.preventDefault();
-
-        await createRoom({
-            roomNumber,
-            rent: Number(rent),
-            totalBeds: Number(beds),
-        });
-
-        setRoomNumber("");
-        setRent("");
-        setBeds("");
-        reload();
+router.put("/:id", auth, authorize("owner"), (req, res, next) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ success: false, message: "Invalid resident ID" });
     }
+    return updateResident(req, res, next);
+});
 
-    async function handleDelete(id: string) {
-        await deleteRoom(id);
-        reload();
+router.delete("/:id", auth, authorize("owner"), (req, res, next) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: "Invalid resident ID" });
     }
+    return deleteResident(req, res, next);
+});
 
-    if (loading) return <p>Loading rooms...</p>;
+export default router;
 
+--- END OF .\backend\src\routes\resident.js ---
+
+--- FILE: .\web\app\globals.css ---
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import "tailwindcss";
+
+/* ============================================
+   TAGT DESIGN SYSTEM — SILICON VALLEY GRADE
+   ============================================ */
+
+:root {
+  /* Core Palette */
+  --bg-base: #030507;
+  --bg-surface: #080d12;
+  --bg-elevated: #0d1520;
+  --bg-card: #0f1a26;
+  --bg-card-hover: #131f2e;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Brand */
+  --accent-primary: #00d4ff;
+  --accent-secondary: #0099cc;
+  --accent-tertiary: #004466;
+  --accent-glow: rgba(0, 212, 255, 0.15);
+  --accent-glow-strong: rgba(0, 212, 255, 0.25);
+
+  /* Status */
+  --green: #00e676;
+  --green-bg: rgba(0, 230, 118, 0.08);
+  --yellow: #ffd740;
+  --yellow-bg: rgba(255, 215, 64, 0.08);
+  --red: #ff5252;
+  --red-bg: rgba(255, 82, 82, 0.08);
+
+  /* Typography */
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Text */
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-tertiary: rgba(255, 255, 255, 0.30);
+  --text-accent: #00d4ff;
+}
+
+/* ============================================
+   RESET & BASE
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-tertiary);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 212, 255, 0.2);
+  color: #fff;
+}
+
+/* ============================================
+   NOISE TEXTURE OVERLAY
+   ============================================ */
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* ============================================
+   ANIMATED GRADIENT MESH
+   ============================================ */
+
+.mesh-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mesh-bg::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(ellipse, rgba(0, 212, 255, 0.06) 0%, transparent 70%);
+  animation: meshFloat1 20s ease-in-out infinite;
+}
+
+.mesh-bg::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgba(0, 100, 180, 0.05) 0%, transparent 70%);
+  animation: meshFloat2 25s ease-in-out infinite reverse;
+}
+
+@keyframes meshFloat1 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(3%, 5%) scale(1.05);
+  }
+
+  66% {
+    transform: translate(-2%, 3%) scale(0.97);
+  }
+}
+
+@keyframes meshFloat2 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-4%, -3%) scale(1.08);
+  }
+}
+
+/* ============================================
+   GLASS CARD
+   ============================================ */
+
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 212, 255, 0.05);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent-primary);
+  color: #000;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(0, 212, 255, 0.4);
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+
+.input-field {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s ease;
+  caret-color: var(--accent-primary);
+}
+
+.input-field::placeholder {
+  color: var(--text-tertiary);
+}
+
+.input-field:focus {
+  border-color: rgba(0, 212, 255, 0.4);
+  background: rgba(0, 212, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.08);
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+.display-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.mono-text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.label-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.25);
+  }
+}
+
+@keyframes scanline {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease both;
+}
+
+/* Stagger delays */
+.delay-1 {
+  animation-delay: 0.05s;
+}
+
+.delay-2 {
+  animation-delay: 0.1s;
+}
+
+.delay-3 {
+  animation-delay: 0.15s;
+}
+
+.delay-4 {
+  animation-delay: 0.2s;
+}
+
+.delay-5 {
+  animation-delay: 0.25s;
+}
+
+.delay-6 {
+  animation-delay: 0.3s;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.18s ease;
+  position: relative;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.sidebar-link.active {
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--accent-primary);
+  border: 1px solid rgba(0, 212, 255, 0.12);
+}
+
+.sidebar-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--accent-primary);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+/* ============================================
+   STATUS BADGES
+   ============================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+
+.badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge-paid {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid rgba(0, 230, 118, 0.15);
+}
+
+.badge-pending {
+  background: var(--yellow-bg);
+  color: var(--yellow);
+  border: 1px solid rgba(255, 215, 64, 0.15);
+}
+
+.badge-overdue {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid rgba(255, 82, 82, 0.15);
+}
+
+.badge-failed {
+  background: rgba(255, 82, 82, 0.05);
+  color: #ff1744;
+  border: 1px solid rgba(255, 23, 68, 0.15);
+}
+
+/* ============================================
+   DATA TABLE
+   ============================================ */
+
+.data-row {
+  display: grid;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  transition: all 0.18s ease;
+  gap: 16px;
+}
+
+.data-row:hover {
+  border-color: var(--border-default);
+  background: var(--bg-card-hover);
+}
+
+/* ============================================
+   STAT CARD
+   ============================================ */
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-card:hover::after {
+  opacity: 1;
+}
+
+.stat-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   LOADING SKELETON
+   ============================================ */
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ============================================
+   LANDING PAGE
+   ============================================ */
+
+.hero-grid-line {
+  position: absolute;
+  background: linear-gradient(to bottom, transparent, rgba(0, 212, 255, 0.06), transparent);
+  width: 1px;
+  top: 0;
+  bottom: 0;
+}
+
+.glow-text {
+  background: linear-gradient(135deg, #fff 30%, rgba(0, 212, 255, 0.9) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.accent-line {
+  display: inline-block;
+  position: relative;
+}
+
+.accent-line::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-primary), transparent);
+  border-radius: 1px;
+}
+--- END OF .\web\app\globals.css ---
+
+--- FILE: .\web\app\provider\layout.tsx ---
+import { RoleGuard } from "@/components/auth/RoleGuard";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+
+export default function ProviderLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
     return (
-        <div className="space-y-8">
-            <h1 className="text-2xl font-bold">Rooms</h1>
-
-            <form onSubmit={handleCreate} className="space-y-3 max-w-md">
-                <input
-                    placeholder="Room Number"
-                    className="w-full p-2 bg-neutral-800 rounded"
-                    value={roomNumber}
-                    onChange={(e) => setRoomNumber(e.target.value)}
-                    required
-                />
-
-                <input
-                    placeholder="Rent"
-                    type="number"
-                    className="w-full p-2 bg-neutral-800 rounded"
-                    value={rent}
-                    onChange={(e) => setRent(e.target.value)}
-                    required
-                />
-
-                <input
-                    placeholder="Total Beds"
-                    type="number"
-                    className="w-full p-2 bg-neutral-800 rounded"
-                    value={beds}
-                    onChange={(e) => setBeds(e.target.value)}
-                    required
-                />
-
-                <button className="bg-violet-600 px-4 py-2 rounded">
-                    Add Room
-                </button>
-            </form>
-
-            <div className="space-y-3">
-                {rooms.map((room) => (
-                    <div
-                        key={room._id}
-                        className="flex justify-between items-center bg-neutral-900 p-4 rounded"
-                    >
-                        <div>
-                            <p className="font-semibold">{room.roomNumber}</p>
-                            <p className="text-sm text-white/50">
-                                ₹{room.rent} | {room.occupiedBeds}/{room.totalBeds} beds
-                            </p>
-                        </div>
-
-                        <button
-                            onClick={() => handleDelete(room._id)}
-                            className="text-red-500"
-                        >
-                            Delete
-                        </button>
-                    </div>
-                ))}
-            </div>
-        </div>
+        <RoleGuard allowed={["super_admin"]}>
+            <DashboardShell>{children}</DashboardShell>
+        </RoleGuard>
     );
 }
---- END OF .\web\app\owner\rooms\page.tsx ---
+--- END OF .\web\app\provider\layout.tsx ---
 
---- FILE: .\web\features\owner\useAnalytics.ts ---
-import { useEffect, useState } from "react";
-import { fetchKPIs, KPIResponse } from "./analytics.service";
+--- FILE: .\web\features\owner\owner.service.ts ---
+import api from "@/lib/api";
 
-export function useAnalytics() {
-    const [data, setData] = useState<KPIResponse | null>(null);
-    const [loading, setLoading] = useState(true);
+export type OwnerStats = {
+    totalResidents: number;
+    totalRooms: number;
+    occupancyRate: number;
+    pendingPayments: number;
+    overduePayments: number;
+    monthlyRevenue: number;
+};
 
-    useEffect(() => {
-        fetchKPIs()
-            .then(setData)
-            .finally(() => setLoading(false));
-    }, []);
-
-    return { data, loading };
+export async function fetchOwnerStats(_selectedProperty: string | null): Promise<OwnerStats | null> {
+    try {
+        const { data } = await api.get("/v2/analytics/owner-dashboard");
+        return data.data ?? null;
+    } catch {
+        return null;
+    }
 }
---- END OF .\web\features\owner\useAnalytics.ts ---
+--- END OF .\web\features\owner\owner.service.ts ---
 

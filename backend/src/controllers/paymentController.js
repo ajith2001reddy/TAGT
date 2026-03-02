@@ -1,6 +1,7 @@
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
+import { generateInvoicePDF } from "../utils/invoiceGenerator.js";
 
 export const generateMonthlyRent = async (req, res, next) => {
     try {
@@ -46,3 +47,68 @@ export const generateMonthlyRent = async (req, res, next) => {
         next(err);
     }
 };
+
+export const markPaymentPaid = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const payment = await Payment.findById(id);
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: "Payment not found"
+            });
+        }
+
+        payment.status = "paid";
+        payment.paidAt = new Date();
+
+        await payment.save();
+
+        return res.json({
+            success: true,
+            data: payment
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getAllPayments = async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
+
+        const payments = await Payment.find(scope)
+            .populate("resident", "name email")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({
+            success: true,
+            data: payments   // ✅ standardized
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const downloadInvoice = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const payment = await Payment.findById(id)
+            .populate({ path: "resident", select: "name email", options: { strictPopulate: false } });
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: "Payment not found"
+            });
+        }
+
+        generateInvoicePDF(payment, res);
+
+    } catch (err) {
+        next(err);
+    }
+}; 

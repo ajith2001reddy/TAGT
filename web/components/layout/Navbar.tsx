@@ -56,7 +56,7 @@ export function Navbar() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {(role === "owner" || role === "super_admin") && <PropertySwitcher />}
+                {role === "owner" && <PropertySwitcher />}
 
                 {/* Avatar */}
                 <div style={{

@@ -36593,171 +36593,269 @@ export const deleteRequest = async (id) => {
 
 --- END OF .\full_project_dump.txt ---
 
---- FILE: .\backend\src\controllers\authController.js ---
-import User from "../models/User.js";
+--- FILE: .\backend\src\config\firebase.js ---
+import admin from "firebase-admin";
 
-export const registerUser = async (req, res) => {
-    try {
-        const { name, email, firebaseUid } = req.body;
+const {
+  FIREBASE_PROJECT_ID,
+  FIREBASE_CLIENT_EMAIL,
+  FIREBASE_PRIVATE_KEY,
+} = process.env;
 
-        const existingUser = await User.findOne({ firebaseUid });
-
-        if (existingUser) {
-            return res.status(400).json({ message: "User already exists" });
-        }
-
-        const user = await User.create({
-            name,
-            email,
-            firebaseUid,
-            role: "resident",
-            isActive: true,
-        });
-
-        res.status(201).json(user);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
-    }
-};
---- END OF .\backend\src\controllers\authController.js ---
-
---- FILE: .\backend\src\routes\admin.js ---
-import { Router } from "express";
-import auth from "../middleware/auth.js";
-import isAdmin from "../middleware/isAdmin.js";
-import {
-    createProperty,
-    createOwner,
-    assignOwnerToProperty
-} from "../controllers/adminController.js";
-
-const router = Router();
-
-// Only super_admin allowed
-router.post("/properties", auth, isAdmin, createProperty);
-router.post("/owners", auth, isAdmin, createOwner);
-router.post("/properties/:id/assign-owner", auth, isAdmin, assignOwnerToProperty);
-
-export default router;
---- END OF .\backend\src\routes\admin.js ---
-
---- FILE: .\web\package.json ---
-{
-  "name": "web",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "axios": "^1.13.6",
-    "firebase": "^12.10.0",
-    "next": "16.1.6",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "recharts": "^3.7.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: FIREBASE_PROJECT_ID,
+      clientEmail: FIREBASE_CLIENT_EMAIL,
+      privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    }),
+  });
 }
 
---- END OF .\web\package.json ---
+export default admin;
+--- END OF .\backend\src\config\firebase.js ---
 
---- FILE: .\web\app\resident\page.tsx ---
+--- FILE: .\backend\src\middleware\validate.js ---
+export default (schema) => (req, res, next) => {
+    const { error, value } = schema.validate(req.body, {
+        abortEarly: true,
+        stripUnknown: true
+    });
+
+    if (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.details[0].message
+        });
+    }
+
+    req.body = value;
+    next();
+};
+
+--- END OF .\backend\src\middleware\validate.js ---
+
+--- FILE: .\backend\src\services\emailService.js ---
+// src/services/emailService.js
+import nodemailer from "nodemailer";
+
+const emailEnabled = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+let transporter = null;
+if (emailEnabled) {
+    transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+}
+
+const FROM = process.env.SMTP_FROM || "TAGT Platform <noreply@tagt.app>";
+
+const send = async (to, subject, html) => {
+    if (!transporter) {
+        console.log(`[EMAIL MOCK] To: ${to} | Subject: ${subject}`);
+        return { mocked: true };
+    }
+    return transporter.sendMail({ from: FROM, to, subject, html });
+};
+
+/* ── Templates ──────────────────────────────────── */
+
+export const sendRentReminder = async ({ name, email, amount, dueDate, month, propertyName }) => {
+    const dueFmt = new Date(dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    return send(email, `Rent Reminder – ${month}`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00d4ff">TAGT</div>
+            <h2 style="margin:0 0 16px">Hi ${name},</h2>
+            <p style="color:#aaa">Your rent for <b style="color:#fff">${month}</b> is due soon.</p>
+            <div style="background:#0f1a26;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin:20px 0">
+                <div style="font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Amount Due</div>
+                <div style="font-size:32px;font-weight:700;color:#00d4ff">₹${amount.toLocaleString()}</div>
+                <div style="font-size:14px;color:#aaa;margin-top:6px">Due by ${dueFmt}</div>
+            </div>
+            <p style="color:#aaa">Please pay on time to avoid late fees. Contact your property manager at <b>${propertyName || "TAGT"}</b> for any issues.</p>
+            <div style="margin-top:24px;font-size:12px;color:#555">TAGT Property Management</div>
+        </div>
+    `);
+};
+
+export const sendOverdueNotice = async ({ name, email, amount, lateFee, month }) => {
+    return send(email, `⚠ Overdue Rent – ${month}`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#ff5252">TAGT – Overdue Notice</div>
+            <h2 style="margin:0 0 16px">Hi ${name},</h2>
+            <p style="color:#aaa">Your rent for <b style="color:#fff">${month}</b> is <b style="color:#ff5252">overdue</b>.</p>
+            <div style="background:#1a0f0f;border:1px solid rgba(255,82,82,0.2);border-radius:12px;padding:20px;margin:20px 0">
+                <div style="font-size:28px;font-weight:700;color:#ff5252">₹${(amount + (lateFee || 0)).toLocaleString()}</div>
+                <div style="font-size:13px;color:#aaa;margin-top:6px">Rent: ₹${amount.toLocaleString()} + Late Fee: ₹${(lateFee || 0).toLocaleString()}</div>
+            </div>
+            <p style="color:#aaa">Please pay immediately to avoid further penalties.</p>
+        </div>
+    `);
+};
+
+export const sendPaymentConfirmation = async ({ name, email, amount, month, paidAt }) => {
+    const dateFmt = new Date(paidAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    return send(email, `✅ Payment Confirmed – ${month}`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00e676">TAGT</div>
+            <h2 style="margin:0 0 16px">Payment received, ${name}!</h2>
+            <div style="background:#0f1a1a;border:1px solid rgba(0,230,118,0.2);border-radius:12px;padding:20px;margin:20px 0">
+                <div style="font-size:28px;font-weight:700;color:#00e676">₹${amount.toLocaleString()}</div>
+                <div style="font-size:13px;color:#aaa;margin-top:6px">${month} · Paid on ${dateFmt}</div>
+            </div>
+            <p style="color:#aaa">Thank you for your payment. This is your digital confirmation.</p>
+        </div>
+    `);
+};
+
+export const sendWelcomeEmail = async ({ name, email, tempPassword, propertyName }) => {
+    return send(email, `Welcome to ${propertyName || "TAGT"} 🏠`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:16px;color:#00d4ff">TAGT</div>
+            <h2>Welcome, ${name}!</h2>
+            <p style="color:#aaa">Your tenant account at <b>${propertyName || "TAGT"}</b> has been created.</p>
+            <div style="background:#0f1a26;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin:20px 0">
+                <div style="margin-bottom:8px"><span style="color:#666;font-size:12px">Email:</span><br><b>${email}</b></div>
+                ${tempPassword ? `<div><span style="color:#666;font-size:12px">Temporary Password:</span><br><b style="color:#00d4ff;font-size:18px;letter-spacing:0.05em">${tempPassword}</b></div>` : ""}
+            </div>
+            <p style="color:#aaa">Please change your password on first login.</p>
+        </div>
+    `);
+};
+
+export const isEmailEnabled = () => emailEnabled;
+
+--- END OF .\backend\src\services\emailService.js ---
+
+--- FILE: .\web\app\(auth)\forgot-password\page.tsx ---
 "use client";
 
-import { useResidentDashboard } from "@/features/resident/useResidentDashboard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useState } from "react";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import Link from "next/link";
 
-export default function ResidentPage() {
-    const { payments, requests, loading } = useResidentDashboard();
+export default function ForgotPasswordPage() {
+    const [email, setEmail] = useState("");
+    const [sent, setSent] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    if (loading) return <p>Loading dashboard...</p>;
+    async function handleReset(e: React.FormEvent) {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setSent(true);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (sent) {
+        return (
+            <div style={{ textAlign: "center", padding: "12px 0" }}>
+                <div style={{
+                    width: "56px", height: "56px", borderRadius: "16px",
+                    background: "var(--green-bg)", border: "1px solid rgba(0,230,118,0.2)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    margin: "0 auto 20px", fontSize: "26px",
+                }}>
+                    ✓
+                </div>
+                <h2 className="display-text" style={{ fontSize: "22px", marginBottom: "10px" }}>Check your inbox</h2>
+                <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.7, marginBottom: "28px" }}>
+                    We sent a password reset link to <strong style={{ color: "var(--text-primary)" }}>{email}</strong>
+                </p>
+                <Link href="/login" className="btn-ghost" style={{ display: "inline-flex" }}>
+                    ← Back to sign in
+                </Link>
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-10">
-            <h1 className="text-2xl font-bold">Resident Dashboard</h1>
+        <>
+            <div style={{ marginBottom: "32px" }}>
+                <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "8px" }}>Reset password</h1>
+                <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+                    We'll send a reset link to your email
+                </p>
+            </div>
 
-            {/* Payments */}
-            <section>
-                <h2 className="text-lg font-semibold mb-4">My Payments</h2>
-                <div className="space-y-3">
-                    {payments.map((payment) => (
-                        <div
-                            key={payment._id}
-                            className="flex justify-between bg-neutral-900 p-4 rounded border border-white/10"
-                        >
-                            <div>
-                                <p className="font-semibold">₹{payment.amount}</p>
-                                <p className="text-sm text-white/50">{payment.month}</p>
-                            </div>
-                            <StatusBadge status={payment.status} />
-                        </div>
-                    ))}
+            <form onSubmit={handleReset} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div>
+                    <label className="label-text" style={{ display: "block", marginBottom: "8px" }}>Email Address</label>
+                    <input
+                        type="email"
+                        className="input-field"
+                        placeholder="you@company.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
                 </div>
-            </section>
 
-            {/* Requests */}
-            <section>
-                <h2 className="text-lg font-semibold mb-4">My Requests</h2>
-                <div className="space-y-3">
-                    {requests.map((req) => (
-                        <div
-                            key={req._id}
-                            className="bg-neutral-900 p-4 rounded border border-white/10"
-                        >
-                            <p className="font-semibold">{req.title}</p>
-                            <p className="text-sm text-white/50">{req.description}</p>
-                            <div className="mt-2">
-                                <StatusBadge status={req.status} />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-        </div>
+                <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={loading}
+                    style={{ width: "100%", padding: "14px", marginTop: "4px" }}
+                >
+                    {loading ? "Sending..." : "Send Reset Link →"}
+                </button>
+            </form>
+
+            <div style={{ marginTop: "24px", textAlign: "center", fontSize: "14px", color: "var(--text-secondary)" }}>
+                <Link href="/login" style={{ color: "var(--accent-primary)", textDecoration: "none" }}>
+                    ← Back to sign in
+                </Link>
+            </div>
+        </>
     );
 }
---- END OF .\web\app\resident\page.tsx ---
+--- END OF .\web\app\(auth)\forgot-password\page.tsx ---
 
---- FILE: .\web\features\resident\resident.service.ts ---
-import api from "@/lib/api";
+--- FILE: .\web\app\resident\layout.tsx ---
+import { RoleGuard } from "@/components/auth/RoleGuard";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import { PropertyProvider } from "@/context/PropertyContext";
 
-export type ResidentPayment = {
-    _id: string;
-    amount: number;
-    status: string;
-    month: string;
-};
-
-export type ResidentRequest = {
-    _id: string;
-    title: string;
-    description: string;
-    status: string;
-    createdAt: string;
-};
-
-export async function fetchResidentPayments(): Promise<ResidentPayment[]> {
-    const { data } = await api.get("/resident/payments"); // adjust if route differs
-    return data.payments || data.data || [];
+export default function ResidentLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return (
+        <RoleGuard allowed={["resident"]}>
+            <PropertyProvider>
+                <DashboardShell>{children}</DashboardShell>
+            </PropertyProvider>
+        </RoleGuard>
+    );
 }
+--- END OF .\web\app\resident\layout.tsx ---
 
-export async function fetchResidentRequests(): Promise<ResidentRequest[]> {
-    const { data } = await api.get("/resident/requests");
-    return data.requests || data.data || [];
+--- FILE: .\web\features\owner\useOwnerStats.ts ---
+import { useEffect, useState } from "react";
+import { fetchOwnerStats, OwnerStats } from "./owner.service";
+import { useProperty } from "@/context/PropertyContext";
+
+export function useOwnerStats() {
+    const [stats, setStats] = useState<OwnerStats | null>(null);
+    const [loading, setLoading] = useState(true);
+    const { selectedProperty } = useProperty();
+
+    useEffect(() => {
+        setLoading(true);
+        fetchOwnerStats(selectedProperty)
+            .then(setStats)
+            .finally(() => setLoading(false));
+    }, [selectedProperty]);
+
+    return { stats, loading };
 }
---- END OF .\web\features\resident\resident.service.ts ---
+--- END OF .\web\features\owner\useOwnerStats.ts ---
 

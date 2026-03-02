@@ -32,34 +32,36 @@ router.get("/requests", auth, authorize("owner"), async (req, res, next) => {
         next(err);
     }
 });
-router.get("/properties", auth, authorize("owner"), async (req, res) => {
-    const properties = await Property.find({
-        _id: { $in: req.user.propertyIds }
-    }).lean();
+router.get("/properties", auth, authorize("owner", "super_admin"), async (req, res) => {
+    let filter = {};
+    if (req.user.role === "owner") {
+        filter = { _id: { $in: req.user.propertyIds || [] } };
+    }
 
+    const properties = await Property.find(filter).lean();
     res.json({ success: true, data: properties });
 });
 
-router.get("/stats", auth, authorize("owner"), async (req, res, next) => {
+router.get("/stats", auth, authorize("owner", "super_admin"), async (req, res, next) => {
     try {
-        console.log("Owner user:", req.user);
         const { propertyId } = req.query;
-
-        let scope;
+        let scope = {};
 
         if (propertyId) {
             // 🔐 SECURITY CHECK
-            if (!req.user.propertyIds.includes(propertyId)) {
+            if (req.user.role === "owner" && !req.user.propertyIds?.includes(propertyId)) {
                 return res.status(403).json({
                     success: false,
                     message: "Unauthorized property access"
                 });
             }
-
             scope = { propertyId };
-        } else {
-            // All properties
-            scope = { propertyId: { $in: req.user.propertyIds } };
+        } else if (req.user.role === "owner") {
+            // All properties for this owner
+            scope = { propertyId: { $in: req.user.propertyIds || [] } };
+        } else if (req.user.role === "super_admin") {
+            // All properties globally
+            scope = {};
         }
 
         const [totalResidents, pendingRequests, payments] =

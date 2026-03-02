@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
 import Request from "../models/Request.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 export const getAllResidents = async (req, res, next) => {
     try {
@@ -141,32 +142,108 @@ export const updateResident = async (req, res, next) => {
 
     try {
         const { id } = req.params;
-        const { name, email, isActive } = req.body;
+        const { name, email, isActive, roomId } = req.body;
 
-        const resident = await User.findOne({ _id: id, role: "resident" }).session(session);
+        const resident = await User.findOne({
+            _id: id,
+            role: "resident"
+        }).session(session);
+
         if (!resident) {
             await session.abortTransaction();
-            return res.status(404).json({ success: false, message: "Resident not found" });
+            return res.status(404).json({
+                success: false,
+                message: "Resident not found"
+            });
         }
 
-        if (typeof name === "string" && name.trim()) resident.name = name.trim();
+        // Update basic fields
+        if (typeof name === "string" && name.trim()) {
+            resident.name = name.trim();
+        }
 
         if (typeof email === "string" && email.trim()) {
             const normalizedEmail = email.toLowerCase().trim();
-            const existing = await User.findOne({ email: normalizedEmail, _id: { $ne: id } }).session(session);
+            const existing = await User.findOne({
+                email: normalizedEmail,
+                _id: { $ne: id }
+            }).session(session);
+
             if (existing) {
                 await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "Email already exists" });
+                return res.status(400).json({
+                    success: false,
+                    message: "Email already exists"
+                });
             }
+
             resident.email = normalizedEmail;
         }
 
-        if (typeof isActive === "boolean") resident.isActive = isActive;
+        if (typeof isActive === "boolean") {
+            resident.isActive = isActive;
+        }
+
+        /* =========================
+           ROOM TRANSFER LOGIC
+        ========================== */
+
+        if (roomId && roomId !== String(resident.roomId)) {
+
+            const oldRoom = resident.roomId
+                ? await Room.findById(resident.roomId).session(session)
+                : null;
+
+            const newRoom = await Room.findOne({
+                _id: roomId,
+                propertyId: req.user.propertyId
+            }).session(session);
+
+            if (!newRoom) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid new room"
+                });
+            }
+
+            if (newRoom.maintenanceMode) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Room under maintenance"
+                });
+            }
+
+            if (newRoom.occupiedBeds >= newRoom.totalBeds) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "New room is full"
+                });
+            }
+
+            // Decrement old room
+            if (oldRoom && oldRoom.occupiedBeds > 0) {
+                oldRoom.occupiedBeds -= 1;
+                await oldRoom.save({ session });
+            }
+
+            // Increment new room
+            newRoom.occupiedBeds += 1;
+            await newRoom.save({ session });
+
+            resident.roomId = newRoom._id;
+        }
 
         await resident.save({ session });
         await session.commitTransaction();
 
-        return res.json({ success: true, resident });
+        return res.json({
+            success: true,
+            data: resident
+        });
+
     } catch (err) {
         await session.abortTransaction();
         logger.error(`UPDATE RESIDENT ERROR: ${err.message}`);

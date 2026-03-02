@@ -2,10 +2,10 @@
 
 import { useProperty } from "@/context/PropertyContext";
 import { useEffect, useState } from "react";
-import api from "@/lib/api";
+import { api } from "@/lib/api";
 
 export function PropertySwitcher() {
-    const { selectedProperty, setSelectedProperty } = useProperty();
+    const { property, setCurrentProperty } = useProperty();
     const [properties, setProperties] = useState<any[]>([]);
 
     useEffect(() => {
@@ -27,8 +27,8 @@ export function PropertySwitcher() {
                 <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
             <select
-                value={selectedProperty || ""}
-                onChange={(e) => setSelectedProperty(e.target.value || null)}
+                value={property?._id || ""}
+                onChange={(e) => setCurrentProperty(e.target.value)}
                 style={{
                     paddingLeft: "28px",
                     paddingRight: "28px",

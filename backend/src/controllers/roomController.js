@@ -1,4 +1,5 @@
 ﻿import Room from "../models/rooms.js";
+import Bed from "../models/Bed.js";
 import logger from "../utils/logger.js";
 import mongoose from "mongoose";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
@@ -36,23 +37,39 @@ export const addRoom = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Room number already exists" });
         }
 
-        const room = await Room.create(
-            [{
-                propertyId: req.user.propertyId,   // 🔥 REQUIRED
-                roomNumber,
-                rent: Number(rent),
-                totalBeds: Number(totalBeds),
-                occupiedBeds: 0,
-                note: typeof note === "string" ? note : ""
-            }],
-            { session }
-        );
+        const roomData = {
+            propertyId: req.user.propertyId,
+            roomNumber,
+            rent: Number(rent),
+            totalBeds: Number(totalBeds),
+            occupiedBeds: 0,
+            note: typeof note === "string" ? note : ""
+        };
+
+        const [room] = await Room.create([roomData], { session });
+
+        // 🛏️ Create Bed documents automatically
+        const beds = [];
+        for (let i = 1; i <= Number(totalBeds); i++) {
+            beds.push({
+                propertyId: req.user.propertyId,
+                roomId: room._id,
+                bedNumber: `Bed ${String(i).padStart(2, '0')}`,
+                status: "available"
+            });
+        }
+
+        const createdBeds = await Bed.insertMany(beds, { session });
+
+        // Link beds back to room
+        room.beds = createdBeds.map(b => b._id);
+        await room.save({ session });
 
         await session.commitTransaction();
 
-        logger.info(`Room added: ${room[0].roomNumber}`);
+        logger.info(`Room added with ${totalBeds} beds: ${room.roomNumber}`);
 
-        return res.status(201).json({ success: true, room: room[0] });
+        return res.status(201).json({ success: true, room });
     } catch (err) {
         await session.abortTransaction();
         logger.error(`ADD ROOM ERROR: ${err.message}`);
@@ -65,8 +82,14 @@ export const addRoom = async (req, res, next) => {
 export const getAllRooms = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
-        const rooms = await Room.find(scope).sort({ createdAt: -1 }).lean();
-        return res.json({ success: true, rooms });
+        const rooms = await Room.find(scope)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({
+            success: true,
+            data: rooms   // ✅ unified response key
+        });
     } catch (err) {
         logger.error(`GET ROOMS ERROR: ${err.message}`);
         next(err);
@@ -122,7 +145,7 @@ export const deleteRoom = async (req, res, next) => {
     try {
         const { id } = req.params;
         const scope = buildPropertyFilter(req.user);
-        const room = await Room.findById(id, ...scope).session(session);
+        const room = await Room.findOne({ _id: id, ...scope }).session(session);
 
         if (!room) {
             await session.abortTransaction();

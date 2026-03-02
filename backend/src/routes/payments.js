@@ -7,13 +7,20 @@ import auth from "../middleware/auth.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
 import isAdmin from "../middleware/isAdmin.js";
 import { generateMonthlyRent } from "../controllers/paymentController.js";
+import { markPaymentPaid } from "../controllers/paymentController.js";
+import { getAllPayments } from "../controllers/paymentController.js";
+import { downloadInvoice } from "../controllers/paymentController.js";
 import Room from "../models/rooms.js";
 
 import authorize from "../middleware/authorize.js";
 
 
 const router = Router();
+router.patch("/:id/mark-paid", auth, isAdmin, markPaymentPaid);
 router.post("/generate-monthly", auth, isAdmin, generateMonthlyRent);
+router.get("/", auth, isAdmin, getAllPayments);
+router.patch("/:id/mark-paid", auth, isAdmin, markPaymentPaid);
+router.get("/:id/invoice", auth, authorize("owner"), downloadInvoice);
 router.get("/summary", auth, authorize("owner"), async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
@@ -224,7 +231,7 @@ router.put("/:id/paid", auth, authorize("owner"), async (req, res, next) => {
         }
 
         const scope = buildPropertyFilter(req.user);
-        const payment = await Payment.findById(id, ...scope);
+        const payment = await Payment.findOne({ _id: id, ...scope });
 
         if (!payment) {
             return res.status(404).json({ success: false, message: "Payment not found" });
@@ -256,7 +263,7 @@ router.delete("/:id", auth, authorize("owner"), async (req, res, next) => {
         }
 
         const scope = buildPropertyFilter(req.user);
-        const payment = await Payment.findById(id, ...scope);
+        const payment = await Payment.findOne({ _id: id, ...scope });
 
         if (!payment) {
             return res.status(404).json({ success: false, message: "Payment not found" });

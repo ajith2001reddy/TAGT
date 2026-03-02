@@ -18,7 +18,10 @@ const firebaseAuth = async (req, res, next) => {
 
     // 1️⃣ Verify Firebase token
     const decoded = await admin.auth().verifyIdToken(token);
-
+    console.log("---- TOKEN DEBUG ----");
+    console.log("Decoded UID:", decoded.uid);
+    console.log("Decoded Email:", decoded.email);
+    console.log("---------------------");
     // 2️⃣ Find user in DB
     const dbUser = await User.findOne({
       $or: [

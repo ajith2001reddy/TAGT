@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import api from "@/lib/api";
+import { api } from "@/lib/api";
 
 type AuthContextType = {
     user: User | null;
@@ -25,12 +25,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (firebaseUser) {
                 try {
-                    const { data } = await api.get("/auth/me");
+                    // 🔥 Force refresh token before calling backend
+                    await firebaseUser.getIdToken(true);
 
-                    // 🔥 Correct role extraction
+                    const { data } = await api.get("/auth/me");
                     setRole(data.data?.role || null);
 
-                } catch {
+                } catch (err: any) {
+                    if (err.response?.status !== 401) {
+                        console.error("Auth sync error:", err);
+                    }
                     setRole(null);
                 }
             } else {

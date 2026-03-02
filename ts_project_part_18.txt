@@ -1,232 +1,567 @@
 TS PROJECT PART 18 of 20
 ==============================
---- FILE: .\backend\src\analytics\maintenanceForecast.js ---
+--- FILE: .\backend\src\analytics\intelligenceEngine.js ---
+// src/analytics/intelligenceEngine.js
+// Phase 3 – Revenue forecast, occupancy trends, smart alerts
+import Payment from "../models/Payment.js";
+import Room from "../models/rooms.js";
+import User from "../models/User.js";
 import Request from "../models/Request.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
 
-// Function to get monthly maintenance costs for a specified number of months
-async function getMonthlyMaintenanceCosts(months = 6, req) {
-    const now = new Date();
-    const history = [];
-
-    const ranges = Array.from({ length: months }, (_, i) => {
-        const start = new Date(
-            now.getFullYear(),
-            now.getMonth() - (months - i),
-            1
-        );
-        const end = new Date(
-            now.getFullYear(),
-            now.getMonth() - (months - i) + 1,
-            0,
-            23,
-            59,
-            59
-        );
-        return { start, end };
-    });
-
+/* ─────────────────────────────────────────────────────
+   Revenue Forecast
+   Uses last 6 months of actual paid data,
+   linear regression to project next 3 months
+─────────────────────────────────────────────────────── */
+export const revenueForecast = async (req) => {
     const scope = buildPropertyFilter(req.user);
-    const requestsByMonth = await Promise.all(
-        ranges.map(({ start, end }) =>
-            Request.find(
-                { createdAt: { $gte: start, $lte: end }, ...scope },
-                "cost"
-            ).lean()
-        )
-    );
+    const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
 
-    ranges.forEach(({ start }, idx) => {
-        const totalCost = requestsByMonth[idx].reduce(
-            (sum, r) => sum + (r.cost || 0),
-            0
-        );
+    const history = await Payment.aggregate([
+        { $match: { ...pm, status: "paid" } },
+        { $group: { _id: "$month", collected: { $sum: "$amount" }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+    ]);
 
-        history.push({
-            month: start.toISOString().slice(0, 7),
-            cost: Number(totalCost.toFixed(2))
-        });
-    });
+    const last6 = history.slice(-6);
 
-    return history;
-}
+    // Linear regression y = mx + b
+    const n = last6.length;
+    let forecast = [];
+    let slope = 0, intercept = 0, trend = "stable";
 
-// Function to calculate cost trends from historical data
-function calculateCostTrend(data) {
-    if (data.length < 2) return 0;
-
-    let change = 0;
-    for (let i = 1; i < data.length; i++) {
-        change += data[i].cost - data[i - 1].cost;
+    if (n >= 2) {
+        const xs = last6.map((_, i) => i);
+        const ys = last6.map(d => d.collected);
+        const sumX = xs.reduce((a, b) => a + b, 0);
+        const sumY = ys.reduce((a, b) => a + b, 0);
+        const sumXY = xs.reduce((a, x, i) => a + x * ys[i], 0);
+        const sumX2 = xs.reduce((a, x) => a + x * x, 0);
+        slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        intercept = (sumY - slope * sumX) / n;
+        trend = slope > 50 ? "up" : slope < -50 ? "down" : "stable";
+    } else {
+        const avg = n ? last6[0].collected : 0;
+        slope = 0; intercept = avg;
     }
 
-    return change / (data.length - 1);
-}
-
-// Function to detect cost spikes based on historical data
-function detectSpikeRisk(history) {
-    if (history.length < 3) return "LOW";
-
-    const avg =
-        history.reduce((s, m) => s + m.cost, 0) / history.length;
-
-    const last = history[history.length - 1].cost;
-
-    if (last > avg * 1.4) return "HIGH";
-    if (last > avg * 1.2) return "MEDIUM";
-    return "LOW";
-}
-
-// Function to predict future maintenance costs
-async function predictMaintenanceCost(monthsAhead = 6) {
-    const history = await getMonthlyMaintenanceCosts(6);
-
-    if (!history.length) {
-        return {
-            history: [],
-            forecast: [],
-            meta: {
-                model: "Insufficient data",
-                generatedAt: new Date()
-            }
-        };
-    }
-
-    const trend = calculateCostTrend(history);
-    const spikeRisk = detectSpikeRisk(history);
-
-    let currentCost = history[history.length - 1].cost;
-    const forecast = [];
-
-    for (let i = 1; i <= monthsAhead; i++) {
-        currentCost = Math.max(0, currentCost + trend);
-
-        const date = new Date();
-        date.setMonth(date.getMonth() + i);
-
-        forecast.push({
-            month: date.toISOString().slice(0, 7),
-            predictedCost: Number(currentCost.toFixed(2))
-        });
+    // Project 3 months ahead
+    const lastMonth = last6.length ? last6[last6.length - 1]._id : new Date().toISOString().slice(0, 7);
+    for (let i = 1; i <= 3; i++) {
+        const d = new Date(lastMonth + "-01");
+        d.setMonth(d.getMonth() + i);
+        const projected = Math.max(0, Math.round(intercept + slope * (n + i - 1)));
+        forecast.push({ month: d.toISOString().slice(0, 7), projected, isForecast: true });
     }
 
     return {
-        history,
+        history: last6.map(d => ({ month: d._id, collected: d.collected, count: d.count })),
         forecast,
-        meta: {
-            trend: Number(trend.toFixed(2)),
-            spikeRisk,
-            generatedAt: new Date(),
-            model: "Linear Trend Projection"
-        }
+        trend,
+        avgMonthlyRevenue: n ? Math.round(last6.reduce((s, d) => s + d.collected, 0) / n) : 0,
+        generatedAt: new Date(),
     };
-}
+};
 
-export { predictMaintenanceCost };
+/* ─────────────────────────────────────────────────────
+   Occupancy Trends
+   Monthly resident count + occupancy % from payment history
+─────────────────────────────────────────────────────── */
+export const occupancyTrends = async (req) => {
+    const scope = buildPropertyFilter(req.user);
+    const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
 
---- END OF .\backend\src\analytics\maintenanceForecast.js ---
+    // Get current bed totals
+    const rooms = await Room.find(pm, "totalBeds occupiedBeds rent roomNumber").lean();
+    const totalBeds = rooms.reduce((s, r) => s + (r.totalBeds || 0), 0);
+    const currentOccupied = rooms.reduce((s, r) => s + (r.occupiedBeds || 0), 0);
 
---- FILE: .\backend\src\models\Property.js ---
+    // Revenue trend by month (proxy for occupancy trend)
+    const paymentsByMonth = await Payment.aggregate([
+        { $match: { ...pm } },
+        { $group: { _id: "$month", billed: { $sum: "$amount" }, paid: { $sum: { $cond: [{ $eq: ["$status", "paid"] }, "$amount", 0] } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+        { $limit: 12 },
+    ]);
+
+    // Resident growth – residents created per month
+    const residentsByMonth = await User.aggregate([
+        { $match: { ...pm, role: "resident" } },
+        { $group: { _id: { $substr: ["$createdAt", 0, 7] }, newResidents: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+    ]);
+
+    const residentMap = {};
+    residentsByMonth.forEach(r => { residentMap[r._id] = r.newResidents; });
+
+    // Per-room breakdown
+    const roomBreakdown = rooms.map(r => ({
+        roomNumber: r.roomNumber,
+        totalBeds: r.totalBeds || 0,
+        occupiedBeds: r.occupiedBeds || 0,
+        occupancyRate: r.totalBeds ? Number(((r.occupiedBeds / r.totalBeds) * 100).toFixed(0)) : 0,
+        rent: r.rent || 0,
+    }));
+
+    return {
+        current: {
+            totalBeds,
+            occupiedBeds: currentOccupied,
+            occupancyRate: totalBeds ? Number(((currentOccupied / totalBeds) * 100).toFixed(1)) : 0,
+        },
+        monthlyRevenueTrend: paymentsByMonth.map(m => ({
+            month: m._id,
+            billed: m.billed,
+            paid: m.paid,
+            collectionRate: m.billed ? Number(((m.paid / m.billed) * 100).toFixed(0)) : 0,
+            newResidents: residentMap[m._id] || 0,
+        })),
+        roomBreakdown,
+        generatedAt: new Date(),
+    };
+};
+
+/* ─────────────────────────────────────────────────────
+   Smart Alerts
+   Auto-detected problems that need owner attention
+─────────────────────────────────────────────────────── */
+export const smartAlerts = async (req) => {
+    const scope = buildPropertyFilter(req.user);
+    const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
+    const alerts = [];
+
+    const [rooms, payments, residents, requests] = await Promise.all([
+        Room.find(pm).lean(),
+        Payment.find(pm).lean(),
+        User.find({ ...pm, role: "resident", isActive: true }).lean(),
+        Request.find({ ...pm, status: { $in: ["pending", "open"] } }).lean(),
+    ]);
+
+    const now = new Date();
+    const totalBeds = rooms.reduce((s, r) => s + (r.totalBeds || 0), 0);
+    const occupiedBeds = rooms.reduce((s, r) => s + (r.occupiedBeds || 0), 0);
+    const occupancyRate = totalBeds ? (occupiedBeds / totalBeds) * 100 : 0;
+
+    // 1. Low occupancy
+    if (occupancyRate < 60) {
+        alerts.push({ id: "low-occupancy", severity: "critical", title: "Critical Low Occupancy", description: `Only ${occupancyRate.toFixed(0)}% of beds are occupied. You're losing ₹${Math.round((totalBeds - occupiedBeds) * (rooms.reduce((s, r) => s + (r.rent || 0), 0) / (rooms.length || 1)))} this month.`, action: "Review pricing and run promotions" });
+    } else if (occupancyRate < 80) {
+        alerts.push({ id: "moderate-occupancy", severity: "warning", title: "Below Target Occupancy", description: `Occupancy at ${occupancyRate.toFixed(0)}% — below the 80% healthy threshold.`, action: "Consider targeted outreach or pricing adjustments" });
+    }
+
+    // 2. Overdue payments cluster
+    const overduePayments = payments.filter(p => p.status === "overdue");
+    const overdueAmount = overduePayments.reduce((s, p) => s + (p.amount || 0), 0);
+    if (overduePayments.length >= 3) {
+        alerts.push({ id: "overdue-cluster", severity: "critical", title: `${overduePayments.length} Overdue Bills`, description: `₹${overdueAmount.toLocaleString()} in overdue rent. Multiple residents behind may indicate financial distress.`, action: "Send reminders and initiate collection process" });
+    } else if (overduePayments.length >= 1) {
+        alerts.push({ id: "overdue-bills", severity: "warning", title: `${overduePayments.length} Overdue Bill${overduePayments.length > 1 ? "s" : ""}`, description: `₹${overdueAmount.toLocaleString()} in overdue rent needs collection.`, action: "Send payment reminder emails" });
+    }
+
+    // 3. High maintenance load
+    const pendingRequests = requests.filter(r => r.status === "pending");
+    if (pendingRequests.length >= 5) {
+        alerts.push({ id: "maintenance-overload", severity: "critical", title: "Maintenance Overload", description: `${pendingRequests.length} open maintenance requests. High unresolved issues affect resident satisfaction and churn.`, action: "Prioritize and resolve maintenance requests" });
+    } else if (pendingRequests.length >= 2) {
+        alerts.push({ id: "pending-maintenance", severity: "warning", title: `${pendingRequests.length} Pending Requests`, description: "Open maintenance requests from residents need attention.", action: "Review and update request statuses" });
+    }
+
+    // 4. Collection rate drop
+    const currentMonth = now.toISOString().slice(0, 7);
+    const monthPayments = payments.filter(p => p.month === currentMonth);
+    if (monthPayments.length > 0) {
+        const collected = monthPayments.filter(p => p.status === "paid").reduce((s, p) => s + (p.amount || 0), 0);
+        const billed = monthPayments.reduce((s, p) => s + (p.amount || 0), 0);
+        const rate = billed ? (collected / billed) * 100 : 0;
+        if (rate < 50 && monthPayments.length >= 3) {
+            alerts.push({ id: "low-collection", severity: "critical", title: "Low Collection Rate This Month", description: `Only ${rate.toFixed(0)}% collected this month. Most residents haven't paid.`, action: "Send urgent payment reminders" });
+        }
+    }
+
+    // 5. Rooms in maintenance mode
+    const maintenanceRooms = rooms.filter(r => r.maintenanceMode);
+    if (maintenanceRooms.length > 0) {
+        alerts.push({ id: "maintenance-rooms", severity: "info", title: `${maintenanceRooms.length} Room${maintenanceRooms.length > 1 ? "s" : ""} in Maintenance Mode`, description: `${maintenanceRooms.map(r => `Room ${r.roomNumber}`).join(", ")} cannot accept new residents.`, action: "Complete maintenance and re-enable rooms" });
+    }
+
+    // 6. No bills generated this month
+    if (residents.length > 0 && monthPayments.length === 0) {
+        alerts.push({ id: "no-bills", severity: "warning", title: "No Bills Generated This Month", description: `You have ${residents.length} active residents but no rent bills for ${currentMonth}.`, action: "Run monthly rent generation" });
+    }
+
+    if (alerts.length === 0) {
+        alerts.push({ id: "all-clear", severity: "info", title: "All Clear", description: "No critical issues detected. Your property is performing well.", action: "Continue monitoring" });
+    }
+
+    return { alerts, generatedAt: new Date(), totalAlerts: alerts.length };
+};
+
+--- END OF .\backend\src\analytics\intelligenceEngine.js ---
+
+--- FILE: .\backend\src\middleware\auth.js ---
+import admin from "../config/firebase.js";
+import User from "../models/User.js";
+
+const firebaseAuth = async (req, res, next) => {
+    let token; // ✅ declare outside
+
+    try {
+        const header = req.headers.authorization;
+
+        if (!header || !header.startsWith("Bearer ")) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized"
+            });
+        }
+
+        token = header.split(" ")[1]; // assign here
+
+        // 1️⃣ Verify Firebase token
+        const decoded = await admin.auth().verifyIdToken(token);
+
+        // 2️⃣ Find user in DB
+        const dbUser = await User.findOne({
+            $or: [
+                { firebaseUid: decoded.uid },
+                { email: decoded.email?.toLowerCase() }
+            ]
+        });
+
+        if (!dbUser) {
+            return res.status(401).json({
+                success: false,
+                message: "User not registered in system"
+            });
+        }
+
+        if (!dbUser.isActive) {
+            return res.status(403).json({
+                success: false,
+                message: "Account inactive"
+            });
+        }
+
+        // 3️⃣ Link firebaseUid if missing
+        if (!dbUser.firebaseUid) {
+            await User.findByIdAndUpdate(dbUser._id, {
+                firebaseUid: decoded.uid
+            });
+        }
+
+        // 4️⃣ Attach user
+        req.user = dbUser;
+
+        next();
+
+    } catch (error) {
+        console.log("Token received:", token);
+        console.error("firebaseAuth error:", error.message);
+
+        return res.status(401).json({
+            success: false,
+            message: "Invalid or expired token"
+        });
+    }
+};
+
+export default firebaseAuth;
+--- END OF .\backend\src\middleware\auth.js ---
+
+--- FILE: .\backend\src\routes\requests.js ---
+import { Router } from "express";
 import mongoose from "mongoose";
 
-const propertySchema = new mongoose.Schema(
-    {
-        name: { type: String, required: true, trim: true, index: true },
-        type: { type: String, enum: ["pg", "hotel"], required: true, index: true },
-        owner: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            default: null,
-            index: true
-        },
-        address: { type: String, required: true, trim: true },
-        isActive: { type: Boolean, default: true, index: true }
-    },
-    { timestamps: true }
-);
+import auth from "../middleware/auth.js";
+import {
+    createRequest,
+    getAllRequests,
+    getMyRequests,
+    updateRequestStatus,
+    deleteRequest,
+} from "../controllers/requestController.js";
 
-propertySchema.index({ owner: 1, isActive: 1 });
+const router = Router();
 
-export default mongoose.model("Property", propertySchema);
+/**
+ * Resident creates request
+ */
+router.post("/", auth, createRequest);
 
---- END OF .\backend\src\models\Property.js ---
+/**
+ * Resident views own requests
+ */
+router.get("/me", auth, getMyRequests);
 
---- FILE: .\web\.env.local ---
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAN4ROuHsxJSyazZq3ZGtQAT4BGvhfw3E8
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tagt-auth-a9c79.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=tagt-auth-a9c79
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tagt-auth-a9c79.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=1003146198453
-NEXT_PUBLIC_FIREBASE_APP_ID=1:1003146198453:web:44b3379351082f099aedfc
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
---- END OF .\web\.env.local ---
+/**
+ * Admin views all requests
+ */
+router.get("/", auth, getAllRequests);
 
---- FILE: .\web\app\owner\payments\page.tsx ---
+/**
+ * Admin updates request status
+ */
+router.put("/:id/status", auth, (req, res, next) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid request ID",
+        });
+    }
+
+    return updateRequestStatus(req, res, next);
+});
+
+/**
+ * Admin deletes request
+ */
+router.delete("/:id", auth, (req, res, next) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid request ID",
+        });
+    }
+
+    return deleteRequest(req, res, next);
+});
+
+export default router;
+
+--- END OF .\backend\src\routes\requests.js ---
+
+--- FILE: .\web\tsconfig.json ---
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+
+--- END OF .\web\tsconfig.json ---
+
+--- FILE: .\web\app\owner\subscription\page.tsx ---
 "use client";
 
-import { usePayments } from "@/features/owner/usePayments";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
 
-export default function PaymentsPage() {
-    const { payments, loading } = usePayments();
+interface PlanLimits { properties: number; rooms: number; residents: number; reports: boolean; analytics: boolean; emailReminders: boolean; }
+interface Plan { id: string; name: string; price: number; priceLabel: string; limits: PlanLimits; features: string[]; highlight: boolean; }
+interface MyPlan { plan: string; limits: PlanLimits; status: string; currentPeriodEnd: string | null; usage: { residents: number; rooms: number }; }
 
-    if (loading) return <p>Loading payments...</p>;
-
+function UsageBar({ used, max, label }: { used: number; max: number; label: string }) {
+    const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
+    const color = pct >= 90 ? "#ff5252" : pct >= 70 ? "#fbbf24" : "#34d399";
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-bold">Payments</h1>
-
-            <div className="space-y-3">
-                {payments.map((payment) => (
-                    <div
-                        key={payment._id}
-                        className="flex justify-between items-center bg-neutral-900 p-4 rounded border border-white/10"
-                    >
-                        <div>
-                            <p className="font-semibold">
-                                {payment.resident?.name || "Resident"}
-                            </p>
-                            <p className="text-sm text-white/50">
-                                {payment.month} • ₹{payment.amount}
-                            </p>
-                        </div>
-
-                        <StatusBadge status={payment.status} />
-                    </div>
-                ))}
+        <div style={{ marginBottom: "14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", fontSize: "12px" }}>
+                <span style={{ color: "var(--text-secondary)" }}>{label}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color }}>{used} / {max === 9999 ? "∞" : max}</span>
+            </div>
+            <div style={{ height: "5px", background: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${max === 9999 ? Math.min(pct, 30) : pct}%`, background: color, borderRadius: "3px", transition: "width 0.8s ease" }} />
             </div>
         </div>
     );
 }
---- END OF .\web\app\owner\payments\page.tsx ---
 
---- FILE: .\web\features\owner\rooms.service.ts ---
+const PLAN_BADGE_COLOR: Record<string, string> = { free: "var(--text-tertiary)", pro: "var(--accent-primary)", enterprise: "#a78bfa" };
+
+export default function SubscriptionPage() {
+    const [myPlan, setMyPlan] = useState<MyPlan | null>(null);
+    const [plans, setPlans] = useState<Plan[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [upgrading, setUpgrading] = useState<string | null>(null);
+    const [upgraded, setUpgraded] = useState(false);
+
+    async function fetchData() {
+        const [planRes, myRes] = await Promise.all([
+            api.get("/v2/subscription/plans"),
+            api.get("/v2/subscription/my-plan"),
+        ]);
+        setPlans(planRes.data.data);
+        setMyPlan(myRes.data.data);
+        setLoading(false);
+    }
+    useEffect(() => { fetchData().catch(console.error); }, []);
+
+    async function handleUpgrade(planId: string) {
+        if (planId === myPlan?.plan) return;
+        setUpgrading(planId);
+        try {
+            await api.post("/v2/subscription/upgrade", { plan: planId });
+            setUpgraded(true);
+            await fetchData();
+            setTimeout(() => setUpgraded(false), 3000);
+        } catch (e) { console.error(e); }
+        finally { setUpgrading(null); }
+    }
+
+    return (
+        <div className="animate-fade-in">
+            <div style={{ marginBottom: "32px" }}>
+                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Platform Billing</div>
+                <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Subscription</h1>
+                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Manage your plan and feature access</p>
+            </div>
+
+            {upgraded && (
+                <div className="animate-fade-in" style={{ background: "var(--green-bg)", border: "1px solid rgba(0,230,118,0.2)", borderRadius: "12px", padding: "14px 18px", marginBottom: "20px", color: "var(--green)", fontSize: "13px", display: "flex", gap: "10px" }}>
+                    ✅ Plan updated successfully!
+                </div>
+            )}
+
+            {/* Current plan status */}
+            {!loading && myPlan && (
+                <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px", marginBottom: "24px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+                        <div>
+                            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "6px" }}>Current Plan</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 700, textTransform: "capitalize", color: PLAN_BADGE_COLOR[myPlan.plan] }}>{myPlan.plan}</div>
+                                <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", background: PLAN_BADGE_COLOR[myPlan.plan] + "15", color: PLAN_BADGE_COLOR[myPlan.plan], border: `1px solid ${PLAN_BADGE_COLOR[myPlan.plan]}30`, padding: "3px 9px", borderRadius: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>{myPlan.status}</span>
+                            </div>
+                        </div>
+                        {myPlan.currentPeriodEnd && <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>Renews {new Date(myPlan.currentPeriodEnd).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</div>}
+                    </div>
+                    <UsageBar used={myPlan.usage.rooms} max={myPlan.limits.rooms} label="Rooms" />
+                    <UsageBar used={myPlan.usage.residents} max={myPlan.limits.residents} label="Residents" />
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "8px" }}>
+                        {[
+                            { label: "Analytics", enabled: myPlan.limits.analytics },
+                            { label: "Reports", enabled: myPlan.limits.reports },
+                            { label: "Email Reminders", enabled: myPlan.limits.emailReminders },
+                        ].map(({ label, enabled }) => (
+                            <span key={label} style={{ fontSize: "11px", fontFamily: "var(--font-mono)", padding: "4px 10px", borderRadius: "7px", background: enabled ? "var(--green-bg)" : "var(--bg-elevated)", color: enabled ? "var(--green)" : "var(--text-tertiary)", border: `1px solid ${enabled ? "rgba(0,230,118,0.2)" : "var(--border-subtle)"}` }}>
+                                {enabled ? "✓" : "✗"} {label}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Plan cards */}
+            {loading
+                ? <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>{Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" style={{ height: "380px", borderRadius: "18px" }} />)}</div>
+                : (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
+                        {plans.map((plan, i) => {
+                            const isCurrent = myPlan?.plan === plan.id;
+                            const isHighlight = plan.highlight;
+                            const accentColor = plan.id === "enterprise" ? "#a78bfa" : plan.id === "pro" ? "var(--accent-primary)" : "var(--text-tertiary)";
+                            return (
+                                <div key={plan.id} className="animate-fade-up" style={{ animationDelay: `${i * 0.07}s` }}>
+                                    <div style={{
+                                        background: isHighlight ? "linear-gradient(135deg, rgba(0,212,255,0.06), var(--bg-card))" : "var(--bg-card)",
+                                        border: `1px solid ${isCurrent ? accentColor + "80" : isHighlight ? "rgba(0,212,255,0.2)" : "var(--border-default)"}`,
+                                        borderRadius: "20px", padding: "28px", position: "relative", overflow: "hidden",
+                                        transition: "all 0.25s ease",
+                                    }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = `0 16px 48px rgba(0,0,0,0.4)`; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
+                                    >
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: `linear-gradient(90deg, transparent, ${accentColor}80, transparent)` }} />
+                                        {isHighlight && <div style={{ position: "absolute", top: "14px", right: "14px", fontSize: "10px", fontFamily: "var(--font-mono)", background: "var(--accent-primary)", color: "#000", fontWeight: 700, padding: "3px 9px", borderRadius: "5px", letterSpacing: "0.08em" }}>POPULAR</div>}
+
+                                        <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 700, marginBottom: "4px", color: accentColor }}>{plan.name}</div>
+                                        <div style={{ fontFamily: "var(--font-display)", fontSize: "30px", fontWeight: 700, letterSpacing: "-0.04em", marginBottom: "20px" }}>{plan.priceLabel}</div>
+
+                                        <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                                            {plan.features.map(f => (
+                                                <li key={f} style={{ fontSize: "13px", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2.5" style={{ marginTop: "2px", flexShrink: 0 }}><polyline points="20 6 9 17 4 12" /></svg>
+                                                    {f}
+                                                </li>
+                                            ))}
+                                        </ul>
+
+                                        <button
+                                            onClick={() => handleUpgrade(plan.id)}
+                                            disabled={isCurrent || upgrading === plan.id}
+                                            style={{
+                                                width: "100%", padding: "12px", borderRadius: "10px", border: "none", cursor: isCurrent ? "default" : "pointer",
+                                                background: isCurrent ? "var(--bg-elevated)" : isHighlight ? "var(--accent-primary)" : `${accentColor}18`,
+                                                color: isCurrent ? "var(--text-tertiary)" : isHighlight ? "#000" : accentColor,
+                                                fontWeight: 700, fontSize: "13px",
+                                                fontFamily: "var(--font-display)", transition: "all 0.15s",
+                                            }}
+                                        >
+                                            {upgrading === plan.id ? "Upgrading…" : isCurrent ? "Current Plan ✓" : plan.id === "free" ? "Downgrade" : `Upgrade to ${plan.name}`}
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )
+            }
+
+            <div style={{ marginTop: "28px", padding: "16px 20px", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", borderRadius: "12px", fontSize: "13px", color: "var(--text-secondary)" }}>
+                💡 Stripe billing integration coming soon. Plan changes are currently applied instantly. Contact support for invoices.
+            </div>
+        </div>
+    );
+}
+
+--- END OF .\web\app\owner\subscription\page.tsx ---
+
+--- FILE: .\web\features\owner\analytics.service.ts ---
 import api from "@/lib/api";
 
-export type Room = {
-    _id: string;
-    roomNumber: string;
-    rent: number;
-    totalBeds: number;
-    occupiedBeds: number;
+export type KPIResponse = {
+    occupancy: {
+        rate: number;
+        occupiedBeds: number;
+        totalBeds: number;
+    };
+    payments: {
+        collectionRate: number;
+        totalBilled: number;
+        totalCollected: number;
+    };
+    maintenance: {
+        avgResolutionTime: number;
+        resolvedCount: number;
+    };
 };
 
-export async function fetchRooms(): Promise<Room[]> {
-    const { data } = await api.get("/rooms");
-    return data.rooms;
+export async function fetchKPIs(): Promise<KPIResponse> {
+    const { data } = await api.get("/analytics/kpis");
+    return data.data;
 }
-
-export async function createRoom(payload: {
-    roomNumber: string;
-    rent: number;
-    totalBeds: number;
-}) {
-    const { data } = await api.post("/rooms", payload);
-    return data.room;
-}
-
-export async function deleteRoom(id: string) {
-    await api.delete(`/rooms/${id}`);
-}
---- END OF .\web\features\owner\rooms.service.ts ---
+--- END OF .\web\features\owner\analytics.service.ts ---
 

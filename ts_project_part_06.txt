@@ -615,347 +615,509 @@ TS PROJECT PART 6 of 20
 }
 --- END OF .\.vs\TAGT.slnx\v18\DocumentLayout.backup.json ---
 
---- FILE: .\backend\src\controllers\residentController.js ---
-﻿import logger from "../utils/logger.js";
-import mongoose from "mongoose";
-
-import User from "../models/User.js";
-import Room from "../models/rooms.js";
+--- FILE: .\backend\src\controllers\paymentController.js ---
 import Payment from "../models/Payment.js";
-import Request from "../models/Request.js";
+import User from "../models/User.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
+import { generateInvoicePDF } from "../utils/invoiceGenerator.js";
 
-export const getAllResidents = async (req, res, next) => {
+export const generateMonthlyRent = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
+        const month = new Date().toISOString().slice(0, 7);
+
         const residents = await User.find({
             role: "resident",
+            isActive: true,
             ...scope
-        })
-            .populate("roomId", "roomNumber totalBeds occupiedBeds rent")
-            .sort({ createdAt: -1 })
-            .lean();
+        }).lean();
 
-        return res.json({ success: true, residents });
-    } catch (err) {
-        logger.error(`GET RESIDENTS ERROR: ${err.message}`);
-        next(err);
-    }
-};
+        let created = 0;
 
-export const getResidentProfile = async (req, res, next) => {
-    try {
-        const resident = await User.findOne({ _id: req.params.id, role: "resident" })
-            .populate("roomId", "roomNumber rent")
-            .lean();
+        for (const resident of residents) {
+            const exists = await Payment.findOne({
+                propertyId: resident.propertyId,
+                resident: resident._id,
+                month
+            });
 
-        if (!resident) {
-            return res.status(404).json({ success: false, message: "Resident not found" });
+            if (!exists) {
+                await Payment.create({
+                    propertyId: resident.propertyId,
+                    resident: resident._id,
+                    amount: resident.rent || 0,
+                    type: "rent",
+                    status: "pending",
+                    month,
+                    dueDate: new Date(new Date().getFullYear(), new Date().getMonth(), 5)
+                });
+                created++;
+            }
         }
 
-        const [paymentSummary, requestSummary] = await Promise.all([
-            Payment.aggregate([
-                { $match: { resident: resident._id } },
-                { $group: { _id: "$status", count: { $sum: 1 }, total: { $sum: "$amount" } } }
-            ]),
-            Request.aggregate([
-                { $match: { resident: resident._id } },
-                { $group: { _id: "$status", count: { $sum: 1 } } }
-            ])
-        ]);
+        return res.json({
+            success: true,
+            message: `Generated ${created} rent payments`,
+            month
+        });
 
-        return res.json({ success: true, resident, paymentSummary, requestSummary });
     } catch (err) {
-        logger.error(`GET RESIDENT PROFILE ERROR: ${err.message}`);
         next(err);
     }
 };
 
-export const addResident = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
+export const markPaymentPaid = async (req, res, next) => {
     try {
-        const { name, email, password, roomId } = req.body;
+        const { id } = req.params;
 
-        if (!name || !email || !password || !roomId) {
-            await session.abortTransaction();
-            return res.status(400).json({
+        const payment = await Payment.findById(id);
+        if (!payment) {
+            return res.status(404).json({
                 success: false,
-                message: "Name, email, password, and room are required"
+                message: "Payment not found"
             });
         }
 
-        const normalizedEmail = email.toLowerCase().trim();
+        payment.status = "paid";
+        payment.paidAt = new Date();
 
-        const existingUser = await User.findOne({ email: normalizedEmail }).session(session);
-        if (existingUser) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Email already exists" });
-        }
+        await payment.save();
 
-        const roomDoc = await Room.findOne({
-            _id: roomId,
-            propertyId: req.user.propertyId
-        }).session(session);
-
-        if (!roomDoc) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Invalid room selected" });
-        }
-
-        if (roomDoc.maintenanceMode) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Room in maintenance mode" });
-        }
-
-        if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Room is full" });
-        }
-
-        const resident = await User.create([{
-            name,
-            email: normalizedEmail,
-            password,
-            role: "resident",
-            propertyId: req.user.propertyId,
-            roomId: roomDoc._id,
-            isActive: true
-        }], { session });
-
-        roomDoc.occupiedBeds += 1;
-        await roomDoc.save({ session });
-
-        const now = new Date();
-        const dueDate = new Date(now.getFullYear(), now.getMonth(), 5);
-
-        await Payment.create([{
-            propertyId: req.user.propertyId,
-            resident: resident[0]._id,
-            room: roomDoc._id,
-            amount: roomDoc.rent,
-            type: "rent",
-            status: "pending",
-            month: now.toISOString().slice(0, 7),
-            dueDate
-        }], { session });
-
-        await session.commitTransaction();
-
-        return res.status(201).json({ success: true, resident: resident[0] });
-
+        return res.json({
+            success: true,
+            data: payment
+        });
     } catch (err) {
-        await session.abortTransaction();
-        logger.error(`ADD RESIDENT ERROR: ${err.message}`);
         next(err);
-    } finally {
-        session.endSession();
     }
 };
 
-export const updateResident = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
+export const getAllPayments = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const { name, email, isActive } = req.body;
+        const scope = buildPropertyFilter(req.user);
 
-        const resident = await User.findOne({ _id: id, role: "resident" }).session(session);
-        if (!resident) {
-            await session.abortTransaction();
-            return res.status(404).json({ success: false, message: "Resident not found" });
-        }
+        const payments = await Payment.find(scope)
+            .populate("resident", "name email")
+            .sort({ createdAt: -1 })
+            .lean();
 
-        if (typeof name === "string" && name.trim()) resident.name = name.trim();
-
-        if (typeof email === "string" && email.trim()) {
-            const normalizedEmail = email.toLowerCase().trim();
-            const existing = await User.findOne({ email: normalizedEmail, _id: { $ne: id } }).session(session);
-            if (existing) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "Email already exists" });
-            }
-            resident.email = normalizedEmail;
-        }
-
-        if (typeof isActive === "boolean") resident.isActive = isActive;
-
-        await resident.save({ session });
-        await session.commitTransaction();
-
-        return res.json({ success: true, resident });
+        return res.json({
+            success: true,
+            data: payments   // ✅ standardized
+        });
     } catch (err) {
-        await session.abortTransaction();
-        logger.error(`UPDATE RESIDENT ERROR: ${err.message}`);
         next(err);
-    } finally {
-        session.endSession();
     }
-};
-
-export const deleteResident = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        const { id } = req.params;
-
-        const resident = await User.findById(id).session(session);
-        if (!resident) {
-            await session.abortTransaction();
-            return res.status(404).json({ success: false, message: "Resident not found" });
-        }
-
-        if (resident.roomId) {
-            const room = await Room.findById(resident.roomId).session(session);
-            if (room && room.occupiedBeds > 0) {
-                room.occupiedBeds -= 1;
-                await room.save({ session });
-            }
-        }
-
-        await Payment.deleteMany({ resident: resident._id }).session(session);
-        await resident.deleteOne({ session });
-        await session.commitTransaction();
-
-        return res.json({ success: true, message: "Resident deleted successfully" });
-    } catch (err) {
-        await session.abortTransaction();
-        logger.error(`DELETE RESIDENT ERROR: ${err.message}`);
-        next(err);
-    } finally {
-        session.endSession();
-    }
-};
-
---- END OF .\backend\src\controllers\residentController.js ---
-
---- FILE: .\backend\src\routes\index.js ---
-﻿import { Router } from "express";
-
-import authRoutes from "./auth.js";
-import ownerRoutes from "./owner.js";
-import roomRoutes from "./rooms.js";
-import paymentRoutes from "./payments.js";
-import residentRoutes from "./resident.js";
-import analyticsRoutes from "./analytics.js";
-import requestRoutes from "./requests.js";
-import v2Routes from "./v2/index.js";
-import adminRoutes from "./admin.js";
-import residentDashboardRoutes from "./residentDashboard.js";
-
-const router = Router();
-
-router.use("/auth", authRoutes);           // POST /api/auth/login
-router.use("/owner", ownerRoutes);
-router.use("/admin", adminRoutes);
-router.use("/rooms", roomRoutes);
-router.use("/payments", paymentRoutes);
-router.use("/owner/resident", residentRoutes);
-router.use("/analytics", analyticsRoutes);
-router.use("/requests", requestRoutes);
-router.use("/v2", v2Routes);
-router.use("/resident", residentDashboardRoutes);
-
-router.get("/", (req, res) => {
-    res.json({ success: true, message: "TAGT API is running" });
-});
-
-router.get("/health", (req, res) => {
-    res.status(200).json({
-        status: "OK",
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-    });
-});
-
-export default router;
---- END OF .\backend\src\routes\index.js ---
-
---- FILE: .\web\tsconfig.json ---
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": ["node_modules"]
 }
 
---- END OF .\web\tsconfig.json ---
+export const downloadInvoice = async (req, res, next) => {
+    try {
+        const { id } = req.params;
 
---- FILE: .\web\components\layout\DashboardShell.tsx ---
+        const payment = await Payment.findById(id)
+            .populate({ path: "resident", select: "name email", options: { strictPopulate: false } });
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: "Payment not found"
+            });
+        }
+
+        generateInvoicePDF(payment, res);
+
+    } catch (err) {
+        next(err);
+    }
+}; 
+--- END OF .\backend\src\controllers\paymentController.js ---
+
+--- FILE: .\backend\src\models\Property.js ---
+import mongoose from "mongoose";
+
+const propertySchema = new mongoose.Schema(
+    {
+        name: { type: String, required: true, trim: true, index: true },
+        type: { type: String, enum: ["pg", "hotel"], required: true, index: true },
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+            index: true
+        },
+        address: { type: String, required: true, trim: true },
+        isActive: { type: Boolean, default: true, index: true }
+    },
+    { timestamps: true }
+);
+
+propertySchema.index({ owner: 1, isActive: 1 });
+
+export default mongoose.model("Property", propertySchema);
+
+--- END OF .\backend\src\models\Property.js ---
+
+--- FILE: .\backend\src\utils\emailService.js ---
+import nodemailer from "nodemailer";
+
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+let transporter = null;
+
+if (EMAIL_USER && EMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+        service: "gmail",
+        firebaseAuth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS
+        }
+    });
+}
+
+async function sendEmail(to, subject, html) {
+    if (!transporter) return;
+
+    await transporter.sendMail({
+        from: `"TAGT Property Management" <${EMAIL_USER}>`,
+        to,
+        subject,
+        html
+    });
+}
+
+function sendWelcomeEmail(email, name, password) {
+    return sendEmail(
+        email,
+        "Welcome to TAGT - Your Account Details",
+        `
+        <div style="font-family:Arial,max-width:600px;margin:auto">
+            <h2 style="color:#2563eb">Welcome to TAGT</h2>
+            <p>Hello ${name},</p>
+            <p>Your account has been created.</p>
+            <div style="background:#f3f4f6;padding:16px;border-radius:6px">
+                <p><b>Email:</b> ${email}</p>
+                <p><b>Password:</b> ${password}</p>
+            </div>
+            <a href="${FRONTEND_URL}"
+               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">
+                Login
+            </a>
+        </div>
+        `
+    );
+}
+
+function sendStatusUpdateEmail(email, requestMessage, newStatus, adminNote) {
+    return sendEmail(
+        email,
+        "Maintenance Request Update",
+        `
+        <div style="font-family:Arial,max-width:600px;margin:auto">
+            <h2 style="color:#2563eb">Request Update</h2>
+            <p><b>Request:</b> ${requestMessage}</p>
+            <p><b>Status:</b> ${newStatus}</p>
+            <p><b>Note:</b> ${adminNote || "No notes"}</p>
+            <a href="${FRONTEND_URL}/resident"
+               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">
+                View Request
+            </a>
+        </div>
+        `
+    );
+}
+
+function sendPaymentReminder(email, name, amount, dueDate) {
+    return sendEmail(
+        email,
+        "Payment Reminder",
+        `
+        <div style="font-family:Arial,max-width:600px;margin:auto">
+            <h2 style="color:#dc2626">Payment Reminder</h2>
+            <p>Hello ${name},</p>
+            <p><b>Amount:</b> $${amount}</p>
+            <p><b>Due:</b> ${new Date(dueDate).toLocaleDateString()}</p>
+            <a href="${FRONTEND_URL}/resident/payments"
+               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#dc2626;color:#fff;border-radius:6px;text-decoration:none">
+                Pay Now
+            </a>
+        </div>
+        `
+    );
+}
+
+export {
+    sendEmail,
+    sendWelcomeEmail,
+    sendStatusUpdateEmail,
+    sendPaymentReminder
+};
+
+--- END OF .\backend\src\utils\emailService.js ---
+
+--- FILE: .\web\app\api\geocode\route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(req: NextRequest) {
+    const { searchParams } = req.nextUrl;
+    const q = searchParams.get("q") || "";
+    const type = searchParams.get("type") || "search"; // "search" or "reverse"
+
+    if (!q) return NextResponse.json([]);
+
+    try {
+        const url =
+            type === "reverse"
+                ? `https://nominatim.openstreetmap.org/reverse?lat=${q}&format=json`
+                : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&countrycodes=in&limit=6&addressdetails=0`;
+
+        const res = await fetch(url, {
+            headers: {
+                "User-Agent": "TAGT-PropertyPlatform/1.0 (contact@tagt.app)",
+                "Accept-Language": "en",
+                "Accept": "application/json",
+            },
+            // Cache for 60 seconds to reduce Nominatim load
+            next: { revalidate: 60 },
+        });
+
+        if (!res.ok) return NextResponse.json([]);
+
+        const data = await res.json();
+        return NextResponse.json(data);
+    } catch {
+        return NextResponse.json([]);
+    }
+}
+
+--- END OF .\web\app\api\geocode\route.ts ---
+
+--- FILE: .\web\app\resident\requests\page.tsx ---
 "use client";
 
-import { ReactNode } from "react";
-import { Sidebar } from "./Sidebar";
-import { Navbar } from "./Navbar";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
 
-export function DashboardShell({ children }: { children: ReactNode }) {
+interface Request {
+    _id: string;
+    message?: string;
+    description?: string;
+    priority: string;
+    status: string;
+    createdAt: string;
+    title?: string;
+}
+
+const PRIORITY_COLOR: Record<string, { bg: string; text: string; border: string }> = {
+    low: { bg: "rgba(52,211,153,0.1)", text: "#34d399", border: "rgba(52,211,153,0.2)" },
+    medium: { bg: "rgba(251,191,36,0.1)", text: "#fbbf24", border: "rgba(251,191,36,0.2)" },
+    high: { bg: "rgba(255,82,82,0.1)", text: "#ff5252", border: "rgba(255,82,82,0.2)" },
+};
+
+const STATUS_COLOR: Record<string, string> = {
+    pending: "#fbbf24",
+    open: "var(--accent-primary)",
+    resolved: "#34d399",
+    closed: "var(--text-tertiary)",
+};
+
+const STATUS_ICON: Record<string, string> = {
+    pending: "🕐", open: "🔧", resolved: "✅", closed: "🔒",
+};
+
+export default function ResidentRequestsPage() {
+    const [requests, setRequests] = useState<Request[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+    const [message, setMessage] = useState("");
+    const [priority, setPriority] = useState("medium");
+    const [successMsg, setSuccessMsg] = useState("");
+    const [error, setError] = useState("");
+
+    async function fetchRequests() {
+        try {
+            const res = await api.get("/v2/requests");
+            setRequests(res.data.data || []);
+        } catch { }
+        finally { setLoading(false); }
+    }
+
+    useEffect(() => { fetchRequests(); }, []);
+
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        if (!message.trim()) { setError("Please describe your request"); return; }
+        setSubmitting(true);
+        setError("");
+        try {
+            await api.post("/v2/resident/requests", { message: message.trim(), priority });
+            setMessage("");
+            setPriority("medium");
+            setShowForm(false);
+            setSuccessMsg("Request submitted! Your property manager will review it.");
+            setTimeout(() => setSuccessMsg(""), 5000);
+            fetchRequests();
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Failed to submit request");
+        } finally { setSubmitting(false); }
+    }
+
+    const pending = requests.filter(r => r.status === "pending" || r.status === "open").length;
+    const resolved = requests.filter(r => r.status === "resolved").length;
+
     return (
-        <div className="flex min-h-screen bg-black text-white">
-
-            {/* Sidebar */}
-            <Sidebar />
-
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col">
-
-                {/* Top Navbar */}
-                <Navbar />
-
-                {/* Page Content */}
-                <main className="flex-1 p-6 overflow-y-auto">
-                    {children}
-                </main>
-
+        <div className="animate-fade-in">
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "28px", flexWrap: "wrap", gap: "16px" }}>
+                <div>
+                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Maintenance</div>
+                    <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "4px" }}>My Requests</h1>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{pending} open · {resolved} resolved</p>
+                </div>
+                <button
+                    className="btn-primary"
+                    onClick={() => { setShowForm(!showForm); setError(""); }}
+                    style={{ gap: "8px", fontSize: "13.5px" }}
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    New Request
+                </button>
             </div>
+
+            {/* Success banner */}
+            {successMsg && (
+                <div className="animate-fade-in" style={{ background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", borderRadius: "12px", padding: "14px 18px", marginBottom: "20px", color: "#34d399", fontSize: "13px", display: "flex", gap: "10px", alignItems: "center" }}>
+                    ✅ {successMsg}
+                </div>
+            )}
+
+            {/* Submit form */}
+            {showForm && (
+                <div className="animate-fade-up glass-card" style={{ padding: "24px", marginBottom: "24px" }}>
+                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontWeight: 700, marginBottom: "20px" }}>Submit a Maintenance Request</h3>
+                    <form onSubmit={handleSubmit}>
+                        <div style={{ marginBottom: "16px" }}>
+                            <label style={{ display: "block", fontSize: "12px", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Priority</label>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                                {(["low", "medium", "high"] as const).map(p => {
+                                    const c = PRIORITY_COLOR[p];
+                                    const active = priority === p;
+                                    return (
+                                        <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() => setPriority(p)}
+                                            style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${active ? c.border : "var(--border-default)"}`, background: active ? c.bg : "transparent", color: active ? c.text : "var(--text-secondary)", fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: active ? 700 : 400, cursor: "pointer", textTransform: "capitalize", transition: "all 0.15s" }}
+                                        >
+                                            {p}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: "16px" }}>
+                            <label style={{ display: "block", fontSize: "12px", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Describe your issue</label>
+                            <textarea
+                                className="input-field"
+                                placeholder="e.g. The bathroom tap is leaking. It started 2 days ago and is getting worse…"
+                                value={message}
+                                onChange={e => setMessage(e.target.value)}
+                                rows={4}
+                                style={{ width: "100%", resize: "vertical", fontSize: "13px" }}
+                            />
+                        </div>
+
+                        {error && <div style={{ marginBottom: "12px", fontSize: "13px", color: "#ff5252" }}>⚠ {error}</div>}
+
+                        <div style={{ display: "flex", gap: "10px" }}>
+                            <button type="submit" className="btn-primary" disabled={submitting} style={{ fontSize: "13px" }}>
+                                {submitting ? "Submitting…" : "Submit Request"}
+                            </button>
+                            <button type="button" className="btn-ghost" onClick={() => { setShowForm(false); setError(""); }} style={{ fontSize: "13px" }}>
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* Request list */}
+            {loading ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="skeleton" style={{ height: "90px", borderRadius: "14px" }} />
+                    ))}
+                </div>
+            ) : requests.length === 0 ? (
+                <div className="glass-card" style={{ padding: "60px", textAlign: "center" }}>
+                    <div style={{ fontSize: "40px", marginBottom: "12px" }}>🔧</div>
+                    <div style={{ fontSize: "16px", fontWeight: 600, marginBottom: "6px" }}>No requests yet</div>
+                    <div style={{ color: "var(--text-tertiary)", fontSize: "13px", marginBottom: "20px" }}>Submit your first maintenance request and your manager will be notified.</div>
+                    <button className="btn-primary" onClick={() => setShowForm(true)}>Submit a Request</button>
+                </div>
+            ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {requests.map((r, i) => {
+                        const pColor = PRIORITY_COLOR[r.priority] || PRIORITY_COLOR.medium;
+                        const sColor = STATUS_COLOR[r.status] || "var(--text-tertiary)";
+                        const text = r.description || r.message || "—";
+                        return (
+                            <div key={r._id} className="animate-fade-up glass-card" style={{ padding: "18px 22px", animationDelay: `${i * 0.04}s`, display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                                {/* Status icon */}
+                                <div style={{ fontSize: "22px", flexShrink: 0, marginTop: "2px" }}>{STATUS_ICON[r.status] || "📋"}</div>
+
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "6px", flexWrap: "wrap" }}>
+                                        <div style={{ fontSize: "14px", fontWeight: 600, flex: 1 }}>{text.length > 120 ? text.slice(0, 120) + "…" : text}</div>
+                                        <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                                            <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase", background: pColor.bg, color: pColor.text, border: `1px solid ${pColor.border}`, padding: "3px 9px", borderRadius: "6px", fontWeight: 700 }}>{r.priority}</span>
+                                            <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase", background: sColor + "18", color: sColor, border: `1px solid ${sColor}28`, padding: "3px 9px", borderRadius: "6px", fontWeight: 700 }}>{r.status}</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>
+                                        Submitted {new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }
---- END OF .\web\components\layout\DashboardShell.tsx ---
 
---- FILE: .\web\lib\firebase.ts ---
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+--- END OF .\web\app\resident\requests\page.tsx ---
 
-const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+--- FILE: .\web\features\resident\resident.service.ts ---
+import api from "@/lib/api";
+
+export type ResidentPayment = {
+    _id: string;
+    amount: number;
+    status: string;
+    month: string;
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
---- END OF .\web\lib\firebase.ts ---
+export type ResidentRequest = {
+    _id: string;
+    title: string;
+    description: string;
+    status: string;
+    createdAt: string;
+};
+
+export async function fetchResidentPayments(): Promise<ResidentPayment[]> {
+    const { data } = await api.get("/resident/payments"); // adjust if route differs
+    return data.payments || data.data || [];
+}
+
+export async function fetchResidentRequests(): Promise<ResidentRequest[]> {
+    const { data } = await api.get("/resident/requests");
+    return data.requests || data.data || [];
+}
+--- END OF .\web\features\resident\resident.service.ts ---
 

@@ -16,7 +16,7 @@ export const createRequest = async (req, res, next) => {
         }
 
         const request = await Request.create({
-            resident: req.user.id,
+            resident: req.user._id,
             title,
             description,
             priority: priority || "medium",
@@ -59,7 +59,7 @@ export const getAllRequests = async (req, res, next) => {
 export const getMyRequests = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
-        const requests = await Request.find({ ...scope, resident: req.user.id })
+        const requests = await Request.find({ ...scope, resident: req.user._id })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -116,7 +116,7 @@ export const updateRequestStatus = async (req, res, next) => {
 export const deleteRequest = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
-        const request = await Request.findById(req.params.id, ...scope);
+        const request = await Request.findOne({ _id: req.params.id, ...scope });
 
         if (!request) {
             return res.status(404).json({

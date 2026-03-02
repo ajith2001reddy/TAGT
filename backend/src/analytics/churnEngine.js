@@ -3,19 +3,26 @@ import Payment from "../models/Payment.js";
 import Request from "../models/Request.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
 
-// Function to calculate the churn score for each resident
+/**
+ * Calculate churn score for a single resident
+ */
 async function calculateResidentChurn(resident, req) {
     let score = 0;
     const reasons = [];
 
-    // FIX: Payment model uses 'resident' field, not 'residentId'
     const scope = buildPropertyFilter(req.user);
+
     const [payments, requests] = await Promise.all([
         Payment.find({ resident: resident._id, ...scope }).lean(),
         Request.find({ resident: resident._id, ...scope }).lean()
     ]);
 
-    const unpaidCount = payments.filter(p => p.status === "pending" || p.status === "failed").length;
+    // -----------------------------
+    // PAYMENT ANALYSIS
+    // -----------------------------
+    const unpaidCount = payments.filter(
+        p => p.status === "pending" || p.status === "failed"
+    ).length;
 
     if (unpaidCount >= 2) {
         score += 30;
@@ -25,6 +32,9 @@ async function calculateResidentChurn(resident, req) {
         reasons.push("Recent unpaid payment");
     }
 
+    // -----------------------------
+    // MAINTENANCE REQUEST ANALYSIS
+    // -----------------------------
     if (requests.length >= 5) {
         score += 20;
         reasons.push("High number of maintenance requests");
@@ -41,6 +51,9 @@ async function calculateResidentChurn(resident, req) {
         reasons.push("Recent maintenance complaint");
     }
 
+    // -----------------------------
+    // ACTIVITY ANALYSIS
+    // -----------------------------
     const lastActivity = resident.updatedAt || resident.createdAt;
     const inactiveDays =
         (Date.now() - new Date(lastActivity)) / (1000 * 60 * 60 * 24);
@@ -50,14 +63,19 @@ async function calculateResidentChurn(resident, req) {
         reasons.push("Inactive for over 90 days");
     }
 
+    // -----------------------------
+    // TENURE ANALYSIS
+    // -----------------------------
     const tenureDays =
-        (Date.now() - new Date(resident.createdAt)) / (1000 * 60 * 60 * 24);
+        (Date.now() - new Date(resident.createdAt)) /
+        (1000 * 60 * 60 * 24);
 
     if (tenureDays < 60) {
         score += 10;
         reasons.push("New resident (low tenure)");
     }
 
+    // Cap score at 100
     score = Math.min(score, 100);
 
     let riskLevel = "LOW";
@@ -74,16 +92,22 @@ async function calculateResidentChurn(resident, req) {
     };
 }
 
-// Function to predict churn for all residents
-async function predictChurn() {
+/**
+ * Predict churn for all residents (OWNER SCOPED)
+ */
+async function predictChurn(req) {
     const scope = buildPropertyFilter(req.user);
+
     const residents = await User.find({
         role: "resident",
-        isActive: true
+        isActive: true,
+        ...scope
     }).lean();
 
     const residentsData = await Promise.all(
-        residents.map(calculateResidentChurn)
+        residents.map(resident =>
+            calculateResidentChurn(resident, req)
+        )
     );
 
     residentsData.sort((a, b) => b.score - a.score);

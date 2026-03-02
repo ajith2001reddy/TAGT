@@ -15,8 +15,8 @@ export const generateMonthlyRentPayments = async ({ targetDate = new Date(), pro
     };
 
     const residents = await User.find(residentFilter)
-        .populate("roomId", "rent")
-        .select("_id propertyId roomId")
+        .populate("roomId", "rent roomNumber")
+        .select("_id propertyId roomId bedId")
         .lean();
 
     let created = 0;

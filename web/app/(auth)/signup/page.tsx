@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import api from "@/lib/api";
+import { api } from "@/lib/api";
 import Link from "next/link";
 
 function GoogleIcon() {
@@ -31,13 +31,21 @@ export default function SignupPage() {
         e.preventDefault();
         setLoading(true);
         setError("");
+
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const token = await userCredential.user.getIdToken();
-            await api.post("/auth/register", { name }, { headers: { Authorization: `Bearer ${token}` } });
+            await createUserWithEmailAndPassword(auth, email, password);
+
+            // 🔥 Do NOT manually get token
+            await api.post("/auth/register", { name });
+
             router.push("/dashboard");
+
         } catch (err: any) {
-            setError(err.message || "Something went wrong.");
+            if (err.code === "auth/email-already-in-use") {
+                setError("Email is already registered. Please login instead.");
+            } else {
+                setError(err.message || "Something went wrong.");
+            }
         } finally {
             setLoading(false);
         }
@@ -48,12 +56,9 @@ export default function SignupPage() {
         setError("");
         try {
             const result = await signInWithPopup(auth, googleProvider);
-            const token = await result.user.getIdToken();
-            await api.post(
-                "/auth/register",
-                { name: result.user.displayName || result.user.email?.split("@")[0] || "User" },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.post("/auth/register", {
+                name: result.user.displayName || result.user.email?.split("@")[0] || "User"
+            });
             router.push("/dashboard");
         } catch (err: any) {
             if (err.code !== "auth/popup-closed-by-user") {

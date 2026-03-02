@@ -4,374 +4,469 @@ TS PROJECT PART 8 of 20
 {}
 --- END OF .\.vscode\settings.json ---
 
---- FILE: .\backend\src\controllers\v2\automationController.js ---
-import { applyLateFees, generateMonthlyRentPayments, runRentAutomationTick } from "../../services/rentAutomationService.js";
-
-export const runMonthlyRentGeneration = async (req, res, next) => {
-    try {
-        const propertyId = req.user.role === "super_admin" ? (req.body.propertyId || null) : req.user.propertyId;
-        const result = await generateMonthlyRentPayments({ propertyId });
-        return res.json({ success: true, data: result });
-    } catch (err) {
-        next(err);
-    }
-};
-
-export const runLateFeeUpdate = async (req, res, next) => {
-    try {
-        const propertyId = req.user.role === "super_admin" ? (req.body.propertyId || null) : req.user.propertyId;
-        const result = await applyLateFees({ propertyId });
-        return res.json({ success: true, data: result });
-    } catch (err) {
-        next(err);
-    }
-};
-
-export const runAutomationTickNow = async (req, res, next) => {
-    try {
-        const result = await runRentAutomationTick();
-        return res.json({ success: true, data: result });
-    } catch (err) {
-        next(err);
-    }
-};
-
---- END OF .\backend\src\controllers\v2\automationController.js ---
-
---- FILE: .\backend\src\routes\payments.js ---
-﻿import { Router } from "express";
+--- FILE: .\backend\src\controllers\residentController.js ---
+﻿import logger from "../utils/logger.js";
 import mongoose from "mongoose";
 
-import Payment from "../models/Payment.js";
 import User from "../models/User.js";
-import auth from "../middleware/auth.js";
-import { buildPropertyFilter } from "../utils/tenantScope.js";
-import isAdmin from "../middleware/isAdmin.js";
-import { generateMonthlyRent } from "../controllers/paymentController.js";
 import Room from "../models/rooms.js";
+import Payment from "../models/Payment.js";
+import Request from "../models/Request.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
-import authorize from "../middleware/authorize.js";
-
-
-const router = Router();
-router.post("/generate-monthly", auth, isAdmin, generateMonthlyRent);
-router.get("/summary", auth, authorize("owner"), async (req, res, next) => {
+export const getAllResidents = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
+        const residents = await User.find({
+            role: "resident",
+            ...scope
+        })
+            .populate("roomId", "roomNumber totalBeds occupiedBeds rent")
+            .sort({ createdAt: -1 })
+            .lean();
 
-        const payments = await Payment.find(scope).lean();
-        const rooms = await Room.find(scope).lean();
-
-        let totalCollected = 0;
-        let totalPending = 0;
-        let totalOverdue = 0;
-
-        for (const p of payments) {
-            const total = Number(p.totalPayable || p.amount || 0);
-
-            if (p.status === "paid") totalCollected += total;
-            if (p.status === "pending") totalPending += total;
-            if (p.status === "overdue") totalOverdue += total;
-        }
-
-        const currentMonth = new Date().toISOString().slice(0, 7);
-
-        const monthlyRevenue = payments
-            .filter(p => p.month === currentMonth)
-            .reduce((sum, p) => sum + Number(p.totalPayable || p.amount || 0), 0);
-
-        const totalBeds = rooms.reduce((sum, r) => sum + r.totalBeds, 0);
-        const occupiedBeds = rooms.reduce((sum, r) => sum + r.occupiedBeds, 0);
-
-        const occupancyRate = totalBeds > 0
-            ? ((occupiedBeds / totalBeds) * 100).toFixed(1)
-            : "0";
-
-        res.json({
-            success: true,
-            totalCollected,
-            totalPending,
-            totalOverdue,
-            monthlyRevenue,
-            occupancyRate
-        });
-
+        return res.json({ success: true, residents });
     } catch (err) {
+        logger.error(`GET RESIDENTS ERROR: ${err.message}`);
         next(err);
     }
-});
-/* =========================
-   ADMIN → CREATE BILL
-========================= */
-router.post("/", auth, authorize("owner"), async (req, res, next) => {
+};
+
+export const getResidentProfile = async (req, res, next) => {
     try {
-        const { residentId, description, type, month, adminNote } = req.body;
-        const amount = Number(req.body.amount);
-
-        if (!mongoose.Types.ObjectId.isValid(residentId)) {
-            return res.status(400).json({ success: false, message: "Invalid resident" });
-        }
-
-        if (!Number.isFinite(amount) || amount <= 0) {
-            return res.status(400).json({ success: false, message: "Invalid amount" });
-        }
-
-        const scope = buildPropertyFilter(req.user);
-        const resident = await User.findOne({
-            _id: residentId,
-            role: "resident",
-            isActive: true,
-            ...scope
-        }).lean();
+        const resident = await User.findOne({ _id: req.params.id, role: "resident" })
+            .populate("roomId", "roomNumber rent")
+            .lean();
 
         if (!resident) {
+            return res.status(404).json({ success: false, message: "Resident not found" });
+        }
+
+        const [paymentSummary, requestSummary] = await Promise.all([
+            Payment.aggregate([
+                { $match: { resident: resident._id } },
+                { $group: { _id: "$status", count: { $sum: 1 }, total: { $sum: "$amount" } } }
+            ]),
+            Request.aggregate([
+                { $match: { resident: resident._id } },
+                { $group: { _id: "$status", count: { $sum: 1 } } }
+            ])
+        ]);
+
+        return res.json({ success: true, resident, paymentSummary, requestSummary });
+    } catch (err) {
+        logger.error(`GET RESIDENT PROFILE ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+export const addResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { name, email, password, roomId } = req.body;
+
+        if (!name || !email || !password || !roomId) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: "Resident not found or inactive",
+                message: "Name, email, password, and room are required"
             });
         }
 
-        // Prevent duplicate monthly bill
-        if (month) {
-            // FIX: Payment model uses 'resident' field, not 'residentId'
-            const scope = buildPropertyFilter(req.user);
-            const exists = await Payment.findOne({ resident: residentId, month, ...scope });
-            if (exists) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Bill already exists for this month",
-                });
-            }
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const existingUser = await User.findOne({ email: normalizedEmail }).session(session);
+        if (existingUser) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Email already exists" });
         }
 
-        const dueDate = month
-            ? new Date(`${month}-05`) // 5th of the billed month
-            : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+        const roomDoc = await Room.findOne({
+            _id: roomId,
+            propertyId: req.user.propertyId
+        }).session(session);
 
-        const payment = await Payment.create({
-            resident: residentId,       // FIX: was 'residentId', model field is 'resident'
-            amount,
-            notes: description || adminNote || "",
-            type: type || "other",
-            month: month || new Date().toISOString().slice(0, 7),
+        if (!roomDoc) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Invalid room selected" });
+        }
+
+        if (roomDoc.maintenanceMode) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Room in maintenance mode" });
+        }
+
+        if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Room is full" });
+        }
+
+        const resident = await User.create([{
+            name,
+            email: normalizedEmail,
+            password,
+            role: "resident",
+            propertyId: req.user.propertyId,
+            roomId: roomDoc._id,
+            isActive: true
+        }], { session });
+
+        roomDoc.occupiedBeds += 1;
+        await roomDoc.save({ session });
+
+        const now = new Date();
+        const dueDate = new Date(now.getFullYear(), now.getMonth(), 5);
+
+        await Payment.create([{
+            propertyId: req.user.propertyId,
+            resident: resident[0]._id,
+            room: roomDoc._id,
+            amount: roomDoc.rent,
+            type: "rent",
             status: "pending",
-            dueDate,
-            ...scope
-        });
+            month: now.toISOString().slice(0, 7),
+            dueDate
+        }], { session });
 
-        res.status(201).json({ success: true, payment });
+        await session.commitTransaction();
+
+        return res.status(201).json({ success: true, resident: resident[0] });
+
     } catch (err) {
+        await session.abortTransaction();
+        logger.error(`ADD RESIDENT ERROR: ${err.message}`);
         next(err);
-    }
-});
-
-/* =========================
-   ADMIN → GET ALL PAYMENTS
-========================= */
-// FIX: Removed duplicate GET "/" handler (there were two, second one shadowed the first)
-router.get("/", auth, authorize("owner"), async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const payments = await Payment.find({ ...scope })
-            .populate({
-                path: "resident",       // FIX: was 'residentId'
-                select: "email name",
-                options: { strictPopulate: false },
-            })
-            .sort({ createdAt: -1 })
-            .lean();
-
-        return res.json({
-            success: true,
-            payments: payments || [],
-        });
-    } catch (err) {
-        console.error("GET PAYMENTS ERROR:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to load payments",
-        });
-    }
-});
-
-
-router.get("/export/csv", auth, authorize("owner"), async (req, res, next) => {
-    try {
-        const payments = await Payment.find()
-            .populate({ path: "resident", select: "name email", options: { strictPopulate: false } })
-            .sort({ createdAt: -1 })
-            .lean();
-
-        const escapeCsv = (value) => {
-            if (value == null) return "";
-            const str = String(value).replace(/"/g, '""');
-            return /[",\n]/.test(str) ? `"${str}"` : str;
-        };
-
-        const rows = [
-            ["paymentId", "residentName", "residentEmail", "amount", "type", "status", "month", "dueDate", "paidAt", "createdAt"],
-            ...payments.map((payment) => [
-                payment._id,
-                payment.resident?.name || "",
-                payment.resident?.email || "",
-                payment.amount,
-                payment.type,
-                payment.status,
-                payment.month || "",
-                payment.dueDate ? new Date(payment.dueDate).toISOString() : "",
-                payment.paidAt ? new Date(payment.paidAt).toISOString() : "",
-                payment.createdAt ? new Date(payment.createdAt).toISOString() : ""
-            ])
-        ];
-
-        const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
-
-        res.setHeader("Content-Type", "text/csv");
-        res.setHeader("Content-Disposition", `attachment; filename=payments-${new Date().toISOString().slice(0, 10)}.csv`);
-        return res.status(200).send(csv);
-    } catch (err) {
-        next(err);
-    }
-});
-
-/* =========================
-   RESIDENT → GET OWN PAYMENTS
-========================= */
-const getMyPayments = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const payments = await Payment.find({ resident: req.user._id, ...scope })
-            .sort({ createdAt: -1 })
-            .lean();
-
-        return res.json({ success: true, payments });
-    } catch (err) {
-        next(err);
+    } finally {
+        session.endSession();
     }
 };
 
-router.get("/my", auth, getMyPayments);
-router.get("/mine", auth, getMyPayments); // backward-compatible alias
+export const updateResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-/* =========================
-   ADMIN → MARK PAYMENT AS PAID
-========================= */
-router.put("/:id/paid", auth, authorize("owner"), async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { name, email, isActive, roomId } = req.body;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid payment ID" });
+        const resident = await User.findOne({
+            _id: id,
+            role: "resident"
+        }).session(session);
+
+        if (!resident) {
+            await session.abortTransaction();
+            return res.status(404).json({
+                success: false,
+                message: "Resident not found"
+            });
         }
 
-        const scope = buildPropertyFilter(req.user);
-        const payment = await Payment.findById(id, ...scope);
-
-        if (!payment) {
-            return res.status(404).json({ success: false, message: "Payment not found" });
+        // Update basic fields
+        if (typeof name === "string" && name.trim()) {
+            resident.name = name.trim();
         }
 
-        if (payment.status === "paid") {
-            return res.json({ success: true, message: "Payment already marked as paid" });
-        }
+        if (typeof email === "string" && email.trim()) {
+            const normalizedEmail = email.toLowerCase().trim();
+            const existing = await User.findOne({
+                email: normalizedEmail,
+                _id: { $ne: id }
+            }).session(session);
 
-        payment.status = "paid";
-        payment.paidAt = new Date();
-        await payment.save();
-
-        res.json({ success: true, message: "Payment marked as paid" });
-    } catch (err) {
-        next(err);
-    }
-});
-
-/* =========================
-   ADMIN → DELETE PAYMENT
-========================= */
-router.delete("/:id", auth, authorize("owner"), async (req, res, next) => {
-    try {
-        const { id } = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid payment ID" });
-        }
-
-        const scope = buildPropertyFilter(req.user);
-        const payment = await Payment.findById(id, ...scope);
-
-        if (!payment) {
-            return res.status(404).json({ success: false, message: "Payment not found" });
-        }
-
-        await payment.deleteOne();
-
-        res.json({ success: true, message: "Payment deleted successfully" });
-    } catch (err) {
-        next(err);
-    }
-});
-
-export default router;
---- END OF .\backend\src\routes\payments.js ---
-
---- FILE: .\web\app\layout.tsx ---
-import "./globals.css";   // 👈 ADD THIS
-import { AuthProvider } from "@/context/AuthContext";
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        <AuthProvider>{children}</AuthProvider>
-      </body>
-    </html>
-  );
-}
---- END OF .\web\app\layout.tsx ---
-
---- FILE: .\web\components\layout\PropertySwitcher.tsx ---
-"use client";
-
-import { useProperty } from "@/context/PropertyContext";
-import { useEffect, useState } from "react";
-import api from "@/lib/api";
-
-export function PropertySwitcher() {
-    const { selectedProperty, setSelectedProperty } = useProperty();
-    const [properties, setProperties] = useState<any[]>([]);
-
-    useEffect(() => {
-        async function load() {
-            const { data } = await api.get("/owner/properties");
-            setProperties(data.data);
-        }
-        load();
-    }, []);
-
-    return (
-        <select
-            value={selectedProperty || ""}
-            onChange={(e) =>
-                setSelectedProperty(e.target.value || null)
+            if (existing) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Email already exists"
+                });
             }
-            className="bg-neutral-800 text-white px-3 py-1 rounded"
-        >
-            <option value="">All Properties</option>
-            {properties.map((p) => (
-                <option key={p._id} value={p._id}>
-                    {p.name}
-                </option>
-            ))}
-        </select>
+
+            resident.email = normalizedEmail;
+        }
+
+        if (typeof isActive === "boolean") {
+            resident.isActive = isActive;
+        }
+
+        /* =========================
+           ROOM TRANSFER LOGIC
+        ========================== */
+
+        if (roomId && roomId !== String(resident.roomId)) {
+
+            const oldRoom = resident.roomId
+                ? await Room.findById(resident.roomId).session(session)
+                : null;
+
+            const newRoom = await Room.findOne({
+                _id: roomId,
+                propertyId: req.user.propertyId
+            }).session(session);
+
+            if (!newRoom) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid new room"
+                });
+            }
+
+            if (newRoom.maintenanceMode) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Room under maintenance"
+                });
+            }
+
+            if (newRoom.occupiedBeds >= newRoom.totalBeds) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "New room is full"
+                });
+            }
+
+            // Decrement old room
+            if (oldRoom && oldRoom.occupiedBeds > 0) {
+                oldRoom.occupiedBeds -= 1;
+                await oldRoom.save({ session });
+            }
+
+            // Increment new room
+            newRoom.occupiedBeds += 1;
+            await newRoom.save({ session });
+
+            resident.roomId = newRoom._id;
+        }
+
+        await resident.save({ session });
+        await session.commitTransaction();
+
+        return res.json({
+            success: true,
+            data: resident
+        });
+
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`UPDATE RESIDENT ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
+};
+
+export const deleteResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { id } = req.params;
+
+        const resident = await User.findById(id).session(session);
+        if (!resident) {
+            await session.abortTransaction();
+            return res.status(404).json({ success: false, message: "Resident not found" });
+        }
+
+        if (resident.roomId) {
+            const room = await Room.findById(resident.roomId).session(session);
+            if (room && room.occupiedBeds > 0) {
+                room.occupiedBeds -= 1;
+                await room.save({ session });
+            }
+        }
+
+        await Payment.deleteMany({ resident: resident._id }).session(session);
+        await resident.deleteOne({ session });
+        await session.commitTransaction();
+
+        return res.json({ success: true, message: "Resident deleted successfully" });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`DELETE RESIDENT ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
+};
+
+--- END OF .\backend\src\controllers\residentController.js ---
+
+--- FILE: .\backend\src\models\RequestHistory.js ---
+import mongoose from "mongoose";
+
+const requestHistorySchema = new mongoose.Schema(
+    {
+        requestId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Request",
+            index: true
+        },
+        residentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+        originalMessage: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        finalResolution: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        timeline: [
+            {
+                status: {
+                    type: String
+                },
+                note: {
+                    type: String
+                },
+                adminId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User"
+                },
+                createdAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }
+        ],
+        resolvedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+        resolvedAt: {
+            type: Date,
+            default: Date.now,
+            index: true
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+requestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
+
+export default mongoose.model("RequestHistory", requestHistorySchema);
+
+--- END OF .\backend\src\models\RequestHistory.js ---
+
+--- FILE: .\backend\src\utils\logger.js ---
+import winston from "winston";
+
+const logger = winston.createLogger({
+    level: "info",
+    format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+    transports: [
+        new winston.transports.Console(),
+    ]
+});
+
+export default logger; // Default export
+
+--- END OF .\backend\src\utils\logger.js ---
+
+--- FILE: .\web\app\owner\layout.tsx ---
+import { PropertyProvider } from "@/context/PropertyContext";
+import { RoleGuard } from "@/components/auth/RoleGuard";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+
+export default function OwnerLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return (
+        <RoleGuard allowed={["owner"]}>
+            <PropertyProvider>
+                <DashboardShell>{children}</DashboardShell>
+            </PropertyProvider>
+        </RoleGuard>
     );
 }
---- END OF .\web\components\layout\PropertySwitcher.tsx ---
+--- END OF .\web\app\owner\layout.tsx ---
 
---- FILE: .\web\public\globe.svg ---
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
---- END OF .\web\public\globe.svg ---
+--- FILE: .\web\components\auth\RoleGuard.tsx ---
+"use client";
+
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+type RoleGuardProps = {
+    allowed: string[];
+    children: React.ReactNode;
+};
+
+export function RoleGuard({ allowed, children }: RoleGuardProps) {
+    const { role, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && (!role || !allowed.includes(role))) {
+            router.replace("/login");
+        }
+    }, [role, loading, allowed, router]);
+
+    if (loading) {
+        return (
+            <div style={{
+                minHeight: "100vh",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "var(--bg-base)",
+            }}>
+                <div style={{ textAlign: "center" }}>
+                    <div style={{
+                        width: "40px", height: "40px",
+                        border: "2px solid var(--border-default)",
+                        borderTopColor: "var(--accent-primary)",
+                        borderRadius: "50%",
+                        animation: "spin 0.8s linear infinite",
+                        margin: "0 auto 16px",
+                    }} />
+                    <p className="label-text">Loading workspace...</p>
+                </div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
+    }
+
+    if (!role || !allowed.includes(role)) return null;
+
+    return <>{children}</>;
+}
+--- END OF .\web\components\auth\RoleGuard.tsx ---
+
+--- FILE: .\web\lib\api.ts ---
+import axios from "axios";
+import { auth } from "./firebase";
+
+const api = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+});
+
+api.interceptors.request.use(async (config) => {
+    const user = auth.currentUser;
+    if (user) {
+        const token = await user.getIdToken();
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+export default api;
+--- END OF .\web\lib\api.ts ---
 

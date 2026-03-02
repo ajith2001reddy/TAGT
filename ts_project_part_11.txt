@@ -27,7 +27,10 @@ TS PROJECT PART 11 of 20
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.1.0",
+    "node-cron": "^4.2.1",
     "nodemailer": "^6.9.8",
+    "pdfkit": "^0.17.2",
+    "stripe": "^20.4.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.11.0"
@@ -44,121 +47,539 @@ TS PROJECT PART 11 of 20
 
 --- END OF .\backend\package.json ---
 
---- FILE: .\backend\src\middleware\authorize.js ---
-const authorize = (...roles) => (req, res, next) => {
-    if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
-    if (!roles.includes(req.user.role)) return res.status(403).json({ success: false, message: "Forbidden" });
-    return next();
+--- FILE: .\backend\src\controllers\v2\authController.js ---
+import User from "../../models/User.js";
+import admin from "../../config/firebase.js";
+
+export const login = async (req, res) => {
+    res.json({
+        success: true,
+        message: "Login handled by Firebase on frontend"
+    });
 };
 
-export default authorize;
+export const registerOwner = async (req, res) => {
+    try {
+        const { name, email } = req.body;
 
---- END OF .\backend\src\middleware\authorize.js ---
+        if (!name || !email) {
+            return res.status(400).json({
+                success: false,
+                message: "Name and email required"
+            });
+        }
 
---- FILE: .\backend\src\routes\residentDashboard.js ---
-import { Router } from "express";
-import firebaseAuth from "../middleware/firebaseAuth.js";
-import authorize from "../middleware/authorize.js";
-import Payment from "../models/Payment.js";
-import Request from "../models/Request.js";
+        const existing = await User.findOne({ email: email.toLowerCase() });
 
-const router = Router();
+        if (existing) {
+            return res.json({
+                success: true,
+                message: "Owner already exists"
+            });
+        }
 
-/**
- * GET /api/resident/payments
- */
-router.get("/payments", firebaseAuth, authorize("resident"), async (req, res) => {
-    const payments = await Payment.find({
-        resident: req.user._id
-    }).lean();
+        const newOwner = await User.create({
+            name,
+            email: email.toLowerCase(),
+            role: "owner",
+            isActive: true
+        });
 
-    res.json({ success: true, data: payments });
+        res.status(201).json({
+            success: true,
+            data: newOwner
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+};
+--- END OF .\backend\src\controllers\v2\authController.js ---
+
+--- FILE: .\backend\src\models\User.js ---
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+
+const userSchema = new mongoose.Schema(
+    {
+        firebaseUid: {
+            type: String,
+            unique: true,
+            sparse: true,
+            index: true,
+        },
+
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+            index: true,
+            match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
+        },
+
+        password: {
+            type: String,
+            minlength: 6,
+            select: false,
+        },
+
+        role: {
+            type: String,
+            enum: ["super_admin", "owner", "resident"],
+            default: "resident",
+            index: true,
+        },
+
+        // ✅ Multi-property support for owners
+        propertyIds: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Property",
+                index: true,
+            },
+        ],
+
+        // ✅ Single property for resident
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            default: null,
+            index: true,
+        },
+
+        roomId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Room",
+            default: null,
+            index: true,
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true,
+            index: true,
+        },
+
+        notes: [{
+            text: { type: String, trim: true, maxlength: 1000 },
+            addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+            addedAt: { type: Date, default: Date.now },
+        }],
+    },
+    { timestamps: true }
+);
+
+// 🔐 Hash password before saving (only when modified)
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password") || !this.password) return next();
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
 });
 
-/**
- * GET /api/resident/requests
- */
-router.get("/requests", firebaseAuth, authorize("resident"), async (req, res) => {
-    const requests = await Request.find({
-        resident: req.user._id
-    }).lean();
+// ✅ Helper: verify a plain-text password against the stored hash
+userSchema.methods.comparePassword = async function (plain) {
+    return bcrypt.compare(plain, this.password);
+};
 
-    res.json({ success: true, data: requests });
-});
+export default mongoose.model("User", userSchema);
+--- END OF .\backend\src\models\User.js ---
 
-export default router;
---- END OF .\backend\src\routes\residentDashboard.js ---
+--- FILE: .\web\.gitignore ---
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
---- FILE: .\web\app\(auth)\forgot-password\page.tsx ---
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+--- END OF .\web\.gitignore ---
+
+--- FILE: .\web\app\owner\intelligence\page.tsx ---
 "use client";
 
-import { useState } from "react";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+import {
+    AreaChart, Area, BarChart, Bar, LineChart, Line,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+    RadarChart, Radar, PolarGrid, PolarAngleAxis, Cell,
+} from "recharts";
 
-export default function ForgotPasswordPage() {
-    const [email, setEmail] = useState("");
-    const [message, setMessage] = useState("");
+interface ForecastData { history: { month: string; collected: number }[]; forecast: { month: string; projected: number; isForecast: true }[]; trend: string; avgMonthlyRevenue: number; }
+interface TrendsData { current: { totalBeds: number; occupiedBeds: number; occupancyRate: number }; monthlyRevenueTrend: { month: string; billed: number; paid: number; collectionRate: number; newResidents: number }[]; roomBreakdown: { roomNumber: string; totalBeds: number; occupiedBeds: number; occupancyRate: number; rent: number }[]; }
+interface ChurnData { totalResidents: number; highRisk: number; mediumRisk: number; lowRisk: number; residents: { residentId: string; name: string; email: string; score: number; riskLevel: string; reasons: string[] }[]; }
+interface AlertData { alerts: { id: string; severity: string; title: string; description: string; action: string }[]; totalAlerts: number; }
 
-    async function handleReset(e: React.FormEvent) {
-        e.preventDefault();
-        await sendPasswordResetEmail(auth, email);
-        setMessage("Password reset email sent.");
-    }
+interface SummaryData { forecast: ForecastData | null; trends: TrendsData | null; churn: ChurnData | null; alerts: AlertData | null; }
 
+const CHART_COLORS = { primary: "#00d4ff", green: "#34d399", yellow: "#fbbf24", red: "#ff5252", purple: "#a78bfa" };
+const RISK_COLOR = { HIGH: "#ff5252", MEDIUM: "#fbbf24", LOW: "#34d399" };
+const ALERT_COLOR: Record<string, { bg: string; border: string; icon: string; text: string }> = {
+    critical: { bg: "rgba(255,82,82,0.06)", border: "rgba(255,82,82,0.2)", icon: "🔴", text: "#ff5252" },
+    warning: { bg: "rgba(251,191,36,0.06)", border: "rgba(251,191,36,0.2)", icon: "🟡", text: "#fbbf24" },
+    info: { bg: "rgba(0,212,255,0.06)", border: "rgba(0,212,255,0.15)", icon: "🔵", text: "var(--accent-primary)" },
+};
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
     return (
-        <>
-            <form onSubmit={handleReset} className="space-y-4">
-                <h1 className="text-2xl font-bold text-center">Reset Password</h1>
-
-                <input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="w-full p-3 bg-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-
-                <button className="bg-violet-600 hover:bg-violet-700 transition w-full py-3 rounded-lg font-semibold">
-                    Send Reset Link
-                </button>
-
-                {message && (
-                    <p className="text-green-400 text-sm text-center">{message}</p>
-                )}
-            </form>
-
-            <div className="mt-6 text-sm text-neutral-400 text-center">
-                Remember your password?{" "}
-                <Link href="/login" className="text-violet-500 hover:text-violet-400">
-                    Login
-                </Link>
-            </div>
-        </>
+        <div style={{ background: "#0d1520", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "12px 16px", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", marginBottom: "6px" }}>{label}</div>
+            {payload.map((p: any) => (
+                <div key={p.dataKey} style={{ fontSize: "13px", fontWeight: 600, color: p.color }}>
+                    {p.name}: {typeof p.value === "number" ? (p.dataKey?.includes("Rate") ? `${p.value}%` : `₹${Number(p.value).toLocaleString()}`) : p.value}
+                </div>
+            ))}
+        </div>
     );
-}
---- END OF .\web\app\(auth)\forgot-password\page.tsx ---
+};
 
---- FILE: .\web\components\ui\StatCard.tsx ---
-export function StatCard({
-    label,
-    value,
-}: {
-    label: string;
-    value: string | number;
-}) {
+const SectionHeader = ({ title, sub }: { title: string; sub?: string }) => (
+    <div style={{ marginBottom: "20px" }}>
+        <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "4px" }}>{sub || "Intelligence"}</div>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 700, margin: 0 }}>{title}</h2>
+    </div>
+);
+
+const TREND_ICON: Record<string, string> = { up: "📈", down: "📉", stable: "➡️" };
+const TREND_COLOR: Record<string, string> = { up: "#34d399", down: "#ff5252", stable: "var(--accent-primary)" };
+
+export default function IntelligencePage() {
+    const [data, setData] = useState<SummaryData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [tab, setTab] = useState<"revenue" | "occupancy" | "churn" | "alerts">("revenue");
+
+    useEffect(() => {
+        api.get("/v2/intelligence/summary").then(r => setData(r.data.data)).catch(console.error).finally(() => setLoading(false));
+    }, []);
+
+    const TabBtn = ({ id, label }: { id: typeof tab; label: string }) => (
+        <button onClick={() => setTab(id)} style={{ padding: "9px 18px", borderRadius: "9px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: tab === id ? 700 : 400, background: tab === id ? "var(--accent-primary)" : "transparent", color: tab === id ? "#000" : "var(--text-secondary)", transition: "all 0.15s", fontFamily: "var(--font-display)" }}>{label}</button>
+    );
+
+    const combinedRevenueData = data?.forecast ? [
+        ...data.forecast.history.map(h => ({ month: h.month, collected: h.collected })),
+        ...data.forecast.forecast.map(f => ({ month: f.month, projected: f.projected })),
+    ] : [];
+
+    if (loading) return (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton" style={{ height: "280px", borderRadius: "18px" }} />)}
+        </div>
+    );
+
     return (
-        <div className="rounded-xl bg-neutral-900 p-6 border border-white/10">
-            <p className="text-sm text-white/50">{label}</p>
-            <p className="mt-2 text-2xl font-bold">{value}</p>
+        <div className="animate-fade-in">
+            {/* Header */}
+            <div style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "12px" }}>
+                <div>
+                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>AI-Powered</div>
+                    <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Property Intelligence</h1>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Insights, forecasts and churn risk — powered by your data</p>
+                </div>
+                {data?.alerts && data.alerts.alerts.filter(a => a.severity === "critical").length > 0 && (
+                    <div style={{ background: "rgba(255,82,82,0.08)", border: "1px solid rgba(255,82,82,0.2)", borderRadius: "12px", padding: "10px 16px", fontSize: "13px", color: "#ff5252", fontWeight: 600, display: "flex", gap: "8px", alignItems: "center", cursor: "pointer" }} onClick={() => setTab("alerts")}>
+                        🔴 {data.alerts.alerts.filter(a => a.severity === "critical").length} Critical Alert{data.alerts.alerts.filter(a => a.severity === "critical").length > 1 ? "s" : ""}
+                    </div>
+                )}
+            </div>
+
+            {/* Top stats */}
+            {data && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "14px", marginBottom: "24px" }}>
+                    {[
+                        { label: "Avg Monthly Revenue", value: `₹${(data.forecast?.avgMonthlyRevenue || 0).toLocaleString()}`, color: CHART_COLORS.green },
+                        { label: "Occupancy Rate", value: `${data.trends?.current.occupancyRate || 0}%`, color: (data.trends?.current.occupancyRate || 0) >= 80 ? CHART_COLORS.green : CHART_COLORS.yellow },
+                        { label: "Revenue Trend", value: `${TREND_ICON[data.forecast?.trend || "stable"]} ${data.forecast?.trend || "—"}`, color: TREND_COLOR[data.forecast?.trend || "stable"] },
+                        { label: "High Risk Residents", value: data.churn?.highRisk || 0, color: (data.churn?.highRisk || 0) > 0 ? CHART_COLORS.red : CHART_COLORS.green },
+                        { label: "Alerts", value: data.alerts?.totalAlerts || 0, color: (data.alerts?.alerts || []).some(a => a.severity === "critical") ? CHART_COLORS.red : CHART_COLORS.yellow },
+                    ].map(({ label, value, color }) => (
+                        <div key={label} style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "14px", padding: "18px" }}>
+                            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>{label}</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 700, color }}>{value}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Tab bar */}
+            <div style={{ display: "flex", background: "var(--bg-card)", borderRadius: "12px", padding: "5px", gap: "3px", marginBottom: "24px", width: "fit-content" }}>
+                <TabBtn id="revenue" label="Revenue Forecast" />
+                <TabBtn id="occupancy" label="Occupancy Trends" />
+                <TabBtn id="churn" label="Churn Analysis" />
+                <TabBtn id="alerts" label={`Smart Alerts${data?.alerts?.totalAlerts ? ` (${data.alerts.totalAlerts})` : ""}`} />
+            </div>
+
+            {/* Revenue Forecast tab */}
+            {tab === "revenue" && data?.forecast && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
+                        <SectionHeader title="Revenue Forecast" sub="Linear Regression · 6 months history · 3 months projected" />
+                        <ResponsiveContainer width="100%" height={280}>
+                            <AreaChart data={combinedRevenueData} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={CHART_COLORS.green} stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor={CHART_COLORS.green} stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="colorProjected" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                <XAxis dataKey="month" tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend />
+                                <Area type="monotone" dataKey="collected" name="Collected" stroke={CHART_COLORS.green} fill="url(#colorCollected)" strokeWidth={2} dot={{ fill: CHART_COLORS.green, r: 4 }} />
+                                <Area type="monotone" dataKey="projected" name="Projected" stroke={CHART_COLORS.primary} fill="url(#colorProjected)" strokeWidth={2} strokeDasharray="5 5" dot={{ fill: CHART_COLORS.primary, r: 4 }} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            {/* Occupancy Trends tab */}
+            {tab === "occupancy" && data?.trends && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    {/* Collection Rate over time */}
+                    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
+                        <SectionHeader title="Billing vs Collection" sub="Monthly · Billed vs Paid" />
+                        <ResponsiveContainer width="100%" height={240}>
+                            <BarChart data={data.trends.monthlyRevenueTrend} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                <XAxis dataKey="month" tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend />
+                                <Bar dataKey="billed" name="Billed" fill={CHART_COLORS.yellow + "60"} radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="paid" name="Collected" fill={CHART_COLORS.green} radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* Room breakdown */}
+                    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
+                        <SectionHeader title="Room Occupancy Breakdown" sub="Per room · Current status" />
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            {data.trends.roomBreakdown.map(r => (
+                                <div key={r.roomNumber} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                                    <div style={{ width: "70px", fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: 700, flexShrink: 0 }}>Room {r.roomNumber}</div>
+                                    <div style={{ flex: 1, height: "6px", background: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
+                                        <div style={{ height: "100%", width: `${r.occupancyRate}%`, background: r.occupancyRate === 100 ? CHART_COLORS.green : r.occupancyRate >= 50 ? CHART_COLORS.primary : CHART_COLORS.red, borderRadius: "3px", transition: "width 0.8s ease" }} />
+                                    </div>
+                                    <div style={{ width: "42px", textAlign: "right", fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: 700, color: r.occupancyRate === 100 ? CHART_COLORS.green : r.occupancyRate >= 50 ? CHART_COLORS.primary : CHART_COLORS.red, flexShrink: 0 }}>{r.occupancyRate}%</div>
+                                    <div style={{ width: "70px", textAlign: "right", fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", flexShrink: 0 }}>{r.occupiedBeds}/{r.totalBeds} beds</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Churn Analysis tab */}
+            {tab === "churn" && data?.churn && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    {/* Summary pills */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+                        {[{ label: "High Risk", count: data.churn.highRisk, color: CHART_COLORS.red }, { label: "Medium Risk", count: data.churn.mediumRisk, color: CHART_COLORS.yellow }, { label: "Low Risk", count: data.churn.lowRisk, color: CHART_COLORS.green }].map(({ label, count, color }) => (
+                            <div key={label} style={{ background: `${color}08`, border: `1px solid ${color}20`, borderRadius: "14px", padding: "18px", textAlign: "center" }}>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "32px", fontWeight: 700, color }}>{count}</div>
+                                <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px" }}>{label}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Resident churn table */}
+                    <div className="glass-card" style={{ overflow: "hidden" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead>
+                                <tr style={{ borderBottom: "1px solid var(--border-default)" }}>
+                                    {["Resident", "Risk Score", "Level", "Signals"].map(h => (
+                                        <th key={h} style={{ padding: "13px 18px", textAlign: "left", fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", fontWeight: 500 }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.churn.residents.map(r => (
+                                    <tr key={r.residentId} style={{ borderBottom: "1px solid var(--border-subtle)", transition: "background 0.12s" }}
+                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--bg-card-hover)"}
+                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ""}>
+                                        <td style={{ padding: "13px 18px" }}>
+                                            <div style={{ fontSize: "14px", fontWeight: 600 }}>{r.name}</div>
+                                            <div style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{r.email}</div>
+                                        </td>
+                                        <td style={{ padding: "13px 18px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                                <div style={{ flex: 1, maxWidth: "100px", height: "5px", background: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
+                                                    <div style={{ height: "100%", width: `${r.score}%`, background: (RISK_COLOR as any)[r.riskLevel], borderRadius: "3px" }} />
+                                                </div>
+                                                <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color: (RISK_COLOR as any)[r.riskLevel] }}>{r.score}</span>
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: "13px 18px" }}>
+                                            <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.08em", padding: "4px 9px", borderRadius: "6px", textTransform: "uppercase", background: (RISK_COLOR as any)[r.riskLevel] + "15", color: (RISK_COLOR as any)[r.riskLevel], border: `1px solid ${(RISK_COLOR as any)[r.riskLevel]}25` }}>{r.riskLevel}</span>
+                                        </td>
+                                        <td style={{ padding: "13px 18px" }}>
+                                            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                                                {r.reasons.map(reason => (
+                                                    <span key={reason} style={{ fontSize: "10px", background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "5px", padding: "2px 7px", color: "var(--text-secondary)" }}>{reason}</span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Smart Alerts tab */}
+            {tab === "alerts" && data?.alerts && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {data.alerts.alerts.map(alert => {
+                        const style = ALERT_COLOR[alert.severity] || ALERT_COLOR.info;
+                        return (
+                            <div key={alert.id} className="animate-fade-up" style={{ background: style.bg, border: `1px solid ${style.border}`, borderRadius: "16px", padding: "20px 24px", display: "flex", gap: "16px" }}>
+                                <div style={{ fontSize: "22px", flexShrink: 0 }}>{style.icon}</div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "15px", color: style.text, marginBottom: "4px" }}>{alert.title}</div>
+                                    <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "10px" }}>{alert.description}</div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: style.text, opacity: 0.8 }}>
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                                        {alert.action}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }
---- END OF .\web\components\ui\StatCard.tsx ---
 
---- FILE: .\web\public\window.svg ---
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
---- END OF .\web\public\window.svg ---
+--- END OF .\web\app\owner\intelligence\page.tsx ---
+
+--- FILE: .\web\components\layout\PropertySwitcher.tsx ---
+"use client";
+
+import { useProperty } from "@/context/PropertyContext";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+
+export function PropertySwitcher() {
+    const { selectedProperty, setSelectedProperty } = useProperty();
+    const [properties, setProperties] = useState<any[]>([]);
+
+    useEffect(() => {
+        api.get("/owner/properties")
+            .then(({ data }) => setProperties(data.data || []))
+            .catch(() => { });
+    }, []);
+
+    return (
+        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <svg
+                width="13" height="13"
+                viewBox="0 0 24 24" fill="none"
+                stroke="var(--text-tertiary)" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round"
+                style={{ position: "absolute", left: "10px", pointerEvents: "none" }}
+            >
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            <select
+                value={selectedProperty || ""}
+                onChange={(e) => setSelectedProperty(e.target.value || null)}
+                style={{
+                    paddingLeft: "28px",
+                    paddingRight: "28px",
+                    paddingTop: "6px",
+                    paddingBottom: "6px",
+                    background: "var(--bg-card)",
+                    border: "1px solid var(--border-default)",
+                    borderRadius: "8px",
+                    color: "var(--text-secondary)",
+                    fontSize: "12px",
+                    fontFamily: "var(--font-body)",
+                    cursor: "pointer",
+                    outline: "none",
+                    appearance: "none",
+                    WebkitAppearance: "none",
+                    minWidth: "140px",
+                }}
+            >
+                <option value="" style={{ background: "#0d1520" }}>All Properties</option>
+                {properties.map((p) => (
+                    <option key={p._id} value={p._id} style={{ background: "#0d1520" }}>{p.name}</option>
+                ))}
+            </select>
+            <svg
+                width="11" height="11"
+                viewBox="0 0 24 24" fill="none"
+                stroke="var(--text-tertiary)" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round"
+                style={{ position: "absolute", right: "8px", pointerEvents: "none" }}
+            >
+                <polyline points="6 9 12 15 18 9" />
+            </svg>
+        </div>
+    );
+}
+--- END OF .\web\components\layout\PropertySwitcher.tsx ---
+
+--- FILE: .\web\public\globe.svg ---
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
+--- END OF .\web\public\globe.svg ---
 

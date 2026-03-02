@@ -647,299 +647,646 @@ TS PROJECT PART 7 of 20
 }
 --- END OF .\.vs\TAGT.slnx\v18\DocumentLayout.json ---
 
---- FILE: .\backend\src\controllers\roomController.js ---
-﻿import Room from "../models/rooms.js";
+--- FILE: .\backend\src\controllers\requestController.js ---
+import Request from "../models/Request.js";
 import logger from "../utils/logger.js";
-import mongoose from "mongoose";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
-
-export const addRoom = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
+/**
+ * CREATE REQUEST (Resident)
+ */
+export const createRequest = async (req, res, next) => {
     try {
-        const scope = buildPropertyFilter(req.user);
-        const { roomNumber, rent, totalBeds, note } = req.body;
+        const { title, description, priority } = req.body;
 
-
-        if (!roomNumber || rent == null || totalBeds == null) {
-            await session.abortTransaction();
+        if (!title || !description) {
             return res.status(400).json({
                 success: false,
-                message: "Room number, rent, and total beds are required",
+                message: "Title and description are required",
             });
         }
 
-        if (!Number.isFinite(Number(rent)) || Number(rent) <= 0) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Rent must be a positive number" });
-        }
+        const request = await Request.create({
+            resident: req.user._id,
+            title,
+            description,
+            priority: priority || "medium",
+        });
 
-        if (!Number.isFinite(Number(totalBeds)) || Number(totalBeds) <= 0) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Total beds must be a positive number" });
-        }
-
-        const exists = await Room.findOne({ roomNumber, ...scope }).session(session);
-        if (exists) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Room number already exists" });
-        }
-
-        const room = await Room.create(
-            [{
-                propertyId: req.user.propertyId,   // 🔥 REQUIRED
-                roomNumber,
-                rent: Number(rent),
-                totalBeds: Number(totalBeds),
-                occupiedBeds: 0,
-                note: typeof note === "string" ? note : ""
-            }],
-            { session }
-        );
-
-        await session.commitTransaction();
-
-        logger.info(`Room added: ${room[0].roomNumber}`);
-
-        return res.status(201).json({ success: true, room: room[0] });
+        return res.status(201).json({
+            success: true,
+            request,
+        });
     } catch (err) {
-        await session.abortTransaction();
-        logger.error(`ADD ROOM ERROR: ${err.message}`);
-        next(err);
-    } finally {
-        session.endSession();
-    }
-};
-
-export const getAllRooms = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const rooms = await Room.find(scope).sort({ createdAt: -1 }).lean();
-        return res.json({ success: true, rooms });
-    } catch (err) {
-        logger.error(`GET ROOMS ERROR: ${err.message}`);
+        logger.error(`CREATE REQUEST ERROR: ${err.message}`);
         next(err);
     }
 };
 
-export const updateRoom = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const { rent, totalBeds, note, maintenanceMode, maintenanceNote } = req.body;
-
-        const room = await Room.findById(id);
-        if (!room) {
-            return res.status(404).json({ success: false, message: "Room not found" });
-        }
-
-        if (rent != null) {
-            const parsedRent = Number(rent);
-            if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
-                return res.status(400).json({ success: false, message: "Rent must be a positive number" });
-            }
-            room.rent = parsedRent;
-        }
-
-        if (totalBeds != null) {
-            const parsedBeds = Number(totalBeds);
-            if (!Number.isFinite(parsedBeds) || parsedBeds <= 0) {
-                return res.status(400).json({ success: false, message: "Total beds must be a positive number" });
-            }
-            if (parsedBeds < room.occupiedBeds) {
-                return res.status(400).json({ success: false, message: "Total beds cannot be lower than occupied beds" });
-            }
-            room.totalBeds = parsedBeds;
-        }
-
-        if (typeof note === "string") room.note = note;
-        if (typeof maintenanceMode === "boolean") room.maintenanceMode = maintenanceMode;
-        if (typeof maintenanceNote === "string") room.maintenanceNote = maintenanceNote;
-
-        await room.save();
-
-        return res.json({ success: true, room });
-    } catch (err) {
-        logger.error(`UPDATE ROOM ERROR: ${err.message}`);
-        next(err);
-    }
-};
-
-export const deleteRoom = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        const { id } = req.params;
-        const scope = buildPropertyFilter(req.user);
-        const room = await Room.findById(id, ...scope).session(session);
-
-        if (!room) {
-            await session.abortTransaction();
-            return res.status(404).json({ success: false, message: "Room not found" });
-        }
-
-        if (room.occupiedBeds > 0) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Cannot delete room with assigned residents" });
-        }
-
-        await room.deleteOne({ session });
-
-        await session.commitTransaction();
-        logger.info(`Room deleted: ${room.roomNumber}`);
-
-        return res.json({ success: true, message: "Room deleted successfully" });
-    } catch (err) {
-        await session.abortTransaction();
-        logger.error(`DELETE ROOM ERROR: ${err.message}`);
-        next(err);
-    } finally {
-        session.endSession();
-    }
-};
-
---- END OF .\backend\src\controllers\roomController.js ---
-
---- FILE: .\backend\src\routes\owner.js ---
-import { Router } from "express";
-
-import auth from "../middleware/auth.js";
-
-
-import {
-    getAllResidents,
-    addResident,
-} from "../controllers/residentController.js";
-
-import Request from "../models/Request.js";
-import Payment from "../models/Payment.js";
-import User from "../models/User.js";
-import { buildPropertyFilter } from "../utils/tenantScope.js";
-import authorize from "../middleware/authorize.js";
-import Property from "../models/Property.js";
-
-const router = Router();
-
-router.get("/residents", auth, authorize("owner"), getAllResidents);
-router.post("/residents", auth, authorize("owner"), addResident);
-
-router.get("/requests", auth, authorize("owner"), async (req, res, next) => {
+/**
+ * GET ALL REQUESTS (Admin)
+ */
+export const getAllRequests = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
         const requests = await Request.find({ ...scope })
             .populate("resident", "name email")
             .sort({ createdAt: -1 })
             .lean();
-        res.json({ success: true, requests });
-    } catch (err) {
-        next(err);
-    }
-});
-router.get("/properties", auth, authorize("owner"), async (req, res) => {
-    const properties = await Property.find({
-        _id: { $in: req.user.propertyIds }
-    }).lean();
 
-    res.json({ success: true, data: properties });
-});
-
-router.get("/stats", auth, authorize("owner"), async (req, res, next) => {
-    try {
-        console.log("Owner user:", req.user);
-        const { propertyId } = req.query;
-
-        let scope;
-
-        if (propertyId) {
-            // 🔐 SECURITY CHECK
-            if (!req.user.propertyIds.includes(propertyId)) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Unauthorized property access"
-                });
-            }
-
-            scope = { propertyId };
-        } else {
-            // All properties
-            scope = { propertyId: { $in: req.user.propertyIds } };
-        }
-
-        const [totalResidents, pendingRequests, payments] =
-            await Promise.all([
-                User.countDocuments({
-                    role: "resident",
-                    isActive: true,
-                    ...scope
-                }),
-                Request.countDocuments({
-                    status: { $ne: "resolved" },
-                    ...scope
-                }),
-                Payment.find(scope, "amount status").lean()
-            ]);
-
-        let totalRevenue = 0;
-        let outstandingBalance = 0;
-
-        for (const p of payments) {
-            if (p.status === "paid") totalRevenue += p.amount || 0;
-            else outstandingBalance += p.amount || 0;
-        }
-
-        res.json({
+        return res.json({
             success: true,
-            stats: {
-                totalResidents,
-                pendingRequests,
-                totalRevenue,
-                outstandingBalance
-            }
+            requests,
         });
     } catch (err) {
+        logger.error(`GET ALL REQUESTS ERROR: ${err.message}`);
         next(err);
     }
+};
+
+/**
+ * GET MY REQUESTS (Resident)
+ */
+export const getMyRequests = async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
+        const requests = await Request.find({ ...scope, resident: req.user._id })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({
+            success: true,
+            requests,
+        });
+    } catch (err) {
+        logger.error(`GET MY REQUESTS ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * UPDATE REQUEST STATUS (Admin)
+ */
+export const updateRequestStatus = async (req, res, next) => {
+    try {
+        const { status } = req.body;
+
+        if (!["pending", "in-progress", "resolved"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid status value",
+            });
+        }
+
+        const request = await Request.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+
+        if (!request) {
+            return res.status(404).json({
+                success: false,
+                message: "Request not found",
+            });
+        }
+
+        return res.json({
+            success: true,
+            request,
+        });
+    } catch (err) {
+        logger.error(`UPDATE REQUEST ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+/**
+ * DELETE REQUEST (Admin)
+ */
+export const deleteRequest = async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
+        const request = await Request.findOne({ _id: req.params.id, ...scope });
+
+        if (!request) {
+            return res.status(404).json({
+                success: false,
+                message: "Request not found",
+            });
+        }
+
+        await request.deleteOne();
+
+        return res.json({
+            success: true,
+            message: "Request deleted successfully",
+        });
+    } catch (err) {
+        logger.error(`DELETE REQUEST ERROR: ${err.message}`);
+        next(err);
+    }
+};
+--- END OF .\backend\src\controllers\requestController.js ---
+
+--- FILE: .\backend\src\models\Request.js ---
+import mongoose from "mongoose";
+
+const RequestSchema = new mongoose.Schema(
+    {
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            required: true,
+            index: true
+        },
+
+        resident: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+
+        message: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        title: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        description: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        priority: {
+            type: String,
+            enum: ["low", "medium", "high", "urgent"],
+            default: "medium"
+        },
+
+        status: {
+            type: String,
+            enum: ["pending", "in-progress", "resolved"],
+            default: "pending",
+            index: true
+        }
+    },
+    { timestamps: true }
+
+);
+
+RequestSchema.pre("validate", function (next) {
+    if (!this.propertyId || !this.resident) {
+        return next(new Error("Invalid tenant association"));
+    }
+    next();
 });
 
-export default router;
---- END OF .\backend\src\routes\owner.js ---
+RequestSchema.index({ propertyId: 1, status: 1 });
 
---- FILE: .\web\app\globals.css ---
-@import "tailwindcss";
+export default mongoose.model("Request", RequestSchema);
+--- END OF .\backend\src\models\Request.js ---
 
-/* Optional global styling */
-html,
-body {
-  height: 100%;
-}
+--- FILE: .\backend\src\utils\invoiceGenerator.js ---
+import PDFDocument from "pdfkit";
 
-body {
-  background-color: #0a0a0a;
-  color: white;
-}
---- END OF .\web\app\globals.css ---
+export const generateInvoicePDF = (payment, res) => {
+    const doc = new PDFDocument({ margin: 40 });
+    const amount =
+        payment.totalPayable ??
+        payment.amount ??
+        payment.baseAmount ??
+        0;
 
---- FILE: .\web\components\layout\Navbar.tsx ---
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=invoice-${payment._id}.pdf`
+    );
+
+    doc.pipe(res);
+
+    doc.fontSize(20).text("RENT INVOICE", { align: "center" });
+    doc.moveDown();
+
+    doc.fontSize(12);
+    doc.text(`Invoice ID: ${payment._id}`);
+    doc.text(`Resident: ${payment.resident?.name || payment.resident?.email || "Unknown"}`);
+    doc.text(`Amount: ₹${Number(amount).toLocaleString()}`);
+    doc.text(`Month: ${payment.month}`);
+    doc.text(`Due Date: ${new Date(payment.dueDate).toDateString()}`);
+    doc.text(`Status: ${payment.status}`);
+
+    if (payment.paidAt) {
+        doc.text(`Paid On: ${new Date(payment.paidAt).toDateString()}`);
+    }
+
+    doc.moveDown();
+    doc.text("Thank you for your payment.", { align: "center" });
+
+    doc.end();
+};
+--- END OF .\backend\src\utils\invoiceGenerator.js ---
+
+--- FILE: .\web\app\dashboard\page.tsx ---
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { PropertySwitcher } from "./PropertySwitcher";
 
-export function Navbar() {
-    const { role } = useAuth();
+export default function DashboardPage() {
+    const { role, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (loading) return;
+        if (!role) { router.replace("/login"); return; }
+        if (role === "owner") router.replace("/owner");
+        else if (role === "resident") router.replace("/resident");
+        else if (role === "super_admin") router.replace("/provider");
+    }, [role, loading, router]);
 
     return (
-        <div className="flex justify-between items-center p-4 border-b border-neutral-800">
-            <h1 className="text-xl font-semibold">Dashboard</h1>
-
-            {(role === "owner" || role === "super_admin") && (
-                <PropertySwitcher />
-            )}
+        <div style={{
+            minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+            background: "var(--bg-base)", flexDirection: "column", gap: "20px",
+        }}>
+            <div style={{
+                width: "44px", height: "44px",
+                border: "2px solid var(--border-default)",
+                borderTopColor: "var(--accent-primary)",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+            }} />
+            <p className="label-text">Redirecting to your workspace...</p>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     );
 }
---- END OF .\web\components\layout\Navbar.tsx ---
+--- END OF .\web\app\dashboard\page.tsx ---
 
---- FILE: .\web\public\file.svg ---
-<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
---- END OF .\web\public\file.svg ---
+--- FILE: .\web\app\search\page.tsx ---
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+
+interface PGResult {
+    id: number;
+    name: string;
+    type: string;
+    lat: number;
+    lon: number;
+    address?: string;
+    amenity?: string;
+    phone?: string;
+    website?: string;
+    opening_hours?: string;
+    distanceKm?: number;
+}
+
+interface NominatimResult { lat: string; lon: string; display_name: string; }
+interface Place { display_name: string; lat: string; lon: string; }
+
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function buildOverpassQuery(lat: number, lon: number, radiusM = 5000) {
+    return `
+[out:json][timeout:15];
+(
+  node["amenity"="hostel"](around:${radiusM},${lat},${lon});
+  node["tourism"="hostel"](around:${radiusM},${lat},${lon});
+  node["name"~"PG|paying guest|pg|hostel|boys|girls|co.living",i](around:${radiusM},${lat},${lon});
+  way["amenity"="hostel"](around:${radiusM},${lat},${lon});
+  way["name"~"PG|paying guest|pg|hostel|boys|girls|co.living",i](around:${radiusM},${lat},${lon});
+);
+out center tags;`;
+}
+
+function parseOverpassResults(data: any, centerLat: number, centerLon: number): PGResult[] {
+    const elements = data?.elements || [];
+    const seen = new Set<string>();
+    const results: PGResult[] = [];
+
+    for (const el of elements) {
+        const tags = el.tags || {};
+        const name = tags.name || tags["name:en"] || null;
+        if (!name) continue;
+
+        const lat = el.lat ?? el.center?.lat;
+        const lon = el.lon ?? el.center?.lon;
+        if (!lat || !lon) continue;
+
+        const key = `${name.toLowerCase()}_${lat.toFixed(3)}_${lon.toFixed(3)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const parts = [tags["addr:housenumber"], tags["addr:street"], tags["addr:suburb"], tags["addr:city"]].filter(Boolean);
+        results.push({
+            id: el.id,
+            name,
+            type: tags.amenity || tags.tourism || "pg",
+            lat, lon,
+            address: parts.length ? parts.join(", ") : undefined,
+            phone: tags.phone || tags["contact:phone"] || undefined,
+            website: tags.website || tags["contact:website"] || undefined,
+            opening_hours: tags.opening_hours || undefined,
+            distanceKm: haversine(centerLat, centerLon, lat, lon),
+        });
+    }
+    return results.sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
+}
+
+function SearchBar({ defaultQuery }: { defaultQuery: string }) {
+    const [query, setQuery] = useState(defaultQuery);
+    const [suggestions, setSuggestions] = useState<Place[]>([]);
+    const [showDrop, setShowDrop] = useState(false);
+    const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+    const [type, setType] = useState("");
+    let debounceTimer: any;
+
+    async function fetchSuggestions(q: string) {
+        if (q.length < 2) { setSuggestions([]); return; }
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+        const data: Place[] = await res.json();
+        setSuggestions(data); setShowDrop(data.length > 0);
+    }
+
+    function onQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setQuery(e.target.value); setSelectedPlace(null);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => fetchSuggestions(e.target.value), 350);
+    }
+
+    function select(p: Place) { setQuery(p.display_name.split(",").slice(0, 2).join(", ")); setSelectedPlace(p); setSuggestions([]); setShowDrop(false); }
+
+    function handleSearch(e: React.FormEvent) {
+        e.preventDefault();
+        const params = new URLSearchParams({ location: query, type });
+        if (selectedPlace) { params.set("lat", selectedPlace.lat); params.set("lng", selectedPlace.lon); }
+        window.location.href = `/search?${params}`;
+    }
+
+    return (
+        <form onSubmit={handleSearch} style={{ display: "flex", gap: "8px", background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "12px", padding: "6px", flexWrap: "wrap", position: "relative", zIndex: 50 }}>
+            <div style={{ flex: 1, minWidth: "200px", position: "relative" }}>
+                <input value={query} onChange={onQueryChange} onFocus={() => suggestions.length > 0 && setShowDrop(true)} autoComplete="off" placeholder="📍 City or area…" style={{ width: "100%", background: "transparent", border: "none", outline: "none", padding: "9px 14px", fontSize: "14px", color: "var(--text-primary)", fontFamily: "var(--font-body)" }} />
+                {showDrop && suggestions.length > 0 && (
+                    <ul style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--bg-elevated)", border: "1px solid var(--border-default)", borderRadius: "10px", boxShadow: "0 12px 36px rgba(0,0,0,0.5)", padding: "6px", zIndex: 200, listStyle: "none", maxHeight: "220px", overflowY: "auto" }}>
+                        {suggestions.map((s, i) => (
+                            <li key={i} onMouseDown={e => { e.preventDefault(); select(s); }} style={{ padding: "9px 12px", borderRadius: "7px", cursor: "pointer", fontSize: "13px", color: "var(--text-secondary)", display: "flex", gap: "8px" }}
+                                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--bg-card-hover)"}
+                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ""}>
+                                <span>📍</span> <span>{s.display_name}</span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+            <select value={type} onChange={e => setType(e.target.value)} style={{ background: "transparent", border: "none", outline: "none", color: "var(--text-secondary)", fontFamily: "var(--font-body)", fontSize: "14px", padding: "9px 12px", cursor: "pointer" }}>
+                <option value="">All types</option>
+                <option value="boys">Boys PG</option>
+                <option value="girls">Girls PG</option>
+                <option value="hostel">Hostel</option>
+                <option value="co-living">Co-Living</option>
+            </select>
+            <button type="submit" className="btn-primary" style={{ fontSize: "13px", padding: "9px 18px" }}>Search</button>
+        </form>
+    );
+}
+
+export default function SearchPage() {
+    const params = useSearchParams();
+    const location = params.get("location") || "";
+    const type = params.get("type") || "";
+    const latParam = params.get("lat");
+    const lngParam = params.get("lng");
+
+    const [results, setResults] = useState<PGResult[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [centerName, setCenterName] = useState(location);
+    const [error, setError] = useState("");
+
+    const runSearch = useCallback(async () => {
+        setLoading(true); setError("");
+        try {
+            let lat = latParam ? parseFloat(latParam) : null;
+            let lon = lngParam ? parseFloat(lngParam) : null;
+
+            // If no lat/lng from params, geocode the location string
+            if (!lat || !lon) {
+                const geoRes = await fetch(`/api/geocode?q=${encodeURIComponent(location)}`);
+                const geoData: NominatimResult[] = await geoRes.json();
+                if (!geoData.length) { setError("Location not found. Try a more specific name."); setLoading(false); return; }
+                lat = parseFloat(geoData[0].lat);
+                lon = parseFloat(geoData[0].lon);
+                setCenterName(geoData[0].display_name.split(",").slice(0, 2).join(", "));
+            }
+
+            const query = buildOverpassQuery(lat, lon, 5000);
+            const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
+                method: "POST",
+                body: `data=${encodeURIComponent(query)}`,
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            });
+            const overpassData = await overpassRes.json();
+            const parsed = parseOverpassResults(overpassData, lat, lon);
+            setResults(parsed);
+        } catch (e) {
+            setError("Search failed. Please try again.");
+        } finally { setLoading(false); }
+    }, [location, latParam, lngParam]);
+
+    useEffect(() => { if (location) runSearch(); else setLoading(false); }, [runSearch, location]);
+
+    return (
+        <div style={{ minHeight: "100vh", background: "var(--bg-base)", color: "var(--text-primary)", fontFamily: "var(--font-body)" }}>
+            <div className="mesh-bg" />
+
+            {/* Sticky nav + search bar */}
+            <div style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(3,5,7,0.88)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderBottom: "1px solid var(--border-subtle)", padding: "12px 24px" }}>
+                <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                    <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none", flexShrink: 0 }}>
+                        <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ color: "#000", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "12px" }}>T</span>
+                        </div>
+                        <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "16px" }}>TAGT</span>
+                    </Link>
+                    <div style={{ flex: 1, minWidth: "280px" }}>
+                        <SearchBar defaultQuery={location} />
+                    </div>
+                    <Link href="/login" className="btn-ghost" style={{ fontSize: "13px", flexShrink: 0 }}>Sign In</Link>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "36px 24px", position: "relative", zIndex: 1 }}>
+                {/* Header */}
+                <div style={{ marginBottom: "28px" }}>
+                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>
+                        OpenStreetMap · 5km radius
+                    </div>
+                    <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(22px, 4vw, 32px)", fontWeight: 700, marginBottom: "4px", letterSpacing: "-0.02em" }}>
+                        PGs near <span style={{ color: "var(--accent-primary)" }}>{centerName || location}</span>
+                    </h1>
+                    {!loading && (
+                        <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+                            {results.length > 0 ? `${results.length} place${results.length !== 1 ? "s" : ""} found` : "No results found"}
+                            {type ? ` · ${type}` : ""}
+                        </p>
+                    )}
+                </div>
+
+                {/* Loading */}
+                {loading && (
+                    <div>
+                        <div style={{ fontSize: "13px", color: "var(--text-tertiary)", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div style={{ width: "14px", height: "14px", border: "2px solid var(--accent-primary)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+                            Searching OpenStreetMap…
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "14px" }}>
+                            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton" style={{ height: "180px", borderRadius: "16px" }} />)}
+                        </div>
+                    </div>
+                )}
+
+                {/* Error */}
+                {!loading && error && (
+                    <div style={{ textAlign: "center", padding: "60px", border: "1px dashed rgba(255,82,82,0.3)", borderRadius: "16px", color: "#ff5252" }}>
+                        <div style={{ fontSize: "32px", marginBottom: "12px" }}>⚠️</div>
+                        <p style={{ fontSize: "15px", fontWeight: 600, marginBottom: "6px" }}>{error}</p>
+                        <button className="btn-ghost" onClick={runSearch} style={{ fontSize: "13px", marginTop: "12px" }}>Retry</button>
+                    </div>
+                )}
+
+                {/* Empty */}
+                {!loading && !error && results.length === 0 && (
+                    <div style={{ textAlign: "center", padding: "80px 24px", border: "1px dashed var(--border-subtle)", borderRadius: "16px" }}>
+                        <div style={{ fontSize: "40px", marginBottom: "16px" }}>🔍</div>
+                        <p style={{ fontSize: "16px", color: "var(--text-secondary)", marginBottom: "8px" }}>No PGs found in this area on OpenStreetMap</p>
+                        <p style={{ fontSize: "13px", color: "var(--text-tertiary)" }}>Try a broader area like a nearby city or a larger neighbourhood</p>
+                    </div>
+                )}
+
+                {/* Results grid */}
+                {!loading && !error && results.length > 0 && (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "14px" }}>
+                        {results.map((pg, i) => (
+                            <div key={pg.id} className="glass-card animate-fade-up" style={{ padding: "22px", animationDelay: `${i * 0.05}s`, display: "flex", flexDirection: "column", gap: "14px" }}>
+                                {/* Top row */}
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                                    <div style={{ width: "42px", height: "42px", borderRadius: "11px", background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
+                                        🏠
+                                    </div>
+                                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                                        <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.15)", color: "var(--accent-primary)", padding: "3px 9px", borderRadius: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                                            {pg.type}
+                                        </span>
+                                        {pg.distanceKm !== undefined && (
+                                            <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", padding: "3px 9px", borderRadius: "6px" }}>
+                                                {pg.distanceKm < 1 ? `${Math.round(pg.distanceKm * 1000)}m` : `${pg.distanceKm.toFixed(1)}km`}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Name + address */}
+                                <div>
+                                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontWeight: 700, letterSpacing: "-0.01em", marginBottom: "4px" }}>{pg.name}</h3>
+                                    {pg.address && <p style={{ fontSize: "12px", color: "var(--text-tertiary)", lineHeight: 1.5 }}>{pg.address}</p>}
+                                </div>
+
+                                {/* Details */}
+                                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                                    {pg.phone && (
+                                        <div style={{ fontSize: "12px", color: "var(--text-secondary)", display: "flex", gap: "7px" }}>
+                                            <span>📞</span>
+                                            <a href={`tel:${pg.phone}`} style={{ color: "inherit", textDecoration: "none" }}>{pg.phone}</a>
+                                        </div>
+                                    )}
+                                    {pg.opening_hours && (
+                                        <div style={{ fontSize: "12px", color: "var(--text-secondary)", display: "flex", gap: "7px" }}>
+                                            <span>🕐</span> {pg.opening_hours}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Actions */}
+                                <div style={{ display: "flex", gap: "8px", marginTop: "auto" }}>
+                                    <a
+                                        href={`https://www.openstreetmap.org/?mlat=${pg.lat}&mlon=${pg.lon}&zoom=17`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        style={{ flex: 1, textAlign: "center", padding: "8px", borderRadius: "9px", border: "1px solid var(--border-default)", fontSize: "12px", fontWeight: 500, color: "var(--text-secondary)", textDecoration: "none", background: "var(--bg-elevated)", transition: "all 0.15s" }}
+                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--accent-primary)"}
+                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"}
+                                    >
+                                        📍 View Map
+                                    </a>
+                                    {pg.website ? (
+                                        <a href={pg.website} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ flex: 1, textAlign: "center", padding: "8px", fontSize: "12px", textDecoration: "none" }}>
+                                            Website
+                                        </a>
+                                    ) : (
+                                        <Link href="/signup" className="btn-primary" style={{ flex: 1, textAlign: "center", padding: "8px", fontSize: "12px" }}>
+                                            Enquire
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
+}
+--- END OF .\web\app\search\page.tsx ---
+
+--- FILE: .\web\features\resident\useResidentDashboard.ts ---
+import { useEffect, useState } from "react";
+import {
+    fetchResidentPayments,
+    fetchResidentRequests,
+    ResidentPayment,
+    ResidentRequest,
+} from "./resident.service";
+
+export function useResidentDashboard() {
+    const [payments, setPayments] = useState<ResidentPayment[]>([]);
+    const [requests, setRequests] = useState<ResidentRequest[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    async function load() {
+        const [p, r] = await Promise.all([
+            fetchResidentPayments(),
+            fetchResidentRequests(),
+        ]);
+
+        setPayments(p);
+        setRequests(r);
+    }
+
+    useEffect(() => {
+        load().finally(() => setLoading(false));
+    }, []);
+
+    return { payments, requests, loading };
+}
+--- END OF .\web\features\resident\useResidentDashboard.ts ---
 

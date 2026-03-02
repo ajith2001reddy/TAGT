@@ -1,7 +1,9 @@
 import Request from "../models/Request.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
 
-// Function to get monthly maintenance costs for a specified number of months
+/**
+ * Get monthly maintenance cost history
+ */
 async function getMonthlyMaintenanceCosts(months = 6, req) {
     const now = new Date();
     const history = [];
@@ -12,6 +14,7 @@ async function getMonthlyMaintenanceCosts(months = 6, req) {
             now.getMonth() - (months - i),
             1
         );
+
         const end = new Date(
             now.getFullYear(),
             now.getMonth() - (months - i) + 1,
@@ -20,35 +23,40 @@ async function getMonthlyMaintenanceCosts(months = 6, req) {
             59,
             59
         );
+
         return { start, end };
     });
 
     const scope = buildPropertyFilter(req.user);
+
     const requestsByMonth = await Promise.all(
         ranges.map(({ start, end }) =>
             Request.find(
-                { createdAt: { $gte: start, $lte: end }, ...scope },
-                "cost"
+                {
+                    createdAt: { $gte: start, $lte: end },
+                    ...scope
+                }
             ).lean()
         )
     );
 
     ranges.forEach(({ start }, idx) => {
-        const totalCost = requestsByMonth[idx].reduce(
-            (sum, r) => sum + (r.cost || 0),
-            0
-        );
+        // Since no cost field exists,
+        // we use request count as maintenance load proxy
+        const totalRequests = requestsByMonth[idx].length;
 
         history.push({
             month: start.toISOString().slice(0, 7),
-            cost: Number(totalCost.toFixed(2))
+            cost: totalRequests
         });
     });
 
     return history;
 }
 
-// Function to calculate cost trends from historical data
+/**
+ * Calculate trend slope
+ */
 function calculateCostTrend(data) {
     if (data.length < 2) return 0;
 
@@ -60,7 +68,9 @@ function calculateCostTrend(data) {
     return change / (data.length - 1);
 }
 
-// Function to detect cost spikes based on historical data
+/**
+ * Detect spike risk
+ */
 function detectSpikeRisk(history) {
     if (history.length < 3) return "LOW";
 
@@ -74,9 +84,11 @@ function detectSpikeRisk(history) {
     return "LOW";
 }
 
-// Function to predict future maintenance costs
-async function predictMaintenanceCost(monthsAhead = 6) {
-    const history = await getMonthlyMaintenanceCosts(6);
+/**
+ * Predict future maintenance cost
+ */
+async function predictMaintenanceCost(req, monthsAhead = 6) {
+    const history = await getMonthlyMaintenanceCosts(6, req);
 
     if (!history.length) {
         return {

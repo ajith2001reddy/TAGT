@@ -1,25 +1,69 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 const GRID_COLS = 12;
 
+interface Place { display_name: string; lat: string; lon: string; }
+
 export default function LandingPage() {
   const router = useRouter();
-  const [location, setLocation] = useState("");
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Place[]>([]);
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [type, setType] = useState("");
   const [mounted, setMounted] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => { setMounted(true); }, []);
+
+  // Close dropdown on outside click
   useEffect(() => {
-    setMounted(true);
+    function onClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
+
+  const fetchSuggestions = useCallback(async (q: string) => {
+    if (q.length < 2) { setSuggestions([]); return; }
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      const data: Place[] = await res.json();
+      setSuggestions(data);
+      setShowDropdown(data.length > 0);
+    } catch { setSuggestions([]); }
+  }, []);
+
+  function onQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    setQuery(val);
+    setSelectedPlace(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchSuggestions(val), 350);
+  }
+
+  function selectPlace(place: Place) {
+    setQuery(place.display_name.split(",").slice(0, 2).join(", "));
+    setSelectedPlace(place);
+    setSuggestions([]);
+    setShowDropdown(false);
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    router.push(`/search?location=${location}&type=${type}`);
+    if (!query.trim()) return;
+    const params = new URLSearchParams({ location: query, type });
+    if (selectedPlace) { params.set("lat", selectedPlace.lat); params.set("lng", selectedPlace.lon); }
+    router.push(`/search?${params.toString()}`);
   }
 
   return (
@@ -121,31 +165,63 @@ export default function LandingPage() {
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           marginBottom: "80px",
-          width: "100%", maxWidth: "600px",
+          width: "100%", maxWidth: "640px",
+          position: "relative",
         }}>
-          <input
-            className="input-field"
-            placeholder="City or locality..."
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            required
-            style={{ flex: 1, minWidth: "160px", background: "transparent", border: "none", outline: "none", boxShadow: "none", padding: "10px 14px" }}
-          />
-          <div style={{ width: "1px", background: "var(--border-default)", margin: "6px 0" }} />
+          {/* Location autocomplete wrapper */}
+          <div ref={wrapperRef} style={{ flex: 1, minWidth: "180px", position: "relative" }}>
+            <input
+              className="input-field"
+              placeholder="📍 City, area or PG name…"
+              value={query}
+              onChange={onQueryChange}
+              onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
+              autoComplete="off"
+              required
+              style={{ width: "100%", background: "transparent", border: "none", outline: "none", boxShadow: "none", padding: "10px 14px" }}
+            />
+            {showDropdown && suggestions.length > 0 && (
+              <ul style={{
+                position: "absolute", top: "100%", left: 0, right: 0,
+                background: "var(--bg-elevated)", border: "1px solid var(--border-default)",
+                borderRadius: "12px", boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
+                marginTop: "6px", padding: "6px", zIndex: 200,
+                listStyle: "none", maxHeight: "260px", overflowY: "auto",
+              }}>
+                {suggestions.map((s, i) => (
+                  <li key={i}
+                    onMouseDown={(e) => { e.preventDefault(); selectPlace(s); }}
+                    style={{
+                      padding: "10px 12px", borderRadius: "8px", cursor: "pointer", fontSize: "13px",
+                      color: "var(--text-secondary)", display: "flex", gap: "10px", alignItems: "flex-start",
+                      transition: "all 0.1s",
+                    }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--bg-card-hover)"}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ""}
+                  >
+                    <span style={{ flexShrink: 0, marginTop: "1px", opacity: 0.5 }}>📍</span>
+                    <span style={{ lineHeight: 1.4 }}>{s.display_name}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div style={{ width: "1px", background: "var(--border-default)", margin: "6px 0", flexShrink: 0 }} />
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            required
             style={{
               flex: "0 0 auto", background: "transparent", border: "none", outline: "none",
               color: type ? "var(--text-primary)" : "var(--text-tertiary)",
               fontFamily: "var(--font-body)", fontSize: "15px", padding: "10px 14px", cursor: "pointer",
             }}
           >
-            <option value="" style={{ background: "#0d1520" }}>Property type</option>
+            <option value="" style={{ background: "#0d1520" }}>Type</option>
             <option value="boys" style={{ background: "#0d1520" }}>Boys PG</option>
             <option value="girls" style={{ background: "#0d1520" }}>Girls PG</option>
             <option value="co-living" style={{ background: "#0d1520" }}>Co-Living</option>
+            <option value="hostel" style={{ background: "#0d1520" }}>Hostel</option>
           </select>
           <button type="submit" className="btn-primary" style={{ flexShrink: 0 }}>
             Search

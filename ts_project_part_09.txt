@@ -10,451 +10,544 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFA
 JWT_SECRET=tagt_super_secret_jwt_key_change_this_in_production_2024
 --- END OF .\backend\.env ---
 
---- FILE: .\backend\src\controllers\v2\platformController.js ---
+--- FILE: .\backend\src\controllers\roomController.js ---
+﻿import Room from "../models/rooms.js";
+import logger from "../utils/logger.js";
 import mongoose from "mongoose";
-import User from "../../models/User.js";
-import Room from "../../models/rooms.js";
-import Payment from "../../models/Payment.js";
-import Request from "../../models/Request.js";
-import { buildPropertyFilter } from "../../utils/tenantScope.js";
-import Property from "../../models/Property.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
 
-export const providerOverview = async (req, res, next) => {
-    try {
-        const [totalProperties, totalOwners, totalResidents, revenue] = await Promise.all([
-            Property.countDocuments({}),
-            User.countDocuments({ role: "owner" }),
-            User.countDocuments({ role: "resident" }),
-            Payment.aggregate([{ $match: { status: "paid" } }, { $group: { _id: null, total: { $sum: "$amount" } } }])
-        ]);
-        return res.json({ success: true, data: { totalProperties, totalOwners, totalResidents, platformRevenue: revenue[0]?.total || 0 } });
-    } catch (err) { next(err); }
-};
+export const addRoom = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-export const listProperties = async (req, res, next) => {
-    try {
-        const page = Math.max(1, Number(req.query.page) || 1);
-        const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
-        const skip = (page - 1) * limit;
-
-        const [items, total] = await Promise.all([
-            Property.find().populate("owner", "name email").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-            Property.countDocuments({})
-        ]);
-
-        return res.json({ success: true, data: items, pagination: { page, limit, total } });
-    } catch (err) { next(err); }
-};
-
-export const updatePropertyStatus = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ success: false, message: "Invalid property id" });
-        const property = await Property.findByIdAndUpdate(propertyId, {
-            owner: ownerId
-        });
-        if (!property) return res.status(404).json({ success: false, message: "Property not found" });
-        return res.json({ success: true, data: property });
-    } catch (err) { next(err); }
-};
-
-
-
-const resolvePropertyIdForWrite = (req) => {
-    if (req.user.role === "owner" || req.user.role === "resident") return req.user.propertyId;
-    return req.body.propertyId || req.query.propertyId || null;
-};
-
-export const ownerDashboardAnalytics = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
-        const propertyMatch = scope.propertyId ? { propertyId: scope.propertyId } : {};
+        const { roomNumber, rent, totalBeds, note } = req.body;
 
-        const [totalResidents, totalRooms, pendingPayments, overduePayments, revenueAgg, occupancyAgg] = await Promise.all([
-            User.countDocuments({ role: "resident", isActive: true, ...propertyMatch }),
-            Room.countDocuments({ ...propertyMatch }),
-            Payment.countDocuments({ status: "pending", ...propertyMatch }),
-            Payment.countDocuments({ status: "pending", dueDate: { $lt: new Date() }, ...propertyMatch }),
-            Payment.aggregate([{ $match: { status: "paid", ...propertyMatch } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
-            Room.aggregate([{ $match: propertyMatch }, { $group: { _id: null, occupied: { $sum: "$occupiedBeds" }, total: { $sum: "$totalBeds" } } }])
-        ]);
 
-        const occupied = occupancyAgg[0]?.occupied || 0;
-        const totalBeds = occupancyAgg[0]?.total || 0;
+        if (!roomNumber || rent == null || totalBeds == null) {
+            await session.abortTransaction();
+            return res.status(400).json({
+                success: false,
+                message: "Room number, rent, and total beds are required",
+            });
+        }
+
+        if (!Number.isFinite(Number(rent)) || Number(rent) <= 0) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Rent must be a positive number" });
+        }
+
+        if (!Number.isFinite(Number(totalBeds)) || Number(totalBeds) <= 0) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Total beds must be a positive number" });
+        }
+
+        const exists = await Room.findOne({ roomNumber, ...scope }).session(session);
+        if (exists) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Room number already exists" });
+        }
+
+        const room = await Room.create(
+            [{
+                propertyId: req.user.propertyId,   // 🔥 REQUIRED
+                roomNumber,
+                rent: Number(rent),
+                totalBeds: Number(totalBeds),
+                occupiedBeds: 0,
+                note: typeof note === "string" ? note : ""
+            }],
+            { session }
+        );
+
+        await session.commitTransaction();
+
+        logger.info(`Room added: ${room[0].roomNumber}`);
+
+        return res.status(201).json({ success: true, room: room[0] });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`ADD ROOM ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
+};
+
+export const getAllRooms = async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
+        const rooms = await Room.find(scope)
+            .sort({ createdAt: -1 })
+            .lean();
 
         return res.json({
             success: true,
-            data: {
-                totalResidents,
-                totalRooms,
-                occupancyRate: totalBeds ? Number(((occupied / totalBeds) * 100).toFixed(2)) : 0,
-                pendingPayments,
-                overduePayments,
-                monthlyRevenue: revenueAgg[0]?.total || 0
-            }
+            data: rooms   // ✅ unified response key
         });
     } catch (err) {
+        logger.error(`GET ROOMS ERROR: ${err.message}`);
         next(err);
     }
 };
 
-export const listRooms = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const rooms = await Room.find({ ...(scope.propertyId ? { propertyId: scope.propertyId } : {}) }).sort({ createdAt: -1 }).lean();
-        return res.json({ success: true, data: rooms });
-    } catch (err) { next(err); }
-};
-
-export const createRoom = async (req, res, next) => {
-    try {
-        const propertyId = resolvePropertyIdForWrite(req);
-        if (!propertyId) return res.status(400).json({ success: false, message: "propertyId is required" });
-        const { roomNumber, totalBeds, rentAmount, maintenanceMode, maintenanceNote, note } = req.body;
-        const room = await Room.create({ propertyId, roomNumber, totalBeds, rent: rentAmount, maintenanceMode: Boolean(maintenanceMode), maintenanceNote: maintenanceNote || "", note: note || "" });
-        return res.status(201).json({ success: true, data: room });
-    } catch (err) { next(err); }
-};
-
 export const updateRoom = async (req, res, next) => {
     try {
-        const scope = buildPropertyFilter(req.user);
         const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ success: false, message: "Invalid room id" });
+        const { rent, totalBeds, note, maintenanceMode, maintenanceNote } = req.body;
 
-        const filter = { _id: id, ...(scope.propertyId ? { propertyId: scope.propertyId } : {}) };
-        const update = {
-            ...(req.body.roomNumber !== undefined ? { roomNumber: req.body.roomNumber } : {}),
-            ...(req.body.totalBeds !== undefined ? { totalBeds: req.body.totalBeds } : {}),
-            ...(req.body.occupiedBeds !== undefined ? { occupiedBeds: req.body.occupiedBeds } : {}),
-            ...(req.body.rentAmount !== undefined ? { rent: req.body.rentAmount } : {}),
-            ...(req.body.maintenanceMode !== undefined ? { maintenanceMode: Boolean(req.body.maintenanceMode) } : {}),
-            ...(req.body.maintenanceNote !== undefined ? { maintenanceNote: req.body.maintenanceNote } : {}),
-            ...(req.body.note !== undefined ? { note: req.body.note } : {})
-        };
+        const room = await Room.findById(id);
+        if (!room) {
+            return res.status(404).json({ success: false, message: "Room not found" });
+        }
 
-        const room = await Room.findOneAndUpdate(filter, update, { new: true });
-        if (!room) return res.status(404).json({ success: false, message: "Room not found" });
-        return res.json({ success: true, data: room });
-    } catch (err) { next(err); }
+        if (rent != null) {
+            const parsedRent = Number(rent);
+            if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
+                return res.status(400).json({ success: false, message: "Rent must be a positive number" });
+            }
+            room.rent = parsedRent;
+        }
+
+        if (totalBeds != null) {
+            const parsedBeds = Number(totalBeds);
+            if (!Number.isFinite(parsedBeds) || parsedBeds <= 0) {
+                return res.status(400).json({ success: false, message: "Total beds must be a positive number" });
+            }
+            if (parsedBeds < room.occupiedBeds) {
+                return res.status(400).json({ success: false, message: "Total beds cannot be lower than occupied beds" });
+            }
+            room.totalBeds = parsedBeds;
+        }
+
+        if (typeof note === "string") room.note = note;
+        if (typeof maintenanceMode === "boolean") room.maintenanceMode = maintenanceMode;
+        if (typeof maintenanceNote === "string") room.maintenanceNote = maintenanceNote;
+
+        await room.save();
+
+        return res.json({ success: true, room });
+    } catch (err) {
+        logger.error(`UPDATE ROOM ERROR: ${err.message}`);
+        next(err);
+    }
 };
 
-export const listResidents = async (req, res, next) => {
+export const deleteRoom = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
+        const { id } = req.params;
         const scope = buildPropertyFilter(req.user);
-        const filter = req.user.role === "resident" ? { _id: req.user._id } : { role: "resident", ...(scope.propertyId ? { propertyId: scope.propertyId } : {}) };
-        const residents = await User.find(filter).populate("roomId", "roomNumber rent").lean();
-        return res.json({ success: true, data: residents });
-    } catch (err) { next(err); }
+        const room = await Room.findOne({ _id: id, ...scope }).session(session);
+
+        if (!room) {
+            await session.abortTransaction();
+            return res.status(404).json({ success: false, message: "Room not found" });
+        }
+
+        if (room.occupiedBeds > 0) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Cannot delete room with assigned residents" });
+        }
+
+        await room.deleteOne({ session });
+
+        await session.commitTransaction();
+        logger.info(`Room deleted: ${room.roomNumber}`);
+
+        return res.json({ success: true, message: "Room deleted successfully" });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`DELETE ROOM ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
 };
 
-export const createResident = async (req, res, next) => {
-    try {
-        const propertyId = resolvePropertyIdForWrite(req);
-        if (!propertyId) return res.status(400).json({ success: false, message: "propertyId is required" });
-        const { name, email, password, roomId } = req.body;
-        const resident = await User.create({ name, email: email.toLowerCase().trim(), password, role: "resident", propertyId, roomId: roomId || null });
-        return res.status(201).json({ success: true, data: resident });
-    } catch (err) { next(err); }
-};
+--- END OF .\backend\src\controllers\roomController.js ---
 
-export const listPayments = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const payments = await Payment.find(scope).populate("resident", "name email").sort({ createdAt: -1 }).lean();
-        return res.json({ success: true, data: payments });
-    } catch (err) { next(err); }
-};
-
-export const createPayment = async (req, res, next) => {
-    try {
-        const propertyId = resolvePropertyIdForWrite(req);
-        if (!propertyId) return res.status(400).json({ success: false, message: "propertyId is required" });
-        const { resident, amount, month, type, dueDate } = req.body;
-        const payment = await Payment.create({ propertyId, resident, amount, month, type: type || "rent", status: "pending", dueDate });
-        return res.status(201).json({ success: true, data: payment });
-    } catch (err) { next(err); }
-};
-
-export const markPaymentPaid = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const filter = { _id: req.params.id, ...scope };
-        const payment = await Payment.findOneAndUpdate(filter, { status: "paid", paidAt: new Date() }, { new: true });
-        if (!payment) return res.status(404).json({ success: false, message: "Payment not found" });
-        return res.json({ success: true, data: payment });
-    } catch (err) { next(err); }
-};
-
-export const sendPaymentReminder = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const payment = await Payment.findOne({ _id: req.params.id, ...scope }).populate("resident", "name email").lean();
-        if (!payment) return res.status(404).json({ success: false, message: "Payment not found" });
-
-        console.log(`[REMINDER] Payment ${payment._id} reminder sent to ${payment.resident?.email || "unknown"}`);
-
-        return res.json({ success: true, message: "Reminder logged", data: { paymentId: payment._id, resident: payment.resident?.email || null } });
-    } catch (err) { next(err); }
-};
-
-export const listRequests = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const requests = await Request.find(scope).populate("resident", "name email").sort({ createdAt: -1 }).lean();
-        return res.json({ success: true, data: requests });
-    } catch (err) { next(err); }
-};
-
-export const updateRequest = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const request = await Request.findOneAndUpdate({ _id: req.params.id, ...scope }, req.body, { new: true });
-        if (!request) return res.status(404).json({ success: false, message: "Request not found" });
-        return res.json({ success: true, data: request });
-    } catch (err) { next(err); }
-};
-
-export const residentDashboard = async (req, res, next) => {
-    try {
-        const scope = buildPropertyFilter(req.user);
-        const [profile, payments, requests] = await Promise.all([
-            User.findOne({ _id: req.user._id }).populate("roomId", "roomNumber rent totalBeds occupiedBeds").lean(),
-            Payment.find(scope).sort({ createdAt: -1 }).limit(12).lean(),
-            Request.find(scope).sort({ createdAt: -1 }).limit(20).lean()
-        ]);
-        return res.json({ success: true, data: { profile, payments, requests } });
-    } catch (err) { next(err); }
-};
-
-export const residentCreateRequest = async (req, res, next) => {
-    try {
-        const resident = req.user;
-        const { message, priority } = req.body;
-        if (!message || !message.trim()) return res.status(400).json({ success: false, message: "message is required" });
-        const created = await Request.create({
-            propertyId: resident.propertyId,
-            resident: resident._id,
-            title: "Resident Request",
-            description: message,
-            message,
-            priority: priority || "medium",
-            status: "pending"
-        });
-        return res.status(201).json({ success: true, data: created });
-    } catch (err) { next(err); }
-};
-
---- END OF .\backend\src\controllers\v2\platformController.js ---
-
---- FILE: .\backend\src\routes\requests.js ---
-import { Router } from "express";
+--- FILE: .\backend\src\models\rooms.js ---
 import mongoose from "mongoose";
 
-import auth from "../middleware/auth.js";
-import {
-    createRequest,
-    getAllRequests,
-    getMyRequests,
-    updateRequestStatus,
-    deleteRequest,
-} from "../controllers/requestController.js";
-
-const router = Router();
-
-/**
- * Resident creates request
- */
-router.post("/", auth, createRequest);
-
-/**
- * Resident views own requests
- */
-router.get("/me", auth, getMyRequests);
-
-/**
- * Admin views all requests
- */
-router.get("/", auth, getAllRequests);
-
-/**
- * Admin updates request status
- */
-router.put("/:id/status", auth, (req, res, next) => {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid request ID",
-        });
+const roomSchema = new mongoose.Schema(
+    {
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            index: true
+        },
+        roomNumber: {
+            type: String,
+            required: true,
+            trim: true,
+            index: true
+        },
+        rent: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        totalBeds: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        occupiedBeds: {
+            type: Number,
+            default: 0,
+            min: 0,
+            validate: {
+                validator(value) {
+                    return value <= this.totalBeds;
+                },
+                message: "Occupied beds cannot exceed total beds"
+            }
+        },
+        maintenanceMode: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+        maintenanceNote: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 300
+        },
+        note: {
+            type: String,
+            default: ""
+        }
+    },
+    {
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
     }
+);
 
-    return updateRequestStatus(req, res, next);
+roomSchema.virtual("availableBeds").get(function () {
+    if (this.maintenanceMode) return 0;
+    return Math.max(0, this.totalBeds - this.occupiedBeds);
 });
 
-/**
- * Admin deletes request
- */
-router.delete("/:id", auth, (req, res, next) => {
-    const { id } = req.params;
+roomSchema.index({ propertyId: 1 });
+roomSchema.index({ propertyId: 1, roomNumber: 1 }, { unique: true, sparse: true });
+roomSchema.index({ rent: 1 });
+roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid request ID",
-        });
+export default mongoose.model("Room", roomSchema);
+
+--- END OF .\backend\src\models\rooms.js ---
+
+--- FILE: .\backend\src\utils\tenantScope.js ---
+export const getPropertyScope = (user) => {
+    if (user.role === "super_admin") return {};
+
+    if (user.role === "owner") {
+        return { _id: { $in: user.propertyIds } };
     }
 
-    return deleteRequest(req, res, next);
-});
+    return { _id: user.propertyId };
+};
 
-export default router;
+export const buildPropertyFilter = (user) => {
+    if (user.role === "super_admin") return {};
 
---- END OF .\backend\src\routes\requests.js ---
+    if (user.role === "owner") {
+        // If owner has multiple properties
+        if (Array.isArray(user.propertyIds) && user.propertyIds.length > 0) {
+            return { propertyId: { $in: user.propertyIds } };
+        }
 
---- FILE: .\web\app\page.tsx ---
+        // Fallback to single property
+        if (user.propertyId) {
+            return { propertyId: user.propertyId };
+        }
+
+        return {};
+    }
+
+    return { propertyId: user.propertyId };
+};
+--- END OF .\backend\src\utils\tenantScope.js ---
+
+--- FILE: .\web\app\owner\page.tsx ---
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-export default function LandingPage() {
-  const router = useRouter();
-  const [location, setLocation] = useState("");
-  const [type, setType] = useState("");
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    router.push(`/search?location=${location}&type=${type}`);
-  }
-
-  return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center flex-1 px-6 text-center">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6">
-          Find Your Perfect PG
-        </h1>
-
-        <p className="text-white/60 mb-10">
-          Search verified PG accommodations near you.
-        </p>
-
-        {/* Search Form */}
-        <form
-          onSubmit={handleSearch}
-          className="flex flex-col md:flex-row gap-4 bg-neutral-900 p-4 rounded-xl"
-        >
-          <input
-            placeholder="Enter Location"
-            className="px-4 py-3 rounded bg-neutral-800"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            required
-          />
-
-          <select
-            className="px-4 py-3 rounded bg-neutral-800"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            required
-          >
-            <option value="">Select Type</option>
-            <option value="boys">Boys PG</option>
-            <option value="girls">Girls PG</option>
-            <option value="co-living">Co-Living</option>
-          </select>
-
-          <button className="bg-violet-600 px-6 py-3 rounded font-semibold">
-            Search
-          </button>
-        </form>
-      </section>
-
-      {/* Side Content */}
-      <section className="bg-neutral-900 py-16 px-6 text-center">
-        <h2 className="text-3xl font-semibold mb-6">
-          Why Choose TAGT?
-        </h2>
-
-        <div className="grid md:grid-cols-3 gap-10">
-          <div>
-            <h3 className="font-bold mb-2">Verified Listings</h3>
-            <p className="text-white/60">
-              Only trusted PG properties listed.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold mb-2">Transparent Pricing</h3>
-            <p className="text-white/60">
-              No hidden charges or surprises.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold mb-2">Secure Payments</h3>
-            <p className="text-white/60">
-              Integrated safe online payment system.
-            </p>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
---- END OF .\web\app\page.tsx ---
-
---- FILE: .\web\components\layout\Sidebar.tsx ---
-"use client";
-
+import { useEffect, useState } from "react";
+import { useOwnerStats } from "@/features/owner/useOwnerStats";
+import api from "@/lib/api";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
 
-export function Sidebar() {
-    const { role } = useAuth();
-
-    const links = {
-        super_admin: [
-            { href: "/provider", label: "Platform Overview" },
-            { href: "/provider/properties", label: "Properties" },
-        ],
-        owner: [
-            { href: "/owner", label: "Dashboard" },
-            { href: "/owner/rooms", label: "Rooms" },
-            { href: "/owner/payments", label: "Payments" },
-            { href: "/owner/analytics", label: "Analytics" },
-        ],
-        resident: [
-            { href: "/resident", label: "Dashboard" },
-            { href: "/resident/payments", label: "My Payments" },
-            { href: "/resident/requests", label: "My Requests" },
-        ],
-    };
-
-    const roleLinks = role ? links[role as keyof typeof links] : [];
-
+function StatCard({ label, value, sub, color, icon }: {
+    label: string; value: string | number; sub?: string; color: string; icon: React.ReactNode;
+}) {
     return (
-        <aside className="w-64 border-r border-white/10 bg-neutral-900 p-5">
-            <h2 className="mb-6 text-lg font-bold">TAGT</h2>
-            <nav className="space-y-3">
-                {roleLinks?.map((link) => (
-                    <Link
-                        key={link.href}
-                        href={link.href}
-                        className="block rounded-lg px-3 py-2 hover:bg-neutral-800"
-                    >
-                        {link.label}
-                    </Link>
-                ))}
-            </nav>
-        </aside>
+        <div style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-default)",
+            borderRadius: "18px",
+            padding: "24px",
+            position: "relative",
+            overflow: "hidden",
+            transition: "all 0.25s ease",
+            cursor: "default",
+        }}
+            onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)";
+                (e.currentTarget as HTMLElement).style.boxShadow = `0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px ${color}15`;
+            }}
+            onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.transform = "";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)";
+                (e.currentTarget as HTMLElement).style.boxShadow = "";
+            }}
+        >
+            {/* Gradient top edge */}
+            <div style={{
+                position: "absolute", top: 0, left: 0, right: 0, height: "1px",
+                background: `linear-gradient(90deg, transparent, ${color}50, transparent)`,
+            }} />
+            {/* Icon bg glow */}
+            <div style={{
+                position: "absolute", top: "16px", right: "16px",
+                width: "42px", height: "42px",
+                background: `${color}10`,
+                border: `1px solid ${color}20`,
+                borderRadius: "12px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: color,
+            }}>{icon}</div>
+
+            <div style={{ marginBottom: "8px" }}>
+                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>{label}</div>
+            </div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "30px", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--text-primary)", lineHeight: 1.1 }}>{value}</div>
+            {sub && <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--text-tertiary)" }}>{sub}</div>}
+        </div>
     );
 }
---- END OF .\web\components\layout\Sidebar.tsx ---
 
---- FILE: .\web\public\next.svg ---
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
---- END OF .\web\public\next.svg ---
+function InsightCard({ type, severity, message, recommendation }: any) {
+    const colors: Record<string, string> = { HIGH: "var(--red)", MEDIUM: "var(--yellow)", LOW: "var(--green)" };
+    const color = colors[severity] || "var(--text-secondary)";
+    return (
+        <div style={{
+            padding: "16px 20px",
+            borderRadius: "12px",
+            background: "var(--bg-card)",
+            border: `1px solid ${color}20`,
+            borderLeft: `3px solid ${color}`,
+        }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+                <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "4px" }}>{message}</div>
+                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)", lineHeight: 1.5 }}>{recommendation}</div>
+                </div>
+                <span style={{
+                    flexShrink: 0, padding: "4px 10px", borderRadius: "6px",
+                    fontSize: "10px", fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.08em",
+                    background: `${color}12`, color, border: `1px solid ${color}25`,
+                }}>{severity}</span>
+            </div>
+        </div>
+    );
+}
+
+export default function OwnerPage() {
+    const { stats, loading } = useOwnerStats();
+    const [analytics, setAnalytics] = useState<any>(null);
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+    useEffect(() => {
+        async function fetchAnalytics() {
+            try {
+                const [revenue, churn] = await Promise.all([
+                    api.get("/analytics/optimize/revenue"),
+                    api.get("/analytics/predict/churn"),
+                ]);
+                setAnalytics({ revenue: revenue.data.data, churn: churn.data.data });
+            } catch { /* silent */ }
+        }
+        fetchAnalytics();
+    }, []);
+
+    const statItems = stats ? [
+        { label: "Total Residents", value: stats.totalResidents, color: "var(--accent-primary)", sub: "Active tenants", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg> },
+        { label: "Total Rooms", value: stats.totalRooms, color: "#a78bfa", sub: "Configured units", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg> },
+        { label: "Occupancy Rate", value: `${stats.occupancyRate}%`, color: "#34d399", sub: "Current fill rate", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg> },
+        { label: "Pending Payments", value: stats.pendingPayments, color: "#fbbf24", sub: "Awaiting collection", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
+        { label: "Overdue Payments", value: stats.overduePayments, color: "var(--red)", sub: "Past due date", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
+        { label: "Monthly Revenue", value: `₹${((stats.monthlyRevenue || 0) / 1000).toFixed(1)}k`, color: "#34d399", sub: "Collected this month", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg> },
+    ] : [];
+
+    if (loading) return (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px" }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="skeleton" style={{ height: "130px", borderRadius: "18px" }} />
+            ))}
+        </div>
+    );
+
+    return (
+        <div className="animate-fade-in">
+            {/* Header */}
+            <div style={{ marginBottom: "36px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                        <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>
+                            {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+                        </div>
+                        <h1 className="display-text" style={{ fontSize: "32px", marginBottom: "6px" }}>
+                            {greeting} 👋
+                        </h1>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+                            Here's your property portfolio at a glance.
+                        </p>
+                    </div>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                        <Link href="/owner/residents" className="btn-ghost" style={{ fontSize: "13px", padding: "9px 18px" }}>
+                            Add Resident
+                        </Link>
+                        <Link href="/owner/rooms" className="btn-primary" style={{ fontSize: "13px", padding: "9px 18px" }}>
+                            Manage Rooms
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px", marginBottom: "40px" }}>
+                {statItems.map((s, i) => (
+                    <div key={i} className={`animate-fade-up delay-${i + 1}`}>
+                        <StatCard {...s} />
+                    </div>
+                ))}
+            </div>
+
+            {/* Analytics + Quick Actions row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "20px", marginBottom: "32px" }}>
+                {/* Insights */}
+                {analytics?.revenue?.insights?.length > 0 && (
+                    <div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>
+                                Revenue Insights
+                            </div>
+                            <Link href="/owner/analytics" style={{ fontSize: "12px", color: "var(--accent-primary)", textDecoration: "none" }}>View all →</Link>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            {analytics.revenue.insights.map((ins: any, i: number) => (
+                                <div key={i} className={`animate-fade-up delay-${i + 1}`}>
+                                    <InsightCard {...ins} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Quick Actions */}
+                <div>
+                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "16px" }}>
+                        Quick Actions
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {[
+                            { href: "/owner/rooms", label: "Manage Rooms", desc: "Add, edit or remove units", icon: "🏠" },
+                            { href: "/owner/payments", label: "View Payments", desc: "Track rent & invoices", icon: "💳" },
+                            { href: "/owner/residents", label: "View Residents", desc: "Manage all tenants", icon: "👥" },
+                            { href: "/owner/analytics", label: "Full Analytics", desc: "Revenue & churn insights", icon: "📊" },
+                        ].map(({ href, label, desc, icon }) => (
+                            <Link key={href} href={href} style={{
+                                display: "flex", alignItems: "center", gap: "14px",
+                                padding: "14px 16px", borderRadius: "12px",
+                                background: "var(--bg-card)", border: "1px solid var(--border-subtle)",
+                                textDecoration: "none", color: "var(--text-primary)",
+                                transition: "all 0.2s ease",
+                            }}
+                                onMouseEnter={e => {
+                                    (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)";
+                                    (e.currentTarget as HTMLElement).style.background = "var(--bg-card-hover)";
+                                    (e.currentTarget as HTMLElement).style.transform = "translateX(2px)";
+                                }}
+                                onMouseLeave={e => {
+                                    (e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)";
+                                    (e.currentTarget as HTMLElement).style.background = "var(--bg-card)";
+                                    (e.currentTarget as HTMLElement).style.transform = "";
+                                }}
+                            >
+                                <span style={{ fontSize: "18px", flexShrink: 0 }}>{icon}</span>
+                                <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontSize: "13.5px", fontWeight: 600 }}>{label}</div>
+                                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "1px" }}>{desc}</div>
+                                </div>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" style={{ marginLeft: "auto", flexShrink: 0 }}>
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+--- END OF .\web\app\owner\page.tsx ---
+
+--- FILE: .\web\components\layout\DashboardShell.tsx ---
+"use client";
+
+import { ReactNode } from "react";
+import { Sidebar } from "./Sidebar";
+import { Navbar } from "./Navbar";
+
+export function DashboardShell({ children }: { children: ReactNode }) {
+    return (
+        <div style={{
+            display: "flex",
+            minHeight: "100vh",
+            background: "var(--bg-base)",
+            color: "var(--text-primary)",
+            fontFamily: "var(--font-body)",
+        }}>
+            <Sidebar />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+                <Navbar />
+                <main style={{
+                    flex: 1,
+                    padding: "28px 32px",
+                    overflowY: "auto",
+                }}>
+                    {children}
+                </main>
+            </div>
+        </div>
+    );
+}
+--- END OF .\web\components\layout\DashboardShell.tsx ---
+
+--- FILE: .\web\lib\firebase.ts ---
+import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+
+const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+--- END OF .\web\lib\firebase.ts ---
 

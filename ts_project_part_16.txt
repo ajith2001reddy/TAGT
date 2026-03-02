@@ -1,177 +1,659 @@
 TS PROJECT PART 16 of 20
 ==============================
---- FILE: .\backend\src\analytics\forecastEngine.js ---
-import Room from "../models/rooms.js";
+--- FILE: .\backend\src\analytics\churnEngine.js ---
+import User from "../models/User.js";
+import Payment from "../models/Payment.js";
+import Request from "../models/Request.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
-async function getCurrentOccupancy(req) {
+
+/**
+ * Calculate churn score for a single resident
+ */
+async function calculateResidentChurn(resident, req) {
+    let score = 0;
+    const reasons = [];
+
     const scope = buildPropertyFilter(req.user);
-    const rooms = await Room.find({}, "totalBeds occupiedBeds").lean();
 
-    const totalBeds = rooms.reduce(
-        (sum, r) => sum + (r.totalBeds || 0),
-        0
-    );
+    const [payments, requests] = await Promise.all([
+        Payment.find({ resident: resident._id, ...scope }).lean(),
+        Request.find({ resident: resident._id, ...scope }).lean()
+    ]);
 
-    const occupiedBeds = rooms.reduce(
-        (sum, r) => sum + (r.occupiedBeds || 0),
-        0
-    );
+    // -----------------------------
+    // PAYMENT ANALYSIS
+    // -----------------------------
+    const unpaidCount = payments.filter(
+        p => p.status === "pending" || p.status === "failed"
+    ).length;
 
-    const occupancyRate =
-        totalBeds === 0
-            ? 0
-            : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
-
-    return { totalBeds, occupiedBeds, occupancyRate };
-}
-
-async function predictOccupancy(monthsAhead = 6) {
-    const snapshot = await getCurrentOccupancy();
-
-    if (snapshot.totalBeds === 0) {
-        return {
-            history: [],
-            forecast: [],
-            meta: {
-                model: "No data",
-                generatedAt: new Date()
-            }
-        };
+    if (unpaidCount >= 2) {
+        score += 30;
+        reasons.push("Multiple unpaid payments");
+    } else if (unpaidCount === 1) {
+        score += 15;
+        reasons.push("Recent unpaid payment");
     }
 
-    const now = new Date();
+    // -----------------------------
+    // MAINTENANCE REQUEST ANALYSIS
+    // -----------------------------
+    if (requests.length >= 5) {
+        score += 20;
+        reasons.push("High number of maintenance requests");
+    }
 
-    const history = [
-        {
-            month: now.toISOString().slice(0, 7),
-            occupancyRate: snapshot.occupancyRate
-        }
-    ];
-
-    const forecast = Array.from({ length: monthsAhead }, (_, i) => {
-        const date = new Date(now);
-        date.setMonth(now.getMonth() + i + 1);
-
-        return {
-            month: date.toISOString().slice(0, 7),
-            predictedOccupancy: snapshot.occupancyRate
-        };
+    const hasRecentComplaint = requests.some(r => {
+        const days =
+            (Date.now() - new Date(r.createdAt)) / (1000 * 60 * 60 * 24);
+        return days <= 30;
     });
 
+    if (hasRecentComplaint) {
+        score += 10;
+        reasons.push("Recent maintenance complaint");
+    }
+
+    // -----------------------------
+    // ACTIVITY ANALYSIS
+    // -----------------------------
+    const lastActivity = resident.updatedAt || resident.createdAt;
+    const inactiveDays =
+        (Date.now() - new Date(lastActivity)) / (1000 * 60 * 60 * 24);
+
+    if (inactiveDays > 90) {
+        score += 15;
+        reasons.push("Inactive for over 90 days");
+    }
+
+    // -----------------------------
+    // TENURE ANALYSIS
+    // -----------------------------
+    const tenureDays =
+        (Date.now() - new Date(resident.createdAt)) /
+        (1000 * 60 * 60 * 24);
+
+    if (tenureDays < 60) {
+        score += 10;
+        reasons.push("New resident (low tenure)");
+    }
+
+    // Cap score at 100
+    score = Math.min(score, 100);
+
+    let riskLevel = "LOW";
+    if (score >= 60) riskLevel = "HIGH";
+    else if (score >= 30) riskLevel = "MEDIUM";
+
     return {
-        history,
-        forecast,
-        meta: {
-            model: "Flat baseline projection",
-            generatedAt: new Date(),
-            totalBeds: snapshot.totalBeds,
-            occupiedBeds: snapshot.occupiedBeds,
-            occupancyRate: snapshot.occupancyRate
-        }
+        residentId: resident._id,
+        name: resident.name,
+        email: resident.email,
+        score,
+        riskLevel,
+        reasons
     };
 }
 
-export { predictOccupancy };
+/**
+ * Predict churn for all residents (OWNER SCOPED)
+ */
+async function predictChurn(req) {
+    const scope = buildPropertyFilter(req.user);
 
---- END OF .\backend\src\analytics\forecastEngine.js ---
+    const residents = await User.find({
+        role: "resident",
+        isActive: true,
+        ...scope
+    }).lean();
 
---- FILE: .\backend\src\models\ActivityLog.js ---
-import mongoose from "mongoose";
+    const residentsData = await Promise.all(
+        residents.map(resident =>
+            calculateResidentChurn(resident, req)
+        )
+    );
 
-const ActivityLogSchema = new mongoose.Schema(
-    {
-        action: {
-            type: String,
-            required: true,
-            index: true
+    residentsData.sort((a, b) => b.score - a.score);
+
+    return {
+        generatedAt: new Date(),
+        totalResidents: residentsData.length,
+        highRisk: residentsData.filter(r => r.riskLevel === "HIGH").length,
+        mediumRisk: residentsData.filter(r => r.riskLevel === "MEDIUM").length,
+        lowRisk: residentsData.filter(r => r.riskLevel === "LOW").length,
+        residents: residentsData
+    };
+}
+
+export { calculateResidentChurn, predictChurn };
+--- END OF .\backend\src\analytics\churnEngine.js ---
+
+--- FILE: .\backend\src\controllers\v2\subscriptionController.js ---
+// src/controllers/v2/subscriptionController.js
+import { Subscription, PLAN_LIMITS, getPlanForOwner } from "../../models/Subscription.js";
+import User from "../../models/User.js";
+import Room from "../../models/rooms.js";
+import Payment from "../../models/Payment.js";
+import Property from "../../models/Property.js";
+
+/* ─────────────────────────────────────────────────
+   GET /v2/subscription/my-plan
+   Owner: fetch their current subscription + limits
+───────────────────────────────────────────────── */
+export const getMyPlan = async (req, res, next) => {
+    try {
+        const ownerId = req.user._id;
+        const sub = await Subscription.findOne({ owner: ownerId }).lean();
+        const plan = sub?.plan || "free";
+        const limits = PLAN_LIMITS[plan];
+
+        // Count current usage
+        const propertyId = req.user.propertyId || (req.user.propertyIds?.[0]);
+        const [residentCount, roomCount] = await Promise.all([
+            propertyId ? User.countDocuments({ role: "resident", propertyId, isActive: true }) : 0,
+            propertyId ? Room.countDocuments({ propertyId }) : 0,
+        ]);
+
+        return res.json({
+            success: true, data: {
+                plan, limits,
+                status: sub?.status || "active",
+                currentPeriodEnd: sub?.currentPeriodEnd || null,
+                trialEndsAt: sub?.trialEndsAt || null,
+                usage: { residents: residentCount, rooms: roomCount },
+            }
+        });
+    } catch (err) { next(err); }
+};
+
+/* ─────────────────────────────────────────────────
+   GET /v2/subscription/plans
+   Public: list all available plans
+───────────────────────────────────────────────── */
+export const listPlans = async (req, res) => {
+    const plans = [
+        {
+            id: "free", name: "Free", price: 0, priceLabel: "Free forever",
+            limits: PLAN_LIMITS.free,
+            features: ["Up to 10 rooms", "Up to 20 residents", "Basic payments", "Manual billing"],
+            highlight: false,
         },
-        performedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-            ref: "User",
-            index: true
+        {
+            id: "pro", name: "Pro", price: 999, priceLabel: "₹999/mo",
+            limits: PLAN_LIMITS.pro,
+            features: ["Up to 100 rooms", "Up to 500 residents", "Analytics & reports", "Auto billing", "Email reminders", "Revenue leak detector"],
+            highlight: true,
         },
-        role: {
-            type: String,
-            required: true,
-            index: true
+        {
+            id: "enterprise", name: "Enterprise", price: 2999, priceLabel: "₹2,999/mo",
+            limits: PLAN_LIMITS.enterprise,
+            features: ["Unlimited everything", "Priority support", "Custom branding", "API access", "White-label reports"],
+            highlight: false,
         },
-        ipAddress: {
-            type: String
-        },
-        route: {
-            type: String
-        }
-    },
-    {
-        timestamps: true
+    ];
+    return res.json({ success: true, data: plans });
+};
+
+/* ─────────────────────────────────────────────────
+   POST /v2/subscription/upgrade
+   Owner requests plan upgrade (manual / Stripe flow)
+───────────────────────────────────────────────── */
+export const upgradePlan = async (req, res, next) => {
+    try {
+        const { plan } = req.body;
+        if (!["free", "pro", "enterprise"].includes(plan)) return res.status(400).json({ success: false, message: "Invalid plan" });
+
+        const sub = await Subscription.findOneAndUpdate(
+            { owner: req.user._id },
+            { plan, status: "active", currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
+            { new: true, upsert: true }
+        );
+        return res.json({ success: true, data: sub, message: `Upgraded to ${plan} plan.` });
+    } catch (err) { next(err); }
+};
+
+/* ─────────────────────────────────────────────────
+   GET /v2/admin/subscriptions
+   Super admin: list all owner subscriptions
+───────────────────────────────────────────────── */
+export const listAllSubscriptions = async (req, res, next) => {
+    try {
+        const subs = await Subscription.find({}).populate("owner", "name email").sort({ updatedAt: -1 }).lean();
+
+        // Owners without a subscription record = free
+        const ownersWithSub = new Set(subs.map(s => String(s.owner?._id)));
+        const allOwners = await User.find({ role: "owner" }, "name email createdAt").lean();
+        const unsubOwners = allOwners.filter(o => !ownersWithSub.has(String(o._id))).map(o => ({
+            owner: o, plan: "free", status: "active", currentPeriodEnd: null,
+        }));
+
+        return res.json({ success: true, data: [...subs, ...unsubOwners] });
+    } catch (err) { next(err); }
+};
+
+/* ─────────────────────────────────────────────────
+   PATCH /v2/admin/subscriptions/:ownerId
+   Super admin: manually set a plan for an owner
+───────────────────────────────────────────────── */
+export const adminSetPlan = async (req, res, next) => {
+    try {
+        const { plan, status } = req.body;
+        if (plan && !["free", "pro", "enterprise"].includes(plan)) return res.status(400).json({ success: false, message: "Invalid plan" });
+
+        const sub = await Subscription.findOneAndUpdate(
+            { owner: req.params.ownerId },
+            { ...(plan ? { plan } : {}), ...(status ? { status } : {}) },
+            { new: true, upsert: true }
+        ).populate("owner", "name email");
+
+        return res.json({ success: true, data: sub });
+    } catch (err) { next(err); }
+};
+
+--- END OF .\backend\src\controllers\v2\subscriptionController.js ---
+
+--- FILE: .\backend\src\routes\owner.js ---
+import { Router } from "express";
+
+import auth from "../middleware/auth.js";
+
+
+import {
+    getAllResidents,
+    addResident,
+} from "../controllers/residentController.js";
+
+import Request from "../models/Request.js";
+import Payment from "../models/Payment.js";
+import User from "../models/User.js";
+import { buildPropertyFilter } from "../utils/tenantScope.js";
+import authorize from "../middleware/authorize.js";
+import Property from "../models/Property.js";
+
+const router = Router();
+
+router.get("/residents", auth, authorize("owner"), getAllResidents);
+router.post("/residents", auth, authorize("owner"), addResident);
+
+router.get("/requests", auth, authorize("owner"), async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
+        const requests = await Request.find({ ...scope })
+            .populate("resident", "name email")
+            .sort({ createdAt: -1 })
+            .lean();
+        res.json({ success: true, requests });
+    } catch (err) {
+        next(err);
     }
-);
+});
+router.get("/properties", auth, authorize("owner"), async (req, res) => {
+    const properties = await Property.find({
+        _id: { $in: req.user.propertyIds }
+    }).lean();
 
-export default mongoose.model("ActivityLog", ActivityLogSchema);
-
---- END OF .\backend\src\models\ActivityLog.js ---
-
---- FILE: .\backend\src\utils\logger.js ---
-import winston from "winston";
-
-const logger = winston.createLogger({
-    level: "info",
-    format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
-    transports: [
-        new winston.transports.Console(),
-    ]
+    res.json({ success: true, data: properties });
 });
 
-export default logger; // Default export
+router.get("/stats", auth, authorize("owner"), async (req, res, next) => {
+    try {
+        console.log("Owner user:", req.user);
+        const { propertyId } = req.query;
 
---- END OF .\backend\src\utils\logger.js ---
+        let scope;
 
---- FILE: .\web\app\owner\page.tsx ---
+        if (propertyId) {
+            // 🔐 SECURITY CHECK
+            if (!req.user.propertyIds.includes(propertyId)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Unauthorized property access"
+                });
+            }
+
+            scope = { propertyId };
+        } else {
+            // All properties
+            scope = { propertyId: { $in: req.user.propertyIds } };
+        }
+
+        const [totalResidents, pendingRequests, payments] =
+            await Promise.all([
+                User.countDocuments({
+                    role: "resident",
+                    isActive: true,
+                    ...scope
+                }),
+                Request.countDocuments({
+                    status: { $ne: "resolved" },
+                    ...scope
+                }),
+                Payment.find(scope, "amount status").lean()
+            ]);
+
+        let totalRevenue = 0;
+        let outstandingBalance = 0;
+
+        for (const p of payments) {
+            if (p.status === "paid") totalRevenue += p.amount || 0;
+            else outstandingBalance += p.amount || 0;
+        }
+
+        res.json({
+            success: true,
+            stats: {
+                totalResidents,
+                pendingRequests,
+                totalRevenue,
+                outstandingBalance
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+export default router;
+--- END OF .\backend\src\routes\owner.js ---
+
+--- FILE: .\web\postcss.config.mjs ---
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+
+--- END OF .\web\postcss.config.mjs ---
+
+--- FILE: .\web\app\owner\rooms\page.tsx ---
 "use client";
 
-import { useOwnerStats } from "@/features/owner/useOwnerStats";
-import { StatCard } from "@/components/ui/StatCard";
+import { useState } from "react";
+import { useRooms } from "@/features/owner/useRooms";
+import { createRoom, deleteRoom } from "@/features/owner/rooms.service";
 
-export default function OwnerPage() {
-    const { stats, loading } = useOwnerStats();
-
-    if (loading) return <p>Loading dashboard...</p>;
-    if (!stats) return <p>Failed to load data.</p>;
-
+function OccupancyBar({ occupied, total }: { occupied: number; total: number }) {
+    const pct = total > 0 ? Math.round((occupied / total) * 100) : 0;
+    const color = pct >= 90 ? "#34d399" : pct >= 60 ? "var(--accent-primary)" : pct >= 30 ? "#fbbf24" : "var(--red)";
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard label="Total Residents" value={stats.totalResidents} />
-            <StatCard label="Total Rooms" value={stats.totalRooms} />
-            <StatCard label="Occupancy Rate" value={`${stats.occupancyRate}%`} />
-            <StatCard label="Pending Payments" value={stats.pendingPayments} />
-            <StatCard label="Overdue Payments" value={stats.overduePayments} />
-            <StatCard label="Monthly Revenue" value={`₹${stats.monthlyRevenue}`} />
+        <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.06em" }}>OCCUPANCY</span>
+                <span style={{ fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: 600, color }}>{occupied}/{total}</span>
+            </div>
+            <div style={{ height: "3px", background: "var(--border-subtle)", borderRadius: "2px", overflow: "hidden" }}>
+                <div style={{
+                    height: "100%", width: `${pct}%`,
+                    background: `linear-gradient(90deg, ${color}, ${color}99)`,
+                    borderRadius: "2px", transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)",
+                    boxShadow: `0 0 8px ${color}60`,
+                }} />
+            </div>
         </div>
     );
 }
---- END OF .\web\app\owner\page.tsx ---
 
---- FILE: .\web\features\owner\owner.service.ts ---
+export default function RoomsPage() {
+    const { rooms, loading, reload } = useRooms();
+    const [roomNumber, setRoomNumber] = useState("");
+    const [rent, setRent] = useState("");
+    const [beds, setBeds] = useState("");
+    const [adding, setAdding] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+    const [deleting, setDeleting] = useState<string | null>(null);
+    const [error, setError] = useState("");
+
+    const totalBeds = rooms.reduce((s, r) => s + (r.totalBeds || 0), 0);
+    const occupiedBeds = rooms.reduce((s, r) => s + (r.occupiedBeds || 0), 0);
+    const totalRent = rooms.reduce((s, r) => s + (r.rent || 0), 0);
+
+    async function handleCreate(e: React.FormEvent) {
+        e.preventDefault();
+        setAdding(true);
+        setError("");
+        try {
+            await createRoom({ roomNumber, rent: Number(rent), totalBeds: Number(beds) });
+            setRoomNumber(""); setRent(""); setBeds("");
+            setShowForm(false);
+            reload();
+        } catch (err: any) {
+            setError(err?.response?.data?.message || "Failed to create room");
+        } finally { setAdding(false); }
+    }
+
+    async function handleDelete(id: string) {
+        setDeleting(id);
+        try { await deleteRoom(id); reload(); }
+        catch (err: any) { setError(err?.response?.data?.message || "Failed to delete room"); }
+        finally { setDeleting(null); }
+    }
+
+    return (
+        <div className="animate-fade-in">
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px", flexWrap: "wrap", gap: "16px" }}>
+                <div>
+                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Property Management</div>
+                    <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Rooms</h1>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{rooms.length} unit{rooms.length !== 1 ? "s" : ""} configured</p>
+                </div>
+                <button className="btn-primary" onClick={() => setShowForm(!showForm)} style={{ gap: "8px", fontSize: "13.5px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Add Room
+                </button>
+            </div>
+
+            {/* Summary Strip */}
+            <div style={{
+                display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "28px"
+            }}>
+                {[
+                    { label: "Total Beds", value: totalBeds, color: "var(--accent-primary)" },
+                    { label: "Occupied Beds", value: occupiedBeds, color: "#a78bfa" },
+                    { label: "Avg Rent / Room", value: rooms.length ? `₹${Math.round(totalRent / rooms.length).toLocaleString()}` : "—", color: "#34d399" },
+                ].map(({ label, value, color }) => (
+                    <div key={label} style={{
+                        background: "var(--bg-card)", border: "1px solid var(--border-subtle)",
+                        borderRadius: "12px", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center"
+                    }}>
+                        <span style={{ fontSize: "12px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+                        <span style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 700, color }}>{value}</span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Error */}
+            {error && (
+                <div style={{ background: "var(--red-bg)", border: "1px solid rgba(255,82,82,0.2)", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px", color: "var(--red)", fontSize: "13px", display: "flex", gap: "10px", alignItems: "center" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                    {error}
+                    <button onClick={() => setError("")} style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--red)", cursor: "pointer", fontSize: "16px" }}>×</button>
+                </div>
+            )}
+
+            {/* Add Form */}
+            {showForm && (
+                <div className="glass-card animate-fade-up" style={{ padding: "24px", marginBottom: "24px" }}>
+                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontWeight: 600, marginBottom: "20px" }}>New Room</h3>
+                    <form onSubmit={handleCreate} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "12px", alignItems: "end" }}>
+                        {[
+                            { label: "Room No.", placeholder: "101", value: roomNumber, set: setRoomNumber, type: "text" },
+                            { label: "Rent (₹)", placeholder: "8000", value: rent, set: setRent, type: "number" },
+                            { label: "Total Beds", placeholder: "3", value: beds, set: setBeds, type: "number" },
+                        ].map(({ label, placeholder, value, set, type }) => (
+                            <div key={label}>
+                                <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "7px" }}>{label}</label>
+                                <input className="input-field" type={type} placeholder={placeholder} value={value}
+                                    onChange={e => set(e.target.value)} required style={{ padding: "11px 14px" }} />
+                            </div>
+                        ))}
+                        <button type="submit" className="btn-primary" disabled={adding} style={{ padding: "11px 20px" }}>
+                            {adding ? "Adding…" : "Create"}
+                        </button>
+                    </form>
+                </div>
+            )}
+
+            {/* Rooms Grid */}
+            {loading ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
+                    {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton" style={{ height: "170px", borderRadius: "18px" }} />)}
+                </div>
+            ) : rooms.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "80px 40px", border: "1px dashed var(--border-default)", borderRadius: "20px", color: "var(--text-tertiary)" }}>
+                    <div style={{ fontSize: "48px", marginBottom: "16px" }}>🏠</div>
+                    <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "6px" }}>No rooms yet</p>
+                    <p style={{ fontSize: "13px" }}>Click "Add Room" to get started</p>
+                </div>
+            ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
+                    {rooms.map((room, i) => (
+                        <div key={room._id} className="animate-fade-up" style={{ animationDelay: `${i * 0.05}s` }}>
+                            <div style={{
+                                background: "var(--bg-card)", border: "1px solid var(--border-default)",
+                                borderRadius: "18px", padding: "22px", position: "relative", overflow: "hidden",
+                                transition: "all 0.25s ease",
+                            }}
+                                onMouseEnter={e => {
+                                    (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)";
+                                    (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                                    (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(0,0,0,0.4)";
+                                }}
+                                onMouseLeave={e => {
+                                    (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)";
+                                    (e.currentTarget as HTMLElement).style.transform = "";
+                                    (e.currentTarget as HTMLElement).style.boxShadow = "";
+                                }}
+                            >
+                                {/* Maintenance badge */}
+                                {(room as any).maintenanceMode && (
+                                    <div style={{
+                                        position: "absolute", top: "12px", right: "12px",
+                                        background: "var(--yellow-bg)", color: "var(--yellow)",
+                                        border: "1px solid rgba(255,215,64,0.2)", borderRadius: "6px",
+                                        fontSize: "9px", fontFamily: "var(--font-mono)", fontWeight: 700,
+                                        padding: "3px 8px", letterSpacing: "0.1em", textTransform: "uppercase",
+                                    }}>Maintenance</div>
+                                )}
+
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
+                                    <div>
+                                        <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.1em", marginBottom: "4px" }}>ROOM</div>
+                                        <div style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 700, letterSpacing: "-0.03em" }}>{room.roomNumber}</div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDelete(room._id)}
+                                        disabled={deleting === room._id}
+                                        style={{
+                                            width: "32px", height: "32px", borderRadius: "9px",
+                                            background: "transparent", border: "1px solid var(--border-subtle)",
+                                            cursor: "pointer", color: "var(--text-tertiary)",
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            transition: "all 0.15s ease", flexShrink: 0,
+                                        }}
+                                        onMouseEnter={e => {
+                                            (e.currentTarget as HTMLElement).style.background = "var(--red-bg)";
+                                            (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,82,82,0.3)";
+                                            (e.currentTarget as HTMLElement).style.color = "var(--red)";
+                                        }}
+                                        onMouseLeave={e => {
+                                            (e.currentTarget as HTMLElement).style.background = "transparent";
+                                            (e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)";
+                                            (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
+                                        }}
+                                    >
+                                        {deleting === room._id
+                                            ? <div style={{ width: "12px", height: "12px", border: "2px solid var(--red)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
+                                            : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>
+                                        }
+                                    </button>
+                                </div>
+
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "18px" }}>
+                                    ₹{room.rent.toLocaleString()}
+                                    <span style={{ fontSize: "12px", fontWeight: 400, fontFamily: "var(--font-body)", color: "var(--text-tertiary)" }}>/mo</span>
+                                </div>
+
+                                <OccupancyBar occupied={room.occupiedBeds} total={room.totalBeds} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
+}
+--- END OF .\web\app\owner\rooms\page.tsx ---
+
+--- FILE: .\web\context\AuthContext.tsx ---
+"use client";
+
+import { createContext, useContext, useEffect, useState } from "react";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import api from "@/lib/api";
-import { useProperty } from "@/context/PropertyContext";
 
-export type OwnerStats = {
-    totalResidents: number;
-    totalRooms: number;
-    occupancyRate: number;
-    pendingPayments: number;
-    overduePayments: number;
-    monthlyRevenue: number;
+type AuthContextType = {
+    user: User | null;
+    role: string | null;
+    loading: boolean;
+    login: (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
 };
 
-export async function fetchOwnerStats(selectedProperty: string | null) {
-    const query = selectedProperty
-        ? `?propertyId=${selectedProperty}`
-        : "";
+const AuthContext = createContext<AuthContextType | null>(null);
 
-    const { data } = await api.get(`/owner/stats${query}`);
-    return data.stats;
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
+    const [role, setRole] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            setUser(firebaseUser);
+
+            if (firebaseUser) {
+                try {
+                    const { data } = await api.get("/auth/me");
+
+                    // 🔥 Correct role extraction
+                    setRole(data.data?.role || null);
+
+                } catch {
+                    setRole(null);
+                }
+            } else {
+                setRole(null);
+            }
+
+            setLoading(false);
+        });
+
+        return unsubscribe;
+    }, []);
+
+    const login = async (email: string, password: string) => {
+        await signInWithEmailAndPassword(auth, email, password);
+    };
+
+    const logout = async () => {
+        await signOut(auth);
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, role, loading, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
 }
---- END OF .\web\features\owner\owner.service.ts ---
+
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (!context) throw new Error("useAuth must be used within AuthProvider");
+    return context;
+}
+--- END OF .\web\context\AuthContext.tsx ---
 
