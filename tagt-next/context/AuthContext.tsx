@@ -1,75 +1,95 @@
-"use client"
-import { createContext, useContext, useEffect, useState } from "react"
-import type { ReactNode } from "react"
-import api from "../services/api"
+"use client";
 
-type Role = "super_admin" | "owner" | "resident"
-
-type User = {
-    id: string
-    name: string
-    email: string
-    role: Role
-    propertyId?: string | null
-}
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { STORAGE_KEYS } from "@/lib/constants";
+import { fetchMyProfile, loginWithFirebase, logoutFirebase } from "@/services/auth.service";
+import type { AppUser } from "@/types/user";
 
 type AuthContextType = {
-    user: User | null
-    loading: boolean
-    login: (email: string, password: string) => Promise<User>
-    registerOwner: (payload: { name: string; email: string; password: string; propertyName: string; propertyType: "pg" | "hotel"; propertyAddress: string }) => Promise<User>
-    logout: () => void
-}
+  user: AppUser | null;
+  loading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<AppUser>;
+  logout: () => Promise<void>;
+  clearError: () => void;
+};
 
-const AuthContext = createContext<AuthContextType | null>(null)
+const AuthContext = createContext<AuthContextType | null>(null);
+
+function persistUser(user: AppUser | null) {
+  if (!user) {
+    localStorage.removeItem(STORAGE_KEYS.user);
+    return;
+  }
+
+  localStorage.setItem(
+    STORAGE_KEYS.user,
+    JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }),
+  );
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null)
-    const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const stored = localStorage.getItem("user")
-        if (stored) setUser(JSON.parse(stored))
-        setLoading(false)
-    }, [])
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        persistUser(null);
+        setLoading(false);
+        return;
+      }
 
-    const persist = (token: string, nextUser: User) => {
-        localStorage.setItem("token", token)
-        localStorage.setItem("user", JSON.stringify(nextUser))
+      try {
+        const profile = await fetchMyProfile(firebaseUser);
+        setUser(profile);
+        persistUser(profile);
+      } catch {
+        setUser(null);
+        persistUser(null);
+        await logoutFirebase();
+      } finally {
+        setLoading(false);
+      }
+    });
 
-        document.cookie = `token=${token}; path=/`
-        document.cookie = `role=${nextUser.role}; path=/`
+    return () => unsubscribe();
+  }, []);
 
-        setUser(nextUser)
-    }
+  const login = useCallback(async (email: string, password: string) => {
+    setError(null);
+    const firebaseUser = await loginWithFirebase(email, password);
+    const profile = await fetchMyProfile(firebaseUser);
+    setUser(profile);
+    persistUser(profile);
+    return profile;
+  }, []);
 
-    const login = async (email: string, password: string) => {
-        const { data } = await api.post("/v2/auth/login", { email, password })
-        persist(data.token, data.user)
-        return data.user
-    }
+  const logout = useCallback(async () => {
+    await logoutFirebase();
+    setUser(null);
+    persistUser(null);
+  }, []);
 
-    const registerOwner = async (payload: { name: string; email: string; password: string; propertyName: string; propertyType: "pg" | "hotel"; propertyAddress: string }) => {
-        const { data } = await api.post("/v2/auth/register-owner", payload)
-        persist(data.token, data.user)
-        return data.user
-    }
+  const clearError = useCallback(() => setError(null), []);
 
-    const logout = () => {
-        localStorage.removeItem("token")
-        localStorage.removeItem("user")
+  const value = useMemo(
+    () => ({ user, loading, error, login, logout, clearError }),
+    [user, loading, error, login, logout, clearError],
+  );
 
-        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
-        document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
-
-        setUser(null)
-    }
-
-    return <AuthContext.Provider value={{ user, loading, login, registerOwner, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export const useAuth = () => {
-    const ctx = useContext(AuthContext)
-    if (!ctx) throw new Error("useAuth must be used inside AuthProvider")
-    return ctx
+export function useAuthContext() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuthContext must be used inside AuthProvider");
+  }
+  return context;
 }

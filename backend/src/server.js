@@ -10,12 +10,7 @@ import http from "http";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
 import { runRentAutomationTick } from "./services/rentAutomationService.js";
-import cors from "cors";
 
-app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:5000"],
-    credentials: true
-}));
 
 const PORT = process.env.PORT || 5000;
 
