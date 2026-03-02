@@ -1,1 +1,0 @@
-export default function ProviderRevenuePage() { return <div className="border border-white/10 rounded-2xl p-6 text-white/70">Revenue analytics module with monthly and property-level breakdown is ready.</div> }

@@ -1,5 +1,6 @@
 ﻿import mongoose from "mongoose";
 
+
 const PaymentSchema = new mongoose.Schema(
     {
         propertyId: {
@@ -51,7 +52,7 @@ const PaymentSchema = new mongoose.Schema(
         // 📊 Payment status
         status: {
             type: String,
-            enum: ["pending", "paid", "failed", "cancelled"],
+            enum: ["pending", "overdue", "paid", "failed", "cancelled"],
             default: "pending",
             index: true,
         },
@@ -87,6 +88,7 @@ const PaymentSchema = new mongoose.Schema(
             default: 0,
             min: 0,
         },
+
 
         totalPayable: {
             type: Number,

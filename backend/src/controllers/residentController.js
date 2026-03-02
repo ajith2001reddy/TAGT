@@ -57,78 +57,75 @@ export const addResident = async (req, res, next) => {
     session.startTransaction();
 
     try {
-        const { name, email, password, roomNumber, roomId, rent } = req.body;
+        const { name, email, password, roomId } = req.body;
 
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !roomId) {
             await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Name, email, and password are required" });
+            return res.status(400).json({
+                success: false,
+                message: "Name, email, password, and room are required"
+            });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
+
         const existingUser = await User.findOne({ email: normalizedEmail }).session(session);
         if (existingUser) {
             await session.abortTransaction();
             return res.status(400).json({ success: false, message: "Email already exists" });
         }
 
-        let roomDoc = null;
-        let finalRent = 0;
+        const roomDoc = await Room.findOne({
+            _id: roomId,
+            propertyId: req.user.propertyId
+        }).session(session);
 
-        if (roomNumber) {
-            roomDoc = await Room.findOne({ roomNumber: String(roomNumber) }).session(session);
-            if (!roomDoc) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: `Room "${roomNumber}" not found` });
-            }
-        } else if (roomId && mongoose.Types.ObjectId.isValid(roomId)) {
-            roomDoc = await Room.findById(roomId).session(session);
-            if (!roomDoc) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "Invalid room selected" });
-            }
+        if (!roomDoc) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Invalid room selected" });
         }
 
-        if (roomDoc) {
-            if (roomDoc.maintenanceMode) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "Room is currently in maintenance mode" });
-            }
-            if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "No beds available in this room" });
-            }
-            finalRent = roomDoc.rent || 0;
+        if (roomDoc.maintenanceMode) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Room in maintenance mode" });
         }
 
-        if (!roomDoc && rent) {
-            const parsedRent = Number(rent);
-            if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: "Invalid rent amount" });
-            }
-            finalRent = parsedRent;
+        if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Room is full" });
         }
 
-        const [resident] = await User.create([
-            { name, email: normalizedEmail, password, role: "resident", roomId: roomDoc ? roomDoc._id : null, isActive: true }
-        ], { session });
+        const resident = await User.create([{
+            name,
+            email: normalizedEmail,
+            password,
+            role: "resident",
+            propertyId: req.user.propertyId,
+            roomId: roomDoc._id,
+            isActive: true
+        }], { session });
 
-        if (roomDoc) {
-            roomDoc.occupiedBeds += 1;
-            await roomDoc.save({ session });
-        }
+        roomDoc.occupiedBeds += 1;
+        await roomDoc.save({ session });
 
-        if (finalRent > 0) {
-            const now = new Date();
-            const dueDate = new Date(now.getFullYear(), now.getMonth() + 1, 5);
-            await Payment.create([
-                { resident: resident._id, amount: finalRent, type: "rent", status: "pending", month: now.toISOString().slice(0, 7), dueDate }
-            ], { session });
-        }
+        const now = new Date();
+        const dueDate = new Date(now.getFullYear(), now.getMonth(), 5);
+
+        await Payment.create([{
+            propertyId: req.user.propertyId,
+            resident: resident[0]._id,
+            room: roomDoc._id,
+            amount: roomDoc.rent,
+            type: "rent",
+            status: "pending",
+            month: now.toISOString().slice(0, 7),
+            dueDate
+        }], { session });
 
         await session.commitTransaction();
 
-        return res.status(201).json({ success: true, resident });
+        return res.status(201).json({ success: true, resident: resident[0] });
+
     } catch (err) {
         await session.abortTransaction();
         logger.error(`ADD RESIDENT ERROR: ${err.message}`);

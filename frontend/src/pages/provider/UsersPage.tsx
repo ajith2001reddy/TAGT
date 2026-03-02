@@ -1,1 +1,0 @@
-export default function ProviderUsersPage() { return <div className="border border-white/10 rounded-2xl p-6 text-white/70">User management module (filter by role, search, deactivate) is scaffolded and ready for API integration.</div> }

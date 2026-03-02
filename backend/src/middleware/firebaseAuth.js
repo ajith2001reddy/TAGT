@@ -1,6 +1,5 @@
 import admin from "../config/firebase.js";
 import User from "../models/User.js";
-import { buildPropertyFilter } from "../utils/tenantScope.js";
 
 const firebaseAuth = async (req, res, next) => {
   try {
@@ -12,42 +11,47 @@ const firebaseAuth = async (req, res, next) => {
 
     const token = header.split(" ")[1];
 
-    // Verify Firebase ID token
+    // 1️⃣ Verify Firebase token
     const decoded = await admin.auth().verifyIdToken(token);
 
-    // Find user in MongoDB by firebaseUid OR email
-    const scope = buildPropertyFilter(req.user);
-
-    let dbUser = await User.findOne({
+    // 2️⃣ Find user in DB
+    const dbUser = await User.findOne({
       $or: [
         { firebaseUid: decoded.uid },
         { email: decoded.email?.toLowerCase() }
-      ],
-      ...scope
+      ]
     });
 
     if (!dbUser) {
       return res.status(401).json({
         success: false,
-        message: "User not found. Please contact your administrator."
+        message: "User not registered in system"
       });
     }
 
-    // Link firebaseUid if missing (first login)
+    if (!dbUser.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Account inactive"
+      });
+    }
+
+    // 3️⃣ Link firebaseUid if missing
     if (!dbUser.firebaseUid) {
       dbUser.firebaseUid = decoded.uid;
       await dbUser.save();
     }
 
-    if (!dbUser.isActive) {
-      return res.status(403).json({ success: false, message: "Account inactive" });
-    }
-
+    // 4️⃣ Attach user
     req.user = dbUser;
+
     next();
   } catch (error) {
     console.error("firebaseAuth error:", error.message);
-    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token"
+    });
   }
 };
 

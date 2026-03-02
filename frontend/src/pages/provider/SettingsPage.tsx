@@ -1,1 +1,0 @@
-export default function ProviderSettingsPage() { return <div className="border border-white/10 rounded-2xl p-6 text-white/70">Platform settings module scaffolded (plans, audit, security flags).</div> }

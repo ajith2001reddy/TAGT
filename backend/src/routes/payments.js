@@ -7,14 +7,58 @@ import auth from "../middleware/auth.js";
 import { buildPropertyFilter } from "../utils/tenantScope.js";
 import isAdmin from "../middleware/isAdmin.js";
 import { generateMonthlyRent } from "../controllers/paymentController.js";
-
-
+import Room from "../models/rooms.js";
 
 import authorize from "../middleware/authorize.js";
 
+
 const router = Router();
 router.post("/generate-monthly", auth, isAdmin, generateMonthlyRent);
+router.get("/summary", auth, authorize("owner"), async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
 
+        const payments = await Payment.find(scope).lean();
+        const rooms = await Room.find(scope).lean();
+
+        let totalCollected = 0;
+        let totalPending = 0;
+        let totalOverdue = 0;
+
+        for (const p of payments) {
+            const total = Number(p.totalPayable || p.amount || 0);
+
+            if (p.status === "paid") totalCollected += total;
+            if (p.status === "pending") totalPending += total;
+            if (p.status === "overdue") totalOverdue += total;
+        }
+
+        const currentMonth = new Date().toISOString().slice(0, 7);
+
+        const monthlyRevenue = payments
+            .filter(p => p.month === currentMonth)
+            .reduce((sum, p) => sum + Number(p.totalPayable || p.amount || 0), 0);
+
+        const totalBeds = rooms.reduce((sum, r) => sum + r.totalBeds, 0);
+        const occupiedBeds = rooms.reduce((sum, r) => sum + r.occupiedBeds, 0);
+
+        const occupancyRate = totalBeds > 0
+            ? ((occupiedBeds / totalBeds) * 100).toFixed(1)
+            : "0";
+
+        res.json({
+            success: true,
+            totalCollected,
+            totalPending,
+            totalOverdue,
+            monthlyRevenue,
+            occupancyRate
+        });
+
+    } catch (err) {
+        next(err);
+    }
+});
 /* =========================
    ADMIN → CREATE BILL
 ========================= */

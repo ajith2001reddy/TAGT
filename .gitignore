@@ -66,4 +66,5 @@ coverage/
 # If using npm everywhere, keep lockfiles
 # If not, uncomment below to ignore duplicates
 # yarn.lock
-# pnpm-lock.yaml
+# pnpm-lock.yamlts_project_part_
+ts_project_part_**.txt

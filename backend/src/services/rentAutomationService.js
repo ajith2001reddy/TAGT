@@ -1,6 +1,7 @@
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
 
+
 const getMonthKey = (date = new Date()) => date.toISOString().slice(0, 7);
 
 export const generateMonthlyRentPayments = async ({ targetDate = new Date(), propertyId = null } = {}) => {
@@ -21,8 +22,18 @@ export const generateMonthlyRentPayments = async ({ targetDate = new Date(), pro
     let created = 0;
 
     for (const resident of residents) {
-        const rentAmount = Number(resident.roomId?.rent || 0);
-        if (!rentAmount || !resident.propertyId) continue;
+
+        // 🚫 Skip if resident has no room assigned
+        if (!resident.roomId) continue;
+
+        // Extract rent safely
+        const rentAmount = Number(resident.roomId.rent);
+
+        // 🚫 Skip invalid rent values
+        if (!Number.isFinite(rentAmount) || rentAmount <= 0) continue;
+
+        // 🚫 Skip if propertyId missing
+        if (!resident.propertyId) continue;
 
         const result = await Payment.updateOne(
             {
@@ -72,7 +83,13 @@ export const applyLateFees = async ({ now = new Date(), lateFeePercent = 0.05, p
 
         await Payment.updateOne(
             { _id: payment._id, status: "pending" },
-            { $set: { lateFee, totalPayable } }
+            {
+                $set: {
+                    lateFee,
+                    totalPayable,
+                    status: "overdue"
+                }
+            }
         );
         updated += 1;
     }
