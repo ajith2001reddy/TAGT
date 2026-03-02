@@ -1,0 +1,987 @@
+TS PROJECT PART 6 of 20
+==============================
+--- FILE: .\.vs\TAGT.slnx\v18\DocumentLayout.backup.json ---
+{
+  "Version": 1,
+  "WorkspaceRootPath": "F:\\TAGT\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\frontend\\src\\api\\axios.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\api\\axios.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\routes\\payments.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\routes\\payments.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\middleware\\firebaseAuth.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\middleware\\firebaseAuth.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\config\\firebase.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\config\\firebase.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\frontend\\src\\firebase.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\firebase.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\frontend\\src\\context\\AuthContext.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\context\\AuthContext.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\ts_project_part_16.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ts_project_part_16.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\ts_project_part_17.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ts_project_part_17.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\ts_project_part_19.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ts_project_part_19.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\ts_project_part_20.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ts_project_part_20.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\config\\db.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\config\\db.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\ts_project_part_13.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ts_project_part_13.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\ts_project_part_02.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ts_project_part_02.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\ts_project_part_01.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ts_project_part_01.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\routes\\adminRoutes.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\routes\\adminRoutes.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\models\\ActivityLog.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\models\\ActivityLog.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\models\\User.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\models\\User.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\controllers\\adminController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\controllers\\adminController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\utils\\generateToken.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\utils\\generateToken.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\swagger.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\swagger.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\models\\RequestHistory.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\models\\RequestHistory.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\models\\Request.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\models\\Request.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\models\\Payment.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\models\\Payment.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\middleware\\validate.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\middleware\\validate.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\middleware\\isAdmin.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\middleware\\isAdmin.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\middleware\\errorHandler.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\middleware\\errorHandler.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\controllers\\roomController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\controllers\\roomController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\controllers\\residentController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\controllers\\residentController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\controllers\\paymentController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\controllers\\paymentController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\routes\\rooms.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\routes\\rooms.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\routes\\resident.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\routes\\resident.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\models\\Resident.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\models\\Resident.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\routes\\requests.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\routes\\requests.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\tagt-auth-firebase-adminsdk-fbsvc-7dbe8f19bd.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\TAGT\\backend\\src\\controllers\\requestController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\controllers\\requestController.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "axios.js",
+              "DocumentMoniker": "F:\\TAGT\\frontend\\src\\api\\axios.js",
+              "RelativeDocumentMoniker": "frontend\\src\\api\\axios.js",
+              "ToolTip": "F:\\TAGT\\frontend\\src\\api\\axios.js",
+              "RelativeToolTip": "frontend\\src\\api\\axios.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAkwAwAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-27T03:18:07.886Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AuthContext.jsx",
+              "DocumentMoniker": "F:\\TAGT\\frontend\\src\\context\\AuthContext.jsx",
+              "RelativeDocumentMoniker": "frontend\\src\\context\\AuthContext.jsx",
+              "ToolTip": "F:\\TAGT\\frontend\\src\\context\\AuthContext.jsx",
+              "RelativeToolTip": "frontend\\src\\context\\AuthContext.jsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAkwAwAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2026-02-27T03:16:29.847Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ts_project_part_20.txt",
+              "DocumentMoniker": "F:\\TAGT\\ts_project_part_20.txt",
+              "RelativeDocumentMoniker": "ts_project_part_20.txt",
+              "ToolTip": "F:\\TAGT\\ts_project_part_20.txt",
+              "RelativeToolTip": "ts_project_part_20.txt",
+              "ViewState": "AgIAAJsAAAAAAAAAAAD4v60AAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-02-27T03:13:50.302Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ts_project_part_19.txt",
+              "DocumentMoniker": "F:\\TAGT\\ts_project_part_19.txt",
+              "RelativeDocumentMoniker": "ts_project_part_19.txt",
+              "ToolTip": "F:\\TAGT\\ts_project_part_19.txt",
+              "RelativeToolTip": "ts_project_part_19.txt",
+              "ViewState": "AgIAABgAAAAAAAAAAAD4vzEAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-02-27T03:13:49.729Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ts_project_part_17.txt",
+              "DocumentMoniker": "F:\\TAGT\\ts_project_part_17.txt",
+              "RelativeDocumentMoniker": "ts_project_part_17.txt",
+              "ToolTip": "F:\\TAGT\\ts_project_part_17.txt",
+              "RelativeToolTip": "ts_project_part_17.txt",
+              "ViewState": "AgIAAK4AAAAAAAAAAAD4v8wAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-02-27T03:13:48.721Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ts_project_part_16.txt",
+              "DocumentMoniker": "F:\\TAGT\\ts_project_part_16.txt",
+              "RelativeDocumentMoniker": "ts_project_part_16.txt",
+              "ToolTip": "F:\\TAGT\\ts_project_part_16.txt",
+              "RelativeToolTip": "ts_project_part_16.txt",
+              "ViewState": "AgIAAIoAAAAAAAAAAAD4v6sAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-02-27T03:13:48.08Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ts_project_part_13.txt",
+              "DocumentMoniker": "F:\\TAGT\\ts_project_part_13.txt",
+              "RelativeDocumentMoniker": "ts_project_part_13.txt",
+              "ToolTip": "F:\\TAGT\\ts_project_part_13.txt",
+              "RelativeToolTip": "ts_project_part_13.txt",
+              "ViewState": "AgIAAIsAAAAAAAAAAAAAAIsAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-02-27T03:13:47.263Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "firebase.js",
+              "DocumentMoniker": "F:\\TAGT\\frontend\\src\\firebase.js",
+              "RelativeDocumentMoniker": "frontend\\src\\firebase.js",
+              "ToolTip": "F:\\TAGT\\frontend\\src\\firebase.js",
+              "RelativeToolTip": "frontend\\src\\firebase.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:25:06.037Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "firebase.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\config\\firebase.js",
+              "RelativeDocumentMoniker": "backend\\src\\config\\firebase.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\config\\firebase.js",
+              "RelativeToolTip": "backend\\src\\config\\firebase.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:20:23.108Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "firebaseAuth.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\middleware\\firebaseAuth.js",
+              "RelativeDocumentMoniker": "backend\\src\\middleware\\firebaseAuth.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\middleware\\firebaseAuth.js",
+              "RelativeToolTip": "backend\\src\\middleware\\firebaseAuth.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAkwBYAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:20:55.363Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "payments.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\routes\\payments.js",
+              "RelativeDocumentMoniker": "backend\\src\\routes\\payments.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\routes\\payments.js",
+              "RelativeToolTip": "backend\\src\\routes\\payments.js",
+              "ViewState": "AgIAAIEAAAAAAAAAAAAAAG4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:30:42.554Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ts_project_part_02.txt",
+              "DocumentMoniker": "F:\\TAGT\\ts_project_part_02.txt",
+              "RelativeDocumentMoniker": "ts_project_part_02.txt",
+              "ToolTip": "F:\\TAGT\\ts_project_part_02.txt",
+              "RelativeToolTip": "ts_project_part_02.txt",
+              "ViewState": "AgIAAEsBAAAAAAAAAAAAAEsBAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-02-27T03:13:46.664Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "ts_project_part_01.txt",
+              "DocumentMoniker": "F:\\TAGT\\ts_project_part_01.txt",
+              "RelativeDocumentMoniker": "ts_project_part_01.txt",
+              "ToolTip": "F:\\TAGT\\ts_project_part_01.txt",
+              "RelativeToolTip": "ts_project_part_01.txt",
+              "ViewState": "AgIAAJcAAAAAAAAAAAAAAJwAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-02-27T03:13:45.53Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "package-lock.json",
+              "DocumentMoniker": "F:\\TAGT\\backend\\package-lock.json",
+              "RelativeDocumentMoniker": "backend\\package-lock.json",
+              "ToolTip": "F:\\TAGT\\backend\\package-lock.json",
+              "RelativeToolTip": "backend\\package-lock.json",
+              "ViewState": "AgIAAOINAAAAAAAAAAAswPMNAABZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-02-26T17:34:16.474Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "db.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\config\\db.js",
+              "RelativeDocumentMoniker": "backend\\src\\config\\db.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\config\\db.js",
+              "RelativeToolTip": "backend\\src\\config\\db.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:31:27.21Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "RequestHistory.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\models\\RequestHistory.js",
+              "RelativeDocumentMoniker": "backend\\src\\models\\RequestHistory.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\models\\RequestHistory.js",
+              "RelativeToolTip": "backend\\src\\models\\RequestHistory.js",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:32:36.294Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "Payment.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\models\\Payment.js",
+              "RelativeDocumentMoniker": "backend\\src\\models\\Payment.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\models\\Payment.js",
+              "RelativeToolTip": "backend\\src\\models\\Payment.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:32:29Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "ActivityLog.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\models\\ActivityLog.js",
+              "RelativeDocumentMoniker": "backend\\src\\models\\ActivityLog.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\models\\ActivityLog.js",
+              "RelativeToolTip": "backend\\src\\models\\ActivityLog.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:32:26.24Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "validate.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\middleware\\validate.js",
+              "RelativeDocumentMoniker": "backend\\src\\middleware\\validate.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\middleware\\validate.js",
+              "RelativeToolTip": "backend\\src\\middleware\\validate.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:32:21.747Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "adminController.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\controllers\\adminController.js",
+              "RelativeDocumentMoniker": "backend\\src\\controllers\\adminController.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\controllers\\adminController.js",
+              "RelativeToolTip": "backend\\src\\controllers\\adminController.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:31:55.839Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "User.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\models\\User.js",
+              "RelativeDocumentMoniker": "backend\\src\\models\\User.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\models\\User.js",
+              "RelativeToolTip": "backend\\src\\models\\User.js",
+              "ViewState": "AgIAACYAAAAAAAAAAAAqwDQAAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:21:08.327Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "isAdmin.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\middleware\\isAdmin.js",
+              "RelativeDocumentMoniker": "backend\\src\\middleware\\isAdmin.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\middleware\\isAdmin.js",
+              "RelativeToolTip": "backend\\src\\middleware\\isAdmin.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:32:16.761Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "errorHandler.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\middleware\\errorHandler.js",
+              "RelativeDocumentMoniker": "backend\\src\\middleware\\errorHandler.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\middleware\\errorHandler.js",
+              "RelativeToolTip": "backend\\src\\middleware\\errorHandler.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:32:11.528Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "adminRoutes.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\routes\\adminRoutes.js",
+              "RelativeDocumentMoniker": "backend\\src\\routes\\adminRoutes.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\routes\\adminRoutes.js",
+              "RelativeToolTip": "backend\\src\\routes\\adminRoutes.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:30:11.063Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "swagger.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\swagger.js",
+              "RelativeDocumentMoniker": "backend\\src\\swagger.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\swagger.js",
+              "RelativeToolTip": "backend\\src\\swagger.js",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAuwBUAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:34:20.587Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "generateToken.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\utils\\generateToken.js",
+              "RelativeDocumentMoniker": "backend\\src\\utils\\generateToken.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\utils\\generateToken.js",
+              "RelativeToolTip": "backend\\src\\utils\\generateToken.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:34:22.818Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "roomController.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\controllers\\roomController.js",
+              "RelativeDocumentMoniker": "backend\\src\\controllers\\roomController.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\controllers\\roomController.js",
+              "RelativeToolTip": "backend\\src\\controllers\\roomController.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:32:06.738Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "residentController.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\controllers\\residentController.js",
+              "RelativeDocumentMoniker": "backend\\src\\controllers\\residentController.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\controllers\\residentController.js",
+              "RelativeToolTip": "backend\\src\\controllers\\residentController.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:32:03.006Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "paymentController.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\controllers\\paymentController.js",
+              "RelativeDocumentMoniker": "backend\\src\\controllers\\paymentController.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\controllers\\paymentController.js",
+              "RelativeToolTip": "backend\\src\\controllers\\paymentController.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:31:59.109Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "Request.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\models\\Request.js",
+              "RelativeDocumentMoniker": "backend\\src\\models\\Request.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\models\\Request.js",
+              "RelativeToolTip": "backend\\src\\models\\Request.js",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAqwCcAAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:16:50.863Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "rooms.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\routes\\rooms.js",
+              "RelativeDocumentMoniker": "backend\\src\\routes\\rooms.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\routes\\rooms.js",
+              "RelativeToolTip": "backend\\src\\routes\\rooms.js",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAMAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:30:48.463Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "resident.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\routes\\resident.js",
+              "RelativeDocumentMoniker": "backend\\src\\routes\\resident.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\routes\\resident.js",
+              "RelativeToolTip": "backend\\src\\routes\\resident.js",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAkAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:30:47.136Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "Resident.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\models\\Resident.js",
+              "RelativeDocumentMoniker": "backend\\src\\models\\Resident.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\models\\Resident.js",
+              "RelativeToolTip": "backend\\src\\models\\Resident.js",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAMAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:30:45.508Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "requests.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\routes\\requests.js",
+              "RelativeDocumentMoniker": "backend\\src\\routes\\requests.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\routes\\requests.js",
+              "RelativeToolTip": "backend\\src\\routes\\requests.js",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAMAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:30:44.407Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "tagt-auth-firebase-adminsdk-fbsvc-7dbe8f19bd.json",
+              "DocumentMoniker": "F:\\tagt-auth-firebase-adminsdk-fbsvc-7dbe8f19bd.json",
+              "RelativeDocumentMoniker": "..\\tagt-auth-firebase-adminsdk-fbsvc-7dbe8f19bd.json",
+              "ToolTip": "F:\\tagt-auth-firebase-adminsdk-fbsvc-7dbe8f19bd.json",
+              "RelativeToolTip": "..\\tagt-auth-firebase-adminsdk-fbsvc-7dbe8f19bd.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAADWBgAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-02-26T17:27:29.199Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "requestController.js",
+              "DocumentMoniker": "F:\\TAGT\\backend\\src\\controllers\\requestController.js",
+              "RelativeDocumentMoniker": "backend\\src\\controllers\\requestController.js",
+              "ToolTip": "F:\\TAGT\\backend\\src\\controllers\\requestController.js",
+              "RelativeToolTip": "backend\\src\\controllers\\requestController.js",
+              "ViewState": "AgIAAH0AAAAAAAAAAAAAAIYAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-02-26T17:17:11.444Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+--- END OF .\.vs\TAGT.slnx\v18\DocumentLayout.backup.json ---
+
+--- FILE: .\backend\src\controllers\residentController.js ---
+﻿import logger from "../utils/logger.js";
+import mongoose from "mongoose";
+
+import User from "../models/User.js";
+import Room from "../models/rooms.js";
+import Payment from "../models/Payment.js";
+import Request from "../models/Request.js";
+
+export const getAllResidents = async (req, res, next) => {
+    try {
+        const residents = await User.find({ role: "resident" })
+            .populate("roomId", "roomNumber totalBeds occupiedBeds rent")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.json({ success: true, residents });
+    } catch (err) {
+        logger.error(`GET RESIDENTS ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+export const getResidentProfile = async (req, res, next) => {
+    try {
+        const resident = await User.findOne({ _id: req.params.id, role: "resident" })
+            .populate("roomId", "roomNumber rent")
+            .lean();
+
+        if (!resident) {
+            return res.status(404).json({ success: false, message: "Resident not found" });
+        }
+
+        const [paymentSummary, requestSummary] = await Promise.all([
+            Payment.aggregate([
+                { $match: { resident: resident._id } },
+                { $group: { _id: "$status", count: { $sum: 1 }, total: { $sum: "$amount" } } }
+            ]),
+            Request.aggregate([
+                { $match: { resident: resident._id } },
+                { $group: { _id: "$status", count: { $sum: 1 } } }
+            ])
+        ]);
+
+        return res.json({ success: true, resident, paymentSummary, requestSummary });
+    } catch (err) {
+        logger.error(`GET RESIDENT PROFILE ERROR: ${err.message}`);
+        next(err);
+    }
+};
+
+export const addResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { name, email, password, roomNumber, roomId, rent } = req.body;
+
+        if (!name || !email || !password) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Name, email, and password are required" });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const existingUser = await User.findOne({ email: normalizedEmail }).session(session);
+        if (existingUser) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Email already exists" });
+        }
+
+        let roomDoc = null;
+        let finalRent = 0;
+
+        if (roomNumber) {
+            roomDoc = await Room.findOne({ roomNumber: String(roomNumber) }).session(session);
+            if (!roomDoc) {
+                await session.abortTransaction();
+                return res.status(400).json({ success: false, message: `Room "${roomNumber}" not found` });
+            }
+        } else if (roomId && mongoose.Types.ObjectId.isValid(roomId)) {
+            roomDoc = await Room.findById(roomId).session(session);
+            if (!roomDoc) {
+                await session.abortTransaction();
+                return res.status(400).json({ success: false, message: "Invalid room selected" });
+            }
+        }
+
+        if (roomDoc) {
+            if (roomDoc.maintenanceMode) {
+                await session.abortTransaction();
+                return res.status(400).json({ success: false, message: "Room is currently in maintenance mode" });
+            }
+            if (roomDoc.occupiedBeds >= roomDoc.totalBeds) {
+                await session.abortTransaction();
+                return res.status(400).json({ success: false, message: "No beds available in this room" });
+            }
+            finalRent = roomDoc.rent || 0;
+        }
+
+        if (!roomDoc && rent) {
+            const parsedRent = Number(rent);
+            if (!Number.isFinite(parsedRent) || parsedRent <= 0) {
+                await session.abortTransaction();
+                return res.status(400).json({ success: false, message: "Invalid rent amount" });
+            }
+            finalRent = parsedRent;
+        }
+
+        const [resident] = await User.create([
+            { name, email: normalizedEmail, password, role: "resident", roomId: roomDoc ? roomDoc._id : null, isActive: true }
+        ], { session });
+
+        if (roomDoc) {
+            roomDoc.occupiedBeds += 1;
+            await roomDoc.save({ session });
+        }
+
+        if (finalRent > 0) {
+            const now = new Date();
+            const dueDate = new Date(now.getFullYear(), now.getMonth() + 1, 5);
+            await Payment.create([
+                { resident: resident._id, amount: finalRent, type: "rent", status: "pending", month: now.toISOString().slice(0, 7), dueDate }
+            ], { session });
+        }
+
+        await session.commitTransaction();
+
+        return res.status(201).json({ success: true, resident });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`ADD RESIDENT ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
+};
+
+export const updateResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { id } = req.params;
+        const { name, email, isActive } = req.body;
+
+        const resident = await User.findOne({ _id: id, role: "resident" }).session(session);
+        if (!resident) {
+            await session.abortTransaction();
+            return res.status(404).json({ success: false, message: "Resident not found" });
+        }
+
+        if (typeof name === "string" && name.trim()) resident.name = name.trim();
+
+        if (typeof email === "string" && email.trim()) {
+            const normalizedEmail = email.toLowerCase().trim();
+            const existing = await User.findOne({ email: normalizedEmail, _id: { $ne: id } }).session(session);
+            if (existing) {
+                await session.abortTransaction();
+                return res.status(400).json({ success: false, message: "Email already exists" });
+            }
+            resident.email = normalizedEmail;
+        }
+
+        if (typeof isActive === "boolean") resident.isActive = isActive;
+
+        await resident.save({ session });
+        await session.commitTransaction();
+
+        return res.json({ success: true, resident });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`UPDATE RESIDENT ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
+};
+
+export const deleteResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { id } = req.params;
+
+        const resident = await User.findById(id).session(session);
+        if (!resident) {
+            await session.abortTransaction();
+            return res.status(404).json({ success: false, message: "Resident not found" });
+        }
+
+        if (resident.roomId) {
+            const room = await Room.findById(resident.roomId).session(session);
+            if (room && room.occupiedBeds > 0) {
+                room.occupiedBeds -= 1;
+                await room.save({ session });
+            }
+        }
+
+        await Payment.deleteMany({ resident: resident._id }).session(session);
+        await resident.deleteOne({ session });
+        await session.commitTransaction();
+
+        return res.json({ success: true, message: "Resident deleted successfully" });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`DELETE RESIDENT ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
+};
+
+--- END OF .\backend\src\controllers\residentController.js ---
+
+--- FILE: .\backend\src\routes\rooms.js ---
+import { Router } from "express";
+import mongoose from "mongoose";
+
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+import { getAllRooms, addRoom, updateRoom, deleteRoom } from "../controllers/roomController.js";
+
+const router = Router();
+
+router.get("/", auth, isAdmin, getAllRooms);
+router.post("/", auth, isAdmin, addRoom);
+
+router.put("/:id", auth, isAdmin, (req, res, next) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: "Invalid room ID" });
+    }
+    return updateRoom(req, res, next);
+});
+
+router.delete("/:id", auth, isAdmin, (req, res, next) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: "Invalid room ID" });
+    }
+    return deleteRoom(req, res, next);
+});
+
+export default router;
+
+--- END OF .\backend\src\routes\rooms.js ---
+
+--- FILE: .\frontend\src\main.tsx ---
+import React from "react"
+import ReactDOM from "react-dom/client"
+import { BrowserRouter } from "react-router-dom"
+import App from "./App"
+import { AuthProvider } from "./context/AuthContext"
+import "./index.css"
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+)
+--- END OF .\frontend\src\main.tsx ---
+
+--- FILE: .\frontend\src\features\residents\ResidentsPage.tsx ---
+import { useEffect, useState } from "react"
+import api from "../../services/api"
+
+type Room = { _id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; rent: number }
+type Resident = { _id: string; name: string; email: string; isActive: boolean; createdAt: string; roomId?: { roomNumber: string; rent: number } | null }
+
+type Profile = {
+    resident: Resident
+    paymentSummary: { _id: string; count: number; total: number }[]
+    requestSummary: { _id: string; count: number }[]
+}
+
+export default function ResidentsPage() {
+    const [residents, setResidents] = useState<Resident[]>([])
+    const [rooms, setRooms] = useState<Room[]>([])
+    const [profile, setProfile] = useState<Profile | null>(null)
+    const [editing, setEditing] = useState<Resident | null>(null)
+    const [form, setForm] = useState({ name: "", email: "", password: "", roomNumber: "", rent: "" })
+    const [editForm, setEditForm] = useState({ name: "", email: "", isActive: true })
+
+    const load = async () => {
+        const [r, rm] = await Promise.all([api.get("/admin/residents"), api.get("/rooms")])
+        setResidents(r.data.residents ?? [])
+        setRooms(rm.data.rooms ?? [])
+    }
+    useEffect(() => { load() }, [])
+
+    const addResident = async (e: React.FormEvent) => {
+        e.preventDefault()
+        await api.post("/admin/residents", { ...form, rent: form.rent ? Number(form.rent) : undefined })
+        setForm({ name: "", email: "", password: "", roomNumber: "", rent: "" })
+        load()
+    }
+
+    const openProfile = async (id: string) => {
+        const r = await api.get(`/resident/${id}`)
+        setProfile(r.data)
+    }
+
+    const openEdit = (r: Resident) => {
+        setEditing(r)
+        setEditForm({ name: r.name, email: r.email, isActive: r.isActive })
+    }
+
+    const saveEdit = async () => {
+        if (!editing) return
+        await api.put(`/resident/${editing._id}`, editForm)
+        setEditing(null)
+        load()
+    }
+
+    return <div className="space-y-6 max-w-6xl">
+        <h1 className="text-2xl font-bold text-white">Residents</h1>
+        <form onSubmit={addResident} className="grid md:grid-cols-6 gap-2 rounded-2xl border border-white/10 p-3">
+            <input className="bg-white/5 p-2 rounded text-white" placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+            <input className="bg-white/5 p-2 rounded text-white" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+            <input className="bg-white/5 p-2 rounded text-white" placeholder="Password" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+            <select className="bg-white/5 p-2 rounded text-white" value={form.roomNumber} onChange={e => setForm({ ...form, roomNumber: e.target.value })}>
+                <option value="">No room</option>
+                {rooms.map(r => <option key={r._id} value={r.roomNumber}>Room {r.roomNumber}</option>)}
+            </select>
+            <input className="bg-white/5 p-2 rounded text-white" type="number" placeholder="Rent" value={form.rent} onChange={e => setForm({ ...form, rent: e.target.value })} />
+            <button className="bg-violet-500 rounded text-white">Add</button>
+        </form>
+
+        <div className="rounded-2xl border border-white/10 overflow-hidden">
+            <table className="w-full text-sm">
+                <thead><tr className="text-white/40 border-b border-white/10"><th className="p-3 text-left">Name</th><th className="p-3 text-left">Room</th><th className="p-3 text-left">Status</th><th className="p-3"></th></tr></thead>
+                <tbody>{residents.map(r => <tr key={r._id} className="border-b border-white/5 text-white/80">
+                    <td className="p-3"><p>{r.name}</p><p className="text-xs text-white/40">{r.email}</p></td>
+                    <td className="p-3">{r.roomId?.roomNumber ?? "—"}</td>
+                    <td className="p-3">{r.isActive ? "Active" : "Inactive"}</td>
+                    <td className="p-3 text-right space-x-3"><button onClick={() => openProfile(r._id)} className="text-sky-300">Profile</button><button onClick={() => openEdit(r)} className="text-violet-300">Edit</button></td>
+                </tr>)}</tbody>
+            </table>
+        </div>
+
+        {profile && <div className="fixed inset-0 bg-black/70 p-4 flex justify-end" onClick={() => setProfile(null)}>
+            <div className="w-full max-w-md bg-[#111320] border border-white/10 rounded-2xl p-5" onClick={e => e.stopPropagation()}>
+                <h3 className="text-white font-semibold">{profile.resident.name}</h3>
+                <p className="text-sm text-white/50">{profile.resident.email}</p>
+                <div className="mt-4 space-y-2 text-sm text-white/70">
+                    {profile.paymentSummary.map(p => <p key={p._id}>{p._id}: {p.count} (${p.total})</p>)}
+                    {profile.requestSummary.map(r => <p key={r._id}>Requests {r._id}: {r.count}</p>)}
+                </div>
+            </div>
+        </div>}
+
+        {editing && <div className="fixed inset-0 bg-black/70 p-4 flex items-center justify-center">
+            <div className="w-full max-w-md bg-[#111320] border border-white/10 rounded-2xl p-5 space-y-3">
+                <h3 className="text-white font-semibold">Edit Resident</h3>
+                <input className="w-full bg-white/5 p-2 rounded text-white" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
+                <input className="w-full bg-white/5 p-2 rounded text-white" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+                <label className="text-white/70 flex items-center gap-2"><input type="checkbox" checked={editForm.isActive} onChange={e => setEditForm({ ...editForm, isActive: e.target.checked })} /> Active</label>
+                <div className="flex justify-end gap-2"><button onClick={() => setEditing(null)} className="text-white/60">Cancel</button><button onClick={saveEdit} className="bg-violet-500 px-3 py-1 rounded text-white">Save</button></div>
+            </div>
+        </div>}
+    </div>
+}
+
+--- END OF .\frontend\src\features\residents\ResidentsPage.tsx ---
+

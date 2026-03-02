@@ -1,0 +1,464 @@
+TS PROJECT PART 2 of 20
+==============================
+--- FILE: .\combine.ps1 ---
+﻿# ============================================
+# PROJECT CODE BUNDLER FOR REVIEW
+# Creates 1 organized text file with project tree and all code
+# ============================================
+
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  PROJECT CODE BUNDLER" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Configuration
+$outputFolder = "project_review_package"
+$outputFile = "Complete_Project_Review.txt"
+
+# Create output folder
+if (!(Test-Path $outputFolder)) {
+    New-Item -ItemType Directory -Path $outputFolder | Out-Null
+    Write-Host "✓ Created output folder: $outputFolder" -ForegroundColor Green
+}
+
+# ============================================
+# PART 1: Generate Project Tree Structure
+# ============================================
+Write-Host ""
+Write-Host "Generating project tree structure..." -ForegroundColor Yellow
+
+function Get-DirectoryTree {
+    param(
+        [string]$Path = ".",
+        [string]$Prefix = "",
+        [bool]$IsLast = $true
+    )
+    
+    $items = Get-ChildItem -Path $Path | Where-Object { 
+        $_.Name -notmatch '^(node_modules|\.git|bin|obj|dist|\.vs|\.vscode|__pycache__|venv|env|coverage|build)$' -and
+        !$_.Name.StartsWith('.')
+    } | Sort-Object { !$_.PSIsContainer }, Name
+    
+    $output = @()
+    $count = $items.Count
+    
+    for ($i = 0; $i -lt $count; $i++) {
+        $item = $items[$i]
+        $isLastItem = ($i -eq ($count - 1))
+        
+        $connector = if ($isLastItem) { "└── " } else { "├── " }
+        $output += "$Prefix$connector$($item.Name)"
+        
+        if ($item.PSIsContainer) {
+            $newPrefix = if ($isLastItem) { "$Prefix    " } else { "$Prefix│   " }
+            $output += Get-DirectoryTree -Path $item.FullName -Prefix $newPrefix -IsLast $isLastItem
+        }
+    }
+    
+    return $output
+}
+
+$treeOutput = @"
+# PROJECT TREE STRUCTURE
+Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Project Path: $((Get-Location).Path)
+``````
+$(Split-Path -Leaf (Get-Location))
+$(Get-DirectoryTree -Path "." | Out-String)
+``````
+
+"@
+
+# ============================================
+# PART 2: Collect All Code Files
+# ============================================
+Write-Host "Collecting code files..." -ForegroundColor Yellow
+
+$allFiles = Get-ChildItem -Recurse -File | Where-Object { 
+    $_.FullName -notmatch 'node_modules|\.git|bin|obj|dist|\.vs|\.vscode|__pycache__|venv|env|coverage|build|project_review_package' -and 
+    $_.Extension -match '\.(js|jsx|ts|tsx|cs|py|java|cpp|c|h|hpp|html|css|scss|sass|php|rb|go|rs|swift|kt|json|xml|yaml|yml|md|txt|sh|sql|vue)$' -and
+    !$_.Name.StartsWith('.')
+} | Sort-Object FullName
+
+Write-Host "✓ Found $($allFiles.Count) code files" -ForegroundColor Green
+
+# ============================================
+# PART 3: Create Summary
+# ============================================
+Write-Host "Creating project summary..." -ForegroundColor Yellow
+
+# Count files by extension
+$extensionStats = $allFiles | Group-Object Extension | Sort-Object Count -Descending
+
+$summaryOutput = @"
+
+# PROJECT SUMMARY
+
+## File Statistics
+
+Total Files: $($allFiles.Count)
+Total Size: $([math]::Round(($allFiles | Measure-Object -Property Length -Sum).Sum / 1KB, 2)) KB
+
+## File Type Distribution
+
+| Extension | Count |
+|-----------|-------|
+$($extensionStats | ForEach-Object { "| $($_.Name) | $($_.Count) |" } | Out-String)
+
+## All Files
+
+$($allFiles | ForEach-Object { $i = 0 } { $i++; "$i. $($_.FullName.Replace((Get-Location).Path + '\', ''))" } | Out-String)
+
+"@
+
+# ============================================
+# PART 4: Create Single Combined File
+# ============================================
+Write-Host ""
+Write-Host "Creating combined review file..." -ForegroundColor Yellow
+
+$fullOutputPath = Join-Path $outputFolder $outputFile
+
+# Write header sections
+$treeOutput + $summaryOutput | Out-File $fullOutputPath -Encoding UTF8
+
+# Add separator before code files
+@"
+
+========================================
+# ALL CODE FILES
+========================================
+
+"@ | Out-File $fullOutputPath -Append -Encoding UTF8
+
+# Write all code files
+$fileCount = 0
+foreach ($file in $allFiles) {
+    $fileCount++
+    $relativePath = $file.FullName.Replace((Get-Location).Path + '\', '')
+    
+    Write-Host "  Processing: $relativePath ($fileCount/$($allFiles.Count))" -ForegroundColor Gray
+    
+    @"
+
+// ##########################################
+// FILE $fileCount of $($allFiles.Count): $relativePath
+// SIZE: $($file.Length) bytes
+// MODIFIED: $($file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"))
+// ##########################################
+
+"@ | Out-File $fullOutputPath -Append -Encoding UTF8
+    
+    try {
+        Get-Content $file.FullName -Raw -ErrorAction Stop | Out-File $fullOutputPath -Append -Encoding UTF8
+    } catch {
+        "[Error reading file: $_]" | Out-File $fullOutputPath -Append -Encoding UTF8
+    }
+    
+    "`n`n" | Out-File $fullOutputPath -Append -Encoding UTF8
+}
+
+# ============================================
+# FINAL SUMMARY
+# ============================================
+$finalSize = [math]::Round((Get-Item $fullOutputPath).Length / 1MB, 2)
+
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "✓ BUNDLING COMPLETE!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Output Location: $fullOutputPath" -ForegroundColor White
+Write-Host "Total Code Files Bundled: $($allFiles.Count)" -ForegroundColor White
+Write-Host "Combined File Size: $finalSize MB" -ForegroundColor White
+Write-Host ""
+Write-Host "Ready to send for review! 🚀" -ForegroundColor Green
+Write-Host ""
+--- END OF .\combine.ps1 ---
+
+--- FILE: .\backend\src\controllers\adminController.js ---
+﻿
+import mongoose from "mongoose";
+import User from "../models/User.js";
+import Room from "../models/rooms.js";
+import admin from "../config/firebase.js";
+
+export const getAllResidents = async (req, res, next) => {
+    try {
+        const residents = await User.find({ role: "resident" })
+            .populate("roomId", "roomNumber totalBeds occupiedBeds")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.json({ success: true, residents });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const addResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { name, email, password, roomId } = req.body;
+
+        if (!name || !email || !password) {
+            await session.abortTransaction();
+            return res.status(400).json({
+                success: false,
+                message: "Name, email, and password are required"
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const existing = await User.findOne({ email: normalizedEmail }).session(session);
+        if (existing) {
+            await session.abortTransaction();
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists"
+            });
+        }
+
+        let room = null;
+        if (roomId) {
+            room = await Room.findById(roomId).session(session);
+
+            if (!room) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid room selected"
+                });
+            }
+
+            if (room.occupiedBeds >= room.totalBeds) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: "No beds available in this room"
+                });
+            }
+        }
+
+        // FIXED: Removed manual bcrypt.hash() - let pre-save hook handle it
+        const resident = await User.create(
+            [
+                {
+                    name,
+                    email: normalizedEmail,
+                    password: password, // Plain text - pre-save hook will hash
+                    role: "resident",
+                    roomId: room ? room._id : null
+                }
+            ],
+            { session }
+        );
+
+        if (room) {
+            room.occupiedBeds += 1;
+            await room.save({ session });
+        }
+
+        await session.commitTransaction();
+
+        res.status(201).json({
+            success: true,
+            resident: resident[0]
+        });
+    } catch (err) {
+        await session.abortTransaction();
+        next(err);
+    } finally {
+        session.endSession();
+    }
+};
+--- END OF .\backend\src\controllers\adminController.js ---
+
+--- FILE: .\backend\src\routes\index.js ---
+﻿import { Router } from "express";
+
+import authRoutes from "./auth.js";
+import adminRoutes from "./adminRoutes.js";
+import roomRoutes from "./rooms.js";
+import paymentRoutes from "./payments.js";
+import residentRoutes from "./resident.js";
+import analyticsRoutes from "./analytics.js";
+import requestRoutes from "./requests.js";
+
+const router = Router();
+
+router.use("/auth", authRoutes);           // POST /api/auth/login
+router.use("/admin", adminRoutes);
+router.use("/rooms", roomRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/resident", residentRoutes);
+router.use("/analytics", analyticsRoutes);
+router.use("/requests", requestRoutes);
+
+router.get("/", (req, res) => {
+    res.json({ success: true, message: "TAGT API is running" });
+});
+
+router.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+    });
+});
+
+export default router;
+--- END OF .\backend\src\routes\index.js ---
+
+--- FILE: .\frontend\public\vite.svg ---
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
+--- END OF .\frontend\public\vite.svg ---
+
+--- FILE: .\frontend\src\features\dashboard\DashboardPage.tsx ---
+import { useEffect, useState } from "react"
+import api from "../../services/api"
+
+type Stats = {
+    totalResidents: number
+    pendingRequests: number
+    totalRevenue: number
+    outstandingBalance: number
+}
+
+function StatCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent: string }) {
+    return (
+        <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20">
+            <div className={`absolute right-0 top-0 h-24 w-24 rounded-full blur-3xl opacity-20 ${accent}`} />
+            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-white/40">{label}</p>
+            <p className="text-3xl font-bold tracking-tight text-white">{value}</p>
+            {sub && <p className="mt-1.5 text-xs text-white/30">{sub}</p>}
+        </div>
+    )
+}
+
+function RecentRow({ name, email, status, time }: { name: string; email: string; status: string; time: string }) {
+    const color = status === "pending" ? "text-amber-400 bg-amber-400/10" : status === "in-progress" ? "text-blue-400 bg-blue-400/10" : "text-emerald-400 bg-emerald-400/10"
+    return (
+        <div className="flex items-center gap-4 py-3 border-b border-white/[0.04] last:border-0">
+            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-white/40 flex-shrink-0">
+                {name[0]?.toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-white/80 text-sm font-medium truncate">{name}</p>
+                <p className="text-white/30 text-xs truncate">{email}</p>
+            </div>
+            <div className="flex items-center gap-3">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold capitalize ${color}`}>{status}</span>
+                <p className="text-white/20 text-xs hidden sm:block">{time}</p>
+            </div>
+        </div>
+    )
+}
+
+export default function DashboardPage() {
+    const [stats, setStats] = useState<Stats | null>(null)
+    const [requests, setRequests] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        Promise.all([
+            api.get("/admin/stats"),
+            api.get("/requests"),
+        ]).then(([statsRes, reqRes]) => {
+            setStats(statsRes.data.stats)
+            setRequests(reqRes.data.requests?.slice(0, 5) ?? [])
+        }).catch(console.error)
+            .finally(() => setLoading(false))
+    }, [])
+
+    if (loading) return (
+        <div className="flex items-center justify-center h-64">
+            <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+        </div>
+    )
+
+    return (
+        <div className="max-w-6xl space-y-8">
+            <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-indigo-500/15 via-violet-500/10 to-cyan-500/10 p-6">
+                <h1 className="text-3xl font-black tracking-tight text-white">Executive Overview</h1>
+                <p className="mt-2 text-sm text-white/60">Real-time intelligence across residents, operations, and revenue.</p>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard label="Residents" value={stats?.totalResidents ?? 0} sub="Active tenants" accent="bg-violet-500" />
+                <StatCard label="Pending" value={stats?.pendingRequests ?? 0} sub="Open requests" accent="bg-amber-500" />
+                <StatCard label="Revenue" value={`$${(stats?.totalRevenue ?? 0).toLocaleString()}`} sub="Total collected" accent="bg-emerald-500" />
+                <StatCard label="Outstanding" value={`$${(stats?.outstandingBalance ?? 0).toLocaleString()}`} sub="Unpaid balance" accent="bg-rose-500" />
+            </div>
+
+            {/* Two-column bottom */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Requests */}
+                <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+                    <div className="flex items-center justify-between mb-5">
+                        <h2 className="text-white/70 text-sm font-semibold">Recent Requests</h2>
+                        <a href="/requests" className="text-violet-400 text-xs hover:text-violet-300 transition">View all →</a>
+                    </div>
+                    {requests.length === 0 ? (
+                        <p className="text-white/20 text-sm text-center py-8">No requests yet</p>
+                    ) : requests.map((r) => (
+                        <RecentRow
+                            key={r._id}
+                            name={r.resident?.name ?? "Unknown"}
+                            email={r.resident?.email ?? ""}
+                            status={r.status}
+                            time={new Date(r.createdAt).toLocaleDateString()}
+                        />
+                    ))}
+                </div>
+
+                {/* Quick Stats */}
+                <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+                    <h2 className="text-white/70 text-sm font-semibold mb-5">Collection Rate</h2>
+                    {stats && (
+                        <>
+                            <div className="mb-6">
+                                <div className="flex justify-between text-xs text-white/40 mb-2">
+                                    <span>Collected</span>
+                                    <span>
+                                        {stats.totalRevenue + stats.outstandingBalance > 0
+                                            ? Math.round((stats.totalRevenue / (stats.totalRevenue + stats.outstandingBalance)) * 100)
+                                            : 0}%
+                                    </span>
+                                </div>
+                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-700"
+                                        style={{
+                                            width: `${stats.totalRevenue + stats.outstandingBalance > 0
+                                                ? Math.round((stats.totalRevenue / (stats.totalRevenue + stats.outstandingBalance)) * 100)
+                                                : 0}%`
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                {[
+                                    { label: "Paid", value: `$${stats.totalRevenue.toLocaleString()}`, color: "bg-emerald-400" },
+                                    { label: "Unpaid", value: `$${stats.outstandingBalance.toLocaleString()}`, color: "bg-rose-400" },
+                                ].map((item) => (
+                                    <div key={item.label} className="flex items-center gap-3">
+                                        <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                                        <p className="text-white/40 text-sm flex-1">{item.label}</p>
+                                        <p className="text-white/70 text-sm font-medium">{item.value}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
+--- END OF .\frontend\src\features\dashboard\DashboardPage.tsx ---
+

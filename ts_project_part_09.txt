@@ -1,0 +1,108 @@
+TS PROJECT PART 9 of 20
+==============================
+--- FILE: .\backend\.env ---
+PORT=5000
+MONGO_URI=mongodb+srv://ajithreddy:Ajithreddy2001@dbuser.xubdq1s.mongodb.net/?appName=test
+FRONTEND_URL=http://localhost:3000
+FIREBASE_PROJECT_ID=tagt-auth
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@tagt-auth.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDGDPB53VZJDYQz\nXoqygTWGQ0fVaMkETtsfcKEqZ9vXVOhAPVXN25Imq7Qvbc+94LJYhPaDzvFHGiIM\nY+h9dcE9/Y/ih21ikCnjZiaMvCgaLsV56PEJUMddDf3ZmngGAlvdP2mTUjuv3Bf7\nLutRWWqq0L7ST1SKqjIuqbS4heVYC1WGLxvI9V8RMyNOijgrI88IQAetJe5KgJ5A\nTsBULSx5YEUeNCGvOECX2MgkgHKghcp+/s46rcrehtefh7lW3x38aGMaIAyRI3VB\nNU4vPyChQouXs+DJNq1DE0uYkVqa1/XSA5HBgpD67AIoTNtMFfVS5XQj4js9CAPZ\n9Y8IjSW/AgMBAAECggEAJ7SiZZw1V1IJZg8XOXBkHbXRafynCGES1zvKY+kMjyAr\nq+1gDXRu2afk6PlYA9ZPiyWlEonjn4CiwN8q1jRMeLQkK6NBD9idPUTWh7KVS6KC\n3s0PvfFe9s3+TakFVRcV+cZj0TBUXQ6AFFC0xstpcjOFfj5/UYmLpAVMAQ5/C2Zn\n8m6UQTp2cLU0udeExyeSqMt6ZC58nzQcM3TOO2pFPk/Tw35Q5J6QKrWOl6DR4OR1\nL0ugV/Y+AhHf2Vi0/0f2S6folBWK7/rO0IVUUUFXP+MJGloYXD9JZqeNYkFZU8Dr\n3uImlHXo35EPLhDsPCjOjXy8NlaIZYN83PpHxIkKkQKBgQDq1PVCBhZa3lfVCehd\nZDKVl3XR/NiLEXy+KKvenI+pw7VwerAkoH74JaASmmp2SiS26dOhhmyNl3r0N5LR\nrG+nD8TJq2s00mRc/0AHSlOBWu465NZ/42976U+EtqZgOExobtBRUd8bQhtIhvhQ\nhn0oluw9T7uuepXKnd6ZFKHtiQKBgQDX5zSxh9Ia3+uV/Nk3Sx1g8moDgSxExnlb\nGmchYveSevXwnInscF5a/Veuy1lj8Hiwh+xYiBe9NAhJDLjKSL5YDLmmkJYxrEfW\nWz7aAaCAaFzAgntwKpU5JTeluXlu/pthb3mFebPC7XtZ7CWPckhWJifTYY0AdFtN\nlh9TCAevBwKBgGMLCJodKSaQKmlO8XMaRH91TxsO0mHtMTievMZ6L9mBErBq/omk\nK4kLjXTrLcXQRaXj/v9cS8J4RkJkggbu/HRwoSYRp3iy1+OlQGMSxR+Es3+hbpqn\n2Shg4cnuo0Nn20ocmr4BkuDTQ+CWFHsaDgWliePeEiFn0G+RoAXefuFJAoGAfzE9\ncM0UMTLzpkP0b8e3whJt9CyYONg4TDyMvzV/pnL8Cskd1AYLAE2550bzHZZgc5dP\n3IQogBV0QBzXjIw4XsT4ZjFN2mulUpokt+g3dw6EfgEg2V6s1KKhWueeq44hWdCD\nZefhyBeCEOK26gAor2ABHF2e5MKnu1iSkabsZ+cCgYEAo+yuz1A48BMycAI8yzkA\nVB7Yr64IGuE9cSEol91qDK2dHHtdgxYuoM8glB912Wb1irL4GIPsw8WnBYItApq0\nhmiDgJMU8nAmI6DYjKS2slGjdJG7QsHXQQAOPO8jOEbb5+5ReORnB7UZKveJfOY8\n7A7CIHaqeofpVVVbIFhuN3E=\n-----END PRIVATE KEY-----\n"
+JWT_SECRET=tagt_super_secret_jwt_key_change_this_in_production_2024
+--- END OF .\backend\.env ---
+
+--- FILE: .\backend\src\middleware\errorHandler.js ---
+﻿export const notFound = (req, res, next) => {
+    res.status(404).json({
+        success: false,
+        message: `Route not found: ${req.originalUrl}`
+    });
+};
+
+export const errorHandler = (err, req, res, next) => {
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    const status = err.status || err.statusCode || 500;
+
+    res.status(status).json({
+        success: false,
+        message: err.message || "Server error",
+        ...(process.env.NODE_ENV === "development" && { stack: err.stack })
+    });
+};
+
+--- END OF .\backend\src\middleware\errorHandler.js ---
+
+--- FILE: .\backend\src\utils\logger.js ---
+import winston from "winston";
+
+const logger = winston.createLogger({
+    level: "info",
+    format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+    transports: [
+        new winston.transports.Console(),
+    ]
+});
+
+export default logger; // Default export
+
+--- END OF .\backend\src\utils\logger.js ---
+
+--- FILE: .\frontend\src\components\Navbar.tsx ---
+import { useAuth } from "../context/AuthContext"
+
+export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
+    const { user } = useAuth()
+
+    return (
+        <header className="sticky top-0 z-30 border-b border-white/10 bg-[#070910]/80 px-5 py-3.5 backdrop-blur-xl lg:px-8">
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={onMenuClick}
+                        className="rounded-lg p-2 text-white/40 transition hover:bg-white/5 hover:text-white/80 lg:hidden"
+                    >
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="2" y1="5" x2="16" y2="5" /><line x1="2" y1="9" x2="16" y2="9" /><line x1="2" y1="13" x2="16" y2="13" />
+                        </svg>
+                    </button>
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/30">TAGT Workspace</p>
+                        <p className="text-sm font-medium text-white/60">
+                            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <span className="hidden rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs capitalize text-white/60 sm:inline-flex">
+                        {user?.role}
+                    </span>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br from-violet-500/40 to-indigo-600/40 text-xs font-bold text-white/80">
+                        {user?.name?.[0]?.toUpperCase() ?? "U"}
+                    </div>
+                </div>
+            </div>
+        </header>
+    )
+}
+
+--- END OF .\frontend\src\components\Navbar.tsx ---
+
+--- FILE: .\frontend\src\lib\firebase.ts ---
+import { initializeApp } from "firebase/app"
+import { getAuth } from "firebase/auth"
+
+const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+}
+
+const app = initializeApp(firebaseConfig)
+export const auth = getAuth(app)
+--- END OF .\frontend\src\lib\firebase.ts ---
+

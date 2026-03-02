@@ -1,0 +1,152 @@
+TS PROJECT PART 12 of 20
+==============================
+--- FILE: .\backend\src\app.js ---
+﻿import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
+import apiRoutes from "./routes/index.js";
+import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { swaggerSpec, swaggerUi } from "./swagger.js";
+
+const app = express();
+
+/* ================= SECURITY ================= */
+
+app.set("trust proxy", 1);
+app.use(
+    helmet({
+        // Needed for Firebase popup auth flows (window.close / window.closed in popup).
+        crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+        // Keep COEP disabled to avoid breaking third-party auth SDK resources.
+        crossOriginEmbedderPolicy: false
+    })
+);
+
+const allowedOrigins = [
+    "https://tagt.website",
+    "https://www.tagt.website",
+    "http://localhost:3000",
+    "http://localhost:5173", // in case you ever use Vite
+];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (origin.includes(".vercel.app")) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
+
+/* ================= RATE LIMIT ================= */
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.use("/api", limiter);
+
+/* ================= BODY PARSER ================= */
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+/* ================= HEALTH CHECK ================= */
+
+app.get("/", (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        service: "TAGT Backend",
+        time: new Date().toISOString(),
+    });
+});
+
+/* ================= ROUTES ================= */
+
+app.use("/api", apiRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+/* ================= ERRORS ================= */
+
+app.use(notFound);
+app.use(errorHandler);
+
+export default app;
+
+--- END OF .\backend\src\app.js ---
+
+--- FILE: .\backend\src\middleware\validate.js ---
+export default (schema) => (req, res, next) => {
+    const { error, value } = schema.validate(req.body, {
+        abortEarly: true,
+        stripUnknown: true
+    });
+
+    if (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.details[0].message
+        });
+    }
+
+    req.body = value;
+    next();
+};
+
+--- END OF .\backend\src\middleware\validate.js ---
+
+--- FILE: .\frontend\eslint.config.js ---
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+  },
+])
+
+--- END OF .\frontend\eslint.config.js ---
+
+--- FILE: .\frontend\src\features\advanced\AnalyticsPlusPage.tsx ---
+import { PageShell, SectionCard } from "./Shared"
+
+export default function AnalyticsPlusPage() {
+  return (
+    <PageShell title="AnalyticsPlus" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
+        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
+        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
+      </div>
+    </PageShell>
+  )
+}
+
+--- END OF .\frontend\src\features\advanced\AnalyticsPlusPage.tsx ---
+

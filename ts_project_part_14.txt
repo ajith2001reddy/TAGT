@@ -1,0 +1,206 @@
+TS PROJECT PART 14 of 20
+==============================
+--- FILE: .\backend\src\swagger.js ---
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+
+const swaggerDefinition = {
+    openapi: "3.0.0",
+    info: {
+        title: "TAGT Property Management API",
+        version: "1.0.0",
+        description: "API documentation for TAGT backend"
+    },
+    servers: [
+        {
+            url: process.env.API_BASE_URL || "http://localhost:5000/api",
+            description: "API Server"
+        }
+    ],
+    components: {
+        securitySchemes: {
+            bearerAuth: {
+                type: "http",
+                scheme: "bearer",
+                bearerFormat: "JWT"
+            }
+        }
+    },
+    security: [{ bearerAuth: [] }]
+};
+
+const options = {
+    swaggerDefinition,
+    apis: [
+        "./routes/*.js",
+        "./controllers/*.js",
+        "./models/*.js"
+    ]
+};
+
+const swaggerSpec = swaggerJsdoc(options);
+
+export { swaggerUi, swaggerSpec };
+
+--- END OF .\backend\src\swagger.js ---
+
+--- FILE: .\backend\src\models\Payment.js ---
+﻿import mongoose from "mongoose";
+
+const PaymentSchema = new mongoose.Schema(
+    {
+        // 🔗 Resident reference
+        resident: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true,
+        },
+
+        // 🔗 Room reference
+        room: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Room",
+            default: null,  
+        },
+
+        // 💰 Amount to be paid
+        amount: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+
+        // 📅 Month identifier (YYYY-MM) → used for cron + duplicate prevention
+        month: {
+            type: String,
+            required: true,
+            match: /^\d{4}-\d{2}$/, // e.g., 2026-02
+            index: true,
+        },
+
+        // 🧾 Payment type (FIXED ENUM — your bug was here)
+        type: {
+            type: String,
+            enum: ["rent", "deposit", "late_fee", "other"],
+            default: "rent",
+            required: true,
+            index: true,
+        },
+
+        // 📊 Payment status
+        status: {
+            type: String,
+            enum: ["pending", "paid", "failed", "cancelled"],
+            default: "pending",
+            index: true,
+        },
+
+        // ⏰ Due date for reminders / late fee automation
+        dueDate: {
+            type: Date,
+            required: true,
+        },
+
+        // 💳 Payment method (future Stripe/cash support)
+        method: {
+            type: String,
+            enum: ["cash", "card", "bank", "online", null],
+            default: null,
+        },
+
+        // 🧾 Optional transaction reference (Stripe ID, etc.)
+        transactionId: {
+            type: String,
+            default: null,
+        },
+
+        // 📝 Notes (admin comments, adjustments)
+        notes: {
+            type: String,
+            trim: true,
+            maxlength: 500,
+        },
+
+        // 📅 Actual paid timestamp
+        paidAt: {
+            type: Date,
+            default: null,
+        },
+    },
+    {
+        timestamps: true, // createdAt, updatedAt
+    }
+);
+
+
+
+// Ensures ONE rent payment per resident per month
+PaymentSchema.index(
+    { resident: 1, month: 1, type: 1 },
+    { unique: true }
+);
+
+
+
+export default mongoose.model("Payment", PaymentSchema);
+
+--- END OF .\backend\src\models\Payment.js ---
+
+--- FILE: .\frontend\package.json ---
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.13.5",
+    "firebase": "^12.9.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.4",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^7.3.1"
+  }
+}
+
+--- END OF .\frontend\package.json ---
+
+--- FILE: .\frontend\src\features\advanced\EmailAutomationPage.tsx ---
+import { PageShell, SectionCard } from "./Shared"
+
+export default function EmailAutomationPage() {
+  return (
+    <PageShell title="EmailAutomation" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
+        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
+        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
+      </div>
+    </PageShell>
+  )
+}
+
+--- END OF .\frontend\src\features\advanced\EmailAutomationPage.tsx ---
+

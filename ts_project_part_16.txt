@@ -1,0 +1,237 @@
+TS PROJECT PART 16 of 20
+==============================
+--- FILE: .\backend\src\analytics\forecastEngine.js ---
+import Room from "../models/rooms.js";
+
+async function getCurrentOccupancy() {
+    const rooms = await Room.find({}, "totalBeds occupiedBeds").lean();
+
+    const totalBeds = rooms.reduce(
+        (sum, r) => sum + (r.totalBeds || 0),
+        0
+    );
+
+    const occupiedBeds = rooms.reduce(
+        (sum, r) => sum + (r.occupiedBeds || 0),
+        0
+    );
+
+    const occupancyRate =
+        totalBeds === 0
+            ? 0
+            : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
+
+    return { totalBeds, occupiedBeds, occupancyRate };
+}
+
+async function predictOccupancy(monthsAhead = 6) {
+    const snapshot = await getCurrentOccupancy();
+
+    if (snapshot.totalBeds === 0) {
+        return {
+            history: [],
+            forecast: [],
+            meta: {
+                model: "No data",
+                generatedAt: new Date()
+            }
+        };
+    }
+
+    const now = new Date();
+
+    const history = [
+        {
+            month: now.toISOString().slice(0, 7),
+            occupancyRate: snapshot.occupancyRate
+        }
+    ];
+
+    const forecast = Array.from({ length: monthsAhead }, (_, i) => {
+        const date = new Date(now);
+        date.setMonth(now.getMonth() + i + 1);
+
+        return {
+            month: date.toISOString().slice(0, 7),
+            predictedOccupancy: snapshot.occupancyRate
+        };
+    });
+
+    return {
+        history,
+        forecast,
+        meta: {
+            model: "Flat baseline projection",
+            generatedAt: new Date(),
+            totalBeds: snapshot.totalBeds,
+            occupiedBeds: snapshot.occupiedBeds,
+            occupancyRate: snapshot.occupancyRate
+        }
+    };
+}
+
+export { predictOccupancy };
+
+--- END OF .\backend\src\analytics\forecastEngine.js ---
+
+--- FILE: .\backend\src\models\RequestHistory.js ---
+import mongoose from "mongoose";
+
+const requestHistorySchema = new mongoose.Schema(
+    {
+        requestId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Request",
+            index: true
+        },
+        residentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+        originalMessage: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        finalResolution: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        timeline: [
+            {
+                status: {
+                    type: String
+                },
+                note: {
+                    type: String
+                },
+                adminId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User"
+                },
+                createdAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }
+        ],
+        resolvedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+        resolvedAt: {
+            type: Date,
+            default: Date.now,
+            index: true
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+requestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
+
+export default mongoose.model("RequestHistory", requestHistorySchema);
+
+--- END OF .\backend\src\models\RequestHistory.js ---
+
+--- FILE: .\frontend\README.md ---
+# React + TypeScript + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+--- END OF .\frontend\README.md ---
+
+--- FILE: .\frontend\src\features\advanced\NotificationCenterPage.tsx ---
+import { PageShell, SectionCard } from "./Shared"
+
+export default function NotificationCenterPage() {
+  return (
+    <PageShell title="NotificationCenter" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
+        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
+        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
+      </div>
+    </PageShell>
+  )
+}
+
+--- END OF .\frontend\src\features\advanced\NotificationCenterPage.tsx ---
+

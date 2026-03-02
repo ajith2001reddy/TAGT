@@ -1,0 +1,219 @@
+TS PROJECT PART 17 of 20
+==============================
+--- FILE: .\backend\src\analytics\kpiCalculator.js ---
+﻿import Room from "../models/rooms.js";
+import Payment from "../models/Payment.js";
+import Request from "../models/Request.js";
+
+export const getKPIs = async ({ fromDate, toDate } = {}) => {
+    const paymentDateFilter =
+        fromDate && toDate
+            ? { paidAt: { $gte: fromDate, $lte: toDate } }
+            : {};
+
+    const requestDateFilter =
+        fromDate && toDate
+            ? { createdAt: { $gte: fromDate, $lte: toDate } }
+            : {};
+
+    /* ================= OCCUPANCY ================= */
+    const roomTotals = await Room.aggregate([
+        {
+            $group: {
+                _id: null,
+                totalBeds: { $sum: "$totalBeds" },
+                occupiedBeds: { $sum: "$occupiedBeds" },
+            },
+        },
+    ]);
+
+    const totalBeds = roomTotals[0]?.totalBeds || 0;
+    const occupiedBeds = roomTotals[0]?.occupiedBeds || 0;
+
+    const occupancyRate =
+        totalBeds === 0 ? 0 : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
+
+    /* ================= PAYMENTS ================= */
+    const paymentStats = await Payment.aggregate([
+        { $match: paymentDateFilter },
+        {
+            $group: {
+                _id: null,
+                totalBilled: { $sum: "$amount" },
+                totalCollected: {
+                    $sum: {
+                        $cond: [{ $eq: ["$status", "paid"] }, "$amount", 0],
+                    },
+                },
+            },
+        },
+    ]);
+
+    const totalBilled = paymentStats[0]?.totalBilled || 0;
+    const totalCollected = paymentStats[0]?.totalCollected || 0;
+
+    const collectionRate =
+        totalBilled === 0
+            ? 0
+            : Number(((totalCollected / totalBilled) * 100).toFixed(2));
+
+    /* ================= MAINTENANCE ================= */
+    const resolvedRequests = await Request.aggregate([
+        {
+            $match: {
+                status: "resolved",
+                ...requestDateFilter,
+            },
+        },
+        {
+            $project: {
+                resolutionHours: {
+                    $divide: [
+                        { $subtract: ["$updatedAt", "$createdAt"] },
+                        1000 * 60 * 60,
+                    ],
+                },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                avgResolutionTime: { $avg: "$resolutionHours" },
+                resolvedCount: { $sum: 1 },
+            },
+        },
+    ]);
+
+    const avgResolutionTime =
+        resolvedRequests[0]?.avgResolutionTime
+            ? Number(resolvedRequests[0].avgResolutionTime.toFixed(2))
+            : 0;
+
+    const resolvedCount = resolvedRequests[0]?.resolvedCount || 0;
+
+    /* ================= RESULT ================= */
+    return {
+        occupancy: {
+            rate: occupancyRate,
+            occupiedBeds,
+            totalBeds,
+        },
+        payments: {
+            collectionRate,
+            totalBilled,
+            totalCollected,
+        },
+        maintenance: {
+            avgResolutionTime,
+            resolvedCount,
+        },
+        meta: {
+            mode: "snapshot",
+            fromDate: fromDate || null,
+            toDate: toDate || null,
+            generatedAt: new Date(),
+        },
+    };
+};
+
+--- END OF .\backend\src\analytics\kpiCalculator.js ---
+
+--- FILE: .\backend\src\models\rooms.js ---
+import mongoose from "mongoose";
+
+const roomSchema = new mongoose.Schema(
+    {
+        roomNumber: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            index: true
+        },
+        rent: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        totalBeds: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        occupiedBeds: {
+            type: Number,
+            default: 0,
+            min: 0,
+            validate: {
+                validator(value) {
+                    return value <= this.totalBeds;
+                },
+                message: "Occupied beds cannot exceed total beds"
+            }
+        },
+        maintenanceMode: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+        maintenanceNote: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 300
+        },
+        note: {
+            type: String,
+            default: ""
+        }
+    },
+    {
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    }
+);
+
+roomSchema.virtual("availableBeds").get(function () {
+    if (this.maintenanceMode) return 0;
+    return Math.max(0, this.totalBeds - this.occupiedBeds);
+});
+
+roomSchema.index({ rent: 1 });
+roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
+
+export default mongoose.model("Room", roomSchema);
+
+--- END OF .\backend\src\models\rooms.js ---
+
+--- FILE: .\frontend\tailwind.config.js ---
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}"
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+--- END OF .\frontend\tailwind.config.js ---
+
+--- FILE: .\frontend\src\features\advanced\PropertyManagementPage.tsx ---
+import { PageShell, SectionCard } from "./Shared"
+
+export default function PropertyManagementPage() {
+  return (
+    <PageShell title="PropertyManagement" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
+        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
+        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
+      </div>
+    </PageShell>
+  )
+}
+
+--- END OF .\frontend\src\features\advanced\PropertyManagementPage.tsx ---
+

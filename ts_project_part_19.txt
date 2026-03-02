@@ -1,0 +1,207 @@
+TS PROJECT PART 19 of 20
+==============================
+--- FILE: .\backend\src\analytics\revenueOptimizer.js ---
+﻿// src/analytics/revenueOptimizer.js
+
+import Room from "../models/rooms.js";
+import Payment from "../models/Payment.js";
+import { predictChurn } from "./churnEngine.js";
+
+export const optimizeRevenue = async () => {
+    const [rooms, payments] = await Promise.all([
+        Room.find({}, "totalBeds occupiedBeds rent").lean(),
+        Payment.find({}, "amount status").lean()
+    ]);
+
+    const totals = rooms.reduce(
+        (acc, room) => {
+            const beds = room.totalBeds || 0;
+            acc.totalBeds += beds;
+            acc.occupiedBeds += room.occupiedBeds || 0;
+            acc.totalRent += (room.rent || 0) * beds;
+            return acc;
+        },
+        { totalBeds: 0, occupiedBeds: 0, totalRent: 0 }
+    );
+
+    const occupancyRate =
+        totals.totalBeds === 0
+            ? 0
+            : (totals.occupiedBeds / totals.totalBeds) * 100;
+
+    const avgRent =
+        totals.totalBeds === 0
+            ? 0
+            : totals.totalRent / totals.totalBeds;
+
+    let totalBilled = 0;
+    let totalCollected = 0;
+
+    for (const p of payments) {
+        totalBilled += p.amount || 0;
+        if (p.status === "paid") totalCollected += p.amount || 0;
+    }
+
+    const collectionRate =
+        totalBilled === 0
+            ? 0
+            : (totalCollected / totalBilled) * 100;
+
+    let highRiskResidents = 0;
+    try {
+        const churnData = await predictChurn();
+        highRiskResidents = churnData?.highRisk || 0;
+    } catch { }
+
+    const insights = [];
+    let revenueLeakEstimate = 0;
+
+    if (occupancyRate < 70) {
+        const emptyBeds = totals.totalBeds - totals.occupiedBeds;
+        revenueLeakEstimate += emptyBeds * avgRent;
+
+        insights.push({
+            type: "OCCUPANCY",
+            severity: "HIGH",
+            message: "Low occupancy detected",
+            recommendation:
+                "Offer promotions, flexible pricing, or partnerships to increase occupancy."
+        });
+    }
+
+    if (collectionRate < 85) {
+        revenueLeakEstimate += totalBilled - totalCollected;
+
+        insights.push({
+            type: "PAYMENTS",
+            severity: "MEDIUM",
+            message: "Low payment collection rate",
+            recommendation:
+                "Enable automated reminders, enforce deadlines, or introduce incentives."
+        });
+    }
+
+    if (highRiskResidents > 0) {
+        insights.push({
+            type: "CHURN",
+            severity: "HIGH",
+            message: `${highRiskResidents} residents at high churn risk`,
+            recommendation:
+                "Proactively engage residents and offer retention incentives."
+        });
+    }
+
+    if (!insights.length) {
+        insights.push({
+            type: "HEALTHY",
+            severity: "LOW",
+            message: "Revenue performance is healthy",
+            recommendation:
+                "Maintain current pricing and operational strategy."
+        });
+    }
+
+    return {
+        generatedAt: new Date(),
+        metrics: {
+            occupancyRate: Number(occupancyRate.toFixed(2)),
+            collectionRate: Number(collectionRate.toFixed(2)),
+            avgRent: Number(avgRent.toFixed(2)),
+            totalBeds: totals.totalBeds,
+            occupiedBeds: totals.occupiedBeds
+        },
+        revenueLeakEstimate: Math.round(revenueLeakEstimate),
+        insights,
+        meta: { mode: "snapshot" }
+    };
+};
+
+--- END OF .\backend\src\analytics\revenueOptimizer.js ---
+
+--- FILE: .\backend\src\routes\adminRoutes.js ---
+import { Router } from "express";
+
+import auth from "../middleware/auth.js";
+import isAdmin from "../middleware/isAdmin.js";
+
+import {
+    getAllResidents,
+    addResident,
+} from "../controllers/residentController.js";
+
+import Request from "../models/Request.js";
+import Payment from "../models/Payment.js";
+import User from "../models/User.js";
+
+const router = Router();
+
+router.get("/residents", auth, isAdmin, getAllResidents);
+router.post("/residents", auth, isAdmin, addResident);
+
+router.get("/requests", auth, isAdmin, async (req, res, next) => {
+    try {
+        const requests = await Request.find()
+            .populate("resident", "name email")
+            .sort({ createdAt: -1 })
+            .lean();
+        res.json({ success: true, requests });
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.get("/stats", auth, isAdmin, async (req, res, next) => {
+    try {
+        const [totalResidents, pendingRequests, payments] = await Promise.all([
+            User.countDocuments({ role: "resident", isActive: true }),
+            Request.countDocuments({ status: { $ne: "resolved" } }),
+            Payment.find({}, "amount status").lean(),
+        ]);
+
+        let totalRevenue = 0;
+        let outstandingBalance = 0;
+        for (const p of payments) {
+            if (p.status === "paid") totalRevenue += p.amount || 0;
+            else outstandingBalance += p.amount || 0;
+        }
+
+        res.json({
+            success: true,
+            stats: { totalResidents, pendingRequests, totalRevenue, outstandingBalance },
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+export default router;
+--- END OF .\backend\src\routes\adminRoutes.js ---
+
+--- FILE: .\frontend\tsconfig.json ---
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
+
+--- END OF .\frontend\tsconfig.json ---
+
+--- FILE: .\frontend\src\features\advanced\ResidentProfilesPage.tsx ---
+import { PageShell, SectionCard } from "./Shared"
+
+export default function ResidentProfilesPage() {
+  return (
+    <PageShell title="ResidentProfiles" description="Enterprise-grade module with premium UX scaffolding and ready integration points.">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <SectionCard title="Command Center" subtitle="Track KPIs, actions, and health checks in one place." />
+        <SectionCard title="Automation" subtitle="Configure workflows, reminders, and role-based actions." />
+        <SectionCard title="Transparency" subtitle="Timeline-style visibility for audit trails and operations." />
+      </div>
+    </PageShell>
+  )
+}
+
+--- END OF .\frontend\src\features\advanced\ResidentProfilesPage.tsx ---
+
