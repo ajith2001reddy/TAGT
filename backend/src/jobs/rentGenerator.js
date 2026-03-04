@@ -1,9 +1,10 @@
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
+import logger from "../utils/logger.js";
 
 export async function generateMonthlyRent() {
     try {
-        console.log("[JOB] Generating monthly rent...");
+        logger.info("[JOB] Generating monthly rent");
 
         const residents = await User.find({ role: "resident" });
 
@@ -31,9 +32,8 @@ export async function generateMonthlyRent() {
             created++;
         }
 
-        console.log(`[JOB] Rent records created: ${created}`);
-
+        logger.info("[JOB] Rent records created", { count: created });
     } catch (err) {
-        console.error("[JOB] Rent generation error:", err.message);
+        logger.error("[JOB] Rent generation error", { error: err.message });
     }
 }

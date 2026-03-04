@@ -2,6 +2,7 @@
 import User from "../models/User.js";
 import admin from "../config/firebase.js";
 import mongoose from "mongoose";
+import { sendOwnerInvite } from "../services/emailService.js";
 
 /* ===========================
    CREATE PROPERTY
@@ -40,29 +41,45 @@ export const createOwner = async (req, res, next) => {
             return res.status(403).json({ success: false, message: "Super admin only" });
         }
 
-        const { name, email, password } = req.body;
+        const { name, email } = req.body;
 
-        // 1️⃣ Create Firebase user
+        if (!email || !name) {
+            return res.status(400).json({ success: false, message: "Name and Email are required" });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        // 1️⃣ Create Firebase user (without password, they'll set it via email)
         const firebaseUser = await admin.auth().createUser({
-            email,
-            password,
+            email: normalizedEmail,
             displayName: name,
         });
 
         // 2️⃣ Create Mongo user
         const user = await User.create({
             name,
-            email,
+            email: normalizedEmail,
             role: "owner",
             firebaseUid: firebaseUser.uid,
             propertyIds: []
         });
 
-        res.status(201).json({ success: true, data: user });
+        // 3️⃣ Generate password setup link
+        const resetLink = await admin.auth().generatePasswordResetLink(normalizedEmail);
+
+        // 4️⃣ Send Invitation Email
+        sendOwnerInvite({ name, email: normalizedEmail, resetLink });
+
+        res.status(201).json({
+            success: true,
+            message: "Owner created and invitation sent",
+            data: user
+        });
     } catch (err) {
         next(err);
     }
 };
+
 
 /* ===========================
    ASSIGN OWNER TO PROPERTY

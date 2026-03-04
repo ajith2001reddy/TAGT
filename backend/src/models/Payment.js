@@ -101,11 +101,23 @@ const PaymentSchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
+
+        // 🗑️ Soft delete fields
+        isDeleted: { type: Boolean, default: false, index: true },
+        deletedAt: { type: Date, default: null },
     },
     {
         timestamps: true, // createdAt, updatedAt
     }
 );
+
+// 🗑️ Soft-delete: automatically exclude deleted payments from all find queries
+PaymentSchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
 
 
 
@@ -115,14 +127,17 @@ PaymentSchema.pre("save", function (next) {
     this.totalPayable = Number((baseAmount + fee).toFixed(2));
     next();
 });
-PaymentSchema.index(
-    { propertyId: 1, resident: 1, month: 1 },
-    { unique: true }
-);
-
-// 📊 Compound indexes for multi-tenant analytics
+PaymentSchema.index({ propertyId: 1, resident: 1, month: 1 }, { unique: true });
 PaymentSchema.index({ propertyId: 1, status: 1, dueDate: 1 });
+PaymentSchema.index({ propertyId: 1, month: 1, status: 1 });
 PaymentSchema.index({ resident: 1, month: 1 }, { unique: true }); // prevent duplicate bills
+
+// 📊 Optimized compound indexes for dashboard/list analytics
+PaymentSchema.index({ propertyId: 1, status: 1, createdAt: -1 });
+PaymentSchema.index({ propertyId: 1, type: 1, status: 1 });
+
+// ✅ Compound indexes for multi-tenant analytics
+PaymentSchema.index({ propertyId: 1, status: 1, dueDate: 1 });
 PaymentSchema.index({ propertyId: 1, month: 1, status: 1 });
 
 export default mongoose.model("Payment", PaymentSchema);

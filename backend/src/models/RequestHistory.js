@@ -51,12 +51,31 @@ const requestHistorySchema = new mongoose.Schema(
             type: Date,
             default: Date.now,
             index: true
-        }
+        },
+        propertyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+            index: true
+        },
+        // 🗑️ Soft delete fields
+        isDeleted: { type: Boolean, default: false, index: true },
+        deletedAt: { type: Date, default: null },
     },
     {
         timestamps: true
     }
 );
+
+// 🗑️ Soft-delete middleware
+requestHistorySchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
+
+// ✅ Compound index for multi-tenant history
+requestHistorySchema.index({ propertyId: 1, residentId: 1 });
 
 requestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
 

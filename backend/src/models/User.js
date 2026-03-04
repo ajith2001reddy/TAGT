@@ -92,6 +92,15 @@ const userSchema = new mongoose.Schema(
             addedAt: { type: Date, default: Date.now },
         }],
 
+        notifications: [
+            {
+                type: { type: String, enum: ["info", "warning", "success", "danger"], default: "info" },
+                message: { type: String, required: true },
+                read: { type: Boolean, default: false },
+                createdAt: { type: Date, default: Date.now },
+            },
+        ],
+
         // 🗑️ Soft delete
         isDeleted: { type: Boolean, default: false, index: true },
         deletedAt: { type: Date, default: null },

@@ -16,6 +16,7 @@ export const listResidents = async (req, res, next) => {
 
         const residents = await User.find(filter)
             .populate("roomId", "roomNumber rent")
+            .populate("propertyId", "name images heroImage")
             .lean();
 
         return res.json({ success: true, data: residents });
@@ -43,7 +44,7 @@ export const createResident = async (req, res, next) => {
             return res.status(403).json({ success: false, message: "Unauthorized property access" });
         }
 
-        const { resident, tempPassword } = await createResidentWorkflow({
+        const { resident, resetLink } = await createResidentWorkflow({
             ...req.body,
             propertyId
         }, session);
@@ -51,7 +52,7 @@ export const createResident = async (req, res, next) => {
         await session.commitTransaction();
 
         // Async welcome email (fire-and-forget)
-        sendWelcomeEmailSafe(resident, propertyId);
+        sendWelcomeEmailSafe(resident, propertyId, resetLink);
 
         return res.status(201).json({ success: true, data: resident });
     } catch (err) {
@@ -165,14 +166,49 @@ export const addResidentNote = async (req, res, next) => {
 /**
  * Get detailed history (payments) for a resident
  */
+/**
+ * Send a notification to a resident
+ */
+export const sendNotification = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { type, message } = req.body;
+        const scope = buildPropertyFilter(req.user);
+        const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
+
+        if (!message?.trim()) return res.status(400).json({ success: false, message: "message is required" });
+
+        const resident = await User.findOneAndUpdate(
+            { _id: id, role: "resident", ...pm },
+            {
+                $push: {
+                    notifications: {
+                        type: type || "info",
+                        message: message.trim(),
+                        createdAt: new Date()
+                    }
+                }
+            },
+            { new: true }
+        );
+
+        if (!resident) return res.status(404).json({ success: false, message: "Resident not found" });
+
+        return res.json({ success: true, message: "Notification sent successfully" });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const getResidentHistory = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
         const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
         const { id } = req.params;
 
-        const resident = await User.findOne({ _id: id, role: "resident", ...pm }, "name email roomId")
+        const resident = await User.findOne({ _id: id, role: "resident", ...pm }, "name email roomId propertyId")
             .populate("roomId", "roomNumber rent")
+            .populate("propertyId", "name address images heroImage")
             .lean();
 
         if (!resident) return res.status(404).json({ success: false, message: "Resident not found" });

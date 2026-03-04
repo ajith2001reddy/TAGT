@@ -121,7 +121,7 @@ export default function SearchPage() {
             setSendingId(pg.id);
 
             await api.post("/enquiries", {
-                pgId: pg.id,
+                propertyId: pg.id,
                 pgName: pg.name,
                 message: "I am interested in this PG.",
             });

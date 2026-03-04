@@ -49,7 +49,7 @@ export default function PaymentsPage() {
     async function handleDownload(payment: Payment) {
         setDownloadingId(payment._id);
         try {
-            const response = await api.get(`/payments/${payment._id}/invoice`, { responseType: "blob" });
+            const response = await api.get(`/v2/payments/${payment._id}/invoice`, { responseType: "blob" });
             const blob = new Blob([response.data], { type: "application/pdf" });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");

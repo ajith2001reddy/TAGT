@@ -26,14 +26,18 @@ import adminRoutes from "./admin.js";
 import v2Routes from "./v2/index.js";
 import residentDashboardRoutes from "./residentDashboard.js";
 import enquiryRoutes from "./enquiry.routes.js";
+import residentProfileRoutes from "./residentProfile.js";
+import joinRequestRoutes from "./joinRequestRoutes.js";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
 router.use("/owner", ownerRoutes);
 router.use("/admin", adminRoutes);
+router.use("/v2/join-requests", joinRequestRoutes);
 router.use("/v2", v2Routes);
 router.use("/resident", residentDashboardRoutes);
+router.use("/resident", residentProfileRoutes);
 router.use("/enquiries", enquiryRoutes);
 
 router.get("/", (req, res) => {

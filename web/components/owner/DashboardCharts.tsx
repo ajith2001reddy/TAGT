@@ -36,7 +36,7 @@ export function RevenueTrendChart({ data }: { data: any[] }) {
                         }}
                         itemStyle={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600 }}
                         labelStyle={{ color: 'var(--text-tertiary)', fontSize: 11, marginBottom: 4 }}
-                        formatter={(v: any) => [`₹${v.toLocaleString()}`, "Revenue"]}
+                        formatter={(v: any) => [`₹${(v || 0).toLocaleString()}`, "Revenue"]}
                     />
                     <Line
                         type="monotone"

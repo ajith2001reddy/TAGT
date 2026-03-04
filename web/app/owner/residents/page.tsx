@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Resident, fetchResidents, createResident, deactivateResident, moveResidentRoom, addResidentNote, fetchResidentHistory, ResidentHistory } from "@/features/owner/residents.service";
+import { Resident, fetchResidents, createResident, deactivateResident, moveResidentRoom, addResidentNote, fetchResidentHistory, ResidentHistory, sendNotification as sendResidentNotification } from "@/features/owner/residents.service";
 import { fetchRooms } from "@/features/owner/rooms.service";
 
 interface Room { _id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; }
@@ -53,11 +53,14 @@ export default function ResidentsPage() {
     const [form, setForm] = useState({ name: "", email: "", roomId: "" });
     const [creating, setCreating] = useState(false);
     const [selected, setSelected] = useState<Resident | null>(null);
-    const [drawerTab, setDrawerTab] = useState<"history" | "notes" | "actions">("history");
+    const [drawerTab, setDrawerTab] = useState<"history" | "notes" | "notify" | "actions">("history");
     const [newNote, setNewNote] = useState("");
     const [addingNote, setAddingNote] = useState(false);
     const [moveRoomId, setMoveRoomId] = useState("");
     const [moving, setMoving] = useState(false);
+    const [notifyMessage, setNotifyMessage] = useState("");
+    const [notifyType, setNotifyType] = useState("info");
+    const [sendingNotify, setSendingNotify] = useState(false);
 
     async function fetchData() {
         try {
@@ -101,6 +104,17 @@ export default function ResidentsPage() {
             await fetchData();
         } catch { setError("Failed to add note."); }
         finally { setAddingNote(false); }
+    }
+
+    async function handleNotify() {
+        if (!selected || !notifyMessage.trim()) return;
+        setSendingNotify(true);
+        try {
+            await sendResidentNotification(selected._id, notifyType, notifyMessage);
+            setNotifyMessage("");
+            alert("Notification sent!");
+        } catch { setError("Failed to send notification."); }
+        finally { setSendingNotify(false); }
     }
 
     const filtered = residents.filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.email.toLowerCase().includes(search.toLowerCase()));
@@ -223,6 +237,7 @@ export default function ResidentsPage() {
                     <div style={{ display: "flex", background: "var(--bg-card)", borderRadius: "9px", padding: "4px", gap: "3px" }}>
                         <DrawerTabBtn tab="history" label="History" />
                         <DrawerTabBtn tab="notes" label="Notes" />
+                        <DrawerTabBtn tab="notify" label="Notify" />
                         <DrawerTabBtn tab="actions" label="Actions" />
                     </div>
 
@@ -243,6 +258,27 @@ export default function ResidentsPage() {
                             </div>
                             <textarea className="input-field" placeholder="Add a note…" value={newNote} onChange={e => setNewNote(e.target.value)} style={{ resize: "vertical", minHeight: "72px", fontSize: "13px" }} />
                             <button className="btn-primary" onClick={handleAddNote} disabled={addingNote || !newNote.trim()} style={{ fontSize: "13px" }}>{addingNote ? "Adding…" : "Add Note"}</button>
+                        </div>
+                    )}
+
+                    {drawerTab === "notify" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <div>
+                                <label style={{ display: "block", fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "6px" }}>Type</label>
+                                <select className="input-field" value={notifyType} onChange={e => setNotifyType(e.target.value)} style={{ fontSize: "13px" }}>
+                                    <option value="info">Information</option>
+                                    <option value="success">Success</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="danger">Danger / Critical</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ display: "block", fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "6px" }}>Message</label>
+                                <textarea className="input-field" placeholder="Type your message to the resident…" value={notifyMessage} onChange={e => setNotifyMessage(e.target.value)} style={{ resize: "vertical", minHeight: "100px", fontSize: "13px" }} />
+                            </div>
+                            <button className="btn-primary" onClick={handleNotify} disabled={sendingNotify || !notifyMessage.trim()} style={{ fontSize: "13px" }}>
+                                {sendingNotify ? "Sending…" : "Send Notification"}
+                            </button>
                         </div>
                     )}
 

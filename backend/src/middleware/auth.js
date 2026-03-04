@@ -1,5 +1,6 @@
 import admin from "../config/firebase.js";
 import User from "../models/User.js";
+import logger from "../utils/logger.js";
 
 const firebaseAuth = async (req, res, next) => {
     let token;
@@ -31,7 +32,7 @@ const firebaseAuth = async (req, res, next) => {
             if (dbUser && !dbUser.firebaseUid) {
                 dbUser.firebaseUid = decoded.uid;
                 await dbUser.save();
-                console.log(`[AUTH] Linked Firebase UID for user: ${dbUser.email}`);
+                logger.info("[AUTH] Linked Firebase UID", { email: dbUser.email });
             }
         }
 
@@ -55,8 +56,8 @@ const firebaseAuth = async (req, res, next) => {
         next();
 
     } catch (error) {
-        if (token) console.log("Token check failed for suffix:", token.slice(-10));
-        console.error("firebaseAuth error:", error.message);
+        if (token) logger.error("Token check failed", { suffix: token.slice(-10) });
+        logger.error("firebaseAuth error", { error: error.message });
 
         return res.status(401).json({
             success: false,

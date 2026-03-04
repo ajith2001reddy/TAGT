@@ -12,11 +12,16 @@
 // ─────────────────────────────────────────────────────────────────
 
 import nodemailer from "nodemailer";
+import logger from "../utils/logger.js";
 
 const emailEnabled = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+const provider = process.env.EMAIL_PROVIDER || "SMTP";
+const FROM = process.env.SMTP_FROM || '"TAGT Platform" <noreply@tagt.app>';
+
+// ─── Provider Setup ──────────────────────────────────────────────
 
 let transporter = null;
-if (emailEnabled) {
+if (provider === "SMTP" && emailEnabled) {
     transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT) || 587,
@@ -26,43 +31,69 @@ if (emailEnabled) {
     });
 }
 
-export const isEmailEnabled = () => emailEnabled;
-
-const FROM = process.env.SMTP_FROM || '"TAGT Platform" <noreply@tagt.app>';
-
 // Internal send helper — never throws
 const send = async (to, subject, html) => {
+    if (provider === "RESEND") {
+        if (!process.env.RESEND_API_KEY) {
+            logger.info(`[RESEND MOCK] To: ${to} | Subject: ${subject}`);
+            return { mocked: true };
+        }
+        // Future: Integration with resend package
+        logger.info(`[RESEND] Sending...`, { to, subject });
+        return { success: true };
+    }
+
+    // Default: SMTP
     if (!transporter) {
-        console.log(`[EMAIL MOCK] To: ${to} | Subject: ${subject}`);
+        logger.info(`[EMAIL MOCK] To: ${to} | Subject: ${subject}`);
         return { mocked: true };
     }
     try {
         const info = await transporter.sendMail({ from: FROM, to, subject, html });
-        console.log(`[EMAIL] Sent: ${subject} → ${to} (${info.messageId})`);
+        logger.info(`[EMAIL] Sent: ${subject}`, { to, messageId: info.messageId });
         return info;
     } catch (err) {
-        console.error(`[EMAIL] Failed: ${subject} → ${to}:`, err.message);
+        logger.error(`[EMAIL] Failed: ${subject}`, { to, error: err.message });
         return { error: err.message };
     }
 };
 
 // ─── Templates ───────────────────────────────────────────────────
 
-export const sendWelcomeEmail = async ({ name, email, tempPassword, propertyName }) => {
+export const sendWelcomeEmail = async ({ name, email, tempPassword, resetLink, propertyName }) => {
     return send(email, `Welcome to ${propertyName || "TAGT"} 🏠`, `
         <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:16px;color:#00d4ff">TAGT</div>
             <h2>Welcome, ${name}!</h2>
-            <p style="color:#aaa">Your tenant account at <b>${propertyName || "TAGT"}</b> has been created.</p>
+            <p style="color:#aaa">Your account at <b>${propertyName || "TAGT"}</b> has been created.</p>
             <div style="background:#0f1a26;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin:20px 0">
                 <div style="margin-bottom:8px"><span style="color:#666;font-size:12px">Email:</span><br><b>${email}</b></div>
                 ${tempPassword ? `<div><span style="color:#666;font-size:12px">Temporary Password:</span><br><b style="color:#00d4ff;font-size:18px;letter-spacing:0.05em">${tempPassword}</b></div>` : ""}
+                ${resetLink ? `<div style="margin-top:16px"><a href="${resetLink}" style="background:#00d4ff;color:#000;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;display:inline-block">Set Your Password</a></div>` : ""}
             </div>
-            <p style="color:#aaa">Please change your password on first login at <a href="${process.env.APP_URL || "https://tagt.website"}/login" style="color:#00d4ff">tagt.website</a>.</p>
+            ${!resetLink ? `<p style="color:#aaa">Please change your password on first login at <a href="${process.env.APP_URL || "https://tagt.website"}/login" style="color:#00d4ff">tagt.website</a>.</p>` : ""}
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Property Management</div>
         </div>
     `);
 };
+
+export const sendOwnerInvite = async ({ name, email, resetLink }) => {
+    return send(email, `Invitation to join TAGT as Owner 🏠`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:16px;color:#00d4ff">TAGT</div>
+            <h2>Namaste ${name},</h2>
+            <p style="color:#aaa">You have been invited to join the TAGT Platform as a <b>Property Owner</b>.</p>
+            <p style="color:#aaa">With TAGT, you can manage your properties, tracking residents, and rent collections seamlessly.</p>
+            <div style="background:#0f1a26;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;margin:24px 0;text-align:center">
+                <p style="color:#fff;margin-bottom:20px">Please click the button below to set up your password and access your dashboard.</p>
+                <a href="${resetLink}" style="background:#00d4ff;color:#000;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;display:inline-block;box-shadow:0 4px 14px rgba(0,212,255,0.3)">Set Up My Account</a>
+            </div>
+            <p style="color:#555;font-size:13px">If you didn't expect this invitation, you can safely ignore this email.</p>
+            <div style="margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.05);font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
+        </div>
+    `);
+};
+
 
 export const sendPaymentConfirmation = async ({ name, email, amount, month, paidAt, propertyName }) => {
     const dateFmt = new Date(paidAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });

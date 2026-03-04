@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useTheme } from "@/context/ThemeContext";
+import { Sun, Moon, Monitor } from "lucide-react";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -58,13 +60,69 @@ export default function SettingsPage() {
         setTimeout(() => setSaved(false), 2500);
     }
 
+    const { theme, toggleTheme } = useTheme();
+
     return (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in" style={{ paddingBottom: "100px" }}>
             <div style={{ marginBottom: "32px" }}>
                 <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Configuration</div>
                 <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Settings</h1>
-                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Billing rules and automation controls for your property</p>
+                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Branding, billing rules, and automation controls</p>
             </div>
+
+            <Section title="Display & Appearance">
+                <FormRow label="Visual Theme" desc="Switch between light and dark modes for the interface">
+                    <div style={{
+                        background: "rgba(0,0,0,0.05)",
+                        padding: "4px",
+                        borderRadius: "12px",
+                        display: "flex",
+                        gap: "4px",
+                        border: "1px solid var(--border-subtle)"
+                    }}>
+                        <button
+                            onClick={() => theme === 'dark' && toggleTheme()}
+                            style={{
+                                padding: "8px 16px",
+                                borderRadius: "8px",
+                                border: "none",
+                                cursor: "pointer",
+                                background: theme === 'light' ? "var(--bg-surface)" : "transparent",
+                                color: theme === 'light' ? "var(--text-primary)" : "var(--text-tertiary)",
+                                boxShadow: theme === 'light' ? "0 2px 10px rgba(0,0,0,0.08)" : "none",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                fontSize: "13px",
+                                fontWeight: 600,
+                                transition: "all 0.2s ease"
+                            }}
+                        >
+                            <Sun size={14} /> Light
+                        </button>
+                        <button
+                            onClick={() => theme === 'light' && toggleTheme()}
+                            style={{
+                                padding: "8px 16px",
+                                borderRadius: "8px",
+                                border: "none",
+                                cursor: "pointer",
+                                background: theme === 'dark' ? "var(--accent-primary)" : "transparent",
+                                color: theme === 'dark' ? "#000" : "var(--text-tertiary)",
+                                boxShadow: theme === 'dark' ? "0 4px 15px rgba(0,212,255,0.2)" : "none",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                fontSize: "13px",
+                                fontWeight: 600,
+                                transition: "all 0.2s ease"
+                            }}
+                        >
+                            <Moon size={14} /> Dark
+                        </button>
+                    </div>
+                </FormRow>
+            </Section>
 
             <Section title="Billing Rules">
                 <FormRow label="Late Fee %" desc="Applied after grace period expires">

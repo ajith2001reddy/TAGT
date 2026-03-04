@@ -1,10 +1,10 @@
-// src/controllers/v2/stripeController.js
 import Payment from "../../models/Payment.js";
 import User from "../../models/User.js";
 import Property from "../../models/Property.js";
 import { createCheckoutSession, constructWebhookEvent, isStripeEnabled } from "../../services/stripeService.js";
 import { sendPaymentConfirmation } from "../../services/emailService.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
+import logger from "../../utils/logger.js";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
@@ -70,14 +70,14 @@ export const stripeWebhook = async (req, res, next) => {
                         amount: payment.amount,
                         month: payment.month,
                         paidAt: payment.paidAt,
-                    }).catch(err => console.error("[WEBHOOK EMAIL]", err.message));
+                    }).catch(err => logger.error("[WEBHOOK EMAIL]", { error: err.message, paymentId }));
                 }
             }
         }
 
         return res.json({ received: true });
     } catch (err) {
-        console.error("[STRIPE WEBHOOK]", err.message);
+        logger.error("[STRIPE WEBHOOK]", { error: err.message });
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 };

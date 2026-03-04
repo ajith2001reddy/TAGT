@@ -45,3 +45,28 @@ export const updatePropertyStatus = async (req, res, next) => {
         return res.json({ success: true, data: property });
     } catch (err) { next(err); }
 };
+
+/**
+ * Public/Resident Discovery: Search for properties
+ */
+export const discoverProperties = async (req, res, next) => {
+    try {
+        const { search } = req.query;
+        let query = { status: "active" }; // Only show approved/active properties
+
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { city: { $regex: search, $options: "i" } },
+                { address: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        const properties = await Property.find(query)
+            .select("name address city phone heroImage images")
+            .limit(50)
+            .lean();
+
+        return res.json({ success: true, data: properties });
+    } catch (err) { next(err); }
+};

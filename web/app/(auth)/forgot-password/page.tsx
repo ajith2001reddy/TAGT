@@ -14,10 +14,24 @@ export default function ForgotPasswordPage() {
         e.preventDefault();
         setLoading(true);
         try {
+
             await sendPasswordResetEmail(auth, email);
             setSent(true);
+
+        } catch (error: any) {
+
+            console.error("Password reset error:", error);
+
+            alert(
+                error.code === "auth/user-not-found"
+                    ? "No account found with this email."
+                    : "Failed to send reset email."
+            );
+
         } finally {
+
             setLoading(false);
+
         }
     }
 

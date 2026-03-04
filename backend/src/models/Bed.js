@@ -31,11 +31,26 @@ const bedSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+
+        // 🗑️ Soft delete fields
+        isDeleted: { type: Boolean, default: false, index: true },
+        deletedAt: { type: Date, default: null },
     },
     { timestamps: true }
 );
 
+// 🗑️ Soft-delete: automatically exclude deleted beds from all find queries
+bedSchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
+
 // Unique bed number per room
 bedSchema.index({ roomId: 1, bedNumber: 1 }, { unique: true });
+
+// ✅ Compound index for multi-tenant list/filter
+bedSchema.index({ propertyId: 1, status: 1 });
 
 export default mongoose.model("Bed", bedSchema);

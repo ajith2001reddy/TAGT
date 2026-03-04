@@ -57,8 +57,8 @@ function CollectionBar({ collected, expected }: { collected: number; expected: n
                 <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${color}, ${color}99)`, borderRadius: "4px", transition: "width 1s cubic-bezier(0.4,0,0.2,1)", boxShadow: `0 0 10px ${color}50` }} />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div><div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginBottom: "2px" }}>Collected</div><div style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 700, color: "#34d399" }}>₹{collected.toLocaleString()}</div></div>
-                <div style={{ textAlign: "right" }}><div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginBottom: "2px" }}>Expected</div><div style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 700 }}>₹{expected.toLocaleString()}</div></div>
+                <div><div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginBottom: "2px" }}>Collected</div><div style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 700, color: "#34d399" }}>₹{(collected || 0).toLocaleString()}</div></div>
+                <div style={{ textAlign: "right" }}><div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginBottom: "2px" }}>Expected</div><div style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 700 }}>₹{(expected || 0).toLocaleString()}</div></div>
             </div>
         </div>
     );
@@ -115,11 +115,11 @@ export default function AnalyticsPage() {
 
                     {/* KPI grid */}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px", marginBottom: "28px" }}>
-                        <KpiCard label="Occupancy Rate" value={`${fin.occupancyRate}%`} sub={`${fin.occupiedBeds}/${fin.totalBeds} beds`} color="var(--accent-primary)" />
-                        <KpiCard label="Outstanding" value={`₹${(fin.monthly.outstanding / 1000).toFixed(1)}k`} sub="Unpaid across all residents" color="#fbbf24" />
-                        <KpiCard label="Late Fees Earned" value={`₹${fin.lateFeesEarned.toLocaleString()}`} sub="All-time" color="#a78bfa" />
-                        <KpiCard label="Overdue Amount" value={`₹${(fin.overdueAmount / 1000).toFixed(1)}k`} sub={`${fin.overdueCount} overdue bills`} color="var(--red)" />
-                        <KpiCard label="Profit Estimate" value={`₹${(fin.profitEstimate / 1000).toFixed(1)}k`} sub="Collected + late fees" color="#34d399" />
+                        <KpiCard label="Occupancy Rate" value={`${fin.occupancyRate || 0}%`} sub={`${fin.occupiedBeds || 0}/${fin.totalBeds || 0} beds`} color="var(--accent-primary)" />
+                        <KpiCard label="Outstanding" value={`₹${((fin.monthly?.outstanding || 0) / 1000).toFixed(1)}k`} sub="Unpaid across all residents" color="#fbbf24" />
+                        <KpiCard label="Late Fees Earned" value={`₹${(fin.lateFeesEarned || 0).toLocaleString()}`} sub="All-time" color="#a78bfa" />
+                        <KpiCard label="Overdue Amount" value={`₹${((fin.overdueAmount || 0) / 1000).toFixed(1)}k`} sub={`${fin.overdueCount || 0} overdue bills`} color="var(--red)" />
+                        <KpiCard label="Profit Estimate" value={`₹${((fin.profitEstimate || 0) / 1000).toFixed(1)}k`} sub="Collected + late fees" color="#34d399" />
                         <KpiCard label="Collection Rate" value={`${fin.collectionRate}%`} sub="This month" color={fin.collectionRate >= 90 ? "#34d399" : fin.collectionRate >= 70 ? "#fbbf24" : "var(--red)"} />
                     </div>
 
@@ -151,7 +151,7 @@ export default function AnalyticsPage() {
                     <div style={{ background: "var(--red-bg)", border: "1px solid rgba(255,82,82,0.2)", borderRadius: "18px", padding: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
                             <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--red)", marginBottom: "8px" }}>Estimated Revenue Leak</div>
-                            <div style={{ fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 700, letterSpacing: "-0.04em", color: "var(--red)" }}>₹{leak.totalLeakEstimate.toLocaleString()}</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 700, letterSpacing: "-0.04em", color: "var(--red)" }}>₹{(leak.totalLeakEstimate || 0).toLocaleString()}</div>
                             <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>per month at current occupancy</div>
                         </div>
                         <div style={{ fontSize: "48px" }}>🔴</div>
@@ -161,14 +161,14 @@ export default function AnalyticsPage() {
                         {/* Empty beds */}
                         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "16px", padding: "20px" }}>
                             <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "16px" }}>
-                                🛏 Empty Beds — ₹{leak.emptyBedCostTotal.toLocaleString()}/mo loss
+                                🛏 Empty Beds — ₹{(leak.emptyBedCostTotal || 0).toLocaleString()}/mo loss
                             </div>
                             {leak.emptyBeds.length === 0
                                 ? <div style={{ color: "var(--green)", fontSize: "13px" }}>✅ All rooms fully occupied</div>
                                 : leak.emptyBeds.map((r, i) => (
                                     <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border-subtle)", fontSize: "13px" }}>
                                         <span>Room {r.roomNumber} — {r.emptyBeds} empty bed{r.emptyBeds > 1 ? "s" : ""}</span>
-                                        <span style={{ color: "var(--red)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>-₹{r.costPerMonth.toLocaleString()}</span>
+                                        <span style={{ color: "var(--red)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>-₹{(r.costPerMonth || 0).toLocaleString()}</span>
                                     </div>
                                 ))
                             }

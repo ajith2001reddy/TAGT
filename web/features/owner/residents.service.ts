@@ -58,3 +58,6 @@ export async function fetchResidentHistory(id: string): Promise<ResidentHistory 
     const response = await api.get(`/v2/residents/${id}/history`);
     return response.data?.data || null;
 }
+export async function sendNotification(id: string, type: string, message: string) {
+    return api.post(`/v2/residents/${id}/notification`, { type, message });
+}

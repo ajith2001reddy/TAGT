@@ -1,6 +1,7 @@
 import { Router } from "express";
 import auth from "../middleware/auth.js";
 import Enquiry from "../models/Enquiry.js";
+import logger from "../utils/logger.js";
 
 const router = Router();
 
@@ -10,17 +11,17 @@ const router = Router();
  */
 router.post("/", auth, async (req, res) => {
     try {
-        const { pgId, pgName, message } = req.body;
+        const { propertyId, pgName, message } = req.body;
 
-        if (!pgId || !pgName) {
+        if (!propertyId || !pgName) {
             return res.status(400).json({
                 success: false,
-                message: "PG details missing",
+                message: "Property ID and Name are required",
             });
         }
 
         const enquiry = await Enquiry.create({
-            pgId,
+            propertyId,
             pgName,
             userId: req.user._id,
             message,
@@ -33,7 +34,7 @@ router.post("/", auth, async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Enquiry error:", error.message);
+        logger.error("Enquiry error", { error: error.message });
 
         res.status(500).json({
             success: false,

@@ -52,6 +52,10 @@ export async function deleteRoom(id: string) {
     return api.delete(`/v2/rooms/${id}`);               // FIXED: was /rooms/:id
 }
 
+export async function updateRoom(id: string, payload: Partial<Room>) {
+    return api.put(`/v2/rooms/${id}`, payload);
+}
+
 export async function fetchBeds(params: { propertyId?: string; roomId?: string }): Promise<Bed[]> {
     const response = await api.get("/v2/beds", { params });
     return response.data?.data || [];

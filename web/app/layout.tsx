@@ -1,5 +1,7 @@
-import "./globals.css";   // 👈 ADD THIS
+import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -9,7 +11,12 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+            <Toaster position="top-center" reverseOrder={false} />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

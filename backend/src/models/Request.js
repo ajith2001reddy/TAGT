@@ -45,11 +45,23 @@ const RequestSchema = new mongoose.Schema(
             enum: ["pending", "in-progress", "resolved"],
             default: "pending",
             index: true
-        }
+        },
+
+        // 🗑️ Soft delete fields
+        isDeleted: { type: Boolean, default: false, index: true },
+        deletedAt: { type: Date, default: null },
     },
     { timestamps: true }
 
 );
+
+// 🗑️ Soft-delete: automatically exclude deleted requests from all find queries
+RequestSchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
 
 RequestSchema.pre("validate", function (next) {
     if (!this.propertyId || !this.resident) {
@@ -59,5 +71,7 @@ RequestSchema.pre("validate", function (next) {
 });
 
 RequestSchema.index({ propertyId: 1, status: 1 });
+RequestSchema.index({ propertyId: 1, status: 1, createdAt: -1 });
+RequestSchema.index({ propertyId: 1, priority: 1, status: 1 });
 
 export default mongoose.model("Request", RequestSchema);

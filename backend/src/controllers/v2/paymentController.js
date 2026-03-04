@@ -1,6 +1,7 @@
 import Payment from "../../models/Payment.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import { generateInvoicePDF } from "../../utils/invoiceGenerator.js";
+import logger from "../../utils/logger.js";
 
 /**
  * List all payments for the scoped property
@@ -109,7 +110,10 @@ export const sendPaymentReminder = async (req, res, next) => {
         if (!payment) return res.status(404).json({ success: false, message: "Payment not found" });
 
         // Logic for sending reminder (mocked for now as in platformController)
-        console.log(`[REMINDER] Payment ${payment._id} reminder sent to ${payment.resident?.email || "unknown"}`);
+        logger.info("[REMINDER] Payment reminder sent", {
+            paymentId: payment._id,
+            resident: payment.resident?.email || "unknown"
+        });
 
         return res.json({
             success: true,

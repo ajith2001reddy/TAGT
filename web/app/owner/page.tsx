@@ -103,7 +103,7 @@ export default function OwnerPage() {
         { label: "Occupancy Rate", value: `${stats.occupancyRate}%`, color: "#34d399", sub: "Current fill rate", icon: <TrendingUp size={18} /> },
         { label: "Pending Payments", value: stats.pendingPayments, color: "#fbbf24", sub: "Awaiting collection", icon: <Clock size={18} /> },
         { label: "Overdue Payments", value: stats.overduePayments, color: "var(--red)", sub: "Past due date", icon: <AlertTriangle size={18} /> },
-        { label: "Monthly Revenue", value: `₹${((stats.monthlyRevenue || 0) / 1000).toFixed(1)}k`, color: "#34d399", sub: "Collected this month", icon: <TrendingUp size={18} /> },
+        { label: "Monthly Revenue", value: `₹${(((stats?.monthlyRevenue || 0) || 0) / 1000).toFixed(1)}k`, color: "#34d399", sub: "Collected this month", icon: <TrendingUp size={18} /> },
     ] : [];
 
     return (

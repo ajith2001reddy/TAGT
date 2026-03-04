@@ -1,4 +1,6 @@
-﻿export const notFound = (req, res, next) => {
+﻿import logger from "../utils/logger.js";
+
+export const notFound = (req, res, next) => {
     res.status(404).json({
         success: false,
         message: `Route not found: ${req.originalUrl}`
@@ -6,7 +8,12 @@
 };
 
 export const errorHandler = (err, req, res, next) => {
-    console.error("API ERROR:", err);
+    logger.error(`${req.method} ${req.originalUrl} - ${err.message}`, {
+        stack: err.stack,
+        url: req.originalUrl,
+        method: req.method,
+        ip: req.ip
+    });
     if (res.headersSent) {
         return next(err);
     }

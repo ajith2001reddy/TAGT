@@ -1,7 +1,8 @@
 ﻿import { Router } from "express";
 import auth from "../middleware/auth.js";
-import admin from "../config/firebase.js";
 import User from "../models/User.js";
+import admin from "../config/firebase.js";
+import logger from "../utils/logger.js";
 
 const router = Router();
 
@@ -82,7 +83,7 @@ router.post("/register", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Register error:", err.message);
+    logger.error("Register error", { error: err.message });
 
     res.status(500).json({
       success: false,

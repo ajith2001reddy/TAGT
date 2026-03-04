@@ -4,12 +4,12 @@ import authorize from "../../middleware/authorize.js";
 import verifyPropertyAccess from "../../middleware/verifyPropertyAccess.js";
 import { login, registerOwner } from "../../controllers/v2/authController.js";
 import { listRooms, createRoom, updateRoom, getRoomStats } from "../../controllers/v2/roomController.js";
-import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, getResidentHistory } from "../../controllers/v2/residentController.js";
+import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, sendNotification, getResidentHistory } from "../../controllers/v2/residentController.js";
 import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, downloadInvoice } from "../../controllers/v2/paymentController.js";
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
 import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2 } from "../../controllers/v2/analyticsController.js";
 import { reportMonthlyRevenue, reportOutstanding } from "../../controllers/v2/reportController.js";
-import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus } from "../../controllers/v2/propertiesController.js";
+import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, discoverProperties } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
 import { createPaymentSession, stripeWebhook, stripeStatus } from "../../controllers/v2/stripeController.js";
@@ -54,6 +54,7 @@ router.post("/residents", auth, authorize("super_admin", "owner"), verifyPropert
 router.patch("/residents/:id/move-room", auth, authorize("super_admin", "owner"), moveResidentRoom);
 router.patch("/residents/:id/deactivate", auth, authorize("super_admin", "owner"), deactivateResident);
 router.post("/residents/:id/notes", auth, authorize("super_admin", "owner"), addResidentNote);
+router.post("/residents/:id/notification", auth, authorize("super_admin", "owner"), sendNotification);
 router.get("/residents/:id/history", auth, authorize("super_admin", "owner"), getResidentHistory);
 
 /* ── Payments ── */
@@ -97,6 +98,9 @@ router.patch("/admin/subscriptions/:ownerId", auth, authorize("super_admin"), ad
 /* ── Phase 2: Activity Logs ── */
 router.get("/admin/activity-logs", auth, authorize("super_admin"), listActivityLogs);
 router.get("/owner/activity-logs", auth, authorize("owner"), myActivityLogs);
+
+/* ── Resident Discovery ── */
+router.get("/properties/discover", auth, authorize("resident"), discoverProperties);
 
 /* ── Phase 3: Intelligence ── */
 router.get("/intelligence/summary", auth, authorize("owner"), getIntelligenceSummary);

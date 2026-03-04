@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRooms } from "@/features/owner/useRooms";
-import { createRoom, deleteRoom } from "@/features/owner/rooms.service";
+import { createRoom, deleteRoom, updateRoom } from "@/features/owner/rooms.service";
 import { BedGrid } from "@/features/owner/BedGrid";
 
 function OccupancyBar({ occupied, total }: { occupied: number; total: number }) {
@@ -34,7 +34,22 @@ export default function RoomsPage() {
     const [adding, setAdding] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [editingRent, setEditingRent] = useState<string | null>(null);
+    const [tempRent, setTempRent] = useState("");
+    const [updatingRent, setUpdatingRent] = useState<string | null>(null);
     const [error, setError] = useState("");
+
+    async function handleUpdateRent(id: string) {
+        if (!tempRent || isNaN(Number(tempRent))) return;
+        setUpdatingRent(id);
+        try {
+            await updateRoom(id, { rent: Number(tempRent) });
+            setEditingRent(null);
+            reload();
+        } catch (err: any) {
+            setError(err?.response?.data?.message || "Failed to update rent");
+        } finally { setUpdatingRent(null); }
+    }
 
     async function handleCreate(e: React.FormEvent) {
         e.preventDefault();
@@ -167,7 +182,22 @@ export default function RoomsPage() {
 
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
                                     <div>
-                                        <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.1em", marginBottom: "4px" }}>ROOM</div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.1em" }}>ROOM</div>
+                                            {(room.propertyId as any)?.name && (
+                                                <span style={{
+                                                    fontSize: "9px",
+                                                    fontWeight: 700,
+                                                    background: "rgba(255,255,255,0.05)",
+                                                    padding: "2px 6px",
+                                                    borderRadius: "4px",
+                                                    color: "var(--accent-primary)",
+                                                    border: "1px solid rgba(255,255,255,0.08)"
+                                                }}>
+                                                    {(room.propertyId as any).name}
+                                                </span>
+                                            )}
+                                        </div>
                                         <div style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 700, letterSpacing: "-0.03em" }}>{room.roomNumber}</div>
                                     </div>
                                     <button
@@ -198,9 +228,37 @@ export default function RoomsPage() {
                                     </button>
                                 </div>
 
-                                <div style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "18px" }}>
-                                    ₹{room.rent.toLocaleString()}
-                                    <span style={{ fontSize: "12px", fontWeight: 400, fontFamily: "var(--font-body)", color: "var(--text-tertiary)" }}>/mo</span>
+                                <div style={{ marginBottom: "18px" }}>
+                                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.1em", marginBottom: "4px" }}>RENT / MONTH</div>
+                                    {editingRent === room._id ? (
+                                        <div style={{ display: "flex", gap: "8px" }}>
+                                            <input
+                                                type="number"
+                                                className="input-field"
+                                                value={tempRent}
+                                                onChange={e => setTempRent(e.target.value)}
+                                                autoFocus
+                                                style={{ padding: "4px 8px", fontSize: "16px", fontWeight: 700, width: "100px" }}
+                                            />
+                                            <button onClick={() => handleUpdateRent(room._id)} disabled={updatingRent === room._id} style={{ background: "var(--accent-primary)", border: "none", borderRadius: "6px", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                {updatingRent === room._id ? <div className="spinner" style={{ width: "12px", height: "12px" }} /> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
+                                            </button>
+                                            <button onClick={() => setEditingRent(null)} style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "6px", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            onClick={() => { setEditingRent(room._id); setTempRent(room.rent.toString()); }}
+                                            style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 700, letterSpacing: "-0.02em", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+                                            onMouseEnter={e => (e.currentTarget.style.color = "var(--accent-primary)")}
+                                            onMouseLeave={e => (e.currentTarget.style.color = "")}
+                                        >
+                                            ₹{room.rent.toLocaleString()}
+                                            <span style={{ fontSize: "12px", fontWeight: 400, fontFamily: "var(--font-body)", color: "var(--text-tertiary)" }}>/mo</span>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.4 }}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <OccupancyBar occupied={room.occupiedBeds} total={room.totalBeds} />
@@ -212,7 +270,10 @@ export default function RoomsPage() {
                 </div>
             )}
 
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+                .spinner { border: 2px solid rgba(0,0,0,0.1); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; }
+            `}</style>
         </div>
     );
 }

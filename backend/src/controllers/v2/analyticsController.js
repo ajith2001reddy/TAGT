@@ -4,12 +4,37 @@ import Payment from "../../models/Payment.js";
 import Property from "../../models/Property.js";
 import Request from "../../models/Request.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
+import logger from "../../utils/logger.js";
+
+import redis from "../../config/redis.js";
+
+// Redis Cache Config
+const ANALYTICS_CACHE_TTL = 300; // 5 minutes (in seconds for Redis)
+
+const getCacheKey = (user, prefix) => {
+    const scope = buildPropertyFilter(user);
+    return `analytics:${prefix}:${user.role}:${JSON.stringify(scope)}`;
+};
 
 /**
  * Standard summary for Owner Dashboard
  */
 export const ownerDashboardAnalytics = async (req, res, next) => {
     try {
+        const cacheKey = getCacheKey(req.user, "owner_summary");
+
+        // 1. Try Redis Cache
+        try {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                logger.info("Analytics Cache Hit (Redis)", { key: cacheKey });
+                return res.json(JSON.parse(cached));
+            }
+        } catch (err) {
+            logger.warn("Redis Cache Get Error, falling back to DB", { error: err.message });
+        }
+
+        logger.info("Analytics Cache Miss", { key: cacheKey });
         // 🔐 SECURITY: Always scope queries to this user's property/properties
         const scope = buildPropertyFilter(req.user); // {} for super_admin, { propertyId: ... } or { propertyId: { $in: [...] } } for owners
 
@@ -54,7 +79,7 @@ export const ownerDashboardAnalytics = async (req, res, next) => {
             });
         }
 
-        return res.json({
+        const result = {
             success: true,
             data: {
                 totalResidents,
@@ -65,7 +90,16 @@ export const ownerDashboardAnalytics = async (req, res, next) => {
                 monthlyRevenue,
                 insights
             }
-        });
+        };
+
+        // 2. Cache in Redis
+        try {
+            await redis.setex(cacheKey, ANALYTICS_CACHE_TTL, JSON.stringify(result));
+        } catch (err) {
+            logger.error("Redis Cache Set Error", { error: err.message });
+        }
+
+        return res.json(result);
     } catch (err) {
         next(err);
     }
@@ -76,6 +110,19 @@ export const ownerDashboardAnalytics = async (req, res, next) => {
  */
 export const ownerFinancialDashboard = async (req, res, next) => {
     try {
+        const cacheKey = getCacheKey(req.user, "owner_financial");
+
+        // 1. Try Redis Cache
+        try {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                logger.info("Financial Cache Hit (Redis)", { key: cacheKey });
+                return res.json(JSON.parse(cached));
+            }
+        } catch (err) {
+            logger.warn("Redis Cache Get Error (Financial)", { error: err.message });
+        }
+
         // 🔐 SECURITY: Always scope queries to this user's property/properties
         const scope = buildPropertyFilter(req.user);
         const currentMonth = new Date().toISOString().slice(0, 7);
@@ -107,7 +154,7 @@ export const ownerFinancialDashboard = async (req, res, next) => {
         ]);
         const trend = trendAgg.reverse().map(t => ({ month: t._id, collected: t.collected }));
 
-        return res.json({
+        const result = {
             success: true,
             data: {
                 occupancyRate, totalBeds, occupiedBeds,
@@ -119,7 +166,16 @@ export const ownerFinancialDashboard = async (req, res, next) => {
                 collectionRate: monthExpected ? Number(((monthCollected / monthExpected) * 100).toFixed(1)) : 0,
                 trend,
             }
-        });
+        };
+
+        // 2. Cache in Redis
+        try {
+            await redis.setex(cacheKey, ANALYTICS_CACHE_TTL, JSON.stringify(result));
+        } catch (err) {
+            logger.error("Redis Cache Set Error (Financial)", { error: err.message });
+        }
+
+        return res.json(result);
     } catch (err) { next(err); }
 };
 
@@ -128,6 +184,19 @@ export const ownerFinancialDashboard = async (req, res, next) => {
  */
 export const revenueLeakReport = async (req, res, next) => {
     try {
+        const cacheKey = getCacheKey(req.user, "owner_leakage");
+
+        // 1. Try Redis Cache
+        try {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                logger.info("Leakage Cache Hit (Redis)", { key: cacheKey });
+                return res.json(JSON.parse(cached));
+            }
+        } catch (err) {
+            logger.warn("Redis Cache Get Error (Leakage)", { error: err.message });
+        }
+
         // 🔐 SECURITY: Always scope queries to this user's property/properties
         const scope = buildPropertyFilter(req.user);
 
@@ -159,14 +228,23 @@ export const revenueLeakReport = async (req, res, next) => {
             return late.length >= 2;
         }).map(r => ({ name: r.name, email: r.email, lateCount: (paymentsByResident[String(r._id)] || []).filter(p => p.status !== "paid").length }));
 
-        return res.json({
+        const result = {
             success: true,
             data: {
                 emptyBeds, emptyBedCostTotal,
                 chronicLatePayers,
                 avgRent: Math.round(avgRent),
             }
-        });
+        };
+
+        // 2. Cache in Redis
+        try {
+            await redis.setex(cacheKey, ANALYTICS_CACHE_TTL, JSON.stringify(result));
+        } catch (err) {
+            logger.error("Redis Cache Set Error (Leakage)", { error: err.message });
+        }
+
+        return res.json(result);
     } catch (err) { next(err); }
 };
 
@@ -247,7 +325,10 @@ export const residentDashboardV2 = async (req, res, next) => {
         const currentMonth = new Date().toISOString().slice(0, 7);
 
         const [profile, payments] = await Promise.all([
-            User.findById(req.user._id).populate("roomId", "roomNumber rent totalBeds occupiedBeds").lean(),
+            User.findById(req.user._id)
+                .populate("propertyId", "name address city phone")
+                .populate("roomId", "roomNumber rent totalBeds occupiedBeds")
+                .lean(),
             Payment.find({ resident: req.user._id, ...scope }).sort({ month: -1 }).lean(),
         ]);
 
@@ -261,7 +342,7 @@ export const residentDashboardV2 = async (req, res, next) => {
         const totalPaid = paidPayments.reduce((s, p) => s + (p.amount || 0), 0);
         const totalLateFeePaid = paidPayments.reduce((s, p) => s + (p.lateFee || 0), 0);
 
-        const notifications = [];
+        const notifications = [...(profile?.notifications || [])];
         if (isOverdue) {
             notifications.push({ type: "danger", message: `Your rent for ${currentPayment?.month} is overdue. Please pay to avoid further late fees.` });
         } else if (daysUntilDue !== null && daysUntilDue <= 3 && currentPayment?.status !== "paid") {

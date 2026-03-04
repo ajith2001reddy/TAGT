@@ -13,6 +13,7 @@ export const listRooms = async (req, res, next) => {
         const filter = scope.propertyId ? { propertyId: scope.propertyId } : {};
 
         const rooms = await Room.find(filter)
+            .populate("propertyId", "name")
             .sort({ createdAt: -1 })
             .lean();
 
