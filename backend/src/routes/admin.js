@@ -5,7 +5,11 @@ import {
     createProperty,
     createOwner,
     assignOwnerToProperty,
-    listOwners
+    listOwners,
+    removePropertyFromOwner,
+    deleteOwner,
+    deleteResident,
+    deleteProperty
 } from "../controllers/adminController.js";
 
 const router = Router();
@@ -15,6 +19,10 @@ router.get("/owners", auth, isAdmin, listOwners);
 router.post("/properties", auth, isAdmin, createProperty);
 router.post("/owners", auth, isAdmin, createOwner);
 router.post("/properties/:id/assign-owner", auth, isAdmin, assignOwnerToProperty);
+router.delete("/owners/:ownerId/properties/:propertyId", auth, isAdmin, removePropertyFromOwner);
+router.delete("/owners/:id", auth, isAdmin, deleteOwner);
+router.delete("/residents/:id", auth, isAdmin, deleteResident);
+router.delete("/properties/:id", auth, isAdmin, deleteProperty);
 
 
 export default router;

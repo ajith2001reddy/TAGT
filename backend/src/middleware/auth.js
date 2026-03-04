@@ -43,10 +43,10 @@ const firebaseAuth = async (req, res, next) => {
             });
         }
 
-        if (!dbUser.isActive) {
+        if (dbUser.isActive === false) {
             return res.status(403).json({
                 success: false,
-                message: "Account inactive"
+                message: "Account suspended. Please contact your property manager."
             });
         }
 

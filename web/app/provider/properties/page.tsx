@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { Edit2, UserCheck, X, Building2, CheckCircle } from "lucide-react";
+import { Edit2, UserCheck, X, Building2, CheckCircle, Trash2 } from "lucide-react";
 
 interface Property {
     _id: string;
@@ -167,6 +167,16 @@ export default function PropertiesListPage() {
             setEditError(err.response?.data?.message || "Failed to update property");
         } finally {
             setEditSaving(false);
+        }
+    };
+
+    const handleDeleteProperty = async (p: Property) => {
+        if (!confirm(`Permanently delete "${p.name}"?\n\nThis will delete:\n• The property\n• All its rooms\n• All payment records\n\nNote: Delete will be blocked if residents are still assigned.\n\nThis cannot be undone.`)) return;
+        try {
+            await api.delete(`/admin/properties/${p._id}`);
+            fetchProperties(pagination.page);
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to delete property");
         }
     };
 
@@ -515,6 +525,12 @@ export default function PropertiesListPage() {
                                             >
                                                 <UserCheck size={12} />
                                                 {p.owner ? "Owner" : "Assign"}
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteProperty(p)}
+                                                style={{ fontSize: "12px", padding: "6px 10px", display: "flex", alignItems: "center", gap: "5px", background: "rgba(255,82,82,0.08)", border: "1px solid rgba(255,82,82,0.2)", borderRadius: "8px", color: "var(--red)", cursor: "pointer" }}
+                                            >
+                                                <Trash2 size={12} />
                                             </button>
                                         </div>
                                     </td>

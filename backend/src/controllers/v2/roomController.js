@@ -9,7 +9,8 @@ import { buildPropertyFilter } from "../../utils/tenantScope.js";
  */
 export const listRooms = async (req, res, next) => {
     try {
-        const scope = buildPropertyFilter(req.user);
+        const requestedPropertyId = req.query.propertyId || null;
+        const scope = buildPropertyFilter(req.user, requestedPropertyId);
         const filter = scope.propertyId ? { propertyId: scope.propertyId } : {};
 
         const rooms = await Room.find(filter)
@@ -130,11 +131,54 @@ export const updateRoom = async (req, res, next) => {
 };
 
 /**
+ * Delete a room and all its associated beds
+ */
+export const deleteRoom = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const { id } = req.params;
+        const scope = buildPropertyFilter(req.user);
+
+        // Scoped filter: owner can only delete their own property's rooms
+        const filter = { _id: id, ...(scope.propertyId ? { propertyId: scope.propertyId } : {}) };
+        const room = await Room.findOne(filter).session(session);
+
+        if (!room) {
+            await session.abortTransaction();
+            return res.status(404).json({ success: false, message: "Room not found or access denied" });
+        }
+
+        // Prevent deleting occupied rooms
+        if (room.occupiedBeds > 0) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "Cannot delete a room with occupied beds. Move residents first." });
+        }
+
+        // Delete all beds belonging to this room
+        await Bed.deleteMany({ roomId: room._id }).session(session);
+        await Room.findByIdAndDelete(room._id).session(session);
+
+        await session.commitTransaction();
+        logger.info(`Room deleted: ${room.roomNumber} (${room._id})`);
+
+        return res.json({ success: true, message: "Room and its beds deleted successfully" });
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error(`DELETE ROOM ERROR: ${err.message}`);
+        next(err);
+    } finally {
+        session.endSession();
+    }
+};
+
+/**
  * Get Room Stats for the property
  */
 export const getRoomStats = async (req, res, next) => {
     try {
-        const scope = buildPropertyFilter(req.user);
+        const requestedPropertyId = req.query.propertyId || null;
+        const scope = buildPropertyFilter(req.user, requestedPropertyId);
         const propertyMatch = scope.propertyId ? { propertyId: scope.propertyId } : {};
 
         const [rooms, statsAgg] = await Promise.all([

@@ -26,6 +26,86 @@ export const listResidents = async (req, res, next) => {
 };
 
 /**
+ * Super Admin: Assign a resident to a property (and optionally a room)
+ * Used as an emergency access fix tool
+ */
+export const assignResidentToProperty = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { propertyId, roomId } = req.body;
+
+        if (!propertyId) {
+            return res.status(400).json({ success: false, message: "propertyId is required" });
+        }
+
+        const updates = {
+            propertyId,
+            status: "active",
+            ...(roomId ? { roomId } : {}),
+        };
+
+        const resident = await User.findOneAndUpdate(
+            { _id: id, role: "resident" },
+            updates,
+            { new: true }
+        ).populate("propertyId", "name").populate("roomId", "roomNumber");
+
+        if (!resident) {
+            return res.status(404).json({ success: false, message: "Resident not found" });
+        }
+
+        // If a room was assigned, update its occupied bed count
+        if (roomId) {
+            await Room.findByIdAndUpdate(roomId, { $inc: { occupiedBeds: 1 } });
+        }
+
+        return res.json({ success: true, data: resident });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * Super Admin: Full edit of any resident's details
+ * Can change name, email, phone, status, property, room, bed
+ */
+export const superAdminUpdateResident = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { name, email, phone, status, propertyId, roomId, bedId, isActive } = req.body;
+
+        const updates = {};
+        if (name !== undefined) updates.name = name;
+        if (email !== undefined) updates.email = email.toLowerCase().trim();
+        if (phone !== undefined) updates.phone = phone;
+        if (status !== undefined) updates.status = status;
+        if (isActive !== undefined) updates.isActive = isActive;
+        if (propertyId !== undefined) updates.propertyId = propertyId || null;
+        if (roomId !== undefined) updates.roomId = roomId || null;
+        if (bedId !== undefined) updates.bedId = bedId || null;
+
+        const resident = await User.findOneAndUpdate(
+            { _id: id, role: "resident" },
+            updates,
+            { new: true, runValidators: true }
+        )
+            .populate("propertyId", "name")
+            .populate("roomId", "roomNumber");
+
+        if (!resident) {
+            return res.status(404).json({ success: false, message: "Resident not found" });
+        }
+
+        return res.json({ success: true, data: resident });
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(400).json({ success: false, message: "Email already in use by another user" });
+        }
+        next(err);
+    }
+};
+
+/**
  * Create a new resident using the service workflow
  */
 export const createResident = async (req, res, next) => {

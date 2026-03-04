@@ -60,6 +60,10 @@ export function PropertyProvider({
     }
 
     function setCurrentProperty(id: string) {
+        if (!id) {
+            setProperty(null); // "All Properties" selected
+            return;
+        }
         const selected = properties.find((p) => p._id === id);
         if (selected) setProperty(selected);
     }

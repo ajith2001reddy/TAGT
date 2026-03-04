@@ -67,7 +67,8 @@ export default function OwnerOnboardingPage() {
         </div>
     );
 
-    const pendingRequests = requests.filter(r => r.status === "pending");
+    // Filter out any requests where the resident or property was deleted
+    const pendingRequests = requests.filter(r => r.status === "pending" && r.residentId && r.propertyId);
 
     return (
         <div style={{ padding: "40px", maxWidth: "1000px", margin: "0 auto", animation: "fadeIn 0.6s ease-out" }}>
@@ -115,21 +116,21 @@ export default function OwnerOnboardingPage() {
                                     overflow: "hidden",
                                     border: "1px solid var(--border-subtle)"
                                 }}>
-                                    {request.residentId.photo ? (
+                                    {request.residentId?.photo ? (
                                         <img src={request.residentId.photo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                     ) : (
-                                        request.residentId.name.charAt(0)
+                                        request.residentId?.name?.charAt(0) ?? "?"
                                     )}
                                 </div>
                                 <div style={{ flexGrow: 1 }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                                        <h4 style={{ fontSize: "18px", fontWeight: 700 }}>{request.residentId.name}</h4>
+                                        <h4 style={{ fontSize: "18px", fontWeight: 700 }}>{request.residentId?.name ?? "Unknown Resident"}</h4>
                                         <span style={{ fontSize: "11px", background: "var(--accent-primary)", color: "white", padding: "2px 8px", borderRadius: "10px", fontWeight: 600 }}>
                                             Join Request
                                         </span>
                                     </div>
                                     <div style={{ fontSize: "13px", color: "var(--text-tertiary)", marginBottom: "8px" }}>
-                                        {request.residentId.email} • {request.residentId.phone || "No phone provided"}
+                                        {request.residentId?.email} • {request.residentId?.phone || "No phone provided"}
                                     </div>
                                     <div style={{
                                         fontSize: "14px",
@@ -147,7 +148,7 @@ export default function OwnerOnboardingPage() {
 
                             <div style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "160px" }}>
                                 <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textAlign: "center", marginBottom: "4px" }}>
-                                    Requested for: <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{request.propertyId.name}</span>
+                                    Requested for: <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{request.propertyId?.name ?? "Unknown Property"}</span>
                                 </div>
                                 <button
                                     disabled={processingId === request._id}

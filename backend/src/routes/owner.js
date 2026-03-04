@@ -41,13 +41,55 @@ router.get("/requests", auth, authorize("owner"), async (req, res, next) => {
     }
 });
 router.get("/properties", auth, authorize("owner", "super_admin"), async (req, res) => {
-    let filter = {};
-    if (req.user.role === "owner") {
-        filter = { _id: { $in: req.user.propertyIds || [] } };
-    }
+    try {
+        let filter = {};
+        if (req.user.role === "owner") {
+            filter = { _id: { $in: req.user.propertyIds || [] } };
+        }
 
-    const properties = await Property.find(filter).lean();
-    res.json({ success: true, data: properties });
+        // Fetch properties and aggregate room stats in parallel
+        const Room = (await import("../models/rooms.js")).default;
+        const properties = await Property.find(filter).lean();
+
+        if (properties.length === 0) {
+            return res.json({ success: true, data: [] });
+        }
+
+        const propertyIds = properties.map(p => p._id);
+
+        // Aggregate bed stats per property from Room collection
+        const roomStats = await Room.aggregate([
+            { $match: { propertyId: { $in: propertyIds } } },
+            {
+                $group: {
+                    _id: "$propertyId",
+                    totalBeds: { $sum: "$totalBeds" },
+                    occupiedBeds: { $sum: "$occupiedBeds" },
+                    totalRooms: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const statsMap = {};
+        for (const s of roomStats) {
+            statsMap[s._id.toString()] = s;
+        }
+
+        const enriched = properties.map(p => {
+            const stats = statsMap[p._id.toString()] || { totalBeds: 0, occupiedBeds: 0, totalRooms: 0 };
+            return {
+                ...p,
+                totalBeds: stats.totalBeds,
+                occupiedBeds: stats.occupiedBeds,
+                totalRooms: stats.totalRooms,
+            };
+        });
+
+        res.json({ success: true, data: enriched });
+    } catch (err) {
+        console.error("Failed to fetch owner properties", err);
+        res.status(500).json({ success: false, message: "Failed to fetch properties" });
+    }
 });
 
 router.get("/stats", auth, authorize("owner", "super_admin"), async (req, res, next) => {

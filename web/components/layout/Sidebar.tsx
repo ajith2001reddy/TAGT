@@ -34,6 +34,7 @@ const adminNav: NavItem[] = [
     { href: "/provider", label: "Overview", icon: <Globe size={16} /> },
     { href: "/provider/properties", label: "Properties", icon: <Building2 size={16} /> },
     { href: "/provider/owners", label: "Owners", icon: <UserCog size={16} /> },
+    { href: "/provider/residents", label: "Residents", icon: <Users size={16} /> },
     { href: "/provider/subscriptions", label: "Subscriptions", icon: <Star size={16} /> },
     { href: "/provider/activity", label: "Activity Logs", icon: <Activity size={16} /> },
 ];

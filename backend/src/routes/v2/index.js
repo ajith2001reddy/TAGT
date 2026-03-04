@@ -3,13 +3,13 @@ import auth from "../../middleware/auth.js";
 import authorize from "../../middleware/authorize.js";
 import verifyPropertyAccess from "../../middleware/verifyPropertyAccess.js";
 import { login, registerOwner } from "../../controllers/v2/authController.js";
-import { listRooms, createRoom, updateRoom, getRoomStats } from "../../controllers/v2/roomController.js";
-import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, sendNotification, getResidentHistory } from "../../controllers/v2/residentController.js";
+import { listRooms, createRoom, updateRoom, deleteRoom, getRoomStats } from "../../controllers/v2/roomController.js";
+import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident } from "../../controllers/v2/residentController.js";
 import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, downloadInvoice } from "../../controllers/v2/paymentController.js";
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
 import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2 } from "../../controllers/v2/analyticsController.js";
 import { reportMonthlyRevenue, reportOutstanding, reportResidentLedger } from "../../controllers/v2/reportController.js";
-import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty as editProperty, discoverProperties } from "../../controllers/v2/propertiesController.js";
+import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
 import { createPaymentSession, stripeWebhook, stripeStatus } from "../../controllers/v2/stripeController.js";
@@ -28,7 +28,8 @@ router.post("/auth/register-owner", registerOwner);
 /* ── Super Admin ── */
 router.get("/provider/overview", auth, authorize("super_admin"), getProviderOverview);
 router.get("/provider/properties", auth, authorize("super_admin"), listAllProperties);
-router.put("/provider/properties/:id", auth, authorize("super_admin"), logActivity("PROPERTY_UPDATED"), editProperty);
+router.put("/provider/properties/:id", auth, authorize("super_admin"), logActivity("PROPERTY_UPDATED"), updateProperty);
+router.put("/provider/owners/:id", auth, authorize("super_admin"), logActivity("OWNER_UPDATED_BY_ADMIN"), superAdminUpdateOwner);
 router.patch("/provider/properties/:id/status", auth, authorize("super_admin"), logActivity("PROPERTY_STATUS_CHANGED"), patchPropertyStatus);
 router.get("/admin/platform-stats", auth, authorize("super_admin"), getPlatformStats);
 
@@ -42,6 +43,7 @@ router.get("/rooms", auth, authorize("super_admin", "owner"), listRooms);
 router.get("/rooms/stats", auth, authorize("super_admin", "owner"), getRoomStats);
 router.post("/rooms", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createRoom);
 router.put("/rooms/:id", auth, authorize("super_admin", "owner"), updateRoom);
+router.delete("/rooms/:id", auth, authorize("super_admin", "owner"), deleteRoom);
 
 /* ── Beds ── */
 router.get("/beds", auth, authorize("super_admin", "owner"), listBeds);
@@ -57,6 +59,8 @@ router.patch("/residents/:id/deactivate", auth, authorize("super_admin", "owner"
 router.post("/residents/:id/notes", auth, authorize("super_admin", "owner"), addResidentNote);
 router.post("/residents/:id/notification", auth, authorize("super_admin", "owner"), sendNotification);
 router.get("/residents/:id/history", auth, authorize("super_admin", "owner"), getResidentHistory);
+router.patch("/residents/:id/assign-property", auth, authorize("super_admin"), logActivity("RESIDENT_PROPERTY_ASSIGNED"), assignResidentToProperty);
+router.put("/residents/:id", auth, authorize("super_admin"), logActivity("RESIDENT_UPDATED_BY_ADMIN"), superAdminUpdateResident);
 
 /* ── Payments ── */
 router.get("/payments", auth, authorize("super_admin", "owner", "resident"), listPayments);

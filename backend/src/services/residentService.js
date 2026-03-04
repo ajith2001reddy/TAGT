@@ -12,7 +12,7 @@ import logger from "../utils/logger.js";
  * and generating their first bill.
  * Password is NOT set — authentication is handled entirely by Firebase.
  */
-export const createResidentWorkflow = async ({ name, email, roomId, propertyId }, session) => {
+export const createResidentWorkflow = async ({ name, email, password, roomId, propertyId }, session) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -27,10 +27,11 @@ export const createResidentWorkflow = async ({ name, email, roomId, propertyId }
         if (roomDoc.occupiedBeds >= roomDoc.totalBeds) throw new Error("Room is full");
     }
 
-    // 2️⃣ Create Firebase user
+    // 2️⃣ Create Firebase user — set password directly if provided by admin
     const firebaseUser = await admin.auth().createUser({
         email: normalizedEmail,
         displayName: name,
+        ...(password && password.length >= 6 ? { password } : {}),
     });
 
     // 3️⃣ Create Mongo user
@@ -47,10 +48,14 @@ export const createResidentWorkflow = async ({ name, email, roomId, propertyId }
         { session }
     );
 
-    // 4️⃣ Generate password setup link
-    const resetLink = await admin.auth().generatePasswordResetLink(normalizedEmail);
-
-    logger.info("Password setup link", { link: resetLink });
+    // 4️⃣ Generate password setup link (only if no password was set directly)
+    let resetLink = null;
+    if (!password || password.length < 6) {
+        resetLink = await admin.auth().generatePasswordResetLink(normalizedEmail);
+        logger.info("Password setup link generated", { link: resetLink });
+    } else {
+        logger.info("Resident created with direct password — no reset link needed");
+    }
 
     // 5️⃣ Send welcome email (if SMTP configured)
     try {

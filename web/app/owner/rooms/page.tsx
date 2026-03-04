@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRooms } from "@/features/owner/useRooms";
 import { createRoom, deleteRoom, updateRoom } from "@/features/owner/rooms.service";
 import { BedGrid } from "@/features/owner/BedGrid";
+import { useProperty } from "@/context/PropertyContext";
 
 function OccupancyBar({ occupied, total }: { occupied: number; total: number }) {
     const pct = total > 0 ? Math.round((occupied / total) * 100) : 0;
@@ -28,6 +29,7 @@ function OccupancyBar({ occupied, total }: { occupied: number; total: number }) 
 
 export default function RoomsPage() {
     const { rooms, stats, loading, reload } = useRooms();
+    const { property } = useProperty();
     const [roomNumber, setRoomNumber] = useState("");
     const [rent, setRent] = useState("");
     const [beds, setBeds] = useState("");
@@ -56,7 +58,11 @@ export default function RoomsPage() {
         setAdding(true);
         setError("");
         try {
-            await createRoom({ roomNumber, rent: Number(rent), totalBeds: Number(beds) });
+            if (!property?._id) {
+                setError("Please select a property first");
+                return;
+            }
+            await createRoom({ roomNumber, rent: Number(rent), totalBeds: Number(beds), propertyId: property._id });
             setRoomNumber(""); setRent(""); setBeds("");
             setShowForm(false);
             reload();

@@ -31,8 +31,9 @@ export interface RoomStats {
     totalRent: number;
 }
 
-export async function fetchRooms(): Promise<Room[]> {
-    const response = await api.get("/v2/rooms");        // FIXED: was /rooms
+export async function fetchRooms(propertyId?: string): Promise<Room[]> {
+    const params = propertyId ? { propertyId } : {};
+    const response = await api.get("/v2/rooms", { params });
     return response.data?.data || [];
 }
 
@@ -40,11 +41,13 @@ export async function createRoom(payload: {
     roomNumber: string;
     rent: number;
     totalBeds: number;
+    propertyId?: string;
 }) {
-    return api.post("/v2/rooms", {                       // FIXED: was /rooms
+    return api.post("/v2/rooms", {
         roomNumber: payload.roomNumber,
         rent: payload.rent,
         totalBeds: payload.totalBeds,
+        ...(payload.propertyId ? { propertyId: payload.propertyId } : {}),
     });
 }
 
@@ -61,8 +64,9 @@ export async function fetchBeds(params: { propertyId?: string; roomId?: string }
     return response.data?.data || [];
 }
 
-export async function fetchRoomStats(): Promise<RoomStats | null> {
-    const response = await api.get("/v2/rooms/stats");  // FIXED: was /rooms/stats
+export async function fetchRoomStats(propertyId?: string): Promise<RoomStats | null> {
+    const params = propertyId ? { propertyId } : {};
+    const response = await api.get("/v2/rooms/stats", { params });
     return response.data?.data || null;
 }
 

@@ -97,3 +97,40 @@ export const discoverProperties = async (req, res, next) => {
         return res.json({ success: true, data: properties });
     } catch (err) { next(err); }
 };
+
+import User from "../../models/User.js";
+import logger from "../../utils/logger.js";
+
+/**
+ * Super Admin: Full edit of any owner's account details
+ */
+export const superAdminUpdateOwner = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { name, email, phone, isActive } = req.body;
+
+        const updates = {};
+        if (name !== undefined) updates.name = name;
+        if (email !== undefined) updates.email = email.toLowerCase().trim();
+        if (phone !== undefined) updates.phone = phone;
+        if (isActive !== undefined) updates.isActive = isActive;
+
+        const owner = await User.findOneAndUpdate(
+            { _id: id, role: "owner" },
+            updates,
+            { new: true, runValidators: true }
+        ).populate("propertyIds", "name city");
+
+        if (!owner) {
+            return res.status(404).json({ success: false, message: "Owner not found" });
+        }
+
+        logger.info(`Super admin updated owner ${owner._id}`);
+        return res.json({ success: true, data: owner });
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(400).json({ success: false, message: "Email already in use by another user" });
+        }
+        next(err);
+    }
+};
