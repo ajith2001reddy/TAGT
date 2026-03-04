@@ -10,10 +10,28 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (loading) return;
-        if (!role) { router.replace("/login"); return; }
-        if (role === "owner") router.replace("/owner");
-        else if (role === "resident") router.replace("/resident");
-        else if (role === "super_admin") router.replace("/provider");
+
+        if (!role) {
+            router.replace("/login");
+            return;
+        }
+
+        const routes: Record<string, string> = {
+            super_admin: "/provider",
+            admin: "/provider",
+            owner: "/owner",
+            resident: "/resident",
+        };
+
+        const destination = routes[role];
+
+        if (destination) {
+            router.replace(destination);
+        } else {
+            console.warn("Unknown role:", role);
+            router.replace("/login");
+        }
+
     }, [role, loading, router]);
 
     return (

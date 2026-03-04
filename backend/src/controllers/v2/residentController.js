@@ -4,7 +4,6 @@ import Payment from "../../models/Payment.js";
 import Room from "../../models/rooms.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import { createResidentWorkflow, sendWelcomeEmailSafe } from "../../services/residentService.js";
-
 /**
  * List residents for a property
  */

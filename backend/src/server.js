@@ -9,11 +9,17 @@ import app from "./app.js";
 import { connectDB } from "./config/db.js";
 import { runRentAutomationTick } from "./services/rentAutomationService.js";
 import cron from "node-cron";
-import { generateMonthlyRent } from "./jobs/rentGenerator.js";
 import Payment from "./models/Payment.js";
 import User from "./models/User.js";
 import { sendRentReminder, sendOverdueNotice } from "./services/emailService.js";
+import { generateMonthlyRent } from "./jobs/rentGenerator.js";
 const PORT = process.env.PORT || 5000;
+
+/* ── Cron: monthly rent generation at 1am on 1st ─ */
+cron.schedule("0 1 1 * *", async () => {
+    console.log("[CRON] Running monthly rent generator...");
+    await generateMonthlyRent();
+});
 
 /* ── Cron: mark overdue payments at 2am daily ─── */
 cron.schedule("0 2 * * *", async () => {
@@ -29,11 +35,7 @@ cron.schedule("0 2 * * *", async () => {
     }
 });
 
-/* ── Cron: monthly rent generation at 1am on 1st ─ */
-cron.schedule("0 1 1 * *", async () => {
-    console.log("[CRON] Running monthly rent generator...");
-    await generateMonthlyRent();
-});
+
 
 /* ── Cron: email reminders at 9am daily ──────────
    Send rent reminder to residents whose due date

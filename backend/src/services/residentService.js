@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
 import Property from "../models/Property.js";
+import admin from "../config/firebase.js";
 
 /**
  * Core logic for creating a resident, assigning them to a room,
@@ -22,10 +23,28 @@ export const createResidentWorkflow = async ({ name, email, roomId, propertyId }
     }
 
     // 2. Create User (no password — Firebase-only auth)
+    // 2. Create Firebase user
+    const firebaseUser = await admin.auth().createUser({
+        email: normalizedEmail,
+        displayName: name,
+    });
+
+    // 3. Create MongoDB user
     const [resident] = await User.create(
-        [{ name, email: normalizedEmail, role: "resident", propertyId, roomId: roomDoc?._id || null, isActive: true }],
+        [{
+            name,
+            email: normalizedEmail,
+            firebaseUid: firebaseUser.uid,
+            role: "resident",
+            propertyId,
+            roomId: roomDoc?._id || null,
+            isActive: true
+        }],
         { session }
     );
+
+    // 4. Send password setup email
+    await admin.auth().generatePasswordResetLink(normalizedEmail);
 
     // 3. Update room occupancy
     if (roomDoc) {
@@ -64,6 +83,7 @@ export const sendWelcomeEmailSafe = async (resident, propertyId) => {
             name: resident.name,
             email: resident.email,
             propertyName: propertyDoc?.name || "TAGT",
+            resetLink
         });
     } catch (err) {
         console.error("Welcome email failed but resident was created:", err.message);

@@ -16,7 +16,7 @@ export type ResidentRequest = {
 };
 
 export async function fetchResidentPayments(): Promise<ResidentPayment[]> {
-    const { data } = await api.get("/resident/payments"); // adjust if route differs
+    const { data } = await api.get("/resident/payments");
     return data.payments || data.data || [];
 }
 

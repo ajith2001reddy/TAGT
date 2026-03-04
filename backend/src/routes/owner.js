@@ -4,9 +4,13 @@ import auth from "../middleware/auth.js";
 
 
 import {
-    getAllResidents,
-    addResident,
-} from "../controllers/residentController.js";
+    listResidents,
+    createResident,
+    moveResidentRoom,
+    deactivateResident,
+    addResidentNote,
+    getResidentHistory
+} from "../controllers/v2/residentController.js";
 
 import Request from "../models/Request.js";
 import Payment from "../models/Payment.js";
@@ -17,8 +21,12 @@ import Property from "../models/Property.js";
 
 const router = Router();
 
-router.get("/residents", auth, authorize("owner"), getAllResidents);
-router.post("/residents", auth, authorize("owner"), addResident);
+router.get("/residents", auth, authorize("owner"), listResidents);
+router.post("/residents", auth, authorize("owner"), createResident);
+router.put("/residents/:id/move-room", auth, authorize("owner"), moveResidentRoom);
+router.put("/residents/:id/deactivate", auth, authorize("owner"), deactivateResident);
+router.post("/residents/:id/notes", auth, authorize("owner"), addResidentNote);
+router.get("/residents/:id/history", auth, authorize("owner"), getResidentHistory);
 
 router.get("/requests", auth, authorize("owner"), async (req, res, next) => {
     try {

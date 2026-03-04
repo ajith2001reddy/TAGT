@@ -9,6 +9,12 @@ const router = Router();
  * GET /api/auth/me
  */
 router.get("/me", auth, async (req, res) => {
+
+  // 🚨 Prevent browser caching
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   return res.status(200).json({
     success: true,
     data: {
@@ -22,7 +28,6 @@ router.get("/me", auth, async (req, res) => {
     message: "Authenticated user profile fetched",
   });
 });
-
 /**
  * POST /api/auth/register
  * Create Mongo user after Firebase signup

@@ -31,6 +31,16 @@ const userSchema = new mongoose.Schema(
             minlength: 6,
             select: false,
         },
+        setupToken: {
+            type: String,
+            default: null,
+            index: true,
+        },
+
+        setupTokenExpires: {
+            type: Date,
+            default: null,
+        },
 
         role: {
             type: String,
