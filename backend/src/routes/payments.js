@@ -19,7 +19,6 @@ const router = Router();
 router.patch("/:id/mark-paid", auth, isAdmin, markPaymentPaid);
 router.post("/generate-monthly", auth, isAdmin, generateMonthlyRent);
 router.get("/", auth, isAdmin, getAllPayments);
-router.patch("/:id/mark-paid", auth, isAdmin, markPaymentPaid);
 router.get("/:id/invoice", auth, authorize("owner"), downloadInvoice);
 router.get("/summary", auth, authorize("owner"), async (req, res, next) => {
     try {
@@ -68,7 +67,7 @@ router.get("/summary", auth, authorize("owner"), async (req, res, next) => {
 });
 /* =========================
    ADMIN → CREATE BILL
-========================= */
+ ========================= */
 router.post("/", auth, authorize("owner"), async (req, res, next) => {
     try {
         const { residentId, description, type, month, adminNote } = req.body;
@@ -133,7 +132,7 @@ router.post("/", auth, authorize("owner"), async (req, res, next) => {
 
 /* =========================
    ADMIN → GET ALL PAYMENTS
-========================= */
+ ========================= */
 // FIX: Removed duplicate GET "/" handler (there were two, second one shadowed the first)
 router.get("/", auth, authorize("owner"), async (req, res, next) => {
     try {
@@ -202,7 +201,7 @@ router.get("/export/csv", auth, authorize("owner"), async (req, res, next) => {
 
 /* =========================
    RESIDENT → GET OWN PAYMENTS
-========================= */
+ ========================= */
 const getMyPayments = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
@@ -221,7 +220,7 @@ router.get("/mine", auth, getMyPayments); // backward-compatible alias
 
 /* =========================
    ADMIN → MARK PAYMENT AS PAID
-========================= */
+ ========================= */
 router.put("/:id/paid", auth, authorize("owner"), async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -253,7 +252,7 @@ router.put("/:id/paid", auth, authorize("owner"), async (req, res, next) => {
 
 /* =========================
    ADMIN → DELETE PAYMENT
-========================= */
+ ========================= */
 router.delete("/:id", auth, authorize("owner"), async (req, res, next) => {
     try {
         const { id } = req.params;

@@ -13,8 +13,6 @@ import { generateMonthlyRent } from "./jobs/rentGenerator.js";
 import Payment from "./models/Payment.js";
 import User from "./models/User.js";
 import { sendRentReminder, sendOverdueNotice } from "./services/emailService.js";
-import enquiryRoutes from "./routes/enquiry.routes.js";
-app.use("/api/enquiries", enquiryRoutes);
 const PORT = process.env.PORT || 5000;
 
 /* ── Cron: mark overdue payments at 2am daily ─── */

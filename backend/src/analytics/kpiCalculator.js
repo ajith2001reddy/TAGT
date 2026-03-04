@@ -13,8 +13,11 @@ export const getKPIs = async ({ fromDate, toDate } = {}, user) => {
             ? { createdAt: { $gte: fromDate, $lte: toDate } }
             : {};
 
+    const scope = buildPropertyFilter(user);
+
     /* ================= OCCUPANCY ================= */
     const roomTotals = await Room.aggregate([
+        { $match: { ...scope } },
         {
             $group: {
                 _id: null,
@@ -31,7 +34,6 @@ export const getKPIs = async ({ fromDate, toDate } = {}, user) => {
         totalBeds === 0 ? 0 : Number(((occupiedBeds / totalBeds) * 100).toFixed(2));
 
     /* ================= PAYMENTS ================= */
-    const scope = buildPropertyFilter(user);
     const paymentStats = await Payment.aggregate([
         { $match: { ...paymentDateFilter, ...scope } },
         {
@@ -59,6 +61,7 @@ export const getKPIs = async ({ fromDate, toDate } = {}, user) => {
     const resolvedRequests = await Request.aggregate([
         {
             $match: {
+                ...scope,
                 status: "resolved",
                 ...requestDateFilter,
             },

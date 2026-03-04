@@ -6,6 +6,7 @@
 };
 
 export const errorHandler = (err, req, res, next) => {
+    console.error("API ERROR:", err);
     if (res.headersSent) {
         return next(err);
     }

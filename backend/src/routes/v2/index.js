@@ -1,6 +1,7 @@
 import { Router, raw } from "express";
 import auth from "../../middleware/auth.js";
 import authorize from "../../middleware/authorize.js";
+import verifyPropertyAccess from "../../middleware/verifyPropertyAccess.js";
 import { login, registerOwner } from "../../controllers/v2/authController.js";
 import { listRooms, createRoom, updateRoom, getRoomStats } from "../../controllers/v2/roomController.js";
 import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, getResidentHistory } from "../../controllers/v2/residentController.js";
@@ -38,18 +39,18 @@ router.get("/analytics/revenue-leak", auth, authorize("super_admin", "owner"), r
 /* ── Rooms ── */
 router.get("/rooms", auth, authorize("super_admin", "owner"), listRooms);
 router.get("/rooms/stats", auth, authorize("super_admin", "owner"), getRoomStats);
-router.post("/rooms", auth, authorize("super_admin", "owner"), createRoom);
+router.post("/rooms", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createRoom);
 router.put("/rooms/:id", auth, authorize("super_admin", "owner"), updateRoom);
 
 /* ── Beds ── */
 router.get("/beds", auth, authorize("super_admin", "owner"), listBeds);
-router.post("/beds", auth, authorize("super_admin", "owner"), createBeds);
+router.post("/beds", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createBeds);
 router.patch("/beds/:id/status", auth, authorize("super_admin", "owner"), updateBedStatus);
 router.post("/beds/:id/assign", auth, authorize("super_admin", "owner"), assignResidentToBed);
 
 /* ── Residents ── */
 router.get("/residents", auth, authorize("super_admin", "owner", "resident"), listResidents);
-router.post("/residents", auth, authorize("super_admin", "owner"), createResident);
+router.post("/residents", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createResident);
 router.patch("/residents/:id/move-room", auth, authorize("super_admin", "owner"), moveResidentRoom);
 router.patch("/residents/:id/deactivate", auth, authorize("super_admin", "owner"), deactivateResident);
 router.post("/residents/:id/notes", auth, authorize("super_admin", "owner"), addResidentNote);
@@ -57,7 +58,7 @@ router.get("/residents/:id/history", auth, authorize("super_admin", "owner"), ge
 
 /* ── Payments ── */
 router.get("/payments", auth, authorize("super_admin", "owner", "resident"), listPayments);
-router.post("/payments", auth, authorize("super_admin", "owner"), createPayment);
+router.post("/payments", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createPayment);
 router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), markPaymentPaid);
 router.post("/payments/:id/send-reminder", auth, authorize("super_admin", "owner"), sendPaymentReminder);
 router.get("/payments/:id/invoice", auth, authorize("super_admin", "owner", "resident"), downloadInvoice);

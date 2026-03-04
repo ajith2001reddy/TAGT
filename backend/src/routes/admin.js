@@ -4,14 +4,17 @@ import isAdmin from "../middleware/isAdmin.js";
 import {
     createProperty,
     createOwner,
-    assignOwnerToProperty
+    assignOwnerToProperty,
+    listOwners
 } from "../controllers/adminController.js";
 
 const router = Router();
 
 // Only super_admin allowed
+router.get("/owners", auth, isAdmin, listOwners);
 router.post("/properties", auth, isAdmin, createProperty);
 router.post("/owners", auth, isAdmin, createOwner);
 router.post("/properties/:id/assign-owner", auth, isAdmin, assignOwnerToProperty);
+
 
 export default router;

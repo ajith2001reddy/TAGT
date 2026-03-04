@@ -19,15 +19,38 @@ interface Property {
     };
     status: string;
     createdAt: string;
+    gstin?: string;
+    pan?: string;
+    phone?: string;
 }
 
 export default function PropertiesListPage() {
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0 });
+    const [showForm, setShowForm] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState("");
+
+    // Owner Assignment State
+    const [assigningProperty, setAssigningProperty] = useState<Property | null>(null);
+    const [owners, setOwners] = useState<{ _id: string; name: string; email: string }[]>([]);
+    const [selectedOwnerId, setSelectedOwnerId] = useState("");
+    const [assigningLoading, setAssigningLoading] = useState(false);
+
+    const [form, setForm] = useState({
+        name: "",
+        type: "pg",
+        address: "",
+        city: "",
+        gstin: "",
+        pan: "",
+        phone: ""
+    });
 
     useEffect(() => {
         fetchProperties(1);
+        fetchOwners();
     }, []);
 
     const fetchProperties = async (page: number) => {
@@ -40,6 +63,46 @@ export default function PropertiesListPage() {
             console.error("Failed to fetch properties", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchOwners = async () => {
+        try {
+            const res = await api.get("/admin/owners");
+            setOwners(res.data.data);
+        } catch (err) {
+            console.error("Failed to fetch owners", err);
+        }
+    };
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        setError("");
+        try {
+            await api.post("/admin/properties", form);
+            setForm({ name: "", type: "pg", address: "", city: "", gstin: "", pan: "", phone: "" });
+            setShowForm(false);
+            fetchProperties(1);
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Failed to create property");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleAssignOwner = async () => {
+        if (!selectedOwnerId || !assigningProperty) return;
+        setAssigningLoading(true);
+        try {
+            await api.post(`/admin/properties/${assigningProperty._id}/assign-owner`, { ownerId: selectedOwnerId });
+            setAssigningProperty(null);
+            setSelectedOwnerId("");
+            fetchProperties(pagination.page);
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to assign owner");
+        } finally {
+            setAssigningLoading(false);
         }
     };
 
@@ -58,13 +121,153 @@ export default function PropertiesListPage() {
 
     return (
         <div className="animate-fade-in" style={{ padding: "40px", maxWidth: "1200px", margin: "0 auto" }}>
+            {/* Owner Assignment Modal */}
+            {assigningProperty && (
+                <div style={{
+                    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                    background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)",
+                    display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
+                }}>
+                    <div className="glass-card animate-fade-up" style={{ width: "400px", padding: "32px", borderRadius: "24px" }}>
+                        <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "8px" }}>Assign Owner</h3>
+                        <p style={{ color: "var(--text-tertiary)", fontSize: "14px", marginBottom: "24px" }}>
+                            Select an owner for <strong>{assigningProperty.name}</strong>
+                        </p>
+
+                        <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Select Owner</label>
+                        <select
+                            className="input-field"
+                            value={selectedOwnerId}
+                            onChange={(e) => setSelectedOwnerId(e.target.value)}
+                            style={{ marginBottom: "24px" }}
+                        >
+                            <option value="">Choose an owner...</option>
+                            {owners.map(o => (
+                                <option key={o._id} value={o._id}>{o.name} ({o.email})</option>
+                            ))}
+                        </select>
+
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button
+                                className="btn-ghost"
+                                onClick={() => { setAssigningProperty(null); setSelectedOwnerId(""); }}
+                                style={{ flex: 1 }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn-primary"
+                                onClick={handleAssignOwner}
+                                disabled={!selectedOwnerId || assigningLoading}
+                                style={{ flex: 1 }}
+                            >
+                                {assigningLoading ? "Assigning..." : "Assign"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                 <div>
                     <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Platform Administration</div>
                     <h1 className="display-text" style={{ fontSize: "32px", marginBottom: "6px" }}>Properties</h1>
                     <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Manage all {pagination.total} properties across the platform</p>
                 </div>
+                <button
+                    className="btn-primary"
+                    onClick={() => setShowForm(!showForm)}
+                    style={{ padding: "10px 20px", fontSize: "14px", fontWeight: 600 }}
+                >
+                    {showForm ? "Cancel" : "Add Property"}
+                </button>
             </div>
+
+            {showForm && (
+                <div className="glass-card animate-fade-up" style={{ padding: "28px", marginBottom: "32px", borderRadius: "20px" }}>
+                    <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "20px" }}>Create New Property</h3>
+                    {error && (
+                        <div style={{ padding: "12px 16px", background: "rgba(255,82,82,0.1)", border: "1px solid rgba(255,82,82,0.2)", borderRadius: "10px", color: "var(--red)", fontSize: "13px", marginBottom: "20px" }}>
+                            {error}
+                        </div>
+                    )}
+                    <form onSubmit={handleCreate} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                        <div>
+                            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Property Name</label>
+                            <input
+                                required
+                                className="input-field"
+                                value={form.name}
+                                onChange={e => setForm({ ...form, name: e.target.value })}
+                                placeholder="e.g. Skyline Residency"
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Type</label>
+                            <select
+                                className="input-field"
+                                value={form.type}
+                                onChange={e => setForm({ ...form, type: e.target.value })}
+                            >
+                                <option value="pg">PG / Co-living</option>
+                                <option value="hotel">Hotel</option>
+                            </select>
+                        </div>
+                        <div style={{ gridColumn: "span 2" }}>
+                            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Address</label>
+                            <input
+                                required
+                                className="input-field"
+                                value={form.address}
+                                onChange={e => setForm({ ...form, address: e.target.value })}
+                                placeholder="Full street address"
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>City</label>
+                            <input
+                                required
+                                className="input-field"
+                                value={form.city}
+                                onChange={e => setForm({ ...form, city: e.target.value })}
+                                placeholder="e.g. Bengaluru"
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Phone Number</label>
+                            <input
+                                className="input-field"
+                                value={form.phone}
+                                onChange={e => setForm({ ...form, phone: e.target.value })}
+                                placeholder="e.g. +91 9876543210"
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>GSTIN (Optional)</label>
+                            <input
+                                className="input-field"
+                                value={form.gstin}
+                                onChange={e => setForm({ ...form, gstin: e.target.value })}
+                                placeholder="29XXXXX..."
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Landlord PAN (for HRA)</label>
+                            <input
+                                className="input-field"
+                                value={form.pan}
+                                onChange={e => setForm({ ...form, pan: e.target.value })}
+                                placeholder="ABCDE1234F"
+                            />
+                        </div>
+                        <div style={{ display: "flex", alignItems: "flex-end" }}>
+                            <button disabled={submitting} type="submit" className="btn-primary" style={{ width: "100%", padding: "12px", height: "46px" }}>
+                                {submitting ? "Creating..." : "Create Property"}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
 
             <div style={{
                 background: "var(--bg-card)",
@@ -119,7 +322,13 @@ export default function PropertiesListPage() {
                                         </span>
                                     </td>
                                     <td style={{ padding: "16px 24px", textAlign: "right" }}>
-                                        <button className="btn-ghost" style={{ fontSize: "12px", padding: "6px 12px" }}>Manage</button>
+                                        <button
+                                            onClick={() => setAssigningProperty(p)}
+                                            className="btn-ghost"
+                                            style={{ fontSize: "12px", padding: "6px 12px" }}
+                                        >
+                                            {p.owner ? "Change Owner" : "Assign Owner"}
+                                        </button>
                                     </td>
                                 </tr>
                             );
@@ -161,3 +370,4 @@ export default function PropertiesListPage() {
         </div>
     );
 }
+

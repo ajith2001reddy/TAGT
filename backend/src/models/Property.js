@@ -11,6 +11,10 @@ const propertySchema = new mongoose.Schema(
             index: true
         },
         address: { type: String, required: true, trim: true },
+        city: { type: String, required: true, trim: true },
+        gstin: { type: String, trim: true, default: "" },
+        pan: { type: String, trim: true, default: "" },
+        phone: { type: String, trim: true, default: "" },
         isActive: { type: Boolean, default: true, index: true }
     },
     { timestamps: true }

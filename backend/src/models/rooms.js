@@ -66,9 +66,19 @@ roomSchema.virtual("availableBeds").get(function () {
     return Math.max(0, this.totalBeds - this.occupiedBeds);
 });
 
-
+// 📊 Compound indexes for scoped analytics queries
 roomSchema.index({ propertyId: 1, roomNumber: 1 }, { unique: true, sparse: true });
+roomSchema.index({ propertyId: 1, maintenanceMode: 1 });
 roomSchema.index({ rent: 1 });
 roomSchema.index({ occupiedBeds: 1, totalBeds: 1 });
+roomSchema.index({ isDeleted: 1, propertyId: 1 });
+
+// 🗑️ Soft-delete: automatically exclude deleted rooms from all find queries
+roomSchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
 
 export default mongoose.model("Room", roomSchema);

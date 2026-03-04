@@ -40,7 +40,7 @@ export const createRoom = async (req, res, next) => {
         }
 
         // 🔐 SECURITY: Ensure owner owns this property
-        if (req.user.role === "owner" && !req.user.propertyIds?.includes(propertyId)) {
+        if (req.user.role === "owner" && !req.user.propertyIds?.some(id => id.toString() === propertyId.toString())) {
             await session.abortTransaction();
             return res.status(403).json({ success: false, message: "Unauthorized property access" });
         }

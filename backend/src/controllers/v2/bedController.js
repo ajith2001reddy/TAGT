@@ -14,15 +14,16 @@ export const assignResidentToBed = async (req, res, next) => {
         const { id } = req.params; // bedId
         const { residentId } = req.body;
 
-        if (!residentId) {
-            await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Resident ID is required" });
-        }
-
         const bed = await Bed.findById(id).session(session);
         if (!bed) {
             await session.abortTransaction();
             return res.status(404).json({ success: false, message: "Bed not found" });
+        }
+
+        // 🔐 SECURITY: Ensure owner owns this property
+        if (req.user.role === "owner" && !req.user.propertyIds?.some(pid => pid.toString() === bed.propertyId.toString())) {
+            await session.abortTransaction();
+            return res.status(403).json({ success: false, message: "Unauthorized property access" });
         }
 
         if (bed.status === "occupied" && bed.residentId?.toString() !== residentId) {
@@ -95,6 +96,11 @@ export const createBeds = async (req, res, next) => {
 
         if (!propertyId || !roomId || !count) {
             return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        // 🔐 SECURITY: Ensure owner owns this property
+        if (req.user.role === "owner" && !req.user.propertyIds?.some(id => id.toString() === propertyId.toString())) {
+            return res.status(403).json({ success: false, message: "Unauthorized property access" });
         }
 
         const room = await Room.findById(roomId);

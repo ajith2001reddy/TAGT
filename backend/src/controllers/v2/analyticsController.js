@@ -10,16 +10,16 @@ import { buildPropertyFilter } from "../../utils/tenantScope.js";
  */
 export const ownerDashboardAnalytics = async (req, res, next) => {
     try {
-        const scope = buildPropertyFilter(req.user);
-        const propertyMatch = scope.propertyId ? { propertyId: scope.propertyId } : {};
+        // 🔐 SECURITY: Always scope queries to this user's property/properties
+        const scope = buildPropertyFilter(req.user); // {} for super_admin, { propertyId: ... } or { propertyId: { $in: [...] } } for owners
 
         const [totalResidents, totalRooms, pendingPayments, overduePayments, revenueAgg, occupancyAgg] = await Promise.all([
-            User.countDocuments({ role: "resident", isActive: true, ...propertyMatch }),
-            Room.countDocuments({ ...propertyMatch }),
-            Payment.countDocuments({ status: "pending", ...propertyMatch }),
-            Payment.countDocuments({ status: "pending", dueDate: { $lt: new Date() }, ...propertyMatch }),
-            Payment.aggregate([{ $match: { status: "paid", ...propertyMatch } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
-            Room.aggregate([{ $match: propertyMatch }, { $group: { _id: null, occupied: { $sum: "$occupiedBeds" }, total: { $sum: "$totalBeds" } } }])
+            User.countDocuments({ role: "resident", isActive: true, ...scope }),
+            Room.countDocuments({ ...scope }),
+            Payment.countDocuments({ status: "pending", ...scope }),
+            Payment.countDocuments({ status: "pending", dueDate: { $lt: new Date() }, ...scope }),
+            Payment.aggregate([{ $match: { status: "paid", ...scope } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
+            Room.aggregate([{ $match: scope }, { $group: { _id: null, occupied: { $sum: "$occupiedBeds" }, total: { $sum: "$totalBeds" } } }])
         ]);
 
         const occupied = occupancyAgg[0]?.occupied || 0;
@@ -76,14 +76,14 @@ export const ownerDashboardAnalytics = async (req, res, next) => {
  */
 export const ownerFinancialDashboard = async (req, res, next) => {
     try {
+        // 🔐 SECURITY: Always scope queries to this user's property/properties
         const scope = buildPropertyFilter(req.user);
-        const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
         const currentMonth = new Date().toISOString().slice(0, 7);
 
         const [rooms, allPayments, monthPayments] = await Promise.all([
-            Room.find(pm, "totalBeds occupiedBeds rent").lean(),
-            Payment.find(pm, "amount status lateFee totalPayable paidAt dueDate").lean(),
-            Payment.find({ ...pm, month: currentMonth }, "amount status lateFee").lean(),
+            Room.find(scope, "totalBeds occupiedBeds rent").lean(),
+            Payment.find(scope, "amount status lateFee totalPayable paidAt dueDate").lean(),
+            Payment.find({ ...scope, month: currentMonth }, "amount status lateFee").lean(),
         ]);
 
         const totalBeds = rooms.reduce((s, r) => s + (r.totalBeds || 0), 0);
@@ -101,7 +101,7 @@ export const ownerFinancialDashboard = async (req, res, next) => {
 
         // 6-month revenue trend
         const trendAgg = await Payment.aggregate([
-            { $match: { ...pm, status: "paid" } },
+            { $match: { ...scope, status: "paid" } },
             { $group: { _id: "$month", collected: { $sum: "$amount" } } },
             { $sort: { _id: -1 } }, { $limit: 6 },
         ]);
@@ -128,13 +128,13 @@ export const ownerFinancialDashboard = async (req, res, next) => {
  */
 export const revenueLeakReport = async (req, res, next) => {
     try {
+        // 🔐 SECURITY: Always scope queries to this user's property/properties
         const scope = buildPropertyFilter(req.user);
-        const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
 
         const [rooms, residents, payments] = await Promise.all([
-            Room.find(pm).lean(),
-            User.find({ ...pm, role: "resident", isActive: true }).lean(),
-            Payment.find(pm, "resident amount status lateFee dueDate month paidAt").lean(),
+            Room.find(scope).lean(),
+            User.find({ ...scope, role: "resident", isActive: true }).lean(),
+            Payment.find(scope, "resident amount status lateFee dueDate month paidAt").lean(),
         ]);
 
         const avgRent = rooms.length ? rooms.reduce((s, r) => s + (r.rent || 0), 0) / rooms.length : 0;

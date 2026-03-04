@@ -1,5 +1,5 @@
 ﻿import { Router } from "express";
-import firebaseAuth from "../middleware/firebaseAuth.js";
+import auth from "../middleware/auth.js";
 import admin from "../config/firebase.js";
 import User from "../models/User.js";
 
@@ -8,7 +8,7 @@ const router = Router();
 /**
  * GET /api/auth/me
  */
-router.get("/me", firebaseAuth, async (req, res) => {
+router.get("/me", auth, async (req, res) => {
   return res.status(200).json({
     success: true,
     data: {

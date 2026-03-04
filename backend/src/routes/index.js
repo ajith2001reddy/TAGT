@@ -1,28 +1,40 @@
-﻿import { Router } from "express";
+﻿// backend/src/routes/index.js
+// ──────────────────────────────────────────────────────────────────
+// CLEANED: Removed dead v1 route registrations that conflicted with
+// /v2 equivalents. The frontend is fully migrated to /v2.
+//
+// REMOVED (were conflicting with /v2):
+//   ❌  /rooms       → replaced by /v2/rooms
+//   ❌  /payments    → replaced by /v2/payments
+//   ❌  /analytics   → replaced by /v2/analytics/*
+//   ❌  /requests    → replaced by /v2/requests
+//
+// KEPT (still used by frontend or no v2 equivalent yet):
+//   ✅  /auth              → login, register
+//   ✅  /owner             → /owner/properties (PropertySwitcher), /owner/stats
+//   ✅  /admin             → /admin/owners, /admin/properties (provider pages)
+//   ✅  /v2                → all v2 routes
+//   ✅  /resident          → resident dashboard (payments, requests for resident role)
+//   ✅  /enquiries         → public enquiry submission
+// ──────────────────────────────────────────────────────────────────
+
+import { Router } from "express";
 
 import authRoutes from "./auth.js";
 import ownerRoutes from "./owner.js";
-import roomRoutes from "./rooms.js";
-import paymentRoutes from "./payments.js";
-import residentRoutes from "./resident.js";
-import analyticsRoutes from "./analytics.js";
-import requestRoutes from "./requests.js";
-import v2Routes from "./v2/index.js";
 import adminRoutes from "./admin.js";
+import v2Routes from "./v2/index.js";
 import residentDashboardRoutes from "./residentDashboard.js";
+import enquiryRoutes from "./enquiry.routes.js";
 
 const router = Router();
 
-router.use("/auth", authRoutes);           // POST /api/auth/login
+router.use("/auth", authRoutes);
 router.use("/owner", ownerRoutes);
 router.use("/admin", adminRoutes);
-router.use("/rooms", roomRoutes);
-router.use("/payments", paymentRoutes);
-router.use("/owner/resident", residentRoutes);
-router.use("/analytics", analyticsRoutes);
-router.use("/requests", requestRoutes);
 router.use("/v2", v2Routes);
 router.use("/resident", residentDashboardRoutes);
+router.use("/enquiries", enquiryRoutes);
 
 router.get("/", (req, res) => {
     res.json({ success: true, message: "TAGT API is running" });

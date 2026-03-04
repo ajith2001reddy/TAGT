@@ -80,6 +80,11 @@ const icons = {
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" />
         </svg>
     ),
+    owners: (
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+    ),
 };
 
 export function Sidebar() {
@@ -90,11 +95,13 @@ export function Sidebar() {
         super_admin: [
             { href: "/provider", label: "Overview", icon: icons.overview },
             { href: "/provider/properties", label: "Properties", icon: icons.properties },
+            { href: "/provider/owners", label: "Owners", icon: icons.owners },
             { href: "/provider/subscriptions", label: "Subscriptions", icon: icons.subscription },
             { href: "/provider/activity", label: "Activity Logs", icon: icons.activity },
         ],
         owner: [
             { href: "/owner", label: "Dashboard", icon: icons.dashboard },
+            { href: "/owner/property", label: "Property Details", icon: icons.properties },
             { href: "/owner/rooms", label: "Rooms", icon: icons.rooms },
             { href: "/owner/residents", label: "Residents", icon: icons.residents },
             { href: "/owner/payments", label: "Payments", icon: icons.payments },

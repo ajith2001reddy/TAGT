@@ -1,5 +1,5 @@
 import { Router } from "express";
-import firebaseAuth from "../middleware/firebaseAuth.js";
+import auth from "../middleware/auth.js";
 import Enquiry from "../models/Enquiry.js";
 
 const router = Router();
@@ -8,7 +8,7 @@ const router = Router();
  * POST /api/enquiries
  * Create new enquiry
  */
-router.post("/", firebaseAuth, async (req, res) => {
+router.post("/", auth, async (req, res) => {
     try {
         const { pgId, pgName, message } = req.body;
 

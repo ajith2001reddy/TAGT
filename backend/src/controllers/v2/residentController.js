@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import User from "../../models/User.js";
 import Payment from "../../models/Payment.js";
+import Room from "../../models/rooms.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import { createResidentWorkflow, sendWelcomeEmailSafe } from "../../services/residentService.js";
 
@@ -38,7 +39,7 @@ export const createResident = async (req, res, next) => {
         }
 
         // 🔐 SECURITY: Ensure owner owns this property
-        if (req.user.role === "owner" && !req.user.propertyIds?.includes(propertyId)) {
+        if (req.user.role === "owner" && !req.user.propertyIds?.some(id => id.toString() === propertyId.toString())) {
             await session.abortTransaction();
             return res.status(403).json({ success: false, message: "Unauthorized property access" });
         }
@@ -50,8 +51,8 @@ export const createResident = async (req, res, next) => {
 
         await session.commitTransaction();
 
-        // Async email
-        sendWelcomeEmailSafe(resident, tempPassword, propertyId);
+        // Async welcome email (fire-and-forget)
+        sendWelcomeEmailSafe(resident, propertyId);
 
         return res.status(201).json({ success: true, data: resident });
     } catch (err) {

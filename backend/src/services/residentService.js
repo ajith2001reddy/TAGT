@@ -3,13 +3,13 @@ import User from "../models/User.js";
 import Room from "../models/rooms.js";
 import Payment from "../models/Payment.js";
 import Property from "../models/Property.js";
-import crypto from "crypto";
 
 /**
- * Core logic for creating a resident, assigning them to a room, and generating their first bill.
+ * Core logic for creating a resident, assigning them to a room,
+ * and generating their first bill.
+ * Password is NOT set — authentication is handled entirely by Firebase.
  */
-export const createResidentWorkflow = async ({ name, email, roomId, propertyId, password: incomingPassword }, session) => {
-    const password = incomingPassword || crypto.randomBytes(12).toString("hex");
+export const createResidentWorkflow = async ({ name, email, roomId, propertyId }, session) => {
     const normalizedEmail = email.toLowerCase().trim();
 
     // 1. Validate & lock room 
@@ -21,9 +21,9 @@ export const createResidentWorkflow = async ({ name, email, roomId, propertyId, 
         if (roomDoc.occupiedBeds >= roomDoc.totalBeds) throw new Error("Room is full");
     }
 
-    // 2. Create User
+    // 2. Create User (no password — Firebase-only auth)
     const [resident] = await User.create(
-        [{ name, email: normalizedEmail, password, role: "resident", propertyId, roomId: roomDoc?._id || null, isActive: true }],
+        [{ name, email: normalizedEmail, role: "resident", propertyId, roomId: roomDoc?._id || null, isActive: true }],
         { session }
     );
 
@@ -53,17 +53,16 @@ export const createResidentWorkflow = async ({ name, email, roomId, propertyId, 
         }], { session });
     }
 
-    return { resident, tempPassword: incomingPassword ? null : password };
+    return { resident };
 };
 
-export const sendWelcomeEmailSafe = async (resident, tempPassword, propertyId) => {
+export const sendWelcomeEmailSafe = async (resident, propertyId) => {
     try {
         const { sendWelcomeEmail } = await import("./emailService.js");
         const propertyDoc = await Property.findById(propertyId).lean();
         await sendWelcomeEmail({
             name: resident.name,
             email: resident.email,
-            tempPassword: tempPassword,
             propertyName: propertyDoc?.name || "TAGT",
         });
     } catch (err) {

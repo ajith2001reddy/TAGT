@@ -8,7 +8,11 @@ import { generateInvoicePDF } from "../../utils/invoiceGenerator.js";
 export const listPayments = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
-        const payments = await Payment.find(scope)
+        const filter = req.user.role === "resident"
+            ? { resident: req.user._id, ...scope }
+            : scope;
+
+        const payments = await Payment.find(filter)
             .populate("resident", "name email")
             .sort({ createdAt: -1 })
             .lean();
@@ -23,8 +27,13 @@ export const listPayments = async (req, res, next) => {
  */
 export const createPayment = async (req, res, next) => {
     try {
-        const propertyId = req.user.propertyId || req.body.propertyId;
+        const propertyId = req.body.propertyId || req.user.propertyId;
         if (!propertyId) return res.status(400).json({ success: false, message: "propertyId is required" });
+
+        // 🔐 SECURITY: Ensure owner owns this property
+        if (req.user.role === "owner" && !req.user.propertyIds?.some(id => id.toString() === propertyId.toString())) {
+            return res.status(403).json({ success: false, message: "Unauthorized property access" });
+        }
 
         const { resident, amount, month, type, dueDate } = req.body;
         const payment = await Payment.create({
@@ -74,7 +83,8 @@ export const downloadInvoice = async (req, res, next) => {
 
         const payment = await Payment
             .findOne(filter)
-            .populate("resident", "name email");
+            .populate("resident", "name email")
+            .populate("propertyId", "name address city gstin pan phone");
 
         if (!payment) {
             return res.status(404).json({ success: false, message: "Payment not found" });

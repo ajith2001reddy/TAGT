@@ -22,7 +22,7 @@ router.post("/debug/generate-rent", async (req, res) => {
 });
 /* =========================
    KPIs
-========================= */
+ ========================= */
 router.get("/kpis", auth, async (req, res, next) => {
     try {
         const { fromDate, toDate } = req.query;
@@ -52,7 +52,7 @@ router.get("/kpis", auth, async (req, res, next) => {
 
 /* =========================
    OCCUPANCY FORECAST
-========================= */
+ ========================= */
 router.get("/predict/occupancy", auth, async (req, res, next) => {
     try {
         const months = Math.min(Number(req.query.months) || 6, 12);
@@ -65,7 +65,7 @@ router.get("/predict/occupancy", auth, async (req, res, next) => {
 
 /* =========================
    MAINTENANCE FORECAST
-========================= */
+ ========================= */
 router.get("/predict/maintenance", auth, async (req, res, next) => {
     try {
         const forecast = await predictMaintenanceCost(req);
@@ -81,7 +81,7 @@ router.get("/predict/maintenance", auth, async (req, res, next) => {
 
 /* =========================
    CHURN PREDICTION
-========================= */
+ ========================= */
 router.get(
     "/predict/churn",
     auth,
@@ -102,7 +102,7 @@ router.get(
 
 /* =========================
    REVENUE OPTIMIZATION
-========================= */
+ ========================= */
 router.get("/optimize/revenue", auth, authorize("owner", "super_admin"), async (req, res, next) => {
     try {
         const insights = await optimizeRevenue(req);

@@ -5,8 +5,10 @@ import Payment from "../models/Payment.js";
 export const generateMonthlyRent = async () => {
     try {
         const now = new Date();
-        const monthKey = now.toISOString().slice(0, 7); // YYYY-MM
-
+        const month = now.toISOString().slice(0, 7); // YYYY-MM
+        const dueDay = 5;
+        const dueDate = new Date(now.getFullYear(), now.getMonth(), dueDay);
+        if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1);
         const residents = await User.find({
             role: "resident",
             isActive: true
