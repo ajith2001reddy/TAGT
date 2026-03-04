@@ -53,3 +53,39 @@ export const reportOutstanding = async (req, res, next) => {
         return res.status(200).send(content);
     } catch (err) { next(err); }
 };
+
+/**
+ * Resident ledger CSV report (All payments for a resident or property)
+ */
+export const reportResidentLedger = async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
+        const { residentId } = req.query;
+        const filter = { ...scope, ...(residentId ? { resident: residentId } : {}) };
+
+        const payments = await Payment.find(filter)
+            .populate("resident", "name email")
+            .sort({ month: -1, createdAt: -1 })
+            .lean();
+
+        const content = csv(
+            ["Date", "Resident Name", "Email", "Type", "Month", "Amount", "Late Fee", "Total", "Status", "Paid At"],
+            payments.map(p => [
+                new Date(p.createdAt).toLocaleDateString(),
+                p.resident?.name,
+                p.resident?.email,
+                p.type,
+                p.month,
+                p.amount,
+                p.lateFee || 0,
+                p.totalPayable || p.amount,
+                p.status,
+                p.paidAt ? new Date(p.paidAt).toLocaleDateString() : ""
+            ])
+        );
+
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=resident-ledger-${residentId || "all"}.csv`);
+        return res.status(200).send(content);
+    } catch (err) { next(err); }
+};

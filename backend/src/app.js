@@ -4,12 +4,20 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 import apiRoutes from "./routes/index.js";
+import { metricsMiddleware, metricsEndpoint } from "./middleware/metrics.js";
+import { initEventHandlers } from "./events/handlers.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { swaggerSpec, swaggerUi } from "./swagger.js";
 
-
+// Initialize Domain Event Bus
+initEventHandlers();
 
 const app = express();
+/* ================= METRICS ================= */
+
+app.use(metricsMiddleware);
+app.get("/metrics", metricsEndpoint);
+
 /* ================= SECURITY ================= */
 
 app.set("trust proxy", 1);

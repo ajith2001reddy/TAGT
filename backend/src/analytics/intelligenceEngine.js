@@ -94,6 +94,7 @@ export const occupancyTrends = async (req) => {
 
     // Per-room breakdown
     const roomBreakdown = rooms.map(r => ({
+        id: r._id,
         roomNumber: r.roomNumber,
         totalBeds: r.totalBeds || 0,
         occupiedBeds: r.occupiedBeds || 0,

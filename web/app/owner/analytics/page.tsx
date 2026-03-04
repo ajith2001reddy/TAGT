@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
                     </div>
 
                     {/* 6-month trend */}
-                    {fin.trend.length > 0 && (
+                    {fin.trend?.length > 0 && (
                         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
                             <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "20px" }}>6-Month Revenue Trend</div>
                             <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", height: "80px" }}>
@@ -163,9 +163,9 @@ export default function AnalyticsPage() {
                             <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "16px" }}>
                                 🛏 Empty Beds — ₹{(leak.emptyBedCostTotal || 0).toLocaleString()}/mo loss
                             </div>
-                            {leak.emptyBeds.length === 0
+                            {leak.emptyBeds?.length === 0
                                 ? <div style={{ color: "var(--green)", fontSize: "13px" }}>✅ All rooms fully occupied</div>
-                                : leak.emptyBeds.map((r, i) => (
+                                : leak.emptyBeds?.map((r, i) => (
                                     <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border-subtle)", fontSize: "13px" }}>
                                         <span>Room {r.roomNumber} — {r.emptyBeds} empty bed{r.emptyBeds > 1 ? "s" : ""}</span>
                                         <span style={{ color: "var(--red)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>-₹{(r.costPerMonth || 0).toLocaleString()}</span>
@@ -179,9 +179,9 @@ export default function AnalyticsPage() {
                             <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "16px" }}>
                                 ⏰ Chronic Late Payers
                             </div>
-                            {leak.chronicLatePayers.length === 0
+                            {leak.chronicLatePayers?.length === 0
                                 ? <div style={{ color: "var(--green)", fontSize: "13px" }}>✅ No chronic late payers</div>
-                                : leak.chronicLatePayers.map((r, i) => (
+                                : leak.chronicLatePayers?.map((r, i) => (
                                     <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-subtle)" }}>
                                         <div style={{ fontSize: "13px", fontWeight: 600 }}>{r.name}</div>
                                         <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{r.email} · {r.lateCount} unpaid</div>
@@ -192,7 +192,7 @@ export default function AnalyticsPage() {
                     </div>
 
                     {/* Underpriced Rooms */}
-                    {leak.underpricedRooms.length > 0 && (
+                    {leak.underpricedRooms?.length > 0 && (
                         <div style={{ background: "var(--bg-card)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "16px", padding: "20px", borderLeft: "3px solid #fbbf24" }}>
                             <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "#fbbf24", marginBottom: "16px" }}>
                                 💰 Underpriced Rooms (avg ₹{leak.avgRent}/mo)

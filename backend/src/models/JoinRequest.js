@@ -38,7 +38,7 @@ const joinRequestSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Indexes for fast lookups
+// Index for fast lookups (propertyId + status is the most common query for owners)
 joinRequestSchema.index({ propertyId: 1, status: 1 });
 joinRequestSchema.index({ residentId: 1, createdAt: -1 });
 

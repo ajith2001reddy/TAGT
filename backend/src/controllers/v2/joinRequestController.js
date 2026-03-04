@@ -3,6 +3,7 @@ import User from "../../models/User.js";
 import Property from "../../models/Property.js";
 import logger from "../../utils/logger.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
+import eventBus from "../../utils/eventBus.js";
 
 /**
  * Resident: Create a join request for a property
@@ -41,7 +42,7 @@ export const createJoinRequest = async (req, res, next) => {
             message
         });
 
-        logger.info("Join Request Created", { requestId: request._id, residentId, propertyId });
+        eventBus.publish("resident.request.created", { requestId: request._id, residentId, propertyId });
         res.status(201).json({ success: true, data: request });
     } catch (err) {
         next(err);
@@ -91,7 +92,12 @@ export const approveJoinRequest = async (req, res, next) => {
             isActive: true
         });
 
-        logger.info("Join Request Approved", { requestId: id, residentId: request.residentId, propertyId: request.propertyId });
+        eventBus.publish("resident.approved", {
+            requestId: request._id,
+            residentId: request.residentId,
+            propertyId: request.propertyId,
+            processedBy: req.user._id
+        });
         res.json({ success: true, message: "Request approved and resident assigned to property" });
     } catch (err) {
         next(err);

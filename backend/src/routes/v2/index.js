@@ -8,13 +8,13 @@ import { listResidents, createResident, moveResidentRoom, deactivateResident, ad
 import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, downloadInvoice } from "../../controllers/v2/paymentController.js";
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
 import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2 } from "../../controllers/v2/analyticsController.js";
-import { reportMonthlyRevenue, reportOutstanding } from "../../controllers/v2/reportController.js";
-import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, discoverProperties } from "../../controllers/v2/propertiesController.js";
+import { reportMonthlyRevenue, reportOutstanding, reportResidentLedger } from "../../controllers/v2/reportController.js";
+import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty as editProperty, discoverProperties } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
 import { createPaymentSession, stripeWebhook, stripeStatus } from "../../controllers/v2/stripeController.js";
 import { getMyPlan, listPlans, upgradePlan, listAllSubscriptions, adminSetPlan } from "../../controllers/v2/subscriptionController.js";
-import { listActivityLogs, myActivityLogs } from "../../controllers/v2/activityController.js";
+import { listActivityLogs, myActivityLogs, logActivity } from "../../controllers/v2/activityController.js";
 import { listBeds, createBeds, updateBedStatus, assignResidentToBed } from "../../controllers/v2/bedController.js";
 // Phase 3
 import { getRevenueForecast, getOccupancyTrends, getSmartAlerts, getChurnAnalysis, getIntelligenceSummary } from "../../controllers/v2/intelligenceController.js";
@@ -28,7 +28,8 @@ router.post("/auth/register-owner", registerOwner);
 /* ── Super Admin ── */
 router.get("/provider/overview", auth, authorize("super_admin"), getProviderOverview);
 router.get("/provider/properties", auth, authorize("super_admin"), listAllProperties);
-router.patch("/provider/properties/:id/status", auth, authorize("super_admin"), patchPropertyStatus);
+router.put("/provider/properties/:id", auth, authorize("super_admin"), logActivity("PROPERTY_UPDATED"), editProperty);
+router.patch("/provider/properties/:id/status", auth, authorize("super_admin"), logActivity("PROPERTY_STATUS_CHANGED"), patchPropertyStatus);
 router.get("/admin/platform-stats", auth, authorize("super_admin"), getPlatformStats);
 
 /* ── Analytics ── */
@@ -51,8 +52,8 @@ router.post("/beds/:id/assign", auth, authorize("super_admin", "owner"), assignR
 /* ── Residents ── */
 router.get("/residents", auth, authorize("super_admin", "owner", "resident"), listResidents);
 router.post("/residents", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createResident);
-router.patch("/residents/:id/move-room", auth, authorize("super_admin", "owner"), moveResidentRoom);
-router.patch("/residents/:id/deactivate", auth, authorize("super_admin", "owner"), deactivateResident);
+router.patch("/residents/:id/move-room", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_RELOCATED"), moveResidentRoom);
+router.patch("/residents/:id/deactivate", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_DEACTIVATED"), deactivateResident);
 router.post("/residents/:id/notes", auth, authorize("super_admin", "owner"), addResidentNote);
 router.post("/residents/:id/notification", auth, authorize("super_admin", "owner"), sendNotification);
 router.get("/residents/:id/history", auth, authorize("super_admin", "owner"), getResidentHistory);
@@ -60,13 +61,14 @@ router.get("/residents/:id/history", auth, authorize("super_admin", "owner"), ge
 /* ── Payments ── */
 router.get("/payments", auth, authorize("super_admin", "owner", "resident"), listPayments);
 router.post("/payments", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createPayment);
-router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), markPaymentPaid);
+router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), logActivity("PAYMENT_MANUAL_RECONCILIATION"), markPaymentPaid);
 router.post("/payments/:id/send-reminder", auth, authorize("super_admin", "owner"), sendPaymentReminder);
 router.get("/payments/:id/invoice", auth, authorize("super_admin", "owner", "resident"), downloadInvoice);
 
 /* ── Reports (CSV) ── */
 router.get("/reports/monthly-revenue.csv", auth, authorize("super_admin", "owner"), reportMonthlyRevenue);
 router.get("/reports/outstanding.csv", auth, authorize("super_admin", "owner"), reportOutstanding);
+router.get("/reports/resident-ledger.csv", auth, authorize("super_admin", "owner"), reportResidentLedger);
 
 /* ── Requests ── */
 router.get("/requests", auth, authorize("super_admin", "owner", "resident"), listRequests);
@@ -93,7 +95,7 @@ router.get("/subscription/plans", listPlans);
 router.get("/subscription/my-plan", auth, authorize("owner"), getMyPlan);
 router.post("/subscription/upgrade", auth, authorize("owner"), upgradePlan);
 router.get("/admin/subscriptions", auth, authorize("super_admin"), listAllSubscriptions);
-router.patch("/admin/subscriptions/:ownerId", auth, authorize("super_admin"), adminSetPlan);
+router.patch("/admin/subscriptions/:ownerId", auth, authorize("super_admin"), logActivity("SUBSCRIPTION_OVERRIDE"), adminSetPlan);
 
 /* ── Phase 2: Activity Logs ── */
 router.get("/admin/activity-logs", auth, authorize("super_admin"), listActivityLogs);

@@ -228,11 +228,18 @@ export const revenueLeakReport = async (req, res, next) => {
             return late.length >= 2;
         }).map(r => ({ name: r.name, email: r.email, lateCount: (paymentsByResident[String(r._id)] || []).filter(p => p.status !== "paid").length }));
 
+        const underpricedRooms = rooms.filter(r => r.rent < avgRent * 0.9).map(r => ({
+            roomNumber: r.roomNumber,
+            currentRent: r.rent,
+            suggestedRent: Math.round(avgRent)
+        }));
+
         const result = {
             success: true,
             data: {
                 emptyBeds, emptyBedCostTotal,
                 chronicLatePayers,
+                underpricedRooms,
                 avgRent: Math.round(avgRent),
             }
         };

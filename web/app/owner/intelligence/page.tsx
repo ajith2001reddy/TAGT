@@ -9,7 +9,7 @@ import {
 } from "recharts";
 
 interface ForecastData { history: { month: string; collected: number }[]; forecast: { month: string; projected: number; isForecast: true }[]; trend: string; avgMonthlyRevenue: number; }
-interface TrendsData { current: { totalBeds: number; occupiedBeds: number; occupancyRate: number }; monthlyRevenueTrend: { month: string; billed: number; paid: number; collectionRate: number; newResidents: number }[]; roomBreakdown: { roomNumber: string; totalBeds: number; occupiedBeds: number; occupancyRate: number; rent: number }[]; }
+interface TrendsData { current: { totalBeds: number; occupiedBeds: number; occupancyRate: number }; monthlyRevenueTrend: { month: string; billed: number; paid: number; collectionRate: number; newResidents: number }[]; roomBreakdown: { id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; occupancyRate: number; rent: number }[]; }
 interface ChurnData { totalResidents: number; highRisk: number; mediumRisk: number; lowRisk: number; residents: { residentId: string; name: string; email: string; score: number; riskLevel: string; reasons: string[] }[]; }
 interface AlertData { alerts: { id: string; severity: string; title: string; description: string; action: string }[]; totalAlerts: number; }
 
@@ -166,8 +166,8 @@ export default function IntelligencePage() {
                     <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
                         <SectionHeader title="Room Occupancy Breakdown" sub="Per room · Current status" />
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                            {data.trends.roomBreakdown.map(r => (
-                                <div key={r.roomNumber} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                            {data.trends.roomBreakdown.map((r, idx) => (
+                                <div key={r.id || `${r.roomNumber}-${idx}`} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                                     <div style={{ width: "70px", fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: 700, flexShrink: 0 }}>Room {r.roomNumber}</div>
                                     <div style={{ flex: 1, height: "6px", background: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
                                         <div style={{ height: "100%", width: `${r.occupancyRate}%`, background: r.occupancyRate === 100 ? CHART_COLORS.green : r.occupancyRate >= 50 ? CHART_COLORS.primary : CHART_COLORS.red, borderRadius: "3px", transition: "width 0.8s ease" }} />
@@ -205,8 +205,8 @@ export default function IntelligencePage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.churn.residents.map(r => (
-                                    <tr key={r.residentId} style={{ borderBottom: "1px solid var(--border-subtle)", transition: "background 0.12s" }}
+                                {data.churn.residents.map((r, idx) => (
+                                    <tr key={r.residentId || idx} style={{ borderBottom: "1px solid var(--border-subtle)", transition: "background 0.12s" }}
                                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--bg-card-hover)"}
                                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ""}>
                                         <td style={{ padding: "13px 18px" }}>
@@ -226,8 +226,8 @@ export default function IntelligencePage() {
                                         </td>
                                         <td style={{ padding: "13px 18px" }}>
                                             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                                                {r.reasons.map(reason => (
-                                                    <span key={reason} style={{ fontSize: "10px", background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "5px", padding: "2px 7px", color: "var(--text-secondary)" }}>{reason}</span>
+                                                {r.reasons.map((reason, idx) => (
+                                                    <span key={`${reason}-${idx}`} style={{ fontSize: "10px", background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "5px", padding: "2px 7px", color: "var(--text-secondary)" }}>{reason}</span>
                                                 ))}
                                             </div>
                                         </td>
@@ -242,10 +242,10 @@ export default function IntelligencePage() {
             {/* Smart Alerts tab */}
             {tab === "alerts" && data?.alerts && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {data.alerts.alerts.map(alert => {
+                    {data.alerts.alerts.map((alert, idx) => {
                         const style = ALERT_COLOR[alert.severity] || ALERT_COLOR.info;
                         return (
-                            <div key={alert.id} className="animate-fade-up" style={{ background: style.bg, border: `1px solid ${style.border}`, borderRadius: "16px", padding: "20px 24px", display: "flex", gap: "16px" }}>
+                            <div key={alert.id || idx} className="animate-fade-up" style={{ background: style.bg, border: `1px solid ${style.border}`, borderRadius: "16px", padding: "20px 24px", display: "flex", gap: "16px" }}>
                                 <div style={{ fontSize: "22px", flexShrink: 0 }}>{style.icon}</div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "15px", color: style.text, marginBottom: "4px" }}>{alert.title}</div>

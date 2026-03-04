@@ -47,6 +47,33 @@ export const updatePropertyStatus = async (req, res, next) => {
 };
 
 /**
+ * Update property details (Super Admin only)
+ */
+export const updateProperty = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid property id" });
+        }
+
+        const allowedFields = ["name", "address", "city", "phone", "gstin", "pan", "status", "type"];
+        const updates = {};
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        const property = await Property.findByIdAndUpdate(id, updates, { new: true, runValidators: true })
+            .populate("owner", "name email");
+
+        if (!property) return res.status(404).json({ success: false, message: "Property not found" });
+        return res.json({ success: true, data: property });
+    } catch (err) { next(err); }
+};
+
+
+/**
  * Public/Resident Discovery: Search for properties
  */
 export const discoverProperties = async (req, res, next) => {

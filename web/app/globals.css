@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
 @import "tailwindcss";
 
 /* ============================================
@@ -19,10 +19,13 @@
   --border-default: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
 
-  /* Brand */
+  /* Brand — Airbnb accent */
   --accent-primary: #00d4ff;
   --accent-secondary: #0099cc;
   --accent-glow: rgba(0, 212, 255, 0.15);
+  --accent-airbnb: #FF385C;
+  --accent-airbnb-bg: rgba(255, 56, 92, 0.08);
+  --accent-airbnb-border: rgba(255, 56, 92, 0.2);
 
   /* Status */
   --green: #00e676;
@@ -38,9 +41,27 @@
   --text-tertiary: rgba(255, 255, 255, 0.30);
 
   /* Fonts */
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Syne', 'Inter', sans-serif;
+  --font-body: 'DM Sans', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
 }
 
 /* 🍎 PREMIUM LIGHT THEME */
@@ -59,6 +80,9 @@
   --accent-primary: #0071e3;
   --accent-secondary: #0077ed;
   --accent-glow: rgba(0, 113, 227, 0.1);
+  --accent-airbnb: #FF385C;
+  --accent-airbnb-bg: rgba(255, 56, 92, 0.06);
+  --accent-airbnb-border: rgba(255, 56, 92, 0.15);
 
   --green: #24b47e;
   --green-bg: rgba(36, 180, 126, 0.1);
@@ -343,6 +367,44 @@ body::before {
   background: rgba(0, 212, 255, 0.03);
   box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.08);
 }
+
+/* Dark select dropdown — forces dark bg on option elements */
+select.input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+  cursor: pointer;
+  background-color: #0d1520;
+}
+
+select.input-field option {
+  background-color: #0d1520;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+select.input-field option:hover,
+select.input-field option:checked {
+  background-color: #1a2d3d;
+  color: #00d4ff;
+}
+
+/* Light mode overrides */
+.light select.input-field {
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+.light select.input-field option {
+  background-color: #ffffff;
+  color: #1d1d1f;
+}
+
 
 /* ============================================
    TYPOGRAPHY

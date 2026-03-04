@@ -1,20 +1,27 @@
 // src/controllers/v2/activityController.js
 import ActivityLog from "../../models/ActivityLog.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
+import eventBus from "../../utils/eventBus.js";
 
 /* ─────────────────────────────────────────────────
    Middleware: log an action to ActivityLog
+   Usage: router.post("/path", auth, logActivity("ACTION_NAME"), controller)
 ───────────────────────────────────────────────── */
 export const logActivity = (action) => async (req, res, next) => {
     try {
         if (req.user?._id) {
-            ActivityLog.create({
+            const log = await ActivityLog.create({
                 action,
                 performedBy: req.user._id,
                 role: req.user.role,
-                ipAddress: req.ip || req.headers["x-forwarded-for"],
+                propertyId: req.user.propertyId || null,
+                ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown",
                 route: `${req.method} ${req.originalUrl}`,
             }).catch(() => { }); // fire-and-forget, never block the request
+
+            if (log) {
+                eventBus.publish("activity.logged", { action, userId: req.user._id });
+            }
         }
     } catch { }
     next();
