@@ -1,12 +1,11 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
-import { useRouter } from "next/navigation";
-import { Search, MapPin, Phone, ExternalLink, MessageCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { Search, MapPin, MessageCircle, ExternalLink, AlertCircle, ArrowLeft, Sliders, X } from "lucide-react";
 
 interface PGResult {
     id: number;
@@ -21,76 +20,57 @@ interface PGResult {
     distanceKm?: number;
 }
 
-interface NominatimResult {
-    lat: string;
-    lon: string;
-    display_name: string;
-}
-
-interface Place {
-    display_name: string;
-    lat: string;
-    lon: string;
-}
+interface NominatimResult { lat: string; lon: string; display_name: string; }
+interface Place { display_name: string; lat: string; lon: string; }
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
-
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function parseOverpassResults(
-    data: any,
-    centerLat: number,
-    centerLon: number
-): PGResult[] {
+function parseOverpassResults(data: any, centerLat: number, centerLon: number): PGResult[] {
     const elements = data?.elements || [];
     const seen = new Set<string>();
     const results: PGResult[] = [];
-
     for (const el of elements) {
         const tags = el.tags || {};
         const name = tags.name || tags["name:en"];
         if (!name) continue;
-
         const lat = el.lat ?? el.center?.lat;
         const lon = el.lon ?? el.center?.lon;
         if (!lat || !lon) continue;
-
         const key = `${name}_${lat}_${lon}`;
         if (seen.has(key)) continue;
         seen.add(key);
-
-        const parts = [
-            tags["addr:housenumber"],
-            tags["addr:street"],
-            tags["addr:city"],
-        ].filter(Boolean);
-
+        const parts = [tags["addr:housenumber"], tags["addr:street"], tags["addr:city"]].filter(Boolean);
         results.push({
-            id: el.id,
-            name,
-            type: tags.amenity || tags.tourism || "pg",
-            lat,
-            lon,
-            address: parts.length ? parts.join(", ") : undefined,
+            id: el.id, name, type: tags.amenity || tags.tourism || "pg",
+            lat, lon, address: parts.length ? parts.join(", ") : undefined,
             phone: tags.phone || tags["contact:phone"],
             website: tags.website || tags["contact:website"],
             opening_hours: tags.opening_hours,
             distanceKm: haversine(centerLat, centerLon, lat, lon),
         });
     }
+    return results.sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
+}
 
-    return results.sort(
-        (a, b) => (a.distanceKm || 0) - (b.distanceKm || 0)
+function SkeletonCard() {
+    return (
+        <div style={{
+            borderRadius: "20px", border: "1px solid rgba(255,255,255,0.06)",
+            background: "rgba(255,255,255,0.02)", padding: "28px",
+            animation: "pulse 1.8s ease-in-out infinite",
+        }}>
+            <div style={{ width: "60px", height: "20px", borderRadius: "6px", background: "rgba(255,255,255,0.07)", marginBottom: "20px" }} />
+            <div style={{ width: "70%", height: "24px", borderRadius: "8px", background: "rgba(255,255,255,0.07)", marginBottom: "12px" }} />
+            <div style={{ width: "90%", height: "14px", borderRadius: "6px", background: "rgba(255,255,255,0.05)", marginBottom: "8px" }} />
+            <div style={{ width: "60%", height: "14px", borderRadius: "6px", background: "rgba(255,255,255,0.04)", marginBottom: "28px" }} />
+            <div style={{ height: "44px", borderRadius: "12px", background: "rgba(255,255,255,0.06)" }} />
+        </div>
     );
 }
 
@@ -104,34 +84,32 @@ export default function SearchPage() {
     const lngParam = params.get("lng");
 
     const [results, setResults] = useState<PGResult[]>([]);
-    const [loading, setLoading] = useState(false); // Default to false to avoid initial blank flash
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [sendingId, setSendingId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState(location);
-    const [lastLoc, setLastLoc] = useState(""); // Track last searched location
+    const [lastLoc, setLastLoc] = useState("");
+    const [enquiredIds, setEnquiredIds] = useState<Set<number>>(new Set());
+    const [scrollY, setScrollY] = useState(0);
 
-    // ✅ ENQUIRY FUNCTION (INSIDE COMPONENT)
+    useEffect(() => {
+        const onScroll = () => setScrollY(window.scrollY);
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
     async function handleEnquiry(pg: PGResult) {
         if (!user) {
             router.push("/login?callback=/search" + window.location.search);
             return;
         }
-
         try {
             setSendingId(pg.id);
-
-            await api.post("/enquiries", {
-                propertyId: pg.id,
-                pgName: pg.name,
-                message: "I am interested in this PG.",
-            });
-
-            alert("Enquiry sent successfully!");
-        } catch (err) {
+            await api.post("/enquiries", { propertyId: pg.id, pgName: pg.name, message: "I am interested in this PG." });
+            setEnquiredIds(prev => new Set([...prev, pg.id]));
+        } catch {
             alert("Failed to send enquiry");
-        } finally {
-            setSendingId(null);
-        }
+        } finally { setSendingId(null); }
     }
 
     const handleSearchSubmit = (e: React.FormEvent) => {
@@ -142,52 +120,28 @@ export default function SearchPage() {
 
     const runSearch = useCallback(async () => {
         if (!location || location === lastLoc) return;
-
-        setLoading(true);
-        setError("");
-
+        setLoading(true); setError("");
         try {
             let lat = latParam ? parseFloat(latParam) : null;
             let lon = lngParam ? parseFloat(lngParam) : null;
-
             if (!lat || !lon) {
-                const geoRes = await fetch(
-                    `/api/geocode?q=${encodeURIComponent(location)}`
-                );
+                const geoRes = await fetch(`/api/geocode?q=${encodeURIComponent(location)}`);
                 const geoData: NominatimResult[] = await geoRes.json();
-
-                if (!geoData.length) {
-                    setError(`We couldn't find "${location}" on the map. Try a different city or area.`);
-                    setLoading(false);
-                    return;
-                }
-
-                lat = parseFloat(geoData[0].lat);
-                lon = parseFloat(geoData[0].lon);
+                if (!geoData.length) { setError(`We couldn't find "${location}" on the map.`); setLoading(false); return; }
+                lat = parseFloat(geoData[0].lat); lon = parseFloat(geoData[0].lon);
             }
-
-            // Artificial delay to prevent hitting API too fast after geocode
             await new Promise(r => setTimeout(r, 600));
-
-            const res = await fetch(
-                `/api/search?lat=${lat}&lon=${lon}`
-            );
-
+            const res = await fetch(`/api/search?lat=${lat}&lon=${lon}`);
             if (!res.ok) {
-                if (res.status === 429) throw new Error("Our search partner is busy. Please wait a second.");
+                if (res.status === 429) throw new Error("Our search partner is busy. Please wait a moment.");
                 throw new Error("Temporary search failure. Please try again.");
             }
-
             const data = await res.json();
-            const parsed = parseOverpassResults(data, lat, lon);
-
-            setResults(parsed);
+            setResults(parseOverpassResults(data, lat, lon));
             setLastLoc(location);
         } catch (err: any) {
             setError(err.message || "Search failed.");
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     }, [location, latParam, lngParam, lastLoc]);
 
     useEffect(() => {
@@ -195,131 +149,362 @@ export default function SearchPage() {
         else setLoading(false);
     }, [location, runSearch]);
 
-    return (
-        <div className="min-h-screen pb-20">
-            <div className="mesh-bg" />
+    const TYPE_COLORS: Record<string, string> = {
+        hostel: "#a78bfa",
+        hotel: "#f59e0b",
+        guest_house: "#34d399",
+        pg: "#00d4ff",
+    };
 
-            {/* Header / Search Bar Section */}
-            <div className="sticky top-0 z-50 bg-base/80 backdrop-blur-md border-b border-white/5 py-4 px-6">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 items-center">
+    function getTypeColor(type: string) {
+        return TYPE_COLORS[type.toLowerCase()] ?? "#00d4ff";
+    }
+
+    return (
+        <div style={{ minHeight: "100vh", background: "#04070c", color: "#f0f4f8", fontFamily: "'Inter', sans-serif" }}>
+
+            {/* Ambient orbs */}
+            <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+                <div style={{
+                    position: "absolute", top: "-10vh", left: "30%",
+                    width: "50vw", height: "40vw", borderRadius: "50%",
+                    background: "radial-gradient(circle, rgba(0,180,255,0.07) 0%, transparent 70%)",
+                    filter: "blur(60px)",
+                }} />
+                <div style={{
+                    position: "absolute", bottom: "0", right: "-10%",
+                    width: "40vw", height: "40vw", borderRadius: "50%",
+                    background: "radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)",
+                    filter: "blur(60px)",
+                }} />
+                <div style={{
+                    position: "absolute", inset: 0,
+                    backgroundImage: "linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)",
+                    backgroundSize: "80px 80px",
+                }} />
+            </div>
+
+            {/* Sticky Search Bar */}
+            <div style={{
+                position: "sticky", top: 0, zIndex: 50,
+                background: scrollY > 10 ? "rgba(4,7,12,0.92)" : "rgba(4,7,12,0.7)",
+                backdropFilter: "blur(28px)", WebkitBackdropFilter: "blur(28px)",
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
+                padding: "14px 40px",
+                transition: "background 0.3s",
+            }}>
+                <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", gap: "12px", alignItems: "center" }}>
                     <button
                         onClick={() => router.back()}
-                        className="p-2 hover:bg-white/5 rounded-full transition-colors hidden md:block"
+                        style={{
+                            width: "40px", height: "40px", borderRadius: "12px", flexShrink: 0,
+                            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", color: "rgba(255,255,255,0.5)", transition: "all 0.2s",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
                     >
-                        <ArrowLeft size={20} className="text-secondary" />
+                        <ArrowLeft size={18} />
                     </button>
 
-                    <form onSubmit={handleSearchSubmit} className="relative flex-1 group w-full">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-tertiary group-focus-within:text-accent-primary transition-colors" size={18} />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search for PGs, hostels, or locations..."
-                            className="input-field pl-12 h-12 w-full"
-                        />
+                    <form onSubmit={handleSearchSubmit} style={{ flex: 1, position: "relative", display: "flex" }}>
+                        <div style={{
+                            flex: 1, display: "flex", alignItems: "center",
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            borderRadius: "14px", overflow: "hidden",
+                            transition: "border-color 0.2s",
+                        }}
+                            onFocus={() => { }}
+                        >
+                            <Search size={16} style={{ marginLeft: "16px", color: "rgba(255,255,255,0.3)", flexShrink: 0 }} />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Search for PGs, hostels, or locations..."
+                                style={{
+                                    flex: 1, background: "transparent", border: "none", outline: "none",
+                                    color: "#fff", fontFamily: "inherit", fontSize: "14px",
+                                    padding: "12px 16px", caretColor: "#00d4ff",
+                                }}
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery("")}
+                                    style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0 12px", color: "rgba(255,255,255,0.3)", display: "flex" }}
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                            <button type="submit" style={{
+                                padding: "10px 20px", margin: "4px",
+                                borderRadius: "10px",
+                                background: "linear-gradient(135deg, #00d4ff, #0066cc)",
+                                color: "#000", border: "none", cursor: "pointer",
+                                fontSize: "13px", fontWeight: 700, fontFamily: "inherit",
+                                flexShrink: 0,
+                            }}>Search</button>
+                        </div>
                     </form>
+
+                    <Link href="/" style={{
+                        display: "flex", alignItems: "center", gap: "6px",
+                        fontSize: "14px", fontWeight: 800, letterSpacing: "-0.02em",
+                        color: "rgba(255,255,255,0.7)", textDecoration: "none",
+                        flexShrink: 0,
+                    }}>
+                        <div style={{
+                            width: "26px", height: "26px", borderRadius: "8px",
+                            background: "linear-gradient(135deg, #00d4ff, #0066cc)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                            <span style={{ color: "#000", fontWeight: 900, fontSize: "12px" }}>T</span>
+                        </div>
+                        TAGT
+                    </Link>
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-6 mt-12 relative z-10">
-                <div className="mb-12">
-                    <span className="label-text mb-2 block">Search Results</span>
-                    <h1 className="display-text text-4xl glow-text">
-                        Stay options near <span className="accent-line">{location}</span>
+            {/* Main content */}
+            <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 40px 80px", position: "relative", zIndex: 1 }}>
+
+                {/* Page title */}
+                <div style={{ marginBottom: "48px" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#00d4ff", textTransform: "uppercase", marginBottom: "12px" }}>
+                        Search Results
+                    </div>
+                    <h1 style={{
+                        fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900,
+                        letterSpacing: "-0.04em", lineHeight: 1.1,
+                        background: "linear-gradient(135deg, #ffffff 50%, #6090b0)",
+                        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                    }}>
+                        {location ? <>Stay options near <span style={{ background: "linear-gradient(135deg, #00d4ff, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{location}</span></> : "Search for PGs & Hostels"}
                     </h1>
+                    {!loading && results.length > 0 && (
+                        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px", marginTop: "8px" }}>
+                            {results.length} places found · sorted by distance
+                        </p>
+                    )}
                 </div>
 
+                {/* States */}
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="glass-card p-6 h-64 skeleton opacity-50" />
-                        ))}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "18px" }}>
+                        {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
                     </div>
+
                 ) : error ? (
-                    <div className="glass-card p-12 text-center max-w-2xl mx-auto">
-                        <div className="bg-red-bg p-4 rounded-full w-fit mx-auto mb-6 text-red">
-                            <AlertCircle size={32} />
-                        </div>
-                        <h2 className="display-text text-2xl mb-4">Something went wrong</h2>
-                        <p className="text-secondary mb-8">{error}</p>
-                        <button onClick={() => runSearch()} className="btn-primary">
-                            Try Again
-                        </button>
+                    <div style={{
+                        maxWidth: "520px", margin: "60px auto", textAlign: "center",
+                        padding: "56px 40px", borderRadius: "28px",
+                        border: "1px solid rgba(255,82,82,0.15)",
+                        background: "rgba(255,82,82,0.04)",
+                    }}>
+                        <div style={{ fontSize: "48px", marginBottom: "20px" }}>⚠️</div>
+                        <h2 style={{ fontSize: "22px", fontWeight: 700, marginBottom: "12px", color: "#fff" }}>Something went wrong</h2>
+                        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "14px", lineHeight: 1.75, marginBottom: "32px" }}>{error}</p>
+                        <button
+                            onClick={() => { setLastLoc(""); runSearch(); }}
+                            style={{
+                                padding: "12px 28px", borderRadius: "12px",
+                                background: "linear-gradient(135deg, #00d4ff, #0066cc)",
+                                color: "#000", border: "none", cursor: "pointer",
+                                fontSize: "14px", fontWeight: 700, fontFamily: "inherit",
+                            }}
+                        >Try Again</button>
                     </div>
+
                 ) : results.length === 0 ? (
-                    <div className="glass-card p-12 text-center max-w-2xl mx-auto animate-fade-up">
-                        <div className="bg-white/5 p-4 rounded-full w-fit mx-auto mb-6 text-accent-primary">
-                            <MapPin size={32} />
-                        </div>
-                        <h2 className="display-text text-2xl mb-4">No stays found nearby</h2>
-                        <p className="text-secondary mb-8 leading-relaxed">
-                            We couldn&apos;t find any PGs or hostels exactly in {location}.
-                            Try searching for a broader area or a major landmark nearby.
+                    <div style={{
+                        maxWidth: "520px", margin: "60px auto", textAlign: "center",
+                        padding: "56px 40px", borderRadius: "28px",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                        background: "rgba(255,255,255,0.02)",
+                    }}>
+                        <div style={{ fontSize: "48px", marginBottom: "20px" }}>🔍</div>
+                        <h2 style={{ fontSize: "22px", fontWeight: 700, marginBottom: "12px", color: "#fff" }}>No stays found nearby</h2>
+                        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px", lineHeight: 1.75, marginBottom: "32px" }}>
+                            We couldn&apos;t find any PGs or hostels in <strong style={{ color: "rgba(255,255,255,0.7)" }}>{location}</strong>. Try a broader area or a major landmark nearby.
                         </p>
-                        <button onClick={() => setSearchQuery("")} className="btn-ghost">
-                            Clear Search
-                        </button>
+                        <button
+                            onClick={() => setSearchQuery("")}
+                            style={{
+                                padding: "12px 28px", borderRadius: "12px",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                background: "transparent", color: "rgba(255,255,255,0.7)",
+                                cursor: "pointer", fontSize: "14px", fontWeight: 600,
+                                fontFamily: "inherit", transition: "all 0.2s",
+                            }}
+                        >Clear Search</button>
                     </div>
+
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-                        {results.map((pg, idx) => (
-                            <div
-                                key={pg.id}
-                                className={`glass-card p-6 animate-fade-up delay-${(idx % 6) + 1}`}
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className="badge badge-pending">{pg.type}</span>
-                                    {pg.distanceKm && (
-                                        <span className="mono-text text-accent-primary">
-                                            {pg.distanceKm.toFixed(1)} km away
-                                        </span>
-                                    )}
-                                </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "18px" }}>
+                        {results.map((pg, idx) => {
+                            const color = getTypeColor(pg.type);
+                            const enquired = enquiredIds.has(pg.id);
+                            return (
+                                <div
+                                    key={pg.id}
+                                    style={{
+                                        borderRadius: "20px",
+                                        border: "1px solid rgba(255,255,255,0.07)",
+                                        background: "rgba(255,255,255,0.03)",
+                                        padding: "26px",
+                                        backdropFilter: "blur(12px)",
+                                        transition: "all 0.3s ease",
+                                        animation: `fadeUp 0.5s ease both`,
+                                        animationDelay: `${idx * 0.05}s`,
+                                        position: "relative", overflow: "hidden",
+                                    }}
+                                    onMouseEnter={e => {
+                                        const el = e.currentTarget as HTMLElement;
+                                        el.style.borderColor = `${color}25`;
+                                        el.style.transform = "translateY(-3px)";
+                                        el.style.boxShadow = `0 16px 48px ${color}0d`;
+                                    }}
+                                    onMouseLeave={e => {
+                                        const el = e.currentTarget as HTMLElement;
+                                        el.style.borderColor = "rgba(255,255,255,0.07)";
+                                        el.style.transform = "translateY(0)";
+                                        el.style.boxShadow = "none";
+                                    }}
+                                >
+                                    {/* Corner glow */}
+                                    <div style={{
+                                        position: "absolute", top: 0, right: 0,
+                                        width: "120px", height: "120px",
+                                        background: `radial-gradient(circle at top right, ${color}10, transparent 70%)`,
+                                        borderRadius: "0 20px 0 0", pointerEvents: "none",
+                                    }} />
 
-                                <h3 className="display-text text-xl mb-3">{pg.name}</h3>
-
-                                {pg.address && (
-                                    <div className="flex items-start gap-3 text-secondary text-sm mb-4">
-                                        <MapPin size={16} className="shrink-0 mt-0.5" />
-                                        <p>{pg.address}</p>
-                                    </div>
-                                )}
-
-                                <div className="mt-8 pt-6 border-t border-white/5 flex gap-3">
-                                    <button
-                                        onClick={() => handleEnquiry(pg)}
-                                        disabled={sendingId !== null}
-                                        className="btn-primary flex-1 h-11 relative overflow-hidden"
-                                    >
-                                        {sendingId === pg.id ? (
-                                            <span className="flex items-center gap-2">
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                Sending...
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-2">
-                                                <MessageCircle size={18} />
-                                                Enquire
+                                    {/* Header row */}
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
+                                        <span style={{
+                                            fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em",
+                                            textTransform: "uppercase", padding: "4px 10px", borderRadius: "6px",
+                                            background: `${color}12`, color, border: `1px solid ${color}22`,
+                                        }}>{pg.type}</span>
+                                        {pg.distanceKm && (
+                                            <span style={{
+                                                fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.4)",
+                                                fontFamily: "monospace", display: "flex", alignItems: "center", gap: "4px",
+                                            }}>
+                                                <MapPin size={10} />
+                                                {pg.distanceKm.toFixed(1)} km
                                             </span>
                                         )}
-                                    </button>
+                                    </div>
 
-                                    <a
-                                        href={`https://www.openstreetmap.org/?mlat=${pg.lat}&mlon=${pg.lon}&zoom=17`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="btn-ghost p-0 w-11 h-11 flex items-center justify-center"
-                                        title="View on Map"
-                                    >
-                                        <ExternalLink size={18} />
-                                    </a>
+                                    {/* Name */}
+                                    <h3 style={{
+                                        fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em",
+                                        marginBottom: "10px", color: "#fff", lineHeight: 1.3,
+                                    }}>{pg.name}</h3>
+
+                                    {/* Address */}
+                                    {pg.address && (
+                                        <div style={{
+                                            display: "flex", alignItems: "flex-start", gap: "8px",
+                                            color: "rgba(255,255,255,0.38)", fontSize: "13px",
+                                            lineHeight: 1.5, marginBottom: "8px",
+                                        }}>
+                                            <MapPin size={13} style={{ flexShrink: 0, marginTop: "2px", color }} />
+                                            <span>{pg.address}</span>
+                                        </div>
+                                    )}
+
+                                    {pg.opening_hours && (
+                                        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", marginBottom: "4px" }}>
+                                            🕐 {pg.opening_hours}
+                                        </div>
+                                    )}
+
+                                    {/* Actions */}
+                                    <div style={{
+                                        marginTop: "22px", paddingTop: "20px",
+                                        borderTop: "1px solid rgba(255,255,255,0.06)",
+                                        display: "flex", gap: "10px",
+                                    }}>
+                                        <button
+                                            onClick={() => handleEnquiry(pg)}
+                                            disabled={sendingId !== null || enquired}
+                                            style={{
+                                                flex: 1, padding: "12px", borderRadius: "12px",
+                                                background: enquired
+                                                    ? "rgba(52,211,153,0.1)"
+                                                    : `linear-gradient(135deg, ${color}, ${color}cc)`,
+                                                color: enquired ? "#34d399" : "#000",
+                                                border: enquired ? "1px solid rgba(52,211,153,0.25)" : "none",
+                                                cursor: enquired ? "default" : "pointer",
+                                                fontSize: "13px", fontWeight: 700, fontFamily: "inherit",
+                                                display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                                                transition: "all 0.2s",
+                                                boxShadow: enquired ? "none" : `0 4px 16px ${color}30`,
+                                                opacity: sendingId !== null && sendingId !== pg.id ? 0.5 : 1,
+                                            }}
+                                        >
+                                            {sendingId === pg.id ? (
+                                                <>
+                                                    <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(0,0,0,0.3)", borderTopColor: "#000", animation: "spin 0.7s linear infinite" }} />
+                                                    Sending…
+                                                </>
+                                            ) : enquired ? (
+                                                <>✓ Sent!</>
+                                            ) : (
+                                                <>
+                                                    <MessageCircle size={14} />
+                                                    Enquire
+                                                </>
+                                            )}
+                                        </button>
+
+                                        <a
+                                            href={`https://www.openstreetmap.org/?mlat=${pg.lat}&mlon=${pg.lon}&zoom=17`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            title="View on Map"
+                                            style={{
+                                                width: "44px", height: "44px", borderRadius: "12px",
+                                                border: "1px solid rgba(255,255,255,0.09)",
+                                                background: "rgba(255,255,255,0.04)",
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                color: "rgba(255,255,255,0.5)", textDecoration: "none",
+                                                transition: "all 0.2s", flexShrink: 0,
+                                            }}
+                                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
+                                        >
+                                            <ExternalLink size={16} />
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </main>
+
+            <style>{`
+                @keyframes fadeUp {
+                    from { opacity: 0; transform: translateY(16px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                ::placeholder { color: rgba(255,255,255,0.25) !important; }
+                * { box-sizing: border-box; }
+            `}</style>
         </div>
     );
 }
