@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
-import { fetchKPIs, KPIResponse } from "./analytics.service";
+import { fetchOwnerStats, OwnerStats } from "./owner.service";
+import { useProperty } from "@/context/PropertyContext";
 
 export function useAnalytics() {
-    const [data, setData] = useState<KPIResponse | null>(null);
+    const { property } = useProperty();
+    const [data, setData] = useState<OwnerStats | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchKPIs()
+        setLoading(true);
+        fetchOwnerStats(property?._id ?? null)
             .then(setData)
             .finally(() => setLoading(false));
-    }, []);
+    }, [property?._id]);
 
     return { data, loading };
 }
