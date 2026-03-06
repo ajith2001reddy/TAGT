@@ -9,12 +9,13 @@ export async function markOverduePayments() {
         const now = new Date();
         const result = await Payment.updateMany(
             { status: "pending", dueDate: { $lt: now } },
-            { status: "overdue" }
+            { $set: { status: "overdue" } }
         );
 
-        if (result.modifiedCount > 0) {
-            logger.info(`[JOB] Overdue status updated`, { count: result.modifiedCount });
-        }
+        logger.info(`[JOB] Overdue job complete`, {
+            scanned: result.matchedCount,
+            modified: result.modifiedCount,
+        });
         return result;
     } catch (err) {
         logger.error("[JOB] Overdue job error", { error: err.message });

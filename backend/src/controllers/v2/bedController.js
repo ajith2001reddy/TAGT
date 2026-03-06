@@ -32,6 +32,7 @@ export const assignResidentToBed = async (req, res, next) => {
         }
 
         // 1. Update Bed
+        const wasOccupied = bed.status === "occupied";
         bed.status = "occupied";
         bed.residentId = residentId;
         await bed.save({ session });
@@ -50,9 +51,12 @@ export const assignResidentToBed = async (req, res, next) => {
         await user.save({ session });
 
         // 3. Update Room (increment occupied count)
-        const wasOccupied = bed.status === "occupied" && bed.residentId;
         if (!wasOccupied) {
-            await Room.findByIdAndUpdate(bed.roomId, { $inc: { occupiedBeds: 1 } }).session(session);
+            await Room.findByIdAndUpdate(
+                bed.roomId,
+                { $inc: { occupiedBeds: 1 } },
+                { session }
+            );
         }
 
         await session.commitTransaction();

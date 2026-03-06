@@ -41,12 +41,12 @@ const allowedOrigins = [
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        if (origin.includes(".vercel.app")) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        // During local dev, we might want to just log the missing origin and allow it initially
-        // callback(new Error(`Not allowed by CORS: ${origin}`));
-        // FOR NOW: Let's relax CORS perfectly for your local development setup
-        return callback(null, true);
+
+        if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("Not allowed by CORS"));
     },
     credentials: true, // IMPORTANT: Allows cookies/auth headers like Firebase token to flow
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

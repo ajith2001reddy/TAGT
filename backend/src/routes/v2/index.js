@@ -7,7 +7,7 @@ import { listRooms, createRoom, updateRoom, deleteRoom, getRoomStats } from "../
 import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident } from "../../controllers/v2/residentController.js";
 import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, downloadInvoice } from "../../controllers/v2/paymentController.js";
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
-import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2 } from "../../controllers/v2/analyticsController.js";
+import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2, ownerDashboardSummary } from "../../controllers/v2/analyticsController.js";
 import { reportMonthlyRevenue, reportOutstanding, reportResidentLedger } from "../../controllers/v2/reportController.js";
 import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
@@ -18,6 +18,10 @@ import { listActivityLogs, myActivityLogs, logActivity } from "../../controllers
 import { listBeds, createBeds, updateBedStatus, assignResidentToBed } from "../../controllers/v2/bedController.js";
 // Phase 3
 import { getRevenueForecast, getOccupancyTrends, getSmartAlerts, getChurnAnalysis, getIntelligenceSummary } from "../../controllers/v2/intelligenceController.js";
+// Phase 4: Support
+import { createTicket, listMyTickets, listAllTickets, getTicket, replyToTicket, updateTicketStatus, addInternalNote } from "../../controllers/v2/supportController.js";
+// Phase 5: Notifications
+import { getNotifications, getUnreadCount, markRead, markAllRead } from "../../controllers/v2/notificationController.js";
 
 const router = Router();
 
@@ -37,6 +41,7 @@ router.get("/admin/platform-stats", auth, authorize("super_admin"), getPlatformS
 router.get("/analytics/owner-dashboard", auth, authorize("super_admin", "owner"), ownerDashboardAnalytics);
 router.get("/analytics/financial-dashboard", auth, authorize("super_admin", "owner"), ownerFinancialDashboard);
 router.get("/analytics/revenue-leak", auth, authorize("super_admin", "owner"), revenueLeakReport);
+router.get("/analytics/dashboard-summary", auth, authorize("super_admin", "owner"), ownerDashboardSummary);
 
 /* ── Rooms ── */
 router.get("/rooms", auth, authorize("super_admin", "owner"), listRooms);
@@ -114,5 +119,20 @@ router.get("/intelligence/revenue-forecast", auth, authorize("owner"), getRevenu
 router.get("/intelligence/occupancy-trends", auth, authorize("owner"), getOccupancyTrends);
 router.get("/intelligence/smart-alerts", auth, authorize("owner"), getSmartAlerts);
 router.get("/intelligence/churn-analysis", auth, authorize("owner"), getChurnAnalysis);
+
+/* ── Phase 4: Support Tickets ── */
+router.post("/support/tickets", auth, authorize("resident", "owner"), createTicket);
+router.get("/support/tickets", auth, authorize("resident", "owner"), listMyTickets);
+router.get("/support/tickets/all", auth, authorize("super_admin"), listAllTickets);
+router.get("/support/tickets/:id", auth, getTicket);
+router.post("/support/tickets/:id/reply", auth, replyToTicket);
+router.patch("/support/tickets/:id/status", auth, authorize("super_admin"), updateTicketStatus);
+router.post("/support/tickets/:id/note", auth, authorize("super_admin"), addInternalNote);
+
+/* ── Phase 5: Notifications ── */
+router.get("/notifications", auth, getNotifications);
+router.get("/notifications/unread-count", auth, getUnreadCount);
+router.patch("/notifications/read-all", auth, markAllRead);
+router.patch("/notifications/:id/read", auth, markRead);
 
 export default router;

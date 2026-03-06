@@ -28,6 +28,7 @@ export const connectDB = async () => {
             await mongoose.connect(mongoUri, {
                 autoIndex: true,
                 serverSelectionTimeoutMS: 5000,
+                maxPoolSize: 10,
             });
 
             logger.info("✅ MongoDB connected successfully");

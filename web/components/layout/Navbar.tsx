@@ -2,9 +2,9 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { PropertySwitcher } from "./PropertySwitcher";
+import { NotificationBell } from "./NotificationBell";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Bell, Search, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const pageTitles: Record<string, { title: string; sub: string }> = {
@@ -20,15 +20,18 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
     "/owner/property": { title: "Property", sub: "Property details" },
     "/owner/subscription": { title: "Subscription", sub: "Plan & billing" },
     "/owner/onboarding": { title: "Onboarding", sub: "Manage resident requests" },
+    "/owner/support": { title: "Support", sub: "Get help from the TAGT team" },
     "/resident": { title: "My Dashboard", sub: "Your living space overview" },
     "/resident/payments": { title: "My Payments", sub: "Payment history & upcoming dues" },
     "/resident/requests": { title: "My Requests", sub: "Maintenance history" },
     "/resident/discover": { title: "Discover", sub: "Find a property to call home" },
+    "/resident/support": { title: "Support", sub: "Help center & tickets" },
     "/provider": { title: "Platform Overview", sub: "Global platform stats" },
     "/provider/properties": { title: "Properties", sub: "All registered properties" },
     "/provider/owners": { title: "Owners", sub: "Manage property owners" },
     "/provider/subscriptions": { title: "Subscriptions", sub: "Plan management" },
     "/provider/activity": { title: "Activity Logs", sub: "Full audit trail" },
+    "/provider/support": { title: "Support Dashboard", sub: "Manage all support tickets" },
 };
 
 export function Navbar() {
@@ -109,31 +112,7 @@ export function Navbar() {
                 {role === "owner" && <PropertySwitcher />}
 
                 {/* Notification Bell */}
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                        width: "36px", height: "36px", borderRadius: "10px",
-                        background: "rgba(255,255,255,0.04)",
-                        border: "1px solid var(--border-subtle)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        cursor: "pointer", position: "relative",
-                        color: "var(--text-secondary)",
-                        transition: "all 0.15s ease",
-                    }}
-                    onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
-                        (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)";
-                        (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-                    }}
-                    onMouseLeave={e => {
-                        (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
-                        (e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)";
-                        (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
-                    }}
-                >
-                    <Bell size={15} />
-                </motion.button>
+                <NotificationBell />
 
                 {/* Avatar */}
                 <motion.div

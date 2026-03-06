@@ -5,6 +5,9 @@ import Property from "../../models/Property.js";
 import Request from "../../models/Request.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
+import { revenueForecast, smartAlerts } from "../../analytics/intelligenceEngine.js";
+import { predictChurn } from "../../analytics/churnEngine.js";
+import { predictMaintenanceCost } from "../../analytics/maintenanceForecast.js";
 
 import redis from "../../config/redis.js";
 
@@ -371,4 +374,86 @@ export const residentDashboardV2 = async (req, res, next) => {
             }
         });
     } catch (err) { next(err); }
+};
+
+/**
+ * Owner Dashboard Summary – aggregates KPIs + Forecast + Churn + Maintenance in one call.
+ * GET /v2/analytics/dashboard-summary
+ */
+export const ownerDashboardSummary = async (req, res, next) => {
+    try {
+        const cacheKey = getCacheKey(req.user, "owner_dashboard_summary");
+
+        // 1. Try Redis Cache
+        try {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                logger.info("[Dashboard Summary] Cache Hit", { key: cacheKey });
+                return res.json({ success: true, cached: true, data: JSON.parse(cached) });
+            }
+        } catch (cacheErr) {
+            logger.warn("[Dashboard Summary] Redis get error, falling back to DB", { error: cacheErr.message });
+        }
+
+        const scope = buildPropertyFilter(req.user);
+
+        // 2. Compute KPIs + Intelligence in parallel (failures are tolerated)
+        const [kpisResult, forecastResult, churnResult, maintenanceResult, alertsResult] = await Promise.allSettled([
+            // KPI block
+            (async () => {
+                const [totalResidents, totalRooms, pendingPayments, overduePayments, revenueAgg, occupancyAgg] = await Promise.all([
+                    User.countDocuments({ role: "resident", isActive: true, ...scope }),
+                    Room.countDocuments({ ...scope }),
+                    Payment.countDocuments({ status: "pending", ...scope }),
+                    Payment.countDocuments({ status: "overdue", ...scope }),
+                    Payment.aggregate([{ $match: { status: "paid", ...scope } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
+                    Room.aggregate([{ $match: scope }, { $group: { _id: null, occupied: { $sum: "$occupiedBeds" }, total: { $sum: "$totalBeds" } } }]),
+                ]);
+
+                const occupied = occupancyAgg[0]?.occupied || 0;
+                const totalBeds = occupancyAgg[0]?.total || 0;
+                return {
+                    totalResidents,
+                    totalRooms,
+                    totalBeds,
+                    occupiedBeds: occupied,
+                    occupancyRate: totalBeds ? Number(((occupied / totalBeds) * 100).toFixed(2)) : 0,
+                    pendingPayments,
+                    overduePayments,
+                    totalRevenue: revenueAgg[0]?.total || 0,
+                };
+            })(),
+            revenueForecast(req),
+            predictChurn(req),
+            predictMaintenanceCost(req),
+            smartAlerts(req),
+        ]);
+
+        const kpis = kpisResult.status === "fulfilled" ? kpisResult.value : null;
+        const revenue = forecastResult.status === "fulfilled" ? forecastResult.value : null;
+        const churnRisk = churnResult.status === "fulfilled" ? churnResult.value : null;
+        const maintenanceForecast = maintenanceResult.status === "fulfilled" ? maintenanceResult.value : null;
+        const alerts = alertsResult.status === "fulfilled" ? alertsResult.value : null;
+
+        // 3. Generate consolidated insights
+        const insights = [];
+        if (kpis) {
+            if (kpis.occupancyRate < 70) insights.push({ type: "OCCUPANCY", severity: "HIGH", message: "Low occupancy detected", recommendation: "Consider promotions or flexible pricing to fill units." });
+            if (kpis.overduePayments > 2) insights.push({ type: "PAYMENTS", severity: "MEDIUM", message: "High overdue payments", recommendation: "Send automated reminders or enforce late fees." });
+        }
+        if (insights.length === 0) insights.push({ type: "HEALTHY", severity: "LOW", message: "Portfolio performing well", recommendation: "Maintain current operational strategy." });
+
+        const result = { kpis, revenue, churnRisk, maintenanceForecast, alerts, insights };
+
+        // 4. Cache for 5 min
+        try {
+            await redis.setex(cacheKey, 300, JSON.stringify(result));
+        } catch (cacheErr) {
+            logger.warn("[Dashboard Summary] Redis set error", { error: cacheErr.message });
+        }
+
+        return res.json({ success: true, cached: false, data: result });
+    } catch (err) {
+        next(err);
+    }
 };

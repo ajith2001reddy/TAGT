@@ -148,3 +148,59 @@ export const sendOverdueNotice = async ({ name, email, amount, lateFee, month })
 
 // Alias used by stripeController and scheduler
 export const sendPaymentReminder = sendRentReminder;
+
+// ─── Support Ticket Emails ────────────────────────────────────────
+
+export const sendTicketCreatedEmail = async ({ name, email, ticketId, title, category }) => {
+    return send(email, `🎫 Support Ticket Opened – ${title}`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00d4ff">TAGT Support</div>
+            <h2>Hi ${name}, we received your request.</h2>
+            <p style="color:#aaa">Your support ticket has been created and our team will respond shortly.</p>
+            <div style="background:#0f1a26;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin:20px 0">
+                <div style="font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">Ticket ID</div>
+                <div style="font-size:14px;color:#00d4ff;font-family:monospace">#${ticketId.slice(-8).toUpperCase()}</div>
+                <div style="margin-top:12px;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.1em">Subject</div>
+                <div style="font-weight:600">${title}</div>
+                <div style="margin-top:8px;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.1em">Category</div>
+                <div style="color:#aaa">${category.replace(/_/g, " ")}</div>
+            </div>
+            <p style="color:#aaa;font-size:13px">You can track your ticket status by logging into your TAGT dashboard.</p>
+            <div style="margin-top:24px;font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
+        </div>
+    `);
+};
+
+export const sendTicketReplyEmail = async ({ name, email, ticketId, title, repliedBy, message }) => {
+    return send(email, `💬 New Reply on Your Ticket – ${title}`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00d4ff">TAGT Support</div>
+            <h2>Hi ${name}, you have a new reply.</h2>
+            <p style="color:#aaa"><b style="color:#fff">${repliedBy}</b> has replied to your support ticket.</p>
+            <div style="background:#0f1a26;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin:20px 0">
+                <div style="font-size:12px;color:#666;margin-bottom:4px">Ticket #${ticketId.slice(-8).toUpperCase()}</div>
+                <div style="font-weight:600;margin-bottom:12px">${title}</div>
+                <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;color:#ccc;font-style:italic">"${message}"</div>
+            </div>
+            <p style="color:#aaa;font-size:13px">Log into your TAGT dashboard to reply or view the full conversation.</p>
+            <div style="margin-top:24px;font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
+        </div>
+    `);
+};
+
+export const sendTicketResolvedEmail = async ({ name, email, ticketId, title }) => {
+    return send(email, `✅ Support Ticket Resolved – ${title}`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00e676">TAGT Support</div>
+            <h2>Hi ${name}, your ticket has been resolved.</h2>
+            <p style="color:#aaa">Our support team has marked your ticket as resolved.</p>
+            <div style="background:#0f1a1a;border:1px solid rgba(0,230,118,0.2);border-radius:12px;padding:20px;margin:20px 0">
+                <div style="font-size:12px;color:#666;margin-bottom:4px">Ticket #${ticketId.slice(-8).toUpperCase()}</div>
+                <div style="font-weight:600">${title}</div>
+                <div style="margin-top:12px;display:inline-block;background:rgba(0,230,118,0.15);color:#00e676;padding:4px 12px;border-radius:999px;font-size:13px">✓ Resolved</div>
+            </div>
+            <p style="color:#aaa;font-size:13px">If you still need help, you can open a new ticket from your TAGT dashboard.</p>
+            <div style="margin-top:24px;font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
+        </div>
+    `);
+};

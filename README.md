@@ -7,6 +7,22 @@ The goal of TAGT is to provide a **single platform to manage property operations
 
 ---
 
+## 🌐 Demo
+
+**Live URL:** [https://tagt.website](https://tagt.website)
+
+## 📖 API Documentation
+
+Interactive Swagger docs: [http://localhost:5000/api-docs](http://localhost:5000/api-docs) (run backend locally)
+
+## 📸 Screenshots
+
+| Dashboard | Analytics | Revenue Forecast |
+|-----------|-----------|-----------------|
+| Owner overview with KPIs, occupancy & payment stats | Revenue trends, churn risk, maintenance forecast | ML-based 90-day revenue projection |
+
+---
+
 ## 🚀 Features
 
 ### Property Management
