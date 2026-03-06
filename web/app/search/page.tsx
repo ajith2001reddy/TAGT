@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
@@ -74,7 +74,7 @@ function SkeletonCard() {
     );
 }
 
-export default function SearchPage() {
+function SearchContent() {
     const { user } = useAuth();
     const router = useRouter();
     const params = useSearchParams();
@@ -506,5 +506,13 @@ export default function SearchPage() {
                 * { box-sizing: border-box; }
             `}</style>
         </div>
+    );
+}
+
+export default function SearchPage() {
+    return (
+        <Suspense fallback={<div style={{ minHeight: "100vh", background: "#04070c", display: "flex", alignItems: "center", justifyContent: "center" }}><div className="skeleton" style={{ width: 40, height: 40, borderRadius: 20 }}></div></div>}>
+            <SearchContent />
+        </Suspense>
     );
 }
