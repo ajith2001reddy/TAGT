@@ -78,7 +78,7 @@ export function ResidentAssignmentModal({ bed, onClose, onSuccess }: ResidentAss
 
                 <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 700, marginBottom: "8px" }}>Assign Resident</h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "24px" }}>
-                    Select a resident to assign to <span style={{ color: "var(--accent-primary)", fontWeight: 600 }}>{bed.bedNumber}</span>
+                    Select a resident to assign to <span style={{ color: "var(--accent-primary)", fontWeight: 600 }}>{bed.bedLabel ?? bed._id.slice(-4)}</span>
                 </p>
 
                 <input
