@@ -3,6 +3,25 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { Toaster } from "react-hot-toast";
 
+export const metadata = {
+  title: "TAGT - Manage Every Bed. Bill. Tenant.",
+  description:
+    "TAGT helps PG owners manage tenants, beds, billing, and payments in one platform.",
+  keywords: [
+    "PG management software",
+    "hostel management",
+    "tenant management",
+    "property management SaaS"
+  ],
+  openGraph: {
+    title: "TAGT",
+    description: "Manage every bed, bill, and tenant.",
+    url: "https://tagt.website",
+    siteName: "TAGT",
+    type: "website",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
