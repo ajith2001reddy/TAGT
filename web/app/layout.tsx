@@ -20,6 +20,9 @@ export const metadata = {
     siteName: "TAGT",
     type: "website",
   },
+  verification: {
+    google: "A1t2IoQGTlSEoGg91k9s8xV6cMGCpVRJrjM4ig6ygJE",
+  },
 };
 
 export default function RootLayout({
