@@ -5,6 +5,7 @@
 node_modules/
 .env
 .env.*
+!.env.example
 *.log
 *.tmp
 *.swp
@@ -24,48 +25,50 @@ Thumbs.db
 *.sln
 
 # ==================================================
-# BACKEND (Express)
-# ==================================================
-
-backend/node_modules/
-backend/.env
-backend/dist/
-backend/build/
-backend/coverage/
-
-# 🔥 CRITICAL — NEVER COMMIT FIREBASE KEY
-backend/serviceAccountKey.json
-backend/serviceAccountKey.json.json
-*.pem
-
-# ==================================================
-# FRONTEND (Next.js)
-# ==================================================
-
-tagt-next/node_modules/
-tagt-next/.next/
-tagt-next/out/
-tagt-next/build/
-tagt-next/.env*
-tagt-next/*.tsbuildinfo
-tagt-next/coverage/
-tagt-next/.vercel/
-
-# ==================================================
 # BUILD / CACHE
 # ==================================================
 
 dist/
 build/
 coverage/
+.next/
+out/
 
 # ==================================================
-# LOCKFILES (Keep only one if needed)
+# BACKEND
 # ==================================================
 
-# If using npm everywhere, keep lockfiles
-# If not, uncomment below to ignore duplicates
-# yarn.lock
-# pnpm-lock.yamlts_project_part_
-ts_project_part_**.txt
-C:\my project\TAGT\backend\serviceAccountKey.json
+backend/dist/
+backend/build/
+backend/coverage/
+
+# 🔐 NEVER COMMIT KEYS
+backend/*serviceAccount*.json
+backend/firebase*.json
+*.pem
+*.key
+
+# ==================================================
+# FRONTEND
+# ==================================================
+
+tagt-next/.next/
+tagt-next/out/
+tagt-next/build/
+tagt-next/coverage/
+tagt-next/.vercel/
+*.tsbuildinfo
+
+# ==================================================
+# STORAGE
+# ==================================================
+
+uploads/
+storage/
+temp/
+
+# ==================================================
+# PROJECT FILES
+# ==================================================
+
+ts_project_part_*
