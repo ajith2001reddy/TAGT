@@ -137,10 +137,6 @@ PaymentSchema.index({ resident: 1, month: 1 }, { unique: true }); // prevent dup
 PaymentSchema.index({ propertyId: 1, status: 1, createdAt: -1 });
 PaymentSchema.index({ propertyId: 1, type: 1, status: 1 });
 
-// ✅ Compound indexes for multi-tenant analytics
-PaymentSchema.index({ propertyId: 1, status: 1, dueDate: 1 });
-PaymentSchema.index({ propertyId: 1, month: 1, status: 1 });
-
 // Apply tenant isolation
 PaymentSchema.plugin(tenantIsolationPlugin);
 

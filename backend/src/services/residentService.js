@@ -57,31 +57,13 @@ export const createResidentWorkflow = async ({ name, email, password, roomId, pr
         logger.info("Resident created with direct password — no reset link needed");
     }
 
-    // 5️⃣ Send welcome email (if SMTP configured)
-    try {
-
-        const propertyDoc = await Property.findById(propertyId).lean();
-
-        await sendWelcomeEmail({
-            name,
-            email: normalizedEmail,
-            propertyName: propertyDoc?.name || "TAGT",
-            resetLink
-        });
-
-    } catch (err) {
-
-        logger.error("Welcome email failed but resident was created", { error: err.message });
-
-    }
-
-    // 6️⃣ Update room occupancy
+    // 5️⃣ Update room occupancy
     if (roomDoc) {
 
         roomDoc.occupiedBeds += 1;
         await roomDoc.save({ session });
 
-        // 7️⃣ Create first rent bill
+        // 6️⃣ Create first rent bill
         const now = new Date();
 
         const currentMonth = now.toISOString().slice(0, 7);
