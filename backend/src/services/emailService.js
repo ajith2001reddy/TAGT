@@ -82,8 +82,9 @@ const send = async (to, subject, html, attachments = []) => {
                 logger.info(`[BREVO] Sent: ${subject}`, { to, messageId: result.messageId });
                 return { success: true, messageId: result.messageId };
             } else {
-                logger.error(`[BREVO] Failed: ${subject}`, { to, error: result.message || JSON.stringify(result) });
-                return { error: result.message };
+                const errorDetail = result.message || JSON.stringify(result);
+                logger.error(`[BREVO] Failed: ${subject} - Reason: ${errorDetail}`, { to });
+                return { error: errorDetail };
             }
         } catch (err) {
             logger.error(`[BREVO] Network Error: ${subject}`, { to, error: err.message });
