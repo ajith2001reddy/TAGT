@@ -17,10 +17,10 @@ export interface Room {
 
 export interface Bed {
     _id: string;
-    bedLabel: string;
+    bedNumber: string;
     roomId: string;
     status: "available" | "occupied" | "reserved" | "maintenance";
-    residentId?: string | null;
+    residentId?: any | null;
 }
 
 export interface RoomStats {

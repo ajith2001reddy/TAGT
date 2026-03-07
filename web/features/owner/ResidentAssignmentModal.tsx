@@ -8,6 +8,8 @@ interface Resident {
     _id: string;
     name: string;
     email: string;
+    roomId?: { _id: string; roomNumber: string };
+    bedId?: { _id: string; bedNumber: string };
 }
 
 interface ResidentAssignmentModalProps {
@@ -78,7 +80,7 @@ export function ResidentAssignmentModal({ bed, onClose, onSuccess }: ResidentAss
 
                 <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 700, marginBottom: "8px" }}>Assign Resident</h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "24px" }}>
-                    Select a resident to assign to <span style={{ color: "var(--accent-primary)", fontWeight: 600 }}>{bed.bedLabel ?? bed._id.slice(-4)}</span>
+                    Select a resident to assign to <span style={{ color: "var(--accent-primary)", fontWeight: 600 }}>{bed.bedNumber ?? bed._id.slice(-4)}</span>
                 </p>
 
                 <input
@@ -117,8 +119,22 @@ export function ResidentAssignmentModal({ bed, onClose, onSuccess }: ResidentAss
                                     (e.currentTarget as HTMLElement).style.background = "var(--bg-card-subtle)";
                                 }}
                             >
-                                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{r.name}</span>
-                                <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{r.email}</span>
+                                <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                                    <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{r.name}</span>
+                                    {r.roomId && (
+                                        <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(167, 139, 250, 0.1)", color: "#a78bfa", border: "1px solid rgba(167, 139, 250, 0.2)" }}>
+                                            Move Resident
+                                        </span>
+                                    )}
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center", marginTop: "4px" }}>
+                                    <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{r.email}</span>
+                                    {r.roomId && (
+                                        <span style={{ fontSize: "10px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>
+                                            In Room {r.roomId.roomNumber}
+                                        </span>
+                                    )}
+                                </div>
                             </button>
                         ))
                     )}

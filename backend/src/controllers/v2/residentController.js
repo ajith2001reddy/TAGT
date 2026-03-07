@@ -208,16 +208,23 @@ export const deactivateResident = async (req, res, next) => {
         const scope = buildPropertyFilter(req.user);
         const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
 
-        const resident = await User.findOneAndUpdate(
-            { _id: id, role: "resident", ...pm },
-            { isActive: false, roomId: null },
-            { new: true }
-        );
-
+        const resident = await User.findOne({ _id: id, role: "resident", ...pm });
         if (!resident) return res.status(404).json({ success: false, message: "Resident not found" });
 
-        if (resident.roomId) {
-            await Room.findByIdAndUpdate(resident.roomId, { $inc: { occupiedBeds: -1 } });
+        const oldRoomId = resident.roomId;
+        const oldBedId = resident.bedId;
+
+        resident.isActive = false;
+        resident.roomId = null;
+        resident.bedId = null;
+        await resident.save();
+
+        if (oldRoomId) {
+            await Room.findByIdAndUpdate(oldRoomId, { $inc: { occupiedBeds: -1 } });
+        }
+
+        if (oldBedId) {
+            await Bed.findByIdAndUpdate(oldBedId, { status: "available", residentId: null });
         }
 
         return res.json({ success: true, data: resident });

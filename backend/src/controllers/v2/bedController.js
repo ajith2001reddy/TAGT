@@ -44,31 +44,39 @@ export const assignResidentToBed = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        // 2.5. Remove from OLD bed/room if they are already assigned somewhere
-        if (user.bedId && user.bedId.toString() !== bed._id.toString()) {
-            await Bed.findByIdAndUpdate(user.bedId, { status: "available", residentId: null }, { session });
-            if (user.roomId) {
-                await Room.findByIdAndUpdate(user.roomId, { $inc: { occupiedBeds: -1 } }, { session });
+        // 2.5. Move Logic: Handle room/bed occupancy changes
+        const isSelfAssign = user.bedId?.toString() === bed._id.toString();
+        if (!isSelfAssign) {
+            // Remove from OLD bed if exists
+            if (user.bedId) {
+                await Bed.findByIdAndUpdate(user.bedId, { status: "available", residentId: null }, { session });
+            }
+
+            // Handle Room Occupancy Transfer
+            const oldRoomId = user.roomId?.toString();
+            const newRoomId = bed.roomId.toString();
+
+            if (oldRoomId !== newRoomId) {
+                // If they were in an old room, leave it
+                if (oldRoomId) {
+                    await Room.findByIdAndUpdate(oldRoomId, { $inc: { occupiedBeds: -1 } }, { session });
+                }
+                // Enter the new room
+                await Room.findByIdAndUpdate(newRoomId, { $inc: { occupiedBeds: 1 } }, { session });
+            } else {
+                // Same room transfer: Only increment if they weren't counted in the room yet
+                // This happens if they were unassigned or we are occupying an available bed
+                if (!wasOccupied && !oldRoomId) {
+                    await Room.findByIdAndUpdate(newRoomId, { $inc: { occupiedBeds: 1 } }, { session });
+                }
             }
         }
 
-        // Update user's room and bed info
+        // 3. Update User details
         user.roomId = bed.roomId;
         user.bedId = bed._id;
         user.propertyId = bed.propertyId;
         await user.save({ session });
-
-        // 3. Update NEW Room (increment occupied count)
-        const shouldIncrementNewRoom = bed.status === "occupied" && bed.residentId?.toString() !== residentId;
-        // actually we just assigned it to this bed above
-        // wait, we just set it. We only increment if the bed wasn't occupied by someone else (actually we blocked that).
-        if (!wasOccupied) {
-            await Room.findByIdAndUpdate(
-                bed.roomId,
-                { $inc: { occupiedBeds: 1 } },
-                { session }
-            );
-        }
 
         await session.commitTransaction();
 

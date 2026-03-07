@@ -50,7 +50,7 @@ export function BedGrid({ roomId }: BedGridProps) {
                         }}
                     >
                         <div style={{ fontSize: "10px", fontWeight: 600, color: bed.status === "occupied" ? "#34d399" : "var(--text-secondary)" }}>
-                            {bed?.bedLabel?.replace("Bed ", "#") ?? bed._id.slice(-4)}
+                            {bed?.bedNumber?.replace("Bed ", "#") ?? bed._id.slice(-4)}
                         </div>
                         <div style={{ fontSize: "9px", color: "var(--text-tertiary)", marginTop: "2px" }}>
                             {bed.status}
