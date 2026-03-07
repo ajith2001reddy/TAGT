@@ -9,7 +9,7 @@ interface Resident {
     _id: string;
     name: string;
     email: string;
-    phone?: string;
+    phoneNumber?: string;
     status: string;
     isActive: boolean;
     propertyId?: { _id: string; name: string } | null;
@@ -41,7 +41,7 @@ export default function ProviderResidentsPage() {
 
     // Edit modal
     const [editTarget, setEditTarget] = useState<Resident | null>(null);
-    const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", status: "active", isActive: true, propertyId: "", roomId: "" });
+    const [editForm, setEditForm] = useState({ name: "", email: "", phoneNumber: "", status: "active", isActive: true, propertyId: "", roomId: "" });
     const [editSaving, setEditSaving] = useState(false);
     const [editError, setEditError] = useState("");
 
@@ -78,7 +78,7 @@ export default function ProviderResidentsPage() {
     function openEdit(r: Resident) {
         setEditTarget(r);
         setEditForm({
-            name: r.name || "", email: r.email || "", phone: r.phone || "",
+            name: r.name || "", email: r.email || "", phoneNumber: r.phoneNumber || "",
             status: r.status || "active", isActive: r.isActive !== false,
             propertyId: r.propertyId?._id || "", roomId: r.roomId?._id || "",
         });
@@ -89,8 +89,8 @@ export default function ProviderResidentsPage() {
         if (!editTarget) return;
         setEditSaving(true); setEditError("");
         try {
-            await api.put(`/v2/residents/${editTarget._id}`, {
-                name: editForm.name, email: editForm.email, phone: editForm.phone,
+            await api.put(`/v2/admin/users/${editTarget._id}`, {
+                name: editForm.name, email: editForm.email, phoneNumber: editForm.phoneNumber,
                 status: editForm.status, isActive: editForm.isActive,
                 propertyId: editForm.propertyId || null,
                 roomId: editForm.roomId || null,
@@ -136,7 +136,7 @@ export default function ProviderResidentsPage() {
 
     const filtered = residents.filter(r => {
         const q = search.toLowerCase();
-        return !q || r.name?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q) || r.phone?.includes(q);
+        return !q || r.name?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q) || r.phoneNumber?.includes(q);
     });
 
     const unassigned = filtered.filter(r => !r.propertyId);
@@ -183,7 +183,7 @@ export default function ProviderResidentsPage() {
                                 </div>
                                 <div>
                                     <ModalLabel>Phone</ModalLabel>
-                                    <input className="input-field" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} placeholder="+91 9876543210" />
+                                    <input className="input-field" value={editForm.phoneNumber} onChange={e => setEditForm({ ...editForm, phoneNumber: e.target.value })} placeholder="+91 9876543210" />
                                 </div>
                                 <div>
                                     <ModalLabel>Account Status</ModalLabel>
@@ -333,7 +333,7 @@ function ResidentRow({ resident: r, index, onEdit, onAssign, onDelete, urgent }:
             <Avatar name={r.name || r.email} />
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: "14px" }}>{r.name || "—"}</div>
-                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>{r.email}{r.phone && ` · ${r.phone}`}</div>
+                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>{r.email}{r.phoneNumber && ` · ${r.phoneNumber}`}</div>
             </div>
             <div style={{ flexShrink: 0 }}>
                 {r.propertyId ? (

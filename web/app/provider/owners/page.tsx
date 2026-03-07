@@ -9,7 +9,7 @@ interface Owner {
     _id: string;
     name: string;
     email: string;
-    phone?: string;
+    phoneNumber?: string;
     isActive: boolean;
     propertyIds: (string | { _id: string; name: string })[];
     createdAt: string;
@@ -49,7 +49,7 @@ export default function OwnersListPage() {
 
     // Edit modal
     const [editingOwner, setEditingOwner] = useState<Owner | null>(null);
-    const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", isActive: true });
+    const [editForm, setEditForm] = useState({ name: "", email: "", phoneNumber: "", isActive: true });
     const [editSaving, setEditSaving] = useState(false);
     const [editError, setEditError] = useState("");
 
@@ -75,7 +75,7 @@ export default function OwnersListPage() {
 
     function openEdit(o: Owner) {
         setEditingOwner(o);
-        setEditForm({ name: o.name || "", email: o.email || "", phone: o.phone || "", isActive: o.isActive !== false });
+        setEditForm({ name: o.name || "", email: o.email || "", phoneNumber: o.phoneNumber || "", isActive: o.isActive !== false });
         setEditError("");
     }
 
@@ -83,7 +83,7 @@ export default function OwnersListPage() {
         if (!editingOwner) return;
         setEditSaving(true); setEditError("");
         try {
-            await api.put(`/v2/provider/owners/${editingOwner._id}`, editForm);
+            await api.put(`/v2/admin/users/${editingOwner._id}`, editForm);
             setEditingOwner(null);
             fetchAll();
         } catch (err: any) {
@@ -174,7 +174,7 @@ export default function OwnersListPage() {
                                 </div>
                                 <div>
                                     <Label>Phone</Label>
-                                    <input className="input-field" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} placeholder="+91 9876543210" />
+                                    <input className="input-field" value={editForm.phoneNumber} onChange={e => setEditForm({ ...editForm, phoneNumber: e.target.value })} placeholder="+91 9876543210" />
                                 </div>
                                 <div>
                                     <Label>Account Status</Label>
@@ -297,7 +297,7 @@ export default function OwnersListPage() {
                                         <span style={{ fontSize: "9px", fontFamily: "var(--font-mono)", padding: "2px 6px", borderRadius: "4px", background: "var(--red-bg)", color: "var(--red)", border: "1px solid rgba(255,82,82,0.2)", textTransform: "uppercase" }}>Suspended</span>
                                     )}
                                 </div>
-                                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>{owner.email}{owner.phone && ` · ${owner.phone}`}</div>
+                                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>{owner.email}{owner.phoneNumber && ` · ${owner.phoneNumber}`}</div>
                             </div>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", flex: 1 }}>
                                 {owner.propertyIds?.length > 0 ? owner.propertyIds.map(p => (

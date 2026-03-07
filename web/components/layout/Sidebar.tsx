@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Building2, BedDouble, Users, CreditCard,
     MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
-    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone
+    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; badge?: string };
@@ -47,6 +47,10 @@ const residentNav: NavItem[] = [
     { href: "/resident/payments", label: "My Payments", icon: <CreditCard size={16} /> },
     { href: "/resident/requests", label: "My Requests", icon: <MessageSquare size={16} /> },
     { href: "/resident/support", label: "Support", icon: <LifeBuoy size={16} /> },
+];
+
+const accountNav: NavItem[] = [
+    { href: "/profile", label: "My Profile", icon: <User size={16} /> },
 ];
 
 // Root-level hub routes should only activate on exact match
@@ -285,6 +289,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {role === "resident" && (
                     <NavGroup items={residentNav} pathname={pathname} onNavigate={onClose} />
                 )}
+                <div style={{ height: "1px", background: "var(--border-subtle)", margin: "8px 2px" }} />
+                <NavGroup title="Account" items={accountNav} pathname={pathname} onNavigate={onClose} />
             </nav>
 
             {/* Logout */}
