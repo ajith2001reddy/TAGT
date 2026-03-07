@@ -44,16 +44,37 @@ export default function SubscriptionPage() {
     useEffect(() => { fetchData().catch(console.error); }, []);
 
     async function handleUpgrade(planId: string) {
-        if (planId === myPlan?.plan) return;
+        if (planId === myPlan?.plan || planId === "free") return; // Free plan downgrade usually requires support
+
         setUpgrading(planId);
         try {
-            await api.post("/v2/subscription/upgrade", { plan: planId });
-            setUpgraded(true);
-            await fetchData();
-            setTimeout(() => setUpgraded(false), 3000);
-        } catch (e) { console.error(e); }
-        finally { setUpgrading(null); }
+            const res = await api.post("/v2/stripe/checkout-subscription", { planId });
+            if (res.data?.data?.url) {
+                window.location.href = res.data.data.url;
+            } else {
+                throw new Error("No checkout URL returned");
+            }
+        } catch (e: any) {
+            console.error(e);
+            alert(e.response?.data?.message || "Failed to initiate upgrade. Check Stripe configuration.");
+            setUpgrading(null);
+        }
     }
+
+    // Check for return from Stripe
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("success") === "1") {
+            setUpgraded(true);
+            setTimeout(() => setUpgraded(false), 5000);
+
+            // Clean up the URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete("success");
+            url.searchParams.delete("session_id");
+            window.history.replaceState({}, "", url.toString());
+        }
+    }, []);
 
     return (
         <div className="animate-fade-in">
@@ -65,7 +86,7 @@ export default function SubscriptionPage() {
 
             {upgraded && (
                 <div className="animate-fade-in" style={{ background: "var(--green-bg)", border: "1px solid rgba(0,230,118,0.2)", borderRadius: "12px", padding: "14px 18px", marginBottom: "20px", color: "var(--green)", fontSize: "13px", display: "flex", gap: "10px" }}>
-                    ✅ Plan updated successfully!
+                    ✅ Payment Successful! Your plan has been upgraded. Please wait a moment for the new features to unlock.
                 </div>
             )}
 
@@ -155,7 +176,7 @@ export default function SubscriptionPage() {
             }
 
             <div style={{ marginTop: "28px", padding: "16px 20px", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", borderRadius: "12px", fontSize: "13px", color: "var(--text-secondary)" }}>
-                💡 Stripe billing integration coming soon. Plan changes are currently applied instantly. Contact support for invoices.
+                💳 Secure checkout powered by Stripe. Subscriptions can be cancelled at any time from this dashboard.
             </div>
         </div>
     );

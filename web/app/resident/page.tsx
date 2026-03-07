@@ -251,12 +251,11 @@ export default function ResidentDashboardPage() {
                 </div>
             )}
 
-            {/* Grid Layout */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: "24px" }}>
+            {/* Responsive Grid Layout */}
+            <div className="dashboard-grid">
 
                 {/* 1. Payment Card - Large */}
-                <div style={{
-                    gridColumn: "span 7",
+                <div className="card-large" style={{
                     background: "var(--bg-card)",
                     border: "1px solid var(--border-default)",
                     borderRadius: "32px",
@@ -315,7 +314,7 @@ export default function ResidentDashboardPage() {
                         )}
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                    <div className="stats-grid">
                         <div style={{ background: "rgba(0,0,0,0.05)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border-subtle)" }}>
                             <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Due Date</div>
                             <div style={{ fontSize: "18px", fontWeight: 600, color: data.isOverdue ? "#ff5252" : "var(--text-primary)" }}>
@@ -334,8 +333,7 @@ export default function ResidentDashboardPage() {
                 </div>
 
                 {/* 2. Room Card - Small */}
-                <div style={{
-                    gridColumn: "span 5",
+                <div className="card-small" style={{
                     background: "rgba(255,255,255,0.03)",
                     border: "1px solid rgba(255,255,255,0.08)",
                     borderRadius: "32px",
@@ -366,17 +364,17 @@ export default function ResidentDashboardPage() {
                 </div>
 
                 {/* 3. Stats Row */}
-                <div style={{ gridColumn: "span 3", background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}>
+                <div className="stat-card" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}>
                     <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "8px" }}>Total Rent Paid</div>
                     <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--green)" }}>₹{data.totalPaid.toLocaleString()}</div>
                     <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>since you joined</div>
                 </div>
-                <div style={{ gridColumn: "span 3", background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}>
+                <div className="stat-card" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}>
                     <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "8px" }}>Late Fees Avoided</div>
                     <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--accent-primary)" }}>₹{(data.paymentHistory.length * 500 - data.totalLateFeePaid).toLocaleString()}</div>
                     <div style={{ fontSize: "12px", color: "var(--green)", marginTop: "4px" }}>Keep it up! ⚡</div>
                 </div>
-                <div style={{ gridColumn: "span 6", background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div className="stat-card-wide" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
                     <div>
                         <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Need Help?</div>
                         <div style={{ fontSize: "16px", fontWeight: 600 }}>Create Support Request</div>
@@ -394,7 +392,7 @@ export default function ResidentDashboardPage() {
                 </div>
 
                 {/* 4. Payment History Table */}
-                <div style={{ gridColumn: "span 12", marginTop: "16px" }}>
+                <div className="table-container" style={{ marginTop: "16px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                         <h3 style={{ fontSize: "18px", fontWeight: 700, margin: 0 }}>Recent Payments</h3>
                         <Link href="/resident/payments" style={{ fontSize: "13px", color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Full History →</Link>
@@ -404,9 +402,9 @@ export default function ResidentDashboardPage() {
                         background: "var(--bg-glass)",
                         border: "1px solid var(--border-default)",
                         borderRadius: "24px",
-                        overflow: "hidden"
+                        overflowX: "auto"
                     }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
                             <thead style={{ background: "var(--bg-elevated)" }}>
                                 <tr>
                                     {["Month", "Base Rent", "Late Fee", "Total Paid", "Status", "Date"].map(h => (
@@ -455,6 +453,35 @@ export default function ResidentDashboardPage() {
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(10px); }
                     to { opacity: 1; transform: translateY(0); }
+                }
+                
+                .dashboard-grid {
+                    display: grid;
+                    grid-template-columns: repeat(12, 1fr);
+                    gap: 24px;
+                }
+                
+                .card-large { grid-column: span 7; }
+                .card-small { grid-column: span 5; }
+                .stat-card { grid-column: span 3; }
+                .stat-card-wide { grid-column: span 6; }
+                .table-container { grid-column: span 12; }
+                .stats-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 24px;
+                }
+
+                @media (max-width: 1024px) {
+                    .card-large, .card-small { grid-column: span 12; }
+                    .stat-card { grid-column: span 6; }
+                    .stat-card-wide { grid-column: span 12; }
+                }
+
+                @media (max-width: 768px) {
+                    .dashboard-grid { display: flex; flex-direction: column; gap: 16px; }
+                    .stats-grid { grid-template-columns: 1fr; gap: 16px; }
+                    .stat-card, .stat-card-wide, .card-large, .card-small, .table-container { width: 100%; }
                 }
             `}</style>
         </div>

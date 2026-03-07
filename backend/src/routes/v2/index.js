@@ -15,7 +15,7 @@ import { reportMonthlyRevenue, reportOutstanding, reportResidentLedger } from ".
 import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
-import { createPaymentSession, stripeWebhook, stripeStatus } from "../../controllers/v2/stripeController.js";
+import { createPaymentSession, createSubscriptionSession, stripeWebhook, stripeStatus } from "../../controllers/v2/stripeController.js";
 import { getMyPlan, listPlans, upgradePlan, listAllSubscriptions, adminSetPlan } from "../../controllers/v2/subscriptionController.js";
 import { listActivityLogs, myActivityLogs, logActivity } from "../../controllers/v2/activityController.js";
 import { listBeds, createBeds, updateBedStatus, assignResidentToBed } from "../../controllers/v2/bedController.js";
@@ -104,6 +104,7 @@ router.post("/automation/tick", auth, authorize("super_admin"), runAutomationTic
 /* ── Phase 2: Stripe ── */
 router.get("/stripe/status", auth, stripeStatus);
 router.post("/stripe/checkout-session", auth, authorize("resident"), createPaymentSession);
+router.post("/stripe/checkout-subscription", auth, authorize("owner"), createSubscriptionSession);
 // Webhook: must use raw body (registered separately in app.js — see below)
 router.post("/stripe/webhook", raw({ type: "application/json" }), stripeWebhook);
 

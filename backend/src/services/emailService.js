@@ -32,7 +32,7 @@ if (provider === "SMTP" && emailEnabled) {
 }
 
 // Internal send helper — never throws
-const send = async (to, subject, html) => {
+const send = async (to, subject, html, attachments = []) => {
     if (provider === "RESEND") {
         if (!process.env.RESEND_API_KEY) {
             logger.info(`[RESEND MOCK] To: ${to} | Subject: ${subject}`);
@@ -49,7 +49,7 @@ const send = async (to, subject, html) => {
         return { mocked: true };
     }
     try {
-        const info = await transporter.sendMail({ from: FROM, to, subject, html });
+        const info = await transporter.sendMail({ from: FROM, to, subject, html, attachments });
         logger.info(`[EMAIL] Sent: ${subject}`, { to, messageId: info.messageId });
         return info;
     } catch (err) {
@@ -95,9 +95,9 @@ export const sendOwnerInvite = async ({ name, email, resetLink }) => {
 };
 
 
-export const sendPaymentConfirmation = async ({ name, email, amount, month, paidAt, propertyName }) => {
+export const sendPaymentConfirmation = async ({ name, email, amount, month, paidAt, propertyName, paymentId, pdfBuffer }) => {
     const dateFmt = new Date(paidAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
-    return send(email, `✅ Payment Confirmed – ${month}`, `
+    const template = `
         <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00e676">TAGT</div>
             <h2>Payment received, ${name}!</h2>
@@ -105,10 +105,18 @@ export const sendPaymentConfirmation = async ({ name, email, amount, month, paid
                 <div style="font-size:28px;font-weight:700;color:#00e676">₹${Number(amount).toLocaleString("en-IN")}</div>
                 <div style="font-size:13px;color:#aaa;margin-top:6px">${month} · Paid on ${dateFmt}</div>
             </div>
-            <p style="color:#aaa">Thank you for your payment. This is your digital confirmation for <b>${propertyName || "TAGT"}</b>.</p>
+            <p style="color:#aaa">Thank you for your payment. A PDF breakdown of this receipt has been attached to this email for your records.</p>
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Property Management</div>
         </div>
-    `);
+    `;
+
+    const attachments = pdfBuffer ? [{
+        filename: `receipt-${paymentId}.pdf`,
+        content: pdfBuffer,
+        contentType: "application/pdf"
+    }] : [];
+
+    return send(email, `✅ Payment Confirmed – ${month}`, template, attachments);
 };
 
 export const sendRentReminder = async ({ name, email, amount, dueDate, month, propertyName }) => {

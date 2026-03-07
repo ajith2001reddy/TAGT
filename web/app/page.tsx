@@ -533,6 +533,111 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── Divider ─── */}
+      <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, rgba(245,158,11,0.15), transparent)", margin: "0 40px" }} />
+
+      {/* ─── Pricing ─── */}
+      <section style={{ padding: "120px 40px", position: "relative", zIndex: 1, maxWidth: "1100px", margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: "80px" }}>
+          <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", color: "#f59e0b", textTransform: "uppercase", marginBottom: "16px" }}>
+            Transparent Pricing
+          </div>
+          <h2 style={{
+            fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 900,
+            letterSpacing: "-0.04em", lineHeight: 1.1,
+            background: "linear-gradient(135deg, #fff 50%, #d0b060)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            marginBottom: "20px"
+          }}>
+            Pay as you grow.
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "18px", maxWidth: "600px", margin: "0 auto" }}>
+            Start for free. Upgrade when your portfolio demands it.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px", alignItems: "center" }}>
+          {/* Free Tier */}
+          <div style={{
+            padding: "40px 32px", borderRadius: "24px",
+            border: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.02)",
+            backdropFilter: "blur(10px)",
+          }}>
+            <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "8px", color: "rgba(255,255,255,0.6)" }}>Starter</h3>
+            <div style={{ fontSize: "40px", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px", color: "#fff" }}>Free</div>
+            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              {["Up to 10 Rooms", "Up to 20 Residents", "Basic Maintenance Tracker", "Manual Billing"].map(f => (
+                <li key={f} style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", display: "flex", gap: "10px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12" /></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link href="/signup" style={{
+              display: "block", textAlign: "center", width: "100%", padding: "14px", borderRadius: "12px",
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+              color: "#fff", textDecoration: "none", fontWeight: 600, fontSize: "14px", transition: "var(--transition)"
+            }}>Get Started</Link>
+          </div>
+
+          {/* Pro Tier (Highlighted) */}
+          <div style={{
+            padding: "48px 32px", borderRadius: "24px", position: "relative",
+            border: "1px solid rgba(0,212,255,0.3)",
+            background: "linear-gradient(145deg, rgba(0,212,255,0.06), rgba(8,14,24,0.9))",
+            boxShadow: "0 20px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)",
+            transform: "scale(1.05)", zIndex: 10,
+          }}>
+            <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg, #00d4ff, #0066cc)", color: "#000", fontWeight: 800, fontSize: "11px", letterSpacing: "0.1em", padding: "4px 12px", borderRadius: "100px", textTransform: "uppercase", boxShadow: "0 4px 12px rgba(0,212,255,0.3)" }}>
+              Most Popular
+            </div>
+            <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "8px", color: "#00d4ff" }}>Professional</h3>
+            <div style={{ fontSize: "48px", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "8px", color: "#fff" }}>₹999<span style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>/mo</span></div>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "28px" }}>Billed monthly, cancel anytime.</p>
+            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              {["Up to 100 Rooms & 500 Residents", "Automated Rent Invoicing", "Auto-Late Fee Calculation", "Email & SMS Reminders", "Financial Analytics Dashboard"].map(f => (
+                <li key={f} style={{ fontSize: "14px", color: "rgba(255,255,255,0.8)", display: "flex", gap: "10px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" strokeWidth="2.5" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12" /></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link href="/signup" style={{
+              display: "block", textAlign: "center", width: "100%", padding: "16px", borderRadius: "12px",
+              background: "linear-gradient(135deg, #00d4ff, #0066cc)", border: "none",
+              color: "#000", textDecoration: "none", fontWeight: 700, fontSize: "14px",
+              boxShadow: "0 8px 30px rgba(0,212,255,0.3)"
+            }}>Start 14-Day Free Trial</Link>
+          </div>
+
+          {/* Enterprise Tier */}
+          <div style={{
+            padding: "40px 32px", borderRadius: "24px",
+            border: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.02)",
+            backdropFilter: "blur(10px)",
+          }}>
+            <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "8px", color: "#a78bfa" }}>Enterprise</h3>
+            <div style={{ fontSize: "40px", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "8px", color: "#fff" }}>₹2,999<span style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>/mo</span></div>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "28px" }}>For large operators.</p>
+            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              {["Unlimited Properties & Rooms", "Unlimited Residents", "Revenue Leak Detection", "Prioritized 24/7 Support", "Custom API Integrations"].map(f => (
+                <li key={f} style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", display: "flex", gap: "10px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2.5" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12" /></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link href="/signup" style={{
+              display: "block", textAlign: "center", width: "100%", padding: "14px", borderRadius: "12px",
+              background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)",
+              color: "#a78bfa", textDecoration: "none", fontWeight: 600, fontSize: "14px"
+            }}>Go Enterprise</Link>
+          </div>
+        </div>
+      </section>
+
       {/* ─── CTA ─── */}
       <section style={{ padding: "80px 40px 140px", position: "relative", zIndex: 1, textAlign: "center" }}>
         <div style={{

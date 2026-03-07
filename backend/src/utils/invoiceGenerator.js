@@ -2,16 +2,34 @@ import PDFDocument from "pdfkit";
 
 export const generateInvoicePDF = (payment, res) => {
     const doc = new PDFDocument({ margin: 50 });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=receipt-${payment._id}.pdf`);
+    doc.pipe(res);
+    drawInvoice(doc, payment);
+    doc.end();
+};
+
+export const generateInvoiceBuffer = (payment) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const doc = new PDFDocument({ margin: 50 });
+            const buffers = [];
+            doc.on("data", (chunk) => buffers.push(chunk));
+            doc.on("end", () => resolve(Buffer.concat(buffers)));
+            drawInvoice(doc, payment);
+            doc.end();
+        } catch (err) {
+            reject(err);
+        }
+    });
+};
+
+const drawInvoice = (doc, payment) => {
     const amount = payment.amount || 0;
     const lateFee = payment.lateFee || 0;
     const total = payment.totalPayable || (amount + lateFee);
     const property = payment.propertyId || {};
     const resident = payment.resident || {};
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=receipt-${payment._id}.pdf`);
-
-    doc.pipe(res);
 
     // Header
     doc.fontSize(20).fillColor("#1a1a1a").text(property.name?.toUpperCase() || "RENT RECEIPT", { align: "left" });
@@ -76,6 +94,4 @@ export const generateInvoicePDF = (payment, res) => {
     }
     doc.moveDown();
     doc.fontSize(9).fillColor("#999").text("This is a computer-generated receipt and does not require a physical signature. It can be used as a valid document for tax/HRA purposes.", { align: "center", width: 500 });
-
-    doc.end();
 };

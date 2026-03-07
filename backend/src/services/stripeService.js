@@ -33,6 +33,29 @@ export const createCheckoutSession = async ({ paymentId, residentEmail, amount, 
 };
 
 /**
+ * Create a Stripe Checkout Session for a new Subscription
+ */
+export const createSubscriptionCheckoutSession = async ({ priceId, ownerEmail, ownerId, planId, successUrl, cancelUrl }) => {
+    if (!stripe) throw new Error("Stripe is not configured");
+
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        customer_email: ownerEmail,
+        line_items: [{
+            price: priceId,
+            quantity: 1,
+        }],
+        mode: "subscription",
+        client_reference_id: ownerId, // very important for webhook to know WHICH owner paid
+        metadata: { planId },
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+    });
+
+    return session;
+};
+
+/**
  * Verify a Stripe webhook event signature
  */
 export const constructWebhookEvent = (rawBody, sig) => {

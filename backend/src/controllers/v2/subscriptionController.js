@@ -65,19 +65,15 @@ export const listPlans = async (req, res) => {
 
 /* ─────────────────────────────────────────────────
    POST /v2/subscription/upgrade
-   Owner requests plan upgrade (manual / Stripe flow)
+   (Legacy) Owner requests plan upgrade
 ───────────────────────────────────────────────── */
 export const upgradePlan = async (req, res, next) => {
     try {
-        const { plan } = req.body;
-        if (!["free", "pro", "enterprise"].includes(plan)) return res.status(400).json({ success: false, message: "Invalid plan" });
-
-        const sub = await Subscription.findOneAndUpdate(
-            { owner: req.user._id },
-            { plan, status: "active", currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
-            { new: true, upsert: true }
-        );
-        return res.json({ success: true, data: sub, message: `Upgraded to ${plan} plan.` });
+        // Enforce Stripe flow instead of direct manual upgrades
+        return res.status(400).json({
+            success: false,
+            message: "Direct upgrades are disabled. Please use the Billing portal (Stripe) to upgrade your subcription."
+        });
     } catch (err) { next(err); }
 };
 

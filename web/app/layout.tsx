@@ -2,6 +2,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { Toaster } from "react-hot-toast";
+import { PostHogProvider } from "@/components/PostHogProvider";
 
 export const viewport = {
   width: "device-width",
@@ -41,8 +42,10 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <AuthProvider>
-            {children}
-            <Toaster position="top-center" reverseOrder={false} />
+            <PostHogProvider>
+              {children}
+              <Toaster position="top-center" reverseOrder={false} />
+            </PostHogProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
