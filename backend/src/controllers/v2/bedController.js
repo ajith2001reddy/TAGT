@@ -44,13 +44,24 @@ export const assignResidentToBed = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
+        // 2.5. Remove from OLD bed/room if they are already assigned somewhere
+        if (user.bedId && user.bedId.toString() !== bed._id.toString()) {
+            await Bed.findByIdAndUpdate(user.bedId, { status: "available", residentId: null }, { session });
+            if (user.roomId) {
+                await Room.findByIdAndUpdate(user.roomId, { $inc: { occupiedBeds: -1 } }, { session });
+            }
+        }
+
         // Update user's room and bed info
         user.roomId = bed.roomId;
         user.bedId = bed._id;
         user.propertyId = bed.propertyId;
         await user.save({ session });
 
-        // 3. Update Room (increment occupied count)
+        // 3. Update NEW Room (increment occupied count)
+        const shouldIncrementNewRoom = bed.status === "occupied" && bed.residentId?.toString() !== residentId;
+        // actually we just assigned it to this bed above
+        // wait, we just set it. We only increment if the bed wasn't occupied by someone else (actually we blocked that).
         if (!wasOccupied) {
             await Room.findByIdAndUpdate(
                 bed.roomId,

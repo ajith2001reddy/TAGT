@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import User from "../../models/User.js";
 import Payment from "../../models/Payment.js";
 import Room from "../../models/rooms.js";
+import Bed from "../../models/Bed.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import { createResidentWorkflow, sendWelcomeEmailSafe } from "../../services/residentService.js";
 /**
@@ -163,6 +164,12 @@ export const moveResidentRoom = async (req, res, next) => {
 
         if (resident.roomId) {
             await Room.findByIdAndUpdate(resident.roomId, { $inc: { occupiedBeds: -1 } }).session(session);
+        }
+
+        // Also clear out their actual Bed assignment from the old room
+        if (resident.bedId) {
+            await Bed.findByIdAndUpdate(resident.bedId, { status: "available", residentId: null }, { session });
+            resident.bedId = null; // Unassign bed
         }
 
         const newRoom = await Room.findOne({ _id: newRoomId, ...pm }).session(session);
