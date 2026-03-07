@@ -157,6 +157,24 @@ export const sendOverdueNotice = async ({ name, email, amount, lateFee, month })
 // Alias used by stripeController and scheduler
 export const sendPaymentReminder = sendRentReminder;
 
+// ─── Broadcast Notices ────────────────────────────────────────────
+
+export const sendNoticeEmail = async ({ name, email, title, message, propertyName }) => {
+    return send(email, `📢 Important Update: ${title}`, `
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
+            <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00d4ff">TAGT Notice Board</div>
+            <h2>Hi ${name},</h2>
+            <p style="color:#aaa">The property manager for <b style="color:#fff">${propertyName || "your building"}</b> has posted a new announcement.</p>
+            <div style="background:#0f1a26;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;margin:24px 0">
+                <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:#fff">${title}</div>
+                <div style="color:#ccc;line-height:1.6;font-size:15px;white-space:pre-wrap;">${message}</div>
+            </div>
+            <p style="color:#aaa;font-size:13px">You can view this and other announcements on your TAGT Resident Dashboard.</p>
+            <div style="margin-top:24px;font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
+        </div>
+    `);
+};
+
 // ─── Support Ticket Emails ────────────────────────────────────────
 
 export const sendTicketCreatedEmail = async ({ name, email, ticketId, title, category }) => {

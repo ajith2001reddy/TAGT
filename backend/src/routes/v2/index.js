@@ -25,6 +25,8 @@ import { getRevenueForecast, getOccupancyTrends, getSmartAlerts, getChurnAnalysi
 import { createTicket, listMyTickets, listAllTickets, getTicket, replyToTicket, updateTicketStatus, addInternalNote } from "../../controllers/v2/supportController.js";
 // Phase 5: Notifications
 import { getNotifications, getUnreadCount, markRead, markAllRead } from "../../controllers/v2/notificationController.js";
+// Phase 6: Broadcast Notices
+import { createNotice, listNotices } from "../../controllers/v2/noticeController.js";
 
 import { dynamicTenantRateLimiter } from "../../middleware/tenantLimiter.js";
 
@@ -143,5 +145,9 @@ router.get("/notifications", auth, getNotifications);
 router.get("/notifications/unread-count", auth, getUnreadCount);
 router.patch("/notifications/read-all", auth, markAllRead);
 router.patch("/notifications/:id/read", auth, markRead);
+
+/* ── Phase 6: Broadcast Notices ── */
+router.post("/notices", auth, authorize("super_admin", "owner"), createNotice);
+router.get("/notices", auth, authorize("super_admin", "owner", "resident"), listNotices);
 
 export default router;

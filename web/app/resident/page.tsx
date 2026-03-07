@@ -49,6 +49,13 @@ interface DashboardData {
         type: "danger" | "warning" | "success";
         message: string;
     }[];
+    notices?: {
+        _id: string;
+        title: string;
+        message: string;
+        priority: string;
+        createdAt: string;
+    }[];
 }
 
 const STATUS_COLOR: Record<string, { main: string; bg: string; border: string }> = {
@@ -69,8 +76,11 @@ export default function ResidentDashboardPage() {
 
     const fetchDashboardData = async () => {
         try {
-            const res = await api.get("/v2/resident/dashboard/v2");
-            setData(res.data.data);
+            const [dashRes, noticesRes] = await Promise.all([
+                api.get("/v2/resident/dashboard/v2"),
+                api.get("/v2/notices?limit=3")
+            ]);
+            setData({ ...dashRes.data.data, notices: noticesRes.data.data });
         } catch (err) {
             console.error("Dashboard load error", err);
         } finally {
@@ -248,6 +258,41 @@ export default function ResidentDashboardPage() {
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Broadcast Notices (from Owners) */}
+            {(data.notices || []).length > 0 && (
+                <div style={{ marginBottom: "32px" }}>
+                    <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "12px" }}>
+                        Recent Announcements
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        {data.notices!.map(notice => (
+                            <div key={notice._id} style={{
+                                background: "rgba(255,255,255,0.02)",
+                                border: "1px solid rgba(255,255,255,0.06)",
+                                padding: "20px 24px",
+                                borderRadius: "16px",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px"
+                            }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                        {notice.priority === "critical" ? <span style={{ color: "#ff5252" }}>🚨</span> : notice.priority === "warning" ? <span style={{ color: "#fbbf24" }}>⚠️</span> : <span style={{ color: "var(--accent-primary)" }}>📢</span>}
+                                        <span style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)" }}>{notice.title}</span>
+                                    </div>
+                                    <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>
+                                        {new Date(notice.createdAt).toLocaleString("en-IN", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.5, whiteSpace: "pre-wrap", marginLeft: "30px" }}>
+                                    {notice.message}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
