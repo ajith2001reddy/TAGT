@@ -50,15 +50,35 @@ export const updateProfile = async (req, res, next) => {
  * Change user's password in both MongoDB and Firebase
  */
 export const changePassword = async (req, res, next) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
+    const { id } = req.user;
+    const { currentPassword, newPassword } = req.body;
 
-        if (!newPassword || newPassword.length < 6) {
-            return res.status(400).json({ success: false, message: "New password must be at least 6 characters" });
+    if (req.user.role === "super_admin") {
+        logger.warn(`Attempted password change by super_admin user ${id} blocked.`);
+        return res.status(403).json({
+            success: false,
+            message: "Super Administrators cannot change passwords through this interface for security reasons."
+        });
+    }
+
+    try {
+        if (!currentPassword || !newPassword || newPassword.length < 6) {
+            logger.warn(`Password change failed for user ${id}: Invalid input. currentPassword: ${!!currentPassword}, newPassword: ${!!newPassword}, newPasswordLength: ${newPassword ? newPassword.length : 'N/A'}`);
+            return res.status(400).json({ success: false, message: "Current password and new password are required, and new password must be at least 6 characters." });
         }
 
         const user = await User.findById(req.user._id).select("+password");
-        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        if (!user) {
+            logger.error(`Password change failed for user ${id}: User not found.`);
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Verify current password
+        const isMatch = await user.matchPassword(currentPassword);
+        if (!isMatch) {
+            logger.warn(`Password change failed for user ${id}: Incorrect current password.`);
+            return res.status(401).json({ success: false, message: "Incorrect current password" });
+        }
 
         // Update Firebase password
         if (user.firebaseUid) {

@@ -47,9 +47,11 @@ router.post("/register", async (req, res) => {
     const token = header.split(" ")[1];
     const decoded = await admin.auth().verifyIdToken(token);
 
-    const existing = await User.findOne({
-      email: decoded.email?.toLowerCase()
-    });
+    const query = [];
+    if (decoded.email) query.push({ email: decoded.email.toLowerCase() });
+    if (decoded.phone_number) query.push({ phoneNumber: decoded.phone_number });
+
+    const existing = query.length > 0 ? await User.findOne({ $or: query }) : null;
 
     if (existing) {
       return res.json({
@@ -59,7 +61,7 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    const { name } = req.body;
+    const { name, phoneNumber: bodyPhone } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -70,7 +72,8 @@ router.post("/register", async (req, res) => {
 
     const newUser = await User.create({
       firebaseUid: decoded.uid,
-      email: decoded.email?.toLowerCase(),
+      email: decoded.email?.toLowerCase() || null,
+      phoneNumber: decoded.phone_number || bodyPhone || null,
       name,
       role: "resident",   // default role
       isActive: true
