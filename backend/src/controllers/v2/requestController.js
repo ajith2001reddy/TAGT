@@ -37,16 +37,14 @@ export const updateRequest = async (req, res, next) => {
 export const residentCreateRequest = async (req, res, next) => {
     try {
         const resident = req.user;
-        const { message, priority } = req.body;
-
-        if (!message || !message.trim()) return res.status(400).json({ success: false, message: "message is required" });
+        const { title, description, priority } = req.body;
 
         const created = await Request.create({
             propertyId: resident.propertyId,
             resident: resident._id,
-            title: "Resident Request",
-            description: message,
-            message,
+            title,
+            description,
+            message: description, // Keeping message for backward compatibility if needed
             priority: priority || "medium",
             status: "pending"
         });

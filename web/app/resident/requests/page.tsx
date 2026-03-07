@@ -17,6 +17,7 @@ const PRIORITY_COLOR: Record<string, { bg: string; text: string; border: string 
     low: { bg: "rgba(52,211,153,0.1)", text: "#34d399", border: "rgba(52,211,153,0.2)" },
     medium: { bg: "rgba(251,191,36,0.1)", text: "#fbbf24", border: "rgba(251,191,36,0.2)" },
     high: { bg: "rgba(255,82,82,0.1)", text: "#ff5252", border: "rgba(255,82,82,0.2)" },
+    urgent: { bg: "rgba(255,82,82,0.2)", text: "#ff5252", border: "#ff5252" },
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -35,7 +36,8 @@ export default function ResidentRequestsPage() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [showForm, setShowForm] = useState(false);
-    const [message, setMessage] = useState("");
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
     const [priority, setPriority] = useState("medium");
     const [successMsg, setSuccessMsg] = useState("");
     const [error, setError] = useState("");
@@ -52,12 +54,18 @@ export default function ResidentRequestsPage() {
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!message.trim()) { setError("Please describe your request"); return; }
+        if (!title.trim()) { setError("Please provide a title"); return; }
+        if (!description.trim()) { setError("Please describe your request"); return; }
         setSubmitting(true);
         setError("");
         try {
-            await api.post("/v2/resident/requests", { message: message.trim(), priority });
-            setMessage("");
+            await api.post("/v2/resident/requests", {
+                title: title.trim(),
+                description: description.trim(),
+                priority
+            });
+            setTitle("");
+            setDescription("");
             setPriority("medium");
             setShowForm(false);
             setSuccessMsg("Request submitted! Your property manager will review it.");
@@ -103,9 +111,20 @@ export default function ResidentRequestsPage() {
                     <h3 style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontWeight: 700, marginBottom: "20px" }}>Submit a Maintenance Request</h3>
                     <form onSubmit={handleSubmit}>
                         <div style={{ marginBottom: "16px" }}>
+                            <label style={{ display: "block", fontSize: "12px", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Title</label>
+                            <input
+                                className="input-field"
+                                placeholder="e.g. Leaking tap in bathroom"
+                                value={title}
+                                onChange={e => setTitle(e.target.value)}
+                                style={{ width: "100%", fontSize: "13px" }}
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: "16px" }}>
                             <label style={{ display: "block", fontSize: "12px", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Priority</label>
-                            <div style={{ display: "flex", gap: "8px" }}>
-                                {(["low", "medium", "high"] as const).map(p => {
+                            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                                {(["low", "medium", "high", "urgent"] as const).map(p => {
                                     const c = PRIORITY_COLOR[p];
                                     const active = priority === p;
                                     return (
@@ -127,8 +146,8 @@ export default function ResidentRequestsPage() {
                             <textarea
                                 className="input-field"
                                 placeholder="e.g. The bathroom tap is leaking. It started 2 days ago and is getting worse…"
-                                value={message}
-                                onChange={e => setMessage(e.target.value)}
+                                value={description}
+                                onChange={e => setDescription(e.target.value)}
                                 rows={4}
                                 style={{ width: "100%", resize: "vertical", fontSize: "13px" }}
                             />
@@ -174,12 +193,15 @@ export default function ResidentRequestsPage() {
                                 <div style={{ fontSize: "22px", flexShrink: 0, marginTop: "2px" }}>{STATUS_ICON[r.status] || "📋"}</div>
 
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "6px", flexWrap: "wrap" }}>
-                                        <div style={{ fontSize: "14px", fontWeight: 600, flex: 1 }}>{text.length > 120 ? text.slice(0, 120) + "…" : text}</div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "4px", flexWrap: "wrap" }}>
+                                        <div style={{ fontSize: "15px", fontWeight: 700, flex: 1, color: "var(--text-primary)" }}>{r.title || "Request"}</div>
                                         <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                                             <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase", background: pColor.bg, color: pColor.text, border: `1px solid ${pColor.border}`, padding: "3px 9px", borderRadius: "6px", fontWeight: 700 }}>{r.priority}</span>
                                             <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase", background: sColor + "18", color: sColor, border: `1px solid ${sColor}28`, padding: "3px 9px", borderRadius: "6px", fontWeight: 700 }}>{r.status}</span>
                                         </div>
+                                    </div>
+                                    <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "10px", lineHeight: "1.5" }}>
+                                        {text.length > 200 ? text.slice(0, 200) + "…" : text}
                                     </div>
                                     <div style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>
                                         Submitted {new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
