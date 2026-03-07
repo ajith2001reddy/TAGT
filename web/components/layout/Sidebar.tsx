@@ -192,26 +192,22 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
-                    style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                    style={{ display: "flex", alignItems: "center", gap: "12px" }}
                 >
-                    <div style={{
-                        width: "34px", height: "34px",
-                        background: "linear-gradient(135deg, #00d4ff, #0068a0)",
-                        borderRadius: "10px",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 0 20px rgba(0,212,255,0.25)",
-                        fontSize: "15px", fontWeight: 800,
-                        color: "#000", fontFamily: "var(--font-display)",
-                        flexShrink: 0,
-                    }}>T</div>
+                    <img
+                        src="/logo.png"
+                        alt="TAGT Logo"
+                        style={{ width: "40px", height: "40px", borderRadius: "8px", objectFit: "cover" }}
+                    />
                     <div>
                         <div style={{
                             fontFamily: "var(--font-display)", fontWeight: 700,
-                            fontSize: "16px", letterSpacing: "-0.03em",
+                            fontSize: "16px", letterSpacing: "-0.02em",
+                            color: "var(--text-primary)"
                         }}>TAGT</div>
                         <div style={{
-                            fontSize: "9.5px", color: "var(--text-tertiary)",
-                            letterSpacing: "0.1em", textTransform: "uppercase", marginTop: "1px",
+                            fontSize: "9px", color: "var(--text-tertiary)",
+                            letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "1px"
                         }}>Property OS</div>
                     </div>
                 </motion.div>

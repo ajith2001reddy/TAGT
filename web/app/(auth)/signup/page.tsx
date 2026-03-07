@@ -80,6 +80,9 @@ export default function SignupPage() {
                 strategy="beforeInteractive"
             />
             <div style={{ marginBottom: "28px" }}>
+                <Link href="/" style={{ display: "inline-block", marginBottom: "20px" }}>
+                    <img src="/logo.png" alt="TAGT Logo" style={{ width: "64px", height: "64px", borderRadius: "14px", border: "1px solid var(--border-subtle)" }} />
+                </Link>
                 <h1 className="display-text" style={{ fontSize: "26px", marginBottom: "6px" }}>
                     Create your account
                 </h1>
