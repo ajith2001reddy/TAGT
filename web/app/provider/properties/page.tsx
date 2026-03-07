@@ -492,7 +492,7 @@ export default function PropertiesListPage() {
                                     </td>
                                     <td style={{ padding: "16px 20px", color: "var(--text-secondary)" }}>{p.city}</td>
                                     <td style={{ padding: "16px 20px", textAlign: "center" }}>
-                                        <div style={{ color: "var(--text-primary)", fontWeight: 600 }}>{p.totalRooms}R / {p.totalBeds}B</div>
+                                        <div style={{ color: "var(--text-primary)", fontWeight: 600 }}>{p.totalRooms || 0}R / {p.totalBeds || 0}B</div>
                                         <div style={{ fontSize: "11px", color: occupancy > 80 ? "#34d399" : occupancy > 50 ? "#fbbf24" : "var(--text-tertiary)" }}>
                                             {occupancy}% Occupied
                                         </div>

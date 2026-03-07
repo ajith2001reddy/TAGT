@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import Property from "../../models/Property.js";
+import Room from "../../models/Room.js";
+import Bed from "../../models/Bed.js";
 
 /**
  * List all properties (Super Admin only)
@@ -20,9 +22,22 @@ export const listProperties = async (req, res, next) => {
             Property.countDocuments({})
         ]);
 
+        // Enrich with real-time room/bed counts
+        const enrichedItems = await Promise.all(items.map(async (prop) => {
+            const totalRooms = await Room.countDocuments({ property: prop._id });
+            const totalBeds = await Bed.countDocuments({ room: { $in: await Room.find({ property: prop._id }).distinct('_id') } });
+            const occupiedBeds = await Bed.countDocuments({ room: { $in: await Room.find({ property: prop._id }).distinct('_id') }, isOccupied: true });
+            return {
+                ...prop,
+                totalRooms,
+                totalBeds,
+                occupiedBeds
+            };
+        }));
+
         return res.json({
             success: true,
-            data: items,
+            data: enrichedItems,
             pagination: { page, limit, total }
         });
     } catch (err) { next(err); }
