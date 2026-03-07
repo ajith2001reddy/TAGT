@@ -286,7 +286,7 @@ export const providerOverview = async (req, res, next) => {
  */
 export const platformStats = async (req, res, next) => {
     try {
-        const [totalProperties, totalOwners, totalResidents, revenueAgg, activePayments, rooms, subs, topProps] = await Promise.all([
+        const [totalProperties, totalOwners, totalResidents, revenueAgg, activePayments, rooms, subs, topProps, recentActivity] = await Promise.all([
             Property.countDocuments({}),
             User.countDocuments({ role: "owner" }),
             User.countDocuments({ role: "resident", isActive: true }),
@@ -302,7 +302,7 @@ export const platformStats = async (req, res, next) => {
                 { $lookup: { from: "properties", localField: "_id", foreignField: "_id", as: "property" } },
                 { $unwind: "$property" }
             ]),
-            import("../../models/ActivityLog.js").then(m => m.default.find({}).sort({ createdAt: -1 }).limit(5).populate("user", "name"))
+            import("../../models/ActivityLog.js").then(m => m.default.find({}).sort({ createdAt: -1 }).limit(5).populate("performedBy", "name"))
         ]);
 
         const totalBeds = rooms[0]?.total || 0;
@@ -333,9 +333,9 @@ export const platformStats = async (req, res, next) => {
                 recentActivity: (recentActivity || []).map(a => ({
                     id: a._id,
                     action: a.action,
-                    userName: a.user?.name || "System",
+                    userName: a.performedBy?.name || "System",
                     createdAt: a.createdAt,
-                    details: a.metadata
+                    details: { propertyId: a.propertyId }
                 }))
             }
         });

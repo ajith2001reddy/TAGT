@@ -30,6 +30,7 @@ const SubscriptionSchema = new mongoose.Schema({
 
 export const Plan = mongoose.model("Plan", PlanSchema);
 export const Subscription = mongoose.model("Subscription", SubscriptionSchema);
+export default Subscription;
 
 /* ── Plan limits helper ─────────────────────────── */
 export const PLAN_LIMITS = {
