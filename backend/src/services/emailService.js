@@ -22,6 +22,7 @@ const FROM = process.env.SMTP_FROM || '"TAGT Platform" <noreply@tagt.app>';
 
 let transporter = null;
 if (provider === "SMTP" && emailEnabled) {
+    logger.info(`[SMTP INIT] Attempting connection to ${process.env.SMTP_HOST}:${process.env.SMTP_PORT} with user ${process.env.SMTP_USER}`);
     transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT) || 587,
