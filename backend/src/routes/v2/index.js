@@ -5,6 +5,13 @@ import verifyPropertyAccess from "../../middleware/verifyPropertyAccess.js";
 import validate from "../../middleware/validate.js";
 import { loginSchema, registerOwnerSchema } from "../../validations/auth.validation.js";
 import { createRoomSchema, updateRoomSchema } from "../../validations/room.validation.js";
+import { createResidentSchema, updateResidentSchema } from "../../validations/resident.validation.js";
+import { updatePropertySchema, updatePropertyStatusSchema } from "../../validations/property.validation.js";
+import { createPaymentSchema, markPaymentPaidSchema } from "../../validations/payment.validation.js";
+import { createTicketSchema, replyToTicketSchema, updateTicketStatusSchema, addInternalNoteSchema } from "../../validations/support.validation.js";
+import { createRequestSchema, updateRequestSchema } from "../../validations/request.validation.js";
+import { createBedSchema, updateBedStatusSchema, assignBedSchema } from "../../validations/bed.validation.js";
+import { updateProfileSchema, changePasswordSchema } from "../../validations/user.validation.js";
 import { login, registerOwner } from "../../controllers/v2/authController.js";
 import { listRooms, createRoom, updateRoom, deleteRoom, getRoomStats } from "../../controllers/v2/roomController.js";
 import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident } from "../../controllers/v2/residentController.js";
@@ -45,9 +52,9 @@ router.post("/auth/register-owner", validate(registerOwnerSchema), registerOwner
 /* ── Super Admin ── */
 router.get("/provider/overview", auth, authorize("super_admin"), getProviderOverview);
 router.get("/provider/properties", auth, authorize("super_admin"), listAllProperties);
-router.put("/provider/properties/:id", auth, authorize("super_admin"), logActivity("PROPERTY_UPDATED"), updateProperty);
+router.put("/provider/properties/:id", auth, authorize("super_admin"), validate(updatePropertySchema), logActivity("PROPERTY_UPDATED"), updateProperty);
 router.put("/provider/owners/:id", auth, authorize("super_admin"), logActivity("OWNER_UPDATED_BY_ADMIN"), superAdminUpdateOwner);
-router.patch("/provider/properties/:id/status", auth, authorize("super_admin"), logActivity("PROPERTY_STATUS_CHANGED"), patchPropertyStatus);
+router.patch("/provider/properties/:id/status", auth, authorize("super_admin"), validate(updatePropertyStatusSchema), logActivity("PROPERTY_STATUS_CHANGED"), patchPropertyStatus);
 router.get("/admin/platform-stats", auth, authorize("super_admin"), getPlatformStats);
 router.put("/admin/users/:id", auth, authorize("super_admin"), logActivity("USER_MANAGED_BY_ADMIN"), superAdminManageUser);
 
@@ -60,31 +67,31 @@ router.get("/analytics/dashboard-summary", auth, authorize("super_admin", "owner
 /* ── Rooms ── */
 router.get("/rooms", auth, authorize("super_admin", "owner"), listRooms);
 router.get("/rooms/stats", auth, authorize("super_admin", "owner"), getRoomStats);
-router.post("/rooms", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createRoomSchema), createRoom);
-router.put("/rooms/:id", auth, authorize("super_admin", "owner"), validate(updateRoomSchema), updateRoom);
-router.delete("/rooms/:id", auth, authorize("super_admin", "owner"), deleteRoom);
+router.post("/rooms", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createRoomSchema), logActivity("ROOM_CREATED"), createRoom);
+router.put("/rooms/:id", auth, authorize("super_admin", "owner"), validate(updateRoomSchema), logActivity("ROOM_UPDATED"), updateRoom);
+router.delete("/rooms/:id", auth, authorize("super_admin", "owner"), logActivity("ROOM_DELETED"), deleteRoom);
 
 /* ── Beds ── */
 router.get("/beds", auth, authorize("super_admin", "owner"), listBeds);
-router.post("/beds", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createBeds);
-router.patch("/beds/:id/status", auth, authorize("super_admin", "owner"), updateBedStatus);
-router.post("/beds/:id/assign", auth, authorize("super_admin", "owner"), assignResidentToBed);
+router.post("/beds", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createBedSchema), createBeds);
+router.patch("/beds/:id/status", auth, authorize("super_admin", "owner"), validate(updateBedStatusSchema), updateBedStatus);
+router.post("/beds/:id/assign", auth, authorize("super_admin", "owner"), validate(assignBedSchema), assignResidentToBed);
 
 /* ── Residents ── */
 router.get("/residents", auth, authorize("super_admin", "owner", "resident"), listResidents);
-router.post("/residents", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createResident);
+router.post("/residents", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createResidentSchema), logActivity("RESIDENT_CREATED"), createResident);
 router.patch("/residents/:id/move-room", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_RELOCATED"), moveResidentRoom);
 router.patch("/residents/:id/deactivate", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_DEACTIVATED"), deactivateResident);
 router.post("/residents/:id/notes", auth, authorize("super_admin", "owner"), addResidentNote);
 router.post("/residents/:id/notification", auth, authorize("super_admin", "owner"), sendNotification);
 router.get("/residents/:id/history", auth, authorize("super_admin", "owner"), getResidentHistory);
 router.patch("/residents/:id/assign-property", auth, authorize("super_admin"), logActivity("RESIDENT_PROPERTY_ASSIGNED"), assignResidentToProperty);
-router.put("/residents/:id", auth, authorize("super_admin"), logActivity("RESIDENT_UPDATED_BY_ADMIN"), superAdminUpdateResident);
+router.put("/residents/:id", auth, authorize("super_admin"), validate(updateResidentSchema), logActivity("RESIDENT_UPDATED_BY_ADMIN"), superAdminUpdateResident);
 
 /* ── Payments ── */
 router.get("/payments", auth, authorize("super_admin", "owner", "resident"), listPayments);
-router.post("/payments", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createPayment);
-router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), logActivity("PAYMENT_MANUAL_RECONCILIATION"), markPaymentPaid);
+router.post("/payments", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createPaymentSchema), logActivity("PAYMENT_CREATED"), createPayment);
+router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), validate(markPaymentPaidSchema), logActivity("PAYMENT_MANUAL_RECONCILIATION"), markPaymentPaid);
 router.post("/payments/:id/send-reminder", auth, authorize("super_admin", "owner"), sendPaymentReminder);
 router.get("/payments/:id/invoice", auth, authorize("super_admin", "owner", "resident"), downloadInvoice);
 
@@ -95,12 +102,12 @@ router.get("/reports/resident-ledger.csv", auth, authorize("super_admin", "owner
 
 /* ── Requests ── */
 router.get("/requests", auth, authorize("super_admin", "owner", "resident"), listRequests);
-router.patch("/requests/:id", auth, authorize("super_admin", "owner"), updateRequest);
+router.patch("/requests/:id", auth, authorize("super_admin", "owner"), validate(updateRequestSchema), updateRequest);
 
 /* ── Resident ── */
 router.get("/resident/dashboard", auth, authorize("resident"), getResidentDashboard);
 router.get("/resident/dashboard/v2", auth, authorize("resident"), getResidentDashboardV2);
-router.post("/resident/requests", auth, authorize("resident"), residentCreateRequest);
+router.post("/resident/requests", auth, authorize("resident"), validate(createRequestSchema), residentCreateRequest);
 
 /* ── Automation ── */
 router.post("/automation/monthly-rent", auth, authorize("super_admin", "owner"), runMonthlyRentGeneration);
@@ -137,13 +144,13 @@ router.get("/intelligence/smart-alerts", auth, authorize("owner"), getSmartAlert
 router.get("/intelligence/churn-analysis", auth, authorize("owner"), getChurnAnalysis);
 
 /* ── Phase 4: Support Tickets ── */
-router.post("/support/tickets", auth, authorize("resident", "owner"), createTicket);
+router.post("/support/tickets", auth, authorize("resident", "owner"), validate(createTicketSchema), createTicket);
 router.get("/support/tickets", auth, authorize("resident", "owner"), listMyTickets);
 router.get("/support/tickets/all", auth, authorize("super_admin"), listAllTickets);
 router.get("/support/tickets/:id", auth, getTicket);
-router.post("/support/tickets/:id/reply", auth, replyToTicket);
-router.patch("/support/tickets/:id/status", auth, authorize("super_admin"), updateTicketStatus);
-router.post("/support/tickets/:id/note", auth, authorize("super_admin"), addInternalNote);
+router.post("/support/tickets/:id/reply", auth, validate(replyToTicketSchema), replyToTicket);
+router.patch("/support/tickets/:id/status", auth, authorize("super_admin"), validate(updateTicketStatusSchema), updateTicketStatus);
+router.post("/support/tickets/:id/note", auth, authorize("super_admin"), validate(addInternalNoteSchema), addInternalNote);
 
 /* ── Phase 5: Notifications ── */
 router.get("/notifications", auth, getNotifications);
@@ -152,12 +159,12 @@ router.patch("/notifications/read-all", auth, markAllRead);
 router.patch("/notifications/:id/read", auth, markRead);
 
 /* ── Phase 6: Broadcast Notices ── */
-router.post("/notices", auth, authorize("super_admin", "owner"), createNotice);
+router.post("/notices", auth, authorize("super_admin", "owner"), logActivity("NOTICE_BROADCASTED"), createNotice);
 router.get("/notices", auth, authorize("super_admin", "owner", "resident"), listNotices);
 
 /* ── Profile & User Management ── */
 router.get("/profile", auth, getProfile);
-router.put("/profile", auth, updateProfile);
-router.post("/profile/change-password", auth, changePassword);
+router.put("/profile", auth, validate(updateProfileSchema), updateProfile);
+router.post("/profile/change-password", auth, validate(changePasswordSchema), changePassword);
 
 export default router;

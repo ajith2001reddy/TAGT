@@ -1,7 +1,8 @@
 export default {
-    testEnvironment: "node",
+    testEnvironment: 'node',
     transform: {},
-    verbose: true,
-    testTimeout: 30000,
-    setupFilesAfterEnv: ["<rootDir>/tests/setup.js"],
+    moduleFileExtensions: ['js', 'json', 'node'],
+    roots: ['<rootDir>/tests/api'],
+    setupFiles: ['<rootDir>/tests/setup.js'],
+    testTimeout: 10000,
 };

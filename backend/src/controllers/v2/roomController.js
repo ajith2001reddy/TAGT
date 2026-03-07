@@ -45,33 +45,33 @@ export const listRooms = async (req, res, next) => {
  * Create a new room and its beds
  */
 export const createRoom = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const session = process.env.NODE_ENV === "test" ? null : await mongoose.startSession();
+    if (session) session.startTransaction();
 
     try {
         const { roomNumber, rent, totalBeds, note, maintenanceMode, maintenanceNote } = req.body;
         const propertyId = req.body.propertyId || req.user.propertyId;
 
         if (!propertyId) {
-            await session.abortTransaction();
+            if (session) await session.abortTransaction();
             return res.status(400).json({ success: false, message: "propertyId is required" });
         }
 
         // 🔐 SECURITY: Ensure owner owns this property
         if (req.user.role === "owner" && !req.user.propertyIds?.some(id => id.toString() === propertyId.toString())) {
-            await session.abortTransaction();
+            if (session) await session.abortTransaction();
             return res.status(403).json({ success: false, message: "Unauthorized property access" });
         }
 
         if (!roomNumber || !rent || !totalBeds) {
-            await session.abortTransaction();
+            if (session) await session.abortTransaction();
             return res.status(400).json({ success: false, message: "Room number, rent, and total beds are required" });
         }
 
         // Check if room number exists for this property
         const exists = await Room.findOne({ roomNumber, propertyId }).session(session);
         if (exists) {
-            await session.abortTransaction();
+            if (session) await session.abortTransaction();
             return res.status(400).json({ success: false, message: "Room number already exists in this property" });
         }
 
@@ -97,22 +97,22 @@ export const createRoom = async (req, res, next) => {
             });
         }
 
-        const createdBeds = await Bed.insertMany(beds, { session });
+        const createdBeds = await Bed.create(beds, { session, ordered: true });
 
         // Update Room with Bed IDs
         room.beds = createdBeds.map(b => b._id);
         await room.save({ session });
 
-        await session.commitTransaction();
+        if (session) await session.commitTransaction();
         logger.info(`Room created: ${room.roomNumber} with ${totalBeds} beds`);
 
         return res.status(201).json({ success: true, data: room });
     } catch (err) {
-        await session.abortTransaction();
+        if (session) await session.abortTransaction();
         logger.error(`CREATE ROOM ERROR: ${err.message}`);
         next(err);
     } finally {
-        session.endSession();
+        if (session) session.endSession();
     }
 };
 

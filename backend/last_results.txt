@@ -1,0 +1,137 @@
+
+> tagt-backend@1.0.0 test
+> cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest
+
+npm : (node:28028) 
+ExperimentalWarning: VM Modules is an 
+experimental feature and might change 
+at any time
+At line:1 char:1
++ npm test *>&1 | Out-File -FilePath 
+results_raw.txt -Encoding ascii; S ...
++ ~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpec 
+   ified: ((node:28028) Ex...nge at   
+  any time:String) [], RemoteExcept   
+ ion
+    + FullyQualifiedErrorId : NativeC 
+   ommandError
+ 
+(Use `node --trace-warnings ...` to 
+show where the warning was created)
+(node:26784) ExperimentalWarning: VM 
+Modules is an experimental feature 
+and might change at any time
+(Use `node --trace-warnings ...` to 
+show where the warning was created)
+PASS tests/api/health.test.js
+  ??? Console
+
+    console.log
+      2026-03-07 15:03:01 
+[32minfo[39m: ???? Domain Event 
+Handlers initialized.
+
+      at Console.log (node_modules/win
+ston/lib/winston/transports/console.js
+:87:23)
+
+    console.log
+      2026-03-07 15:03:01 
+[32minfo[39m: ???? Connected to 
+Redis successfully.
+
+      at Console.log (node_modules/win
+ston/lib/winston/transports/console.js
+:87:23)
+
+::ffff:127.0.0.1 - - [07/Mar/2026:20:03:01 +0000] "GET / HTTP/1.1" 200 74 "-" "-"
+
+  ???  Cannot log after tests are 
+done. Did you forget to wait for 
+something async in your test?
+    Attempted to log "It is highly 
+recommended to use a minimum Redis 
+version of 6.2.0
+                 Current: 5.0.14.1".
+
+      at console.warn (node_modules/@j
+est/console/build/BufferedConsole.js:1
+91:10)
+      at RedisConnection.init (node_mo
+dules/bullmq/src/classes/redis-connect
+ion.ts:280:19)
+
+FAIL tests/api/rooms.test.js
+  ??? Rooms Creation Integration ??? 
+should successfully create a room and 
+its associated beds (Transaction Test)
+
+    ValidationError: Property 
+validation failed: city: Path `city` 
+is required., type: Path `type` is 
+required.
+
+      at model.Object.<anonymous>.Docu
+ment.invalidate (node_modules/mongoose
+/lib/document.js:3381:32)
+      at node_modules/mongoose/lib/doc
+ument.js:3142:17
+      at node_modules/mongoose/lib/sch
+emaType.js:1446:9
+
+(node:25216) ExperimentalWarning: VM 
+Modules is an experimental feature 
+and might change at any time
+(Use `node --trace-warnings ...` to 
+show where the warning was created)
+::ffff:127.0.0.1 - - [07/Mar/2026:20:03:02 +0000] "POST /api/v2/auth/login HTTP/1.1" 400 51 "-" "-"
+::ffff:127.0.0.1 - - [07/Mar/2026:20:03:03 +0000] "POST /api/v2/auth/register-owner HTTP/1.1" 201 442 "-" "-"
+::ffff:127.0.0.1 - - [07/Mar/2026:20:03:03 +0000] "POST /api/v2/auth/register-owner HTTP/1.1" 201 442 "-" "-"
+::ffff:127.0.0.1 - - [07/Mar/2026:20:03:03 +0000] "POST /api/v2/auth/register-owner HTTP/1.1" 200 49 "-" "-"
+PASS tests/api/auth.test.js (6.441 s)
+  ??? Console
+
+    console.log
+      2026-03-07 15:03:01 
+[32minfo[39m: ???? Domain Event 
+Handlers initialized.
+
+      at Console.log (node_modules/win
+ston/lib/winston/transports/console.js
+:87:23)
+
+    console.log
+      2026-03-07 15:03:01 
+[32minfo[39m: ???? Connected to 
+Redis successfully.
+
+      at Console.log (node_modules/win
+ston/lib/winston/transports/console.js
+:87:23)
+
+    console.warn
+      It is highly recommended to use 
+a minimum Redis version of 6.2.0
+                   Current: 5.0.14.1
+
+      at RedisConnection.init (node_mo
+dules/bullmq/src/classes/redis-connect
+ion.ts:280:19)
+
+A worker process has failed to exit 
+gracefully and has been force exited. 
+This is likely caused by tests 
+leaking due to improper teardown. Try 
+running with --detectOpenHandles to 
+find leaks. Active timers can also 
+cause this, ensure that .unref() was 
+called on them.
+
+Test Suites: 1 failed, 2 passed, 3 
+total
+Tests:       1 failed, 4 passed, 5 
+total
+Snapshots:   0 total
+Time:        7.396 s
+Ran all test suites.

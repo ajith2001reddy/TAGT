@@ -1,0 +1,31 @@
+name: Enterprise Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0' # Weekly
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: NPM Audit (Backend)
+        run: npm audit --audit-level=high
+        working-directory: ./backend
+        
+      - name: NPM Audit (Frontend)
+        run: npm audit --audit-level=high
+        working-directory: ./web
+
+      # Note: For Snyk, Dependabot, or Firebase AppCheck configs, 
+      # valid repository secrets must be provided in GitHub.

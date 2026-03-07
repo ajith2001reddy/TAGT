@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
+import { encrypt, decrypt } from "../utils/encryption.js";
 
 const userSchema = new mongoose.Schema(
     {
@@ -30,6 +31,8 @@ const userSchema = new mongoose.Schema(
             type: String,
             trim: true,
             default: "",
+            set: encrypt,
+            get: decrypt
         },
 
         password: {
@@ -111,7 +114,11 @@ const userSchema = new mongoose.Schema(
         isDeleted: { type: Boolean, default: false, index: true },
         deletedAt: { type: Date, default: null },
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+        toJSON: { getters: true },
+        toObject: { getters: true }
+    }
 );
 
 // 🔐 Hash password before saving (only when modified)

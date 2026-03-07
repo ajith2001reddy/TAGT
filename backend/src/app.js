@@ -59,7 +59,26 @@ app.use(
         // Needed for Firebase popup auth flows (window.close / window.closed in popup).
         crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
         // Keep COEP disabled to avoid breaking third-party auth SDK resources.
-        crossOriginEmbedderPolicy: false
+        crossOriginEmbedderPolicy: false,
+        // Strict SOC2 Header Hardening
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com", "https://www.gstatic.com"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+                fontSrc: ["'self'", "https://fonts.gstatic.com"],
+                imgSrc: ["'self'", "data:", "https://*"],
+                connectSrc: ["'self'", "https://identitytoolkit.googleapis.com", "https://securetoken.googleapis.com", "https://www.googleapis.com", "https://tagt.website"],
+                frameSrc: ["'self'", "https://tagt.website", "https://tagt.firebaseapp.com"],
+                objectSrc: ["'none'"],
+                upgradeInsecureRequests: [],
+            },
+        },
+        frameguard: {
+            action: "deny",
+        },
+        xssFilter: true,
+        noSniff: true,
     })
 );
 
@@ -89,22 +108,32 @@ app.options("*", cors()); // Enable pre-flight across-the-board
 
 /* ================= RATE LIMIT ================= */
 
-// Global limiter - broad protection for everything else
+// Global limiter - 100 requests per minute for standard API traffic
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 500,
+    windowMs: 60 * 1000,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: "Too many requests, please try again later" },
 });
 
-// Strict limiter for auth endpoints (brute-force protection)
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
+// Strict limiter for Login (5 requests per minute)
+const loginLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { success: false, message: "Too many login attempts, please try again in 15 minutes" },
+    message: { success: false, message: "Too many login attempts, please try again in a minute" },
+    keyGenerator: (req) => req.ip,
+});
+
+// Ultra-strict limiter for Signup (3 requests per minute)
+const signupLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 3,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many signup attempts, please try again in a minute" },
     keyGenerator: (req) => req.ip,
 });
 
@@ -117,12 +146,13 @@ const paymentLimiter = rateLimit({
     message: { success: false, message: "Payment request rate limit exceeded" },
 });
 
-// Apply default/auth limiters
-app.use(limiter);
-app.use("/api/v2/auth/login", authLimiter);
-app.use("/api/auth/login", authLimiter);
+// Mount limiters to their specific routes
+app.use("/api/v2/auth/login", loginLimiter);
+app.use("/api/v2/auth/register-owner", signupLimiter);
 app.use("/api/v2/payments", paymentLimiter);
-app.use("/api/payments", paymentLimiter);
+
+// Apply standard global limiter to the rest of the API
+app.use("/api", limiter);
 
 /* ================= BODY PARSER ================= */
 
