@@ -31,54 +31,50 @@ export const assignResidentToBed = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Bed is already occupied" });
         }
 
-        // 1. Update Bed
-        const wasOccupied = bed.status === "occupied";
-        bed.status = "occupied";
-        bed.residentId = residentId;
-        await bed.save({ session });
-
-        // 2. Update User (Resident)
+        // 1. Find User (Resident)
         const user = await User.findById(residentId).session(session);
         if (!user) {
             await session.abortTransaction();
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        // 2.5. Move Logic: Handle room/bed occupancy changes
-        const isSelfAssign = user.bedId?.toString() === bed._id.toString();
-        if (!isSelfAssign) {
-            // Remove from OLD bed if exists
-            if (user.bedId) {
-                await Bed.findByIdAndUpdate(user.bedId, { status: "available", residentId: null }, { session });
-            }
+        const oldRoomId = user.roomId?.toString();
+        const oldBedId = user.bedId?.toString();
+        const newRoomId = bed.roomId.toString();
+        const newBedId = bed._id.toString();
 
-            // Handle Room Occupancy Transfer
-            const oldRoomId = user.roomId?.toString();
-            const newRoomId = bed.roomId.toString();
-
-            if (oldRoomId !== newRoomId) {
-                // If they were in an old room, leave it
-                if (oldRoomId) {
-                    await Room.findByIdAndUpdate(oldRoomId, { $inc: { occupiedBeds: -1 } }, { session });
-                }
-                // Enter the new room
-                await Room.findByIdAndUpdate(newRoomId, { $inc: { occupiedBeds: 1 } }, { session });
-            } else {
-                // Same room transfer: Only increment if they weren't counted in the room yet
-                // This happens if they were unassigned or we are occupying an available bed
-                if (!wasOccupied && !oldRoomId) {
-                    await Room.findByIdAndUpdate(newRoomId, { $inc: { occupiedBeds: 1 } }, { session });
-                }
-            }
+        // 2. Handle Logic for "Leaving" the old setup
+        if (oldBedId && oldBedId !== newBedId) {
+            // Mark the old bed as available
+            await Bed.findByIdAndUpdate(oldBedId, { status: "available", residentId: null }).session(session);
         }
 
-        // 3. Update User details
+        if (oldRoomId && oldRoomId !== newRoomId) {
+            // Decrement occupancy for the room they are leaving
+            await Room.findByIdAndUpdate(oldRoomId, { $inc: { occupiedBeds: -1 } }).session(session);
+        }
+
+        // 3. Handle Logic for "Entering" the new setup
+        // Only increment the new room counter if they weren't already counted in it
+        if (oldRoomId !== newRoomId) {
+            await Room.findByIdAndUpdate(newRoomId, { $inc: { occupiedBeds: 1 } }).session(session);
+        }
+
+        // 4. Update the Bed to Occupied
+        bed.status = "occupied";
+        bed.residentId = residentId;
+        await bed.save({ session });
+
+        // 5. Update the User profile
         user.roomId = bed.roomId;
         user.bedId = bed._id;
         user.propertyId = bed.propertyId;
         await user.save({ session });
 
         await session.commitTransaction();
+
+        logger.info(`[MOVE] Resident ${user.name} moved to Room ${newRoomId} Bed ${newBedId}`);
+        return res.json({ success: true, message: "Resident assigned successfully", data: { bed, user } });
 
         return res.json({ success: true, message: "Resident assigned successfully", data: { bed, user } });
     } catch (err) {
