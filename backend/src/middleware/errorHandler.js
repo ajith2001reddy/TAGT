@@ -1,28 +1,38 @@
-﻿import logger from "../utils/logger.js";
+﻿import process from "process";
+import logger from "../utils/logger.js";
 
 export const notFound = (req, res, next) => {
-    res.status(404).json({
-        success: false,
-        message: `Route not found: ${req.originalUrl}`
-    });
+    const error = new Error(`Not Found - ${req.originalUrl}`);
+    res.status(404);
+    next(error);
 };
 
+// eslint-disable-next-line no-unused-vars
 export const errorHandler = (err, req, res, next) => {
-    logger.error(`${req.method} ${req.originalUrl} - ${err.message}`, {
-        stack: err.stack,
-        url: req.originalUrl,
-        method: req.method,
-        ip: req.ip
-    });
-    if (res.headersSent) {
-        return next(err);
+    logger.error(`[${req.method}] ${req.url} - ${err.message}`);
+
+    if (err.name === "ValidationError") {
+        return res.status(400).json({
+            success: false,
+            message: "Validation Error",
+            errors: Object.values(err.errors).map(e => e.message)
+        });
     }
 
-    const status = err.status || err.statusCode || 500;
+    if (err.code === 11000) {
+        return res.status(400).json({
+            success: false,
+            message: "Duplicate field value entered"
+        });
+    }
 
-    res.status(status).json({
+    // If the status code was set by a previous middleware (e.g., notFound), use it.
+    // Otherwise, default to 500.
+    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+
+    return res.status(statusCode).json({
         success: false,
-        message: err.message || "Server error",
-        ...(process.env.NODE_ENV === "development" && { stack: err.stack })
+        message: err.message || "Server Error",
+        stack: process.env.NODE_ENV === "development" ? err.stack : undefined
     });
 };

@@ -18,8 +18,8 @@ export default function ForgotPasswordPage() {
             await sendPasswordResetEmail(auth, email);
             setSent(true);
 
-        } catch (error: any) {
-
+        } catch (err: unknown) {
+            const error = err as any;
             console.error("Password reset error:", error);
 
             alert(
@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
             <div style={{ marginBottom: "32px" }}>
                 <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "8px" }}>Reset password</h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-                    We'll send a reset link to your email
+                    We&apos;ll send a reset link to your email
                 </p>
             </div>
 

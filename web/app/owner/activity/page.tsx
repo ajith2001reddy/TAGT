@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Activity, Shield, RefreshCw, Filter, Clock,
+    Activity, RefreshCw, Filter, Clock,
     Globe, ChevronDown, Search
 } from "lucide-react";
 

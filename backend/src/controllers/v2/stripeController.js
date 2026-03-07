@@ -1,8 +1,6 @@
 import Payment from "../../models/Payment.js";
-import User from "../../models/User.js";
-import Property from "../../models/Property.js";
 import { createCheckoutSession, createSubscriptionCheckoutSession, constructWebhookEvent, isStripeEnabled } from "../../services/stripeService.js";
-import { sendPaymentConfirmation, sendRentReminder } from "../../services/emailService.js";
+import { sendPaymentConfirmation } from "../../services/emailService.js";
 import { generateInvoiceBuffer } from "../../utils/invoiceGenerator.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
@@ -82,12 +80,14 @@ export const createSubscriptionSession = async (req, res, next) => {
    POST /v2/stripe/webhook
    Handles Stripe events (charge.succeeded, etc.)
 ───────────────────────────────────────────────── */
-export const stripeWebhook = async (req, res, next) => {
+export const stripeWebhook = async (req, res) => {
+    let event;
+
     try {
         const sig = req.headers["stripe-signature"];
         if (!sig) return res.status(400).send("Missing stripe-signature header");
 
-        const event = constructWebhookEvent(req.body, sig);
+        event = constructWebhookEvent(req.body, sig);
 
         if (event.type === "checkout.session.completed") {
             const session = event.data.object;
@@ -111,7 +111,7 @@ export const stripeWebhook = async (req, res, next) => {
                     }
 
                     // Send confirmation email WITH PDF ATTACHMENT
-                    if (payment.resident?.email) {
+                    if (payment && payment.resident?.email) {
                         await sendPaymentConfirmation({
                             name: payment.resident.name,
                             email: payment.resident.email,

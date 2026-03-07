@@ -68,7 +68,7 @@ router.post("/login", async (req, res) => {
       query = { email: identifier.toLowerCase() };
     } else {
       // Clean and format phone
-      const cleanPhone = identifier.replace(/[\s\-\(\)]/g, '');
+      const cleanPhone = identifier.replace(/[\s-()]/g, '');
       const formattedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+91${cleanPhone}`;
       query = { phoneNumber: formattedPhone };
     }

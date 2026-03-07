@@ -1,7 +1,6 @@
 // backend/src/controllers/v2/supportController.js
 import SupportTicket from "../../models/SupportTicket.js";
 import SupportMessage from "../../models/SupportMessage.js";
-import User from "../../models/User.js";
 import { sendTicketCreatedEmail, sendTicketReplyEmail, sendTicketResolvedEmail } from "../../services/emailService.js";
 import { createNotification } from "../../services/notificationService.js";
 import logger from "../../utils/logger.js";

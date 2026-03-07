@@ -1,9 +1,7 @@
 // src/controllers/v2/subscriptionController.js
-import { Subscription, PLAN_LIMITS, getPlanForOwner } from "../../models/Subscription.js";
+import { Subscription, PLAN_LIMITS } from "../../models/Subscription.js";
 import User from "../../models/User.js";
 import Room from "../../models/rooms.js";
-import Payment from "../../models/Payment.js";
-import Property from "../../models/Property.js";
 
 /* ─────────────────────────────────────────────────
    GET /v2/subscription/my-plan

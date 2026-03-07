@@ -30,7 +30,8 @@ import { createNotice, listNotices } from "../../controllers/v2/noticeController
 // Phase 7: Profile & User Management
 import { getProfile, updateProfile, changePassword, superAdminManageUser } from "../../controllers/v2/userController.js";
 
-import { dynamicTenantRateLimiter } from "../../middleware/tenantLimiter.js";
+// All API V2 routes are under /api/v2
+// Currently dynamic limiters are applied individually or globally in app.js
 
 const router = Router();
 

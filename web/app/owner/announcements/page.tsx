@@ -22,7 +22,6 @@ interface Property {
 }
 
 export default function AnnouncementsPage() {
-    const { user } = useAuth();
     const [notices, setNotices] = useState<Notice[]>([]);
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);

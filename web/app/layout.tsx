@@ -3,7 +3,6 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { Toaster } from "react-hot-toast";
 import { PostHogProvider } from "@/components/PostHogProvider";
-import Script from "next/script";
 
 export const viewport = {
   width: "device-width",

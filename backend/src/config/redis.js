@@ -1,3 +1,4 @@
+import process from "process";
 import Redis from "ioredis";
 import logger from "../utils/logger.js";
 

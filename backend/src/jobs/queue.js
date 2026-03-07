@@ -1,6 +1,5 @@
 import { Queue } from "bullmq";
 import redis from "../config/redis.js";
-import logger from "../utils/logger.js";
 
 /**
  * BullMQ Implementation of the Background Task Queue

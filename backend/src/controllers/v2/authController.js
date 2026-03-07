@@ -1,5 +1,4 @@
 import User from "../../models/User.js";
-import admin from "../../config/firebase.js";
 
 export const login = async (req, res) => {
     res.json({

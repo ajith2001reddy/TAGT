@@ -1,6 +1,5 @@
 // src/controllers/v2/activityController.js
 import ActivityLog from "../../models/ActivityLog.js";
-import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import eventBus from "../../utils/eventBus.js";
 
 /* ─────────────────────────────────────────────────
@@ -17,13 +16,15 @@ export const logActivity = (action) => async (req, res, next) => {
                 propertyId: req.user.propertyId || null,
                 ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown",
                 route: `${req.method} ${req.originalUrl}`,
-            }).catch(() => { }); // fire-and-forget, never block the request
+            });
 
             if (log) {
                 eventBus.publish("activity.logged", { action, userId: req.user._id });
             }
         }
-    } catch { }
+    } catch {
+        // Silently fail logging if database errors
+    }
     next();
 };
 

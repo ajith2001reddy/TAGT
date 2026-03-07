@@ -8,12 +8,13 @@ import { createResidentWorkflow, sendWelcomeEmailSafe } from "../../services/res
 /**
  * List residents for a property
  */
-export const listResidents = async (req, res, next) => {
+export const listResidents = async (req, res) => {
     try {
         const scope = buildPropertyFilter(req.user);
+        const query = req.user.role === "super_admin" ? {} : scope;
         const filter = req.user.role === "resident"
             ? { _id: req.user._id }
-            : { role: "resident", ...scope };
+            : { role: "resident", ...query };
 
         const residents = await User.find(filter)
             .populate("roomId", "roomNumber rent")
@@ -22,7 +23,7 @@ export const listResidents = async (req, res, next) => {
 
         return res.json({ success: true, data: residents });
     } catch (err) {
-        next(err);
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
 
@@ -109,7 +110,7 @@ export const superAdminUpdateResident = async (req, res, next) => {
 /**
  * Create a new resident using the service workflow
  */
-export const createResident = async (req, res, next) => {
+export const createResident = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -236,7 +237,7 @@ export const deactivateResident = async (req, res, next) => {
 /**
  * Add a note to a resident's profile
  */
-export const addResidentNote = async (req, res, next) => {
+export const addResidentNote = async (req, res) => {
     try {
         const scope = buildPropertyFilter(req.user);
         const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
@@ -253,7 +254,7 @@ export const addResidentNote = async (req, res, next) => {
         if (!resident) return res.status(404).json({ success: false, message: "Resident not found" });
         return res.json({ success: true, data: resident.notes });
     } catch (err) {
-        next(err);
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
 
@@ -263,7 +264,7 @@ export const addResidentNote = async (req, res, next) => {
 /**
  * Send a notification to a resident
  */
-export const sendNotification = async (req, res, next) => {
+export const sendNotification = async (req, res) => {
     try {
         const { id } = req.params;
         const { type, message } = req.body;
@@ -290,11 +291,11 @@ export const sendNotification = async (req, res, next) => {
 
         return res.json({ success: true, message: "Notification sent successfully" });
     } catch (err) {
-        next(err);
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
 
-export const getResidentHistory = async (req, res, next) => {
+export const getResidentHistory = async (req, res) => {
     try {
         const scope = buildPropertyFilter(req.user);
         const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
@@ -313,6 +314,6 @@ export const getResidentHistory = async (req, res, next) => {
 
         return res.json({ success: true, data: { resident, payments } });
     } catch (err) {
-        next(err);
+        return res.status(500).json({ success: false, message: err.message });
     }
 };

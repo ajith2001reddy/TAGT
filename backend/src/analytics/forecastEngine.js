@@ -1,7 +1,5 @@
 import Room from "../models/rooms.js";
-import { buildPropertyFilter } from "../utils/tenantScope.js";
-async function getCurrentOccupancy(req) {
-    const scope = buildPropertyFilter(req.user);
+async function getCurrentOccupancy() {
     const rooms = await Room.find({}, "totalBeds occupiedBeds").lean();
 
     const totalBeds = rooms.reduce(

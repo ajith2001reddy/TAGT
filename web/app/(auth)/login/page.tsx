@@ -124,8 +124,9 @@ export default function LoginPage() {
                         } else {
                             throw new Error(data.message || "Login failed");
                         }
-                    } catch (err: any) {
-                        setError(err.response?.data?.message || "Invalid phone number or password. Use OTP instead?");
+                    } catch (err: unknown) {
+                        const error = err as any;
+                        setError(error.response?.data?.message || "Invalid phone number or password. Use OTP instead?");
                         setLoading(false);
                         return;
                     }
@@ -147,14 +148,15 @@ export default function LoginPage() {
             } else {
                 setError("Please enter a valid email or phone number.");
             }
-        } catch (err: any) {
-            console.error("Login Error:", err);
-            if (err.message?.includes("reCAPTCHA") || err.code?.includes("captcha")) {
+        } catch (err: unknown) {
+            const error = err as any;
+            console.error("Login Error:", error);
+            if (error.message?.includes("reCAPTCHA") || error.code?.includes("captcha")) {
                 setError("Blocked by security check. Please ensure 'localhost' is whitelisted in Firebase and reCAPTCHA Enterprise is enabled in Cloud Console.");
-            } else if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found") {
+            } else if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found") {
                 setError("Invalid login details.");
             } else {
-                setError(err.message || "Authentication failed. Try again.");
+                setError(error.message || "Authentication failed. Try again.");
             }
         } finally {
             setLoading(false);
@@ -167,7 +169,7 @@ export default function LoginPage() {
         try {
             await confirmationResult.confirm(otp);
             // Redirection is handled by the useEffect once context syncs
-        } catch (err) {
+        } catch {
             setError("Invalid OTP code. Please try again.");
         } finally {
             setLoading(false);
@@ -186,8 +188,9 @@ export default function LoginPage() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             // Redirection is handled by the useEffect once context syncs
-        } catch (err: any) {
-            if (err.code !== "auth/popup-closed-by-user") {
+        } catch (err: unknown) {
+            const error = err as any;
+            if (error.code !== "auth/popup-closed-by-user") {
                 setError("Google sign-in failed.");
             }
         } finally {
@@ -329,7 +332,7 @@ export default function LoginPage() {
             </form>
 
             <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)", textAlign: "center", fontSize: "14px", color: "var(--text-secondary)" }}>
-                Don't have an account? <Link href="/signup" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Create one</Link>
+                Don&apos;t have an account? <Link href="/signup" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Create one</Link>
             </div>
 
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

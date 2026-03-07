@@ -1,5 +1,6 @@
+import mongoose from "mongoose";
+
 /**
- * Returns the filter for querying Property documents
  */
 export const getPropertyScope = (user) => {
     if (user.role === "super_admin") return {};

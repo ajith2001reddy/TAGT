@@ -1,12 +1,12 @@
 "use client";
 
 import { useOwnerStats } from "@/features/owner/useOwnerStats";
-import { DashboardCard, ChartCard } from "@/components/ui/PremiumUI";
+import { DashboardCard } from "@/components/ui/PremiumUI";
 import { motion } from "framer-motion";
 import { TrendingUp, PieChart, Activity, Building, ArrowUpRight, ArrowDownRight, DownloadCloud, LineChart } from "lucide-react";
 
 export default function InvestorDashboard() {
-    const { stats, detailed, loading } = useOwnerStats(); // For now, leveraging existing stats for mock investor view
+    const { stats, loading } = useOwnerStats(); // For now, leveraging existing stats for mock investor view
 
     if (loading) return (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px" }}>

@@ -117,7 +117,7 @@ export default function OwnerOnboardingPage() {
                                     border: "1px solid var(--border-subtle)"
                                 }}>
                                     {request.residentId?.photo ? (
-                                        <img src={request.residentId.photo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                        <div style={{ backgroundImage: `url(${request.residentId.photo})`, backgroundSize: 'cover', backgroundPosition: 'center', width: "100%", height: "100%" }} />
                                     ) : (
                                         request.residentId?.name?.charAt(0) ?? "?"
                                     )}

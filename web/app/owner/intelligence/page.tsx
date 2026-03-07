@@ -1,11 +1,8 @@
 "use client";
 
 import { useOwnerStats } from "@/features/owner/useOwnerStats";
-import { DashboardCard } from "@/components/ui/PremiumUI";
 import { motion } from "framer-motion";
 import { BrainCircuit, TrendingUp, AlertOctagon, Lightbulb, Activity, Zap } from "lucide-react";
-import Link from "next/link";
-import { RevenueTrendChart } from "@/components/owner/DashboardCharts"; // Reusing existing chart
 
 export default function IntelligenceDashboard() {
     const { stats, loading } = useOwnerStats(); // For now, leveraging existing stats for mock intelligence

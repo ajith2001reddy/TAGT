@@ -42,11 +42,12 @@ export default function SignupPage() {
 
             router.push("/dashboard");
 
-        } catch (err: any) {
-            if (err.code === "auth/email-already-in-use") {
+        } catch (err: unknown) {
+            const error = err as any;
+            if (error.code === "auth/email-already-in-use") {
                 setError("Email is already registered. Please login instead.");
             } else {
-                setError(err.message || "Something went wrong.");
+                setError(error.message || "Something went wrong.");
             }
         } finally {
             setLoading(false);
@@ -62,8 +63,9 @@ export default function SignupPage() {
                 name: result.user.displayName || result.user.email?.split("@")[0] || "User"
             });
             router.push("/dashboard");
-        } catch (err: any) {
-            if (err.code !== "auth/popup-closed-by-user") {
+        } catch (err: unknown) {
+            const error = err as any;
+            if (error.code !== "auth/popup-closed-by-user") {
                 setError("Google sign-up failed. Please try again.");
             }
         } finally {

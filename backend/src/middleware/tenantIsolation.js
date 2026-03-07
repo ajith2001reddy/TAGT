@@ -6,8 +6,6 @@
  */
 
 import { AsyncLocalStorage } from "async_hooks";
-import mongoose from "mongoose";
-
 export const tenantContext = new AsyncLocalStorage();
 
 /**

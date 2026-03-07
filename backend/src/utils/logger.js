@@ -1,6 +1,5 @@
 import winston from "winston";
 import LokiTransport from "winston-loki";
-import * as Sentry from "@sentry/node";
 
 const { combine, timestamp, json, colorize, printf, errors } = winston.format;
 
