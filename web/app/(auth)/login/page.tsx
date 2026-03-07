@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     signInWithEmailAndPassword,
     signInWithPopup,
@@ -43,16 +43,22 @@ export default function LoginPage() {
     const [otp, setOtp] = useState("");
     const [showOtp, setShowOtp] = useState(false);
 
-    useEffect(() => {
-        if (typeof window !== "undefined" && !window.recaptchaVerifier) {
+    const isEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    const isPhone = (val: string) => /^\+?[1-9]\d{9,14}$/.test(val.replace(/[\s\-\(\)]/g, ''));
+
+    const initRecaptcha = () => {
+        try {
+            // If already exists, clear it to avoid "element removed" errors on re-render
+            if (window.recaptchaVerifier) {
+                window.recaptchaVerifier.clear();
+            }
             window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
                 size: "invisible"
             });
+        } catch (err) {
+            console.error("Recaptcha initialization failed:", err);
         }
-    }, []);
-
-    const isEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-    const isPhone = (val: string) => /^\+?[1-9]\d{9,14}$/.test(val.replace(/\s/g, ''));
+    };
 
     async function handleLogin(e: React.FormEvent) {
         e.preventDefault();
@@ -66,19 +72,33 @@ export default function LoginPage() {
                 await signInWithEmailAndPassword(auth, identifier, password);
                 router.push("/dashboard");
             } else if (isPhone(identifier)) {
-                const formattedPhone = identifier.startsWith("+") ? identifier : `+${identifier}`;
+                // Initialize JIT (Just In Time) to ensure the DOM element exists and ref is fresh
+                initRecaptcha();
+
+                const cleanPhone = identifier.replace(/[\s\-\(\)]/g, '');
+                // Basic check for country code
+                const formattedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+91${cleanPhone}`;
+
                 const result = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
                 setConfirmationResult(result);
                 setShowOtp(true);
             } else {
-                setError("Please enter a valid email or phone number (with country code, e.g., +91).");
+                setError("Please enter a valid email or phone number (+91...).");
             }
         } catch (err: any) {
-            console.error(err);
+            console.error("Login Error:", err);
+            // Cleanup on failure
+            if (window.recaptchaVerifier) {
+                window.recaptchaVerifier.clear();
+                window.recaptchaVerifier = null;
+            }
+
             if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found") {
                 setError("Invalid login details. Check your email/phone and password.");
             } else if (err.code === "auth/too-many-requests") {
                 setError("Too many attempts. Please try again later.");
+            } else if (err.code === "auth/captcha-check-failed") {
+                setError("reCAPTCHA failed. Please try again.");
             } else {
                 setError("Authentication failed. " + (err.message || "Try again."));
             }
@@ -123,6 +143,7 @@ export default function LoginPage() {
 
     return (
         <div className="animate-fade-in">
+            {/* Stable div for reCAPTCHA - must always be in DOM */}
             <div id="recaptcha-container"></div>
 
             <div style={{ marginBottom: "28px" }}>
@@ -176,14 +197,14 @@ export default function LoginPage() {
                             <label className="label-text" style={{ display: "block", marginBottom: "8px" }}>Email or Phone Number</label>
                             <input
                                 className="input-field"
-                                placeholder="you@email.com or +91..."
+                                placeholder="you@email.com or 9876543210"
                                 value={identifier}
                                 onChange={(e) => setIdentifier(e.target.value)}
                                 required
                             />
                         </div>
 
-                        {isEmail(identifier) && (
+                        {(isEmail(identifier) || (!isPhone(identifier) && identifier.length > 3)) && (
                             <div className="animate-fade-down">
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                                     <label className="label-text">Password</label>
