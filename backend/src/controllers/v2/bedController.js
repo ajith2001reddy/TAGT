@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Bed from "../../models/Bed.js";
 import Room from "../../models/rooms.js";
 import User from "../../models/User.js";
+import logger from "../../utils/logger.js";
 
 /**
  * Assign a resident to a bed (Atomic update)
