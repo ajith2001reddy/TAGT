@@ -28,6 +28,19 @@ if (provider === "SMTP" && emailEnabled) {
         secure: Number(process.env.SMTP_PORT) === 465,
         auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
         tls: { rejectUnauthorized: false },
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000,
+        socketTimeout: 30000,
+        debug: true, // Show detailed logs
+        logger: true  // Log into winston/console
+    });
+    // Verify connection on startup
+    transporter.verify((error, success) => {
+        if (error) {
+            logger.error("❌ SMTP Connection Error:", { error: error.message });
+        } else {
+            logger.info("✅ SMTP Server is ready to take our messages");
+        }
     });
 }
 
