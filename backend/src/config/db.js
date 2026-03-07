@@ -26,7 +26,7 @@ export const connectDB = async () => {
     while (attempts > 0) {
         try {
             await mongoose.connect(mongoUri, {
-                autoIndex: true,
+                autoIndex: process.env.NODE_ENV !== "production",
                 serverSelectionTimeoutMS: 5000,
                 maxPoolSize: 10,
             });

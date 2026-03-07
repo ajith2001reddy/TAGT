@@ -2,6 +2,9 @@ import { Router, raw } from "express";
 import auth from "../../middleware/auth.js";
 import authorize from "../../middleware/authorize.js";
 import verifyPropertyAccess from "../../middleware/verifyPropertyAccess.js";
+import validate from "../../middleware/validate.js";
+import { loginSchema, registerOwnerSchema } from "../../validations/auth.validation.js";
+import { createRoomSchema, updateRoomSchema } from "../../validations/room.validation.js";
 import { login, registerOwner } from "../../controllers/v2/authController.js";
 import { listRooms, createRoom, updateRoom, deleteRoom, getRoomStats } from "../../controllers/v2/roomController.js";
 import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident } from "../../controllers/v2/residentController.js";
@@ -23,11 +26,16 @@ import { createTicket, listMyTickets, listAllTickets, getTicket, replyToTicket, 
 // Phase 5: Notifications
 import { getNotifications, getUnreadCount, markRead, markAllRead } from "../../controllers/v2/notificationController.js";
 
+import { dynamicTenantRateLimiter } from "../../middleware/tenantLimiter.js";
+
 const router = Router();
 
+// Rate limit applies naturally AFTER auth is successful on any protected route.
+// We'll slip it into standard chains.
+
 /* ── Auth ── */
-router.post("/auth/login", login);
-router.post("/auth/register-owner", registerOwner);
+router.post("/auth/login", validate(loginSchema), login);
+router.post("/auth/register-owner", validate(registerOwnerSchema), registerOwner);
 
 /* ── Super Admin ── */
 router.get("/provider/overview", auth, authorize("super_admin"), getProviderOverview);
@@ -46,8 +54,8 @@ router.get("/analytics/dashboard-summary", auth, authorize("super_admin", "owner
 /* ── Rooms ── */
 router.get("/rooms", auth, authorize("super_admin", "owner"), listRooms);
 router.get("/rooms/stats", auth, authorize("super_admin", "owner"), getRoomStats);
-router.post("/rooms", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createRoom);
-router.put("/rooms/:id", auth, authorize("super_admin", "owner"), updateRoom);
+router.post("/rooms", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createRoomSchema), createRoom);
+router.put("/rooms/:id", auth, authorize("super_admin", "owner"), validate(updateRoomSchema), updateRoom);
 router.delete("/rooms/:id", auth, authorize("super_admin", "owner"), deleteRoom);
 
 /* ── Beds ── */

@@ -1,21 +1,12 @@
 import cron from "node-cron";
 import logger from "../utils/logger.js";
-import { mainQueue, registerJobHandler } from "./queue.js";
-import { generateMonthlyRent } from "./rentGenerator.js";
-import { markOverduePayments } from "./overdueStatusJob.js";
-import { sendUpcomingRentReminders, sendOverdueNotices } from "./emailReminderJob.js";
+import { mainQueue } from "./queue.js";
 
 /**
- * Initializes all background cron schedules and job handlers
+ * Initializes all background cron schedules
  */
 export function initScheduler() {
     logger.info("Initializing BullMQ background job system...");
-
-    // 1. Register handlers in the worker's registry
-    registerJobHandler("MonthlyRentGeneration", generateMonthlyRent);
-    registerJobHandler("MarkOverduePayments", markOverduePayments);
-    registerJobHandler("UpcomingRentReminders", sendUpcomingRentReminders);
-    registerJobHandler("OverdueNotices", sendOverdueNotices);
 
     // 2. Schedule cron jobs to add tasks to the queue
 

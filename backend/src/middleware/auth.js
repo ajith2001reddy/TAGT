@@ -1,6 +1,7 @@
 import admin from "../config/firebase.js";
 import User from "../models/User.js";
 import logger from "../utils/logger.js";
+import { enforceTenantIsolation } from "./tenantIsolation.js";
 
 const firebaseAuth = async (req, res, next) => {
     let token;
@@ -53,7 +54,8 @@ const firebaseAuth = async (req, res, next) => {
         // 3️⃣ Attach user
         req.user = dbUser;
 
-        next();
+        // 4️⃣ Enforce multi-tenant database isolation
+        enforceTenantIsolation(req, res, next);
 
     } catch (error) {
         if (token) logger.error("Token check failed", { suffix: token.slice(-10) });

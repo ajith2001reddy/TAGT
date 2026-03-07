@@ -6,6 +6,10 @@ const REDIS_URL = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 const redis = new Redis(REDIS_URL, {
     maxRetriesPerRequest: null, // Required for BullMQ
     retryStrategy: (times) => {
+        // Cap retry attempts
+        if (times >= 20) {
+            return null; // stop retrying after 20 attempts
+        }
         const delay = Math.min(times * 50, 2000);
         return delay;
     },

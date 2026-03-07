@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const bedSchema = new mongoose.Schema(
     {
@@ -53,4 +54,7 @@ bedSchema.index({ roomId: 1, bedNumber: 1 }, { unique: true });
 // ✅ Compound index for multi-tenant list/filter
 bedSchema.index({ propertyId: 1, status: 1 });
 
-export default mongoose.model("Bed", bedSchema);
+// Apply tenant isolation
+bedSchema.plugin(tenantIsolationPlugin);
+
+export default mongoose.models.Bed || mongoose.model("Bed", bedSchema);

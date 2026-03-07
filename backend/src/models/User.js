@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const userSchema = new mongoose.Schema(
     {
@@ -129,4 +130,7 @@ userSchema.methods.comparePassword = async function (plain) {
     return bcrypt.compare(plain, this.password);
 };
 
-export default mongoose.model("User", userSchema);
+// Apply tenant isolation
+userSchema.plugin(tenantIsolationPlugin);
+
+export default mongoose.models.User || mongoose.model("User", userSchema);

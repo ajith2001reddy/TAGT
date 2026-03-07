@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const roomSchema = new mongoose.Schema(
     {
@@ -84,4 +85,7 @@ roomSchema.pre(/^find/, function (next) {
     next();
 });
 
-export default mongoose.model("Room", roomSchema);
+// Apply tenant isolation
+roomSchema.plugin(tenantIsolationPlugin);
+
+export default mongoose.models.Room || mongoose.model("Room", roomSchema);

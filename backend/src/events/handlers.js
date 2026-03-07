@@ -1,6 +1,7 @@
 import eventBus from "../utils/eventBus.js";
 import logger from "../utils/logger.js";
 import ActivityLog from "../models/ActivityLog.js";
+import Notification from "../models/Notification.js";
 import { businessEventsCounter } from "../middleware/metrics.js";
 
 /**
@@ -13,8 +14,19 @@ export const initEventHandlers = () => {
         businessEventsCounter.labels("resident.request.created").inc();
         logger.info("[Event Handler] Processing resident.request.created", { residentId: data.residentId });
 
-        // Potential side effect: Send email to property owner
-        // if (process.env.NODE_ENV === "production") await sendOwnerNotification(data);
+        try {
+            await Notification.create({
+                recipient: data.ownerId,
+                title: "New Resident Request",
+                message: `You have a new resident join request.`,
+                type: "alert",
+                link: `/owner/onboarding`,
+                propertyId: data.propertyId
+            });
+            // TODO: dispatch Email to Owner via BullMQ
+        } catch (err) {
+            logger.error("Failed to process event resident.request.created", { error: err.message });
+        }
     });
 
     // 2️⃣ Resident Approved
@@ -31,6 +43,15 @@ export const initEventHandlers = () => {
                 propertyId: data.propertyId,
                 route: "EVENT_BUS"
             });
+
+            await Notification.create({
+                recipient: data.residentId,
+                title: "Application Approved",
+                message: `Your application to join the property was approved. Welcome!`,
+                type: "success",
+                propertyId: data.propertyId
+            });
+            // TODO: dispatch Welcome Email to Resident
         } catch (err) {
             logger.error("Failed to log resident admission via EventBus", { error: err.message });
         }
@@ -40,7 +61,29 @@ export const initEventHandlers = () => {
     eventBus.on("payment.received", async (data) => {
         businessEventsCounter.labels("payment.received").inc();
         logger.info("[Event Handler] Processing payment.received", { paymentId: data.paymentId });
-        // side effect: Update occupancy analytics cache or trigger notification
+
+        try {
+            await Notification.create({
+                recipient: data.residentId,
+                title: "Payment Received",
+                message: `We received your payment of ${data.amount}. Thank you!`,
+                type: "success",
+                propertyId: data.propertyId,
+                link: `/resident/payments`
+            });
+
+            await Notification.create({
+                recipient: data.ownerId,
+                title: "New Rent Payment",
+                message: `Payment of ${data.amount} received from Resident ID ${data.residentId}.`,
+                type: "success",
+                propertyId: data.propertyId,
+                link: `/owner/payments`
+            });
+            // TODO: dispatch Slack Notification to Owner's Channel
+        } catch (err) {
+            logger.error("Failed to distribute payment receipts via EventBus", { error: err.message });
+        }
     });
 
     logger.info("🎯 Domain Event Handlers initialized.");

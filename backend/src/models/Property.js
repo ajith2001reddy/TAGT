@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const propertySchema = new mongoose.Schema(
     {
@@ -38,4 +39,7 @@ propertySchema.pre(/^find/, function (next) {
 
 propertySchema.index({ owner: 1, isActive: 1 });
 
-export default mongoose.model("Property", propertySchema);
+// Apply tenant isolation
+propertySchema.plugin(tenantIsolationPlugin);
+
+export default mongoose.models.Property || mongoose.model("Property", propertySchema);

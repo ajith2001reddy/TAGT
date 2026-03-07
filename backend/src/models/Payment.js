@@ -1,4 +1,5 @@
 ﻿import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 
 const PaymentSchema = new mongoose.Schema(
@@ -140,5 +141,7 @@ PaymentSchema.index({ propertyId: 1, type: 1, status: 1 });
 PaymentSchema.index({ propertyId: 1, status: 1, dueDate: 1 });
 PaymentSchema.index({ propertyId: 1, month: 1, status: 1 });
 
-export default mongoose.model("Payment", PaymentSchema);
+// Apply tenant isolation
+PaymentSchema.plugin(tenantIsolationPlugin);
 
+export default mongoose.models.Payment || mongoose.model("Payment", PaymentSchema);

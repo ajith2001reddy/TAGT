@@ -3,6 +3,7 @@
 
 
 import http from "http";
+import mongoose from "mongoose";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
 import { initScheduler } from "./jobs/scheduler.js";
@@ -35,3 +36,16 @@ async function startServer() {
 }
 
 startServer();
+
+// Graceful Shutdown Handlers
+process.on("SIGINT", async () => {
+    logger.info("🛑 SIGINT received. Shutting down gracefully...");
+    await mongoose.connection.close();
+    process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+    logger.info("🛑 SIGTERM received. Shutting down gracefully...");
+    await mongoose.connection.close();
+    process.exit(0);
+});
