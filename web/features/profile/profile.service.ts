@@ -10,6 +10,7 @@ export interface UserProfile {
     firebaseUid?: string;
     propertyId?: string;
     propertyIds?: string[];
+    isPasswordSet: boolean;
 }
 
 export async function fetchProfile(): Promise<UserProfile> {

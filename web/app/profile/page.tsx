@@ -96,6 +96,11 @@ export default function ProfilePage() {
     async function handleChangePassword(e: React.FormEvent) {
         e.preventDefault();
         setPassError(""); setPassSuccess("");
+        const hasPassword = !!profile?.isPasswordSet;
+
+        if (hasPassword && !passwords.current) {
+            return setPassError("Current password is required.");
+        }
 
         if (passwords.new !== passwords.confirm) {
             return setPassError("New passwords do not match.");
@@ -104,7 +109,8 @@ export default function ProfilePage() {
         setPassSaving(true);
         try {
             await changePassword({ currentPassword: passwords.current, newPassword: passwords.new });
-            setPassSuccess("Password changed successfully!");
+            await loadProfile(); // Refresh to update isPasswordSet flag
+            setPassSuccess(hasPassword ? "Password changed successfully!" : "Password created successfully!");
             setPasswords({ current: "", new: "", confirm: "" });
             setTimeout(() => setPassSuccess(""), 3000);
         } catch (err: any) {
@@ -168,17 +174,34 @@ export default function ProfilePage() {
 
                     {/* Account Security - Only for non-super admins */}
                     {profile?.role !== "super_admin" && (
-                        <Section title="Account Security">
+                        <Section title={profile?.isPasswordSet ? "Security & Password" : "Secure Your Account"}>
+                            {!profile?.isPasswordSet && (
+                                <div style={{
+                                    padding: "16px",
+                                    background: "rgba(0,212,255,0.05)",
+                                    borderRadius: "12px",
+                                    border: "1px solid rgba(0,212,255,0.1)",
+                                    marginBottom: "20px",
+                                    fontSize: "13px",
+                                    color: "var(--text-secondary)",
+                                    lineHeight: "1.5"
+                                }}>
+                                    <p style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "4px" }}>🔑 Password Login</p>
+                                    You are currently using Phone/OTP login. Set a password here to login faster next time without needing an SMS code.
+                                </div>
+                            )}
                             <form onSubmit={handleChangePassword}>
-                                <InputGroup label="Current Password" icon={Lock} type="password" value={passwords.current} onChange={(e: any) => setPasswords({ ...passwords, current: e.target.value })} placeholder="••••••••" />
-                                <InputGroup label="New Password" icon={ShieldCheck} type="password" value={passwords.new} onChange={(e: any) => setPasswords({ ...passwords, new: e.target.value })} placeholder="••••••••" />
-                                <InputGroup label="Confirm New Password" icon={ShieldCheck} type="password" value={passwords.confirm} onChange={(e: any) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="••••••••" />
+                                {profile?.isPasswordSet && (
+                                    <InputGroup label="Current Password" icon={Lock} type="password" value={passwords.current} onChange={(e: any) => setPasswords({ ...passwords, current: e.target.value })} placeholder="••••••••" />
+                                )}
+                                <InputGroup label={profile?.isPasswordSet ? "New Password" : "Create Password"} icon={ShieldCheck} type="password" value={passwords.new} onChange={(e: any) => setPasswords({ ...passwords, new: e.target.value })} placeholder="••••••••" />
+                                <InputGroup label="Confirm Password" icon={ShieldCheck} type="password" value={passwords.confirm} onChange={(e: any) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="••••••••" />
 
                                 {passError && <div style={{ color: "var(--red)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--red-bg)", borderRadius: "8px", border: "1px solid rgba(255,82,82,0.1)" }}>{passError}</div>}
                                 {passSuccess && <div style={{ color: "var(--green)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid rgba(0,230,118,0.1)" }}>{passSuccess}</div>}
 
-                                <button type="submit" className="btn-ghost" disabled={passSaving} style={{ width: "100%", height: "48px" }}>
-                                    {passSaving ? "Updating password..." : "Reset Password"}
+                                <button type="submit" className="btn-ghost" disabled={passSaving} style={{ width: "100%", height: "48px", gap: "10px" }}>
+                                    {passSaving ? "Updating password..." : profile?.isPasswordSet ? "Change Password" : "Set Login Password"}
                                 </button>
                             </form>
                         </Section>
