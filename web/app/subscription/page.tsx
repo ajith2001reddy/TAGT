@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Infinity } from "lucide-react";
@@ -7,11 +8,11 @@ import { ArrowLeft, Check, Infinity } from "lucide-react";
 const TIERS = [
     {
         name: "Starter",
-        price: 29,
+        price: 0,
         desc: "For small operators just getting started.",
         features: [
-            "Up to 20 Rooms",
-            "Up to 50 Residents",
+            "Up to 10 Rooms",
+            "Up to 20 Residents",
             "Basic Maintenance Tracker",
             "Manual Billing",
             "Email Support"
@@ -21,49 +22,32 @@ const TIERS = [
         color: "#00d4ff"
     },
     {
-        name: "Growth",
-        price: 99,
-        desc: "Everything you need to scale operations.",
+        name: "Professional",
+        price: 999,
+        desc: "Everything you need to automate operations.",
         features: [
             "Up to 100 Rooms",
-            "Up to 300 Residents",
+            "Up to 500 Residents",
             "Automated Rent Invoicing",
             "Auto-Late Fee Calculation",
             "Email & SMS Reminders",
-            "Basic Analytics"
+            "Financial Analytics Dashboard"
         ],
-        buttonText: "Upgrade to Growth",
-        highlight: false,
+        buttonText: "Upgrade to Professional",
+        highlight: true,
         color: "#34d399"
     },
     {
-        name: "Pro",
-        price: 299,
-        desc: "Advanced intelligence for serious portfolios.",
-        features: [
-            "Up to 500 Rooms",
-            "Unlimited Residents",
-            "AI Revenue Forecasting",
-            "Churn Risk Detection",
-            "Maintenance Predictions",
-            "Smart Actionable Alerts",
-            "Priority Support"
-        ],
-        buttonText: "Get Pro Complete",
-        highlight: true,
-        color: "#a78bfa"
-    },
-    {
         name: "Enterprise",
-        price: "Custom",
+        price: 2999,
         desc: "For institutional operators & very large portfolios.",
         features: [
-            "Unlimited Properties",
-            "Custom Data Engineering",
-            "White-labeled App",
-            "Dedicated Account Manager",
-            "On-Premise Deployment Option",
-            "24/7 Phone Support"
+            "Unlimited Properties & Rooms",
+            "Unlimited Residents",
+            "Revenue Leak Detection",
+            "Prioritized 24/7 Support",
+            "Custom API Integrations",
+            "Dedicated Account Manager"
         ],
         buttonText: "Contact Sales",
         highlight: false,
@@ -72,6 +56,7 @@ const TIERS = [
 ];
 
 export default function SubscriptionPage() {
+    const router = useRouter();
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
     return (
@@ -87,12 +72,12 @@ export default function SubscriptionPage() {
             </div>
 
             <nav style={{ padding: "24px 40px", position: "relative", zIndex: 10 }}>
-                <Link href="/" style={{
+                <Link href="/owner" style={{
                     display: "inline-flex", alignItems: "center", gap: "8px",
                     color: "rgba(255,255,255,0.6)", textDecoration: "none", fontSize: "14px", fontWeight: 500,
                     transition: "color 0.2s"
                 }} onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}>
-                    <ArrowLeft size={16} /> Back to Home
+                    <ArrowLeft size={16} /> Back to Dashboard
                 </Link>
             </nav>
 
@@ -167,9 +152,9 @@ export default function SubscriptionPage() {
 
                             <div style={{ marginBottom: "32px" }}>
                                 <span style={{ fontSize: "48px", fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>
-                                    {typeof tier.price === "number" ? `$${billingCycle === "yearly" ? Math.floor(tier.price * 0.8) : tier.price}` : tier.price}
+                                    {typeof tier.price === "number" ? (tier.price === 0 ? "Free" : `₹${(billingCycle === "yearly" ? Math.floor(tier.price * 0.8) : tier.price).toLocaleString()}`) : tier.price}
                                 </span>
-                                {typeof tier.price === "number" && <span style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)" }}>/mo</span>}
+                                {typeof tier.price === "number" && tier.price > 0 && <span style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)" }}>/mo</span>}
                             </div>
 
                             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 40px", flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -181,14 +166,16 @@ export default function SubscriptionPage() {
                                 ))}
                             </ul>
 
-                            <button style={{
-                                width: "100%", padding: "16px", borderRadius: "14px", fontSize: "15px", fontWeight: 700,
-                                background: tier.highlight ? `linear-gradient(135deg, ${tier.color}, #d8b4fe)` : "rgba(255,255,255,0.05)",
-                                color: tier.highlight ? "#000" : "#fff",
-                                border: tier.highlight ? "none" : "1px solid rgba(255,255,255,0.1)",
-                                cursor: "pointer", transition: "all 0.2s",
-                                boxShadow: tier.highlight ? `0 8px 30px ${tier.color}40` : "none"
-                            }}
+                            <button
+                                onClick={() => router.push("/signup")}
+                                style={{
+                                    width: "100%", padding: "16px", borderRadius: "14px", fontSize: "15px", fontWeight: 700,
+                                    background: tier.highlight ? `linear-gradient(135deg, ${tier.color}, #d8b4fe)` : "rgba(255,255,255,0.05)",
+                                    color: tier.highlight ? "#000" : "#fff",
+                                    border: tier.highlight ? "none" : "1px solid rgba(255,255,255,0.1)",
+                                    cursor: "pointer", transition: "all 0.2s",
+                                    boxShadow: tier.highlight ? `0 8px 30px ${tier.color}40` : "none"
+                                }}
                                 onMouseEnter={e => {
                                     if (tier.highlight) {
                                         (e.currentTarget.style.transform = "translateY(-2px)");

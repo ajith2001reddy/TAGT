@@ -18,7 +18,13 @@ export default function AdminSubscriptionsPage() {
         setSubs(res.data.data || []);
         setLoading(false);
     }
-    useEffect(() => { fetchSubs().catch(console.error); }, []);
+    useEffect(() => {
+        let active = true;
+        fetchSubs()
+            .then(() => { if (active) setLoading(false); })
+            .catch(console.error);
+        return () => { active = false; };
+    }, []);
 
     const totals = { free: 0, pro: 0, enterprise: 0 };
     subs.forEach(s => { if (totals[s.plan as keyof typeof totals] !== undefined) totals[s.plan as keyof typeof totals]++; });

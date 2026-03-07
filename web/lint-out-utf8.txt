@@ -1,0 +1,386 @@
+﻿
+> web@0.1.0 lint
+> eslint
+
+
+C:\my project\TAGT\web\app\(auth)\forgot-password\page.tsx
+  22:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\(auth)\login\page.tsx
+   21:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  192:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\(auth)\signup\page.tsx
+  46:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\api\search\route.ts
+   3:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\owner\analytics\page.tsx
+  28:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  94:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\owner\announcements\page.tsx
+    4:10   warning  'useAuth' is defined but never used       @typescript-eslint/no-unused-vars
+   52:23   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   71:23   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:103  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\owner\intelligence\page.tsx
+   38:120  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  145:110  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  145:119  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\my project\TAGT\web\app\owner\onboarding\page.tsx
+   52:23  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  144:41  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  144:84  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\my project\TAGT\web\app\owner\operations\page.tsx
+  4:10  warning  'DashboardCard' is defined but never used     @typescript-eslint/no-unused-vars
+  8:10  warning  'ActivityTimeline' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\my project\TAGT\web\app\owner\page.tsx
+    3:10  warning  'useEffect' is defined but never used     @typescript-eslint/no-unused-vars
+    3:21  warning  'useState' is defined but never used      @typescript-eslint/no-unused-vars
+    5:10  warning  'api' is defined but never used           @typescript-eslint/no-unused-vars
+   11:10  warning  'ArrowUpRight' is defined but never used  @typescript-eslint/no-unused-vars
+   11:71  warning  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+   13:24  warning  'type' is defined but never used          @typescript-eslint/no-unused-vars
+   13:67  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:57  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\owner\payments\page.tsx
+  90:47  warning  'icon' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\my project\TAGT\web\app\owner\residents\page.tsx
+   69:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   74:36   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   79:23   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:21   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:21   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  156:135  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\owner\rooms\page.tsx
+   51:23  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   69:23  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   77:21  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  156:59  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  156:68  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  179:43  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  193:66  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  203:74  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\owner\settings\page.tsx
+   5:21  warning  'Monitor' is defined but never used  @typescript-eslint/no-unused-vars
+  28:36  warning  'label' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\my project\TAGT\web\app\owner\subscription\page.tsx
+  57:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\owner\support\page.tsx
+    5:36   warning  'TicketStatus' is defined but never used                         @typescript-eslint/no-unused-vars
+  109:84   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  109:133  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\my project\TAGT\web\app\page.tsx
+   73:16  warning  'setType' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   81:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\app\page.tsx:81:5
+  79 |
+  80 |   useEffect(() => {
+> 81 |     setMounted(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  82 |     const onScroll = () => setScrollY(window.scrollY);
+  83 |     window.addEventListener("scroll", onScroll, { passive: true });
+  84 |     return () => window.removeEventListener("scroll", onScroll);  react-hooks/set-state-in-effect
+  410:36  warning  'i' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+
+C:\my project\TAGT\web\app\profile\page.tsx
+    6:54   warning  'CreditCard' is defined but never used         @typescript-eslint/no-unused-vars
+   20:107  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+   48:19   warning  'authUser' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   75:18   warning  'err' is defined but never used                @typescript-eslint/no-unused-vars
+   89:23   error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  116:23   error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  163:94   error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  165:99   error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  195:142  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  197:184  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  198:145  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\provider\owners\page.tsx
+    6:10   warning  'UserCog' is defined but never used                              @typescript-eslint/no-unused-vars
+   89:23   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  102:23   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  114:23   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  124:23   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  134:23   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  190:121  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  190:137  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\my project\TAGT\web\app\provider\page.tsx
+  18:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\provider\properties\page.tsx
+  115:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  178:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\provider\property\page.tsx
+   45:18  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  187:12  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  219:12  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  233:12  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\provider\residents\page.tsx
+    6:10  warning  'Users' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   63:8   warning  React Hook useEffect has a missing dependency: 'editTarget'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  100:23  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  122:23  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  132:23  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\provider\subscriptions\page.tsx
+  14:12  warning  'editing' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  21:23  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\app\provider\subscriptions\page.tsx:21:23
+  19 |         setLoading(false);
+  20 |     }
+> 21 |     useEffect(() => { fetchSubs().catch(console.error); }, []);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  22 |
+  23 |     const totals = { free: 0, pro: 0, enterprise: 0 };
+  24 |     subs.forEach(s => { if (totals[s.plan as keyof typeof totals] !== undefined) totals[s.plan as keyof typeof totals]++; });  react-hooks/set-state-in-effect
+  69:60  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\resident\discover\page.tsx
+    6:8   warning  'Image' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   58:23  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  141:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\my project\TAGT\web\app\resident\page.tsx
+  101:23  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  124:26  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\my project\TAGT\web\app\resident\payments\page.tsx
+  36:34  warning  'onPaid' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  49:23  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+  77:40  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\app\resident\payments\page.tsx:77:40
+  75 |         if (typeof window !== "undefined") {
+  76 |             const params = new URLSearchParams(window.location.search);
+> 77 |             if (params.get("success")) setSuccessMsg("Payment successful! Your receipt will be emailed.");
+     |                                        ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  78 |         }
+  79 |         api.get("/v2/payments").then(r => setPayments(r.data.data || [])).catch(() => { }).finally(() => setLoading(false));
+  80 |     }, []);  react-hooks/set-state-in-effect
+
+C:\my project\TAGT\web\app\resident\requests\page.tsx
+  66:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\resident\support\page.tsx
+    2:20  warning  'useEffect' is defined but never used                            @typescript-eslint/no-unused-vars
+    5:36  warning  'TicketStatus' is defined but never used                         @typescript-eslint/no-unused-vars
+  138:90  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\my project\TAGT\web\app\search\page.tsx
+    4:54  warning  'useRef' is defined but never used        @typescript-eslint/no-unused-vars
+    8:55  warning  'AlertCircle' is defined but never used   @typescript-eslint/no-unused-vars
+    8:79  warning  'Sliders' is defined but never used       @typescript-eslint/no-unused-vars
+   24:11  warning  'Place' is defined but never used         @typescript-eslint/no-unused-vars
+   34:37  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\app\subscription\page.tsx
+  6:28  warning  'Infinity' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\my project\TAGT\web\components\PostHogProvider.tsx
+  44:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\components\PostHogProvider.tsx:44:13
+  42 |     useEffect(() => {
+  43 |         if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+> 44 |             setIsAvailable(true);
+     |             ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  45 |         }
+  46 |     }, []);
+  47 |  react-hooks/set-state-in-effect
+
+C:\my project\TAGT\web\components\layout\PropertySwitcher.tsx
+  9:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\components\owner\ActivityTimeline.tsx
+  51:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\components\owner\DashboardCharts.tsx
+   5:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\components\ui\BarChartCard.tsx
+   5:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:79  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\context\AuthContext.tsx
+  34:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\context\PropertyContext.tsx
+  51:18  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\my project\TAGT\web\context\ThemeContext.tsx
+  21:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\context\ThemeContext.tsx:21:13
+  19 |         const savedTheme = localStorage.getItem("tagt-theme") as Theme;
+  20 |         if (savedTheme) {
+> 21 |             setTheme(savedTheme);
+     |             ^^^^^^^^ Avoid calling setState() directly within an effect
+  22 |             document.documentElement.className = savedTheme;
+  23 |         } else {
+  24 |             // 2. Check system preference  react-hooks/set-state-in-effect
+
+C:\my project\TAGT\web\features\owner\ResidentAssignmentModal.tsx
+  36:22  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  57:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\features\owner\rooms.service.ts
+  23:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\my project\TAGT\web\features\owner\useAnalytics.ts
+  11:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\features\owner\useAnalytics.ts:11:9
+   9 |
+  10 |     useEffect(() => {
+> 11 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  12 |         fetchOwnerStats(property?._id ?? null)
+  13 |             .then(setData)
+  14 |             .finally(() => setLoading(false));  react-hooks/set-state-in-effect
+
+C:\my project\TAGT\web\features\owner\useBeds.ts
+  15:23  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  24:8   warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\my project\TAGT\web\features\owner\useOwnerStats.ts
+  12:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\features\owner\useOwnerStats.ts:12:9
+  10 |
+  11 |     useEffect(() => {
+> 12 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  13 |         const pId = property?._id || null;
+  14 |
+  15 |         Promise.all([  react-hooks/set-state-in-effect
+
+C:\my project\TAGT\web\features\owner\usePayments.ts
+  14:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\features\owner\usePayments.ts:14:9
+  12 |
+  13 |     useEffect(() => {
+> 14 |         load().finally(() => setLoading(false));
+     |         ^^^^ Avoid calling setState() directly within an effect
+  15 |     }, []);
+  16 |
+  17 |     return { payments, loading, reload: load };  react-hooks/set-state-in-effect
+
+C:\my project\TAGT\web\features\owner\useRooms.ts
+  28:9  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\features\owner\useRooms.ts:28:9
+  26 |
+  27 |     useEffect(() => {
+> 28 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  29 |         load().finally(() => setLoading(false));
+  30 |     }, [property?._id]); // Re-fetch when selected property changes
+  31 |  react-hooks/set-state-in-effect
+  30:8  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+
+C:\my project\TAGT\web\features\resident\useResidentDashboard.ts
+  25:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\my project\TAGT\web\features\resident\useResidentDashboard.ts:25:9
+  23 |
+  24 |     useEffect(() => {
+> 25 |         load().finally(() => setLoading(false));
+     |         ^^^^ Avoid calling setState() directly within an effect
+  26 |     }, []);
+  27 |
+  28 |     return { payments, requests, loading };  react-hooks/set-state-in-effect
+
+Γ£û 135 problems (98 errors, 37 warnings)
+
