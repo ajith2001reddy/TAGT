@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Building2, BedDouble, Users, CreditCard,
     MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
-    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy,
+    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X,
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; badge?: string };
@@ -53,11 +53,18 @@ const ROOT_HUBS = ["/owner", "/resident", "/provider"];
 
 function isActiveRoute(href: string, pathname: string): boolean {
     if (pathname === href) return true;
-    if (ROOT_HUBS.includes(href)) return false; // Never prefix-match root hubs
+    if (ROOT_HUBS.includes(href)) return false;
     return pathname.startsWith(href + "/");
 }
 
-function NavGroup({ title, items, pathname }: { title?: string; items: NavItem[]; pathname: string }) {
+function NavGroup({
+    title, items, pathname, onNavigate,
+}: {
+    title?: string;
+    items: NavItem[];
+    pathname: string;
+    onNavigate?: () => void;
+}) {
     return (
         <div style={{ marginBottom: "6px" }}>
             {title && (
@@ -81,6 +88,7 @@ function NavGroup({ title, items, pathname }: { title?: string; items: NavItem[]
                         >
                             <Link
                                 href={link.href}
+                                onClick={onNavigate}
                                 style={{
                                     display: "flex", alignItems: "center", gap: "10px",
                                     padding: "9px 12px", borderRadius: "10px",
@@ -140,7 +148,12 @@ function NavGroup({ title, items, pathname }: { title?: string; items: NavItem[]
     );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const { role, logout, user } = useAuth();
     const pathname = usePathname();
 
@@ -153,19 +166,20 @@ export function Sidebar() {
             role === "super_admin" ? "Super Admin" :
                 "Resident";
 
-    return (
+    const sidebarContent = (
         <aside style={{
             width: "240px", minWidth: "240px", height: "100vh",
-            position: "sticky", top: 0,
             borderRight: "1px solid var(--border-subtle)",
             background: "linear-gradient(180deg, #060c13 0%, #040a10 100%)",
             display: "flex", flexDirection: "column",
             overflow: "hidden",
+            position: "relative",
         }}>
-            {/* Logo */}
+            {/* Logo + Close Button */}
             <div style={{
                 padding: "20px 20px 18px",
                 borderBottom: "1px solid var(--border-subtle)",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
                 <motion.div
                     initial={{ opacity: 0, y: -8 }}
@@ -194,6 +208,28 @@ export function Sidebar() {
                         }}>Property OS</div>
                     </div>
                 </motion.div>
+
+                {/* Close button — only visible on mobile */}
+                <button
+                    className="sidebar-close-btn"
+                    onClick={onClose}
+                    aria-label="Close navigation"
+                    style={{
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid var(--border-subtle)",
+                        borderRadius: "8px",
+                        color: "var(--text-tertiary)",
+                        cursor: "pointer",
+                        display: "none", // shown via CSS on mobile
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "32px",
+                        height: "32px",
+                        flexShrink: 0,
+                    }}
+                >
+                    <X size={16} />
+                </button>
             </div>
 
             {/* User Profile */}
@@ -237,16 +273,16 @@ export function Sidebar() {
             <nav style={{ flex: 1, padding: "8px 10px", overflowY: "auto" }}>
                 {role === "owner" && (
                     <>
-                        <NavGroup items={ownerNav} pathname={pathname} />
+                        <NavGroup items={ownerNav} pathname={pathname} onNavigate={onClose} />
                         <div style={{ height: "1px", background: "var(--border-subtle)", margin: "8px 2px" }} />
-                        <NavGroup title="Insights" items={ownerSecondaryNav} pathname={pathname} />
+                        <NavGroup title="Insights" items={ownerSecondaryNav} pathname={pathname} onNavigate={onClose} />
                     </>
                 )}
                 {role === "super_admin" && (
-                    <NavGroup title="Platform" items={adminNav} pathname={pathname} />
+                    <NavGroup title="Platform" items={adminNav} pathname={pathname} onNavigate={onClose} />
                 )}
                 {role === "resident" && (
-                    <NavGroup items={residentNav} pathname={pathname} />
+                    <NavGroup items={residentNav} pathname={pathname} onNavigate={onClose} />
                 )}
             </nav>
 
@@ -280,5 +316,43 @@ export function Sidebar() {
                 </motion.button>
             </div>
         </aside>
+    );
+
+    return (
+        <>
+            {/* Desktop: always visible, sticky */}
+            <div className="sidebar-desktop">
+                <div style={{ position: "sticky", top: 0, height: "100vh" }}>
+                    {sidebarContent}
+                </div>
+            </div>
+
+            {/* Mobile: slide-in drawer with backdrop */}
+            <AnimatePresence>
+                {isOpen && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
+                            className="sidebar-backdrop"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={onClose}
+                        />
+                        {/* Drawer */}
+                        <motion.div
+                            className="sidebar-mobile"
+                            initial={{ x: "-100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "-100%" }}
+                            transition={{ type: "tween", duration: 0.28, ease: "easeOut" }}
+                        >
+                            {sidebarContent}
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </>
     );
 }

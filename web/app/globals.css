@@ -727,3 +727,108 @@ select.input-field option:checked {
   background: linear-gradient(90deg, var(--accent-primary), transparent);
   border-radius: 1px;
 }
+
+/* ============================================
+   RESPONSIVE LAYOUT
+   ============================================ */
+
+/* Main content area */
+.dashboard-main {
+  flex: 1;
+  padding: 28px 32px;
+  overflow-y: auto;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Desktop: sidebar always visible */
+.sidebar-desktop {
+  display: block;
+}
+
+/* Mobile: drawer */
+.sidebar-mobile {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 200;
+  width: 260px;
+}
+
+/* Sidebar backdrop */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 199;
+}
+
+/* Hamburger — hidden on desktop */
+.navbar-hamburger {
+  display: none !important;
+}
+
+/* Close button — hidden on desktop */
+.sidebar-close-btn {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+
+  /* Hide desktop sidebar, enable mobile drawer */
+  .sidebar-desktop {
+    display: none;
+  }
+
+  .sidebar-mobile {
+    display: block;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  /* Show hamburger and close button */
+  .navbar-hamburger {
+    display: flex !important;
+  }
+
+  .sidebar-close-btn {
+    display: flex !important;
+  }
+
+  /* Tighten main content padding */
+  .dashboard-main {
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  /* Even tighter on very small phones */
+  .dashboard-main {
+    padding: 16px 12px;
+  }
+
+  /* Hide clock and divider in navbar to save space */
+  .navbar-clock,
+  .navbar-divider,
+  .navbar-sub {
+    display: none !important;
+  }
+
+  /* Hide property switcher on tiny screens */
+  .navbar-property-switcher {
+    display: none;
+  }
+
+  body {
+    font-size: 14px;
+  }
+}

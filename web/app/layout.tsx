@@ -3,6 +3,12 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { Toaster } from "react-hot-toast";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata = {
   title: "TAGT - Manage Every Bed. Bill. Tenant.",
   description:
