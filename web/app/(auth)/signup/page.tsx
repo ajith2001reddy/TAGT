@@ -6,6 +6,7 @@ import { auth, googleProvider } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import Script from "next/script";
 
 function GoogleIcon() {
     return (
@@ -72,6 +73,10 @@ export default function SignupPage() {
 
     return (
         <>
+            <Script
+                src="https://www.google.com/recaptcha/enterprise.js?render=6LcYdYIsAAAAALs9O0fknr8dlztXd6NDHYiE0mYd"
+                strategy="beforeInteractive"
+            />
             <div style={{ marginBottom: "28px" }}>
                 <h1 className="display-text" style={{ fontSize: "26px", marginBottom: "6px" }}>
                     Create your account

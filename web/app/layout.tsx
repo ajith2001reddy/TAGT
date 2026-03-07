@@ -41,10 +41,6 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
-        <Script
-          src="https://www.google.com/recaptcha/enterprise.js?render=6LcYdYIsAAAAALs9O0fknr8dlztXd6NDHYiE0mYd"
-          strategy="beforeInteractive"
-        />
         <ThemeProvider>
           <AuthProvider>
             <PostHogProvider>

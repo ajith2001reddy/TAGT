@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import Script from "next/script";
 
 declare global {
     interface Window {
@@ -179,6 +180,11 @@ export default function LoginPage() {
 
     return (
         <div className="animate-fade-in">
+            <Script
+                src="https://www.google.com/recaptcha/enterprise.js?render=6LcYdYIsAAAAALs9O0fknr8dlztXd6NDHYiE0mYd"
+                strategy="beforeInteractive"
+            />
+            {/* Stable div for reCAPTCHA - must always be in DOM */}
             <div id="recaptcha-container"></div>
 
             <div style={{ marginBottom: "28px" }}>
