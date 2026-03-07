@@ -22,6 +22,7 @@ export default function SignupPage() {
     const router = useRouter();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
@@ -36,7 +37,7 @@ export default function SignupPage() {
             await createUserWithEmailAndPassword(auth, email, password);
 
             // 🔥 Do NOT manually get token
-            await api.post("/auth/register", { name });
+            await api.post("/auth/register", { name, phoneNumber: phone });
 
             router.push("/dashboard");
 
@@ -145,6 +146,16 @@ export default function SignupPage() {
                         placeholder="you@company.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="label-text" style={{ display: "block", marginBottom: "7px" }}>Phone Number</label>
+                    <input
+                        className="input-field"
+                        placeholder="+91 98765 43210"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
                         required
                     />
                 </div>

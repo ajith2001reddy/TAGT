@@ -22,6 +22,7 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
     "/owner/subscription": { title: "Subscription", sub: "Plan & billing" },
     "/owner/onboarding": { title: "Onboarding", sub: "Manage resident requests" },
     "/owner/support": { title: "Support", sub: "Get help from the TAGT team" },
+    "/profile": { title: "My Profile", sub: "Personal identity & security" },
     "/resident": { title: "My Dashboard", sub: "Your living space overview" },
     "/resident/payments": { title: "My Payments", sub: "Payment history & upcoming dues" },
     "/resident/requests": { title: "My Requests", sub: "Maintenance history" },

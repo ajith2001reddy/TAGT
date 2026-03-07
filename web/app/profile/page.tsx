@@ -166,21 +166,23 @@ export default function ProfilePage() {
                         </button>
                     </Section>
 
-                    {/* Account Security */}
-                    <Section title="Account Security">
-                        <form onSubmit={handleChangePassword}>
-                            <InputGroup label="Current Password" icon={Lock} type="password" value={passwords.current} onChange={(e: any) => setPasswords({ ...passwords, current: e.target.value })} placeholder="••••••••" />
-                            <InputGroup label="New Password" icon={ShieldCheck} type="password" value={passwords.new} onChange={(e: any) => setPasswords({ ...passwords, new: e.target.value })} placeholder="••••••••" />
-                            <InputGroup label="Confirm New Password" icon={ShieldCheck} type="password" value={passwords.confirm} onChange={(e: any) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="••••••••" />
+                    {/* Account Security - Only for non-super admins */}
+                    {profile?.role !== "super_admin" && (
+                        <Section title="Account Security">
+                            <form onSubmit={handleChangePassword}>
+                                <InputGroup label="Current Password" icon={Lock} type="password" value={passwords.current} onChange={(e: any) => setPasswords({ ...passwords, current: e.target.value })} placeholder="••••••••" />
+                                <InputGroup label="New Password" icon={ShieldCheck} type="password" value={passwords.new} onChange={(e: any) => setPasswords({ ...passwords, new: e.target.value })} placeholder="••••••••" />
+                                <InputGroup label="Confirm New Password" icon={ShieldCheck} type="password" value={passwords.confirm} onChange={(e: any) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="••••••••" />
 
-                            {passError && <div style={{ color: "var(--red)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--red-bg)", borderRadius: "8px", border: "1px solid rgba(255,82,82,0.1)" }}>{passError}</div>}
-                            {passSuccess && <div style={{ color: "var(--green)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid rgba(0,230,118,0.1)" }}>{passSuccess}</div>}
+                                {passError && <div style={{ color: "var(--red)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--red-bg)", borderRadius: "8px", border: "1px solid rgba(255,82,82,0.1)" }}>{passError}</div>}
+                                {passSuccess && <div style={{ color: "var(--green)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid rgba(0,230,118,0.1)" }}>{passSuccess}</div>}
 
-                            <button type="submit" className="btn-ghost" disabled={passSaving} style={{ width: "100%", height: "48px" }}>
-                                {passSaving ? "Updating password..." : "Reset Password"}
-                            </button>
-                        </form>
-                    </Section>
+                                <button type="submit" className="btn-ghost" disabled={passSaving} style={{ width: "100%", height: "48px" }}>
+                                    {passSaving ? "Updating password..." : "Reset Password"}
+                                </button>
+                            </form>
+                        </Section>
+                    )}
                 </div>
 
                 {/* Role Specific Info */}
