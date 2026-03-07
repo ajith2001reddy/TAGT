@@ -3,6 +3,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { Toaster } from "react-hot-toast";
 import { PostHogProvider } from "@/components/PostHogProvider";
+import Script from "next/script";
 
 export const viewport = {
   width: "device-width",
@@ -40,6 +41,10 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
+        <Script
+          src="https://www.google.com/recaptcha/enterprise.js?render=6LcYdYIsAAAAALs9O0fknr8dlztXd6NDHYiE0mYd"
+          strategy="beforeInteractive"
+        />
         <ThemeProvider>
           <AuthProvider>
             <PostHogProvider>

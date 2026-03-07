@@ -16,6 +16,7 @@ import { api } from "@/lib/api";
 declare global {
     interface Window {
         recaptchaVerifier: any;
+        grecaptcha: any;
     }
 }
 
@@ -78,6 +79,29 @@ export default function LoginPage() {
         setLoading(true);
         try {
             if (isEmail(identifier)) {
+                // reCAPTCHA Enterprise Verification
+                if (window.grecaptcha?.enterprise) {
+                    try {
+                        const token = await new Promise<string>((resolve) => {
+                            window.grecaptcha.enterprise.ready(async () => {
+                                const t = await window.grecaptcha.enterprise.execute('6LcYdYIsAAAAALs9O0fknr8dlztXd6NDHYiE0mYd', { action: 'LOGIN' });
+                                resolve(t);
+                            });
+                        });
+
+                        // Verify with our backend
+                        const verifyRes = await api.post("/auth/verify-recaptcha", { token, action: "LOGIN" });
+
+                        if (!verifyRes.data.success || verifyRes.data.data.score < 0.5) {
+                            setError("Security check failed. You appear to be a bot. Please try again.");
+                            setLoading(false);
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn("reCAPTCHA check failed, but continuing for accessibility", e);
+                    }
+                }
+
                 await signInWithEmailAndPassword(auth, identifier, password);
                 router.push("/dashboard");
             } else if (isPhone(identifier)) {
