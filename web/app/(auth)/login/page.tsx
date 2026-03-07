@@ -12,6 +12,7 @@ import { auth, googleProvider } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 declare global {
     interface Window {
@@ -32,6 +33,7 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
+    const { user, role, loading: authLoading } = useAuth();
     const router = useRouter();
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
@@ -43,6 +45,13 @@ export default function LoginPage() {
     const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
     const [otp, setOtp] = useState("");
     const [showOtp, setShowOtp] = useState(false);
+
+    // Redirect if already logged in and role is synchronized
+    useEffect(() => {
+        if (!authLoading && user && role) {
+            router.replace("/dashboard");
+        }
+    }, [user, role, authLoading, router]);
 
     const isEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     const isPhone = (val: string) => /^\+?[1-9]\d{9,14}$/.test(val.replace(/[\s\-\(\)]/g, ''));
@@ -103,7 +112,7 @@ export default function LoginPage() {
                 }
 
                 await signInWithEmailAndPassword(auth, identifier, password);
-                router.push("/dashboard");
+                // Redirection is handled by the useEffect once context syncs
             } else if (isPhone(identifier)) {
                 if (!window.recaptchaVerifier) {
                     setError("Security check (reCAPTCHA) failed to load. Please refresh.");
@@ -139,7 +148,7 @@ export default function LoginPage() {
         setLoading(true);
         try {
             await confirmationResult.confirm(otp);
-            router.push("/dashboard");
+            // Redirection is handled by the useEffect once context syncs
         } catch (err) {
             setError("Invalid OTP code. Please try again.");
         } finally {
@@ -158,7 +167,7 @@ export default function LoginPage() {
                 { name: result.user.displayName || result.user.email?.split("@")[0] || "User" },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            router.push("/dashboard");
+            // Redirection is handled by the useEffect once context syncs
         } catch (err: any) {
             if (err.code !== "auth/popup-closed-by-user") {
                 setError("Google sign-in failed.");

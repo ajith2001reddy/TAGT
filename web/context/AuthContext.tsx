@@ -21,16 +21,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            setUser(firebaseUser);
-
+            // If we have a user, we must keep loading true while we fetch the role
             if (firebaseUser) {
+                setLoading(true); // Ensure loading is true while we sync
+                setUser(firebaseUser);
                 try {
                     // 🔥 Force refresh token before calling backend
                     await firebaseUser.getIdToken(true);
 
                     const { data } = await api.get("/auth/me");
                     setRole(data.data?.role || null);
-
                 } catch (err: any) {
                     if (err.response?.status !== 401) {
                         console.error("Auth sync error:", err);
@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setRole(null);
                 }
             } else {
+                setUser(null);
                 setRole(null);
             }
 

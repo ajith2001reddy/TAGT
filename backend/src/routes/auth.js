@@ -3,8 +3,50 @@ import auth from "../middleware/auth.js";
 import User from "../models/User.js";
 import admin from "../config/firebase.js";
 import logger from "../utils/logger.js";
+import { verifyRecaptchaToken } from "../services/recaptchaService.js";
 
 const router = Router();
+
+/**
+ * POST /api/auth/verify-recaptcha
+ * Verify a reCAPTCHA Enterprise token
+ */
+router.post("/verify-recaptcha", async (req, res) => {
+  try {
+    const { token, action } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "reCAPTCHA token is required"
+      });
+    }
+
+    const score = await verifyRecaptchaToken(token, action || "LOGIN");
+
+    if (score === null) {
+      return res.status(401).json({
+        success: false,
+        message: "Bot detection failed or was invalid"
+      });
+    }
+
+    // Return the score to the frontend (frontend can decide what to do, 
+    // or we can block here if < 0.5)
+    return res.status(200).json({
+      success: true,
+      data: { score },
+      message: "Human verification successful"
+    });
+
+  } catch (err) {
+    logger.error("reCAPTCHA Verification Error", { error: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal security service error"
+    });
+  }
+});
 
 /**
  * GET /api/auth/me
