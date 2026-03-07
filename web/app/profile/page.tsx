@@ -17,7 +17,16 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     );
 }
 
-function InputGroup({ label, icon: Icon, value, onChange, placeholder, type = "text", disabled = false }: any) {
+interface InputGroupProps {
+    label: string;
+    icon: React.ElementType;
+    value: string | undefined;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder?: string;
+    type?: string;
+    disabled?: boolean;
+}
+function InputGroup({ label, icon: Icon, value, onChange, placeholder, type = "text", disabled = false }: InputGroupProps) {
     return (
         <div style={{ marginBottom: "20px" }}>
             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px", marginLeft: "4px" }}>{label}</label>
@@ -86,8 +95,9 @@ export default function ProfilePage() {
             setProfile(updated);
             setSuccess("Profile updated successfully!");
             setTimeout(() => setSuccess(""), 3000);
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to update profile.");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error.response?.data?.message || "Failed to update profile.");
         } finally {
             setSaving(false);
         }
@@ -113,8 +123,9 @@ export default function ProfilePage() {
             setPassSuccess(hasPassword ? "Password changed successfully!" : "Password created successfully!");
             setPasswords({ current: "", new: "", confirm: "" });
             setTimeout(() => setPassSuccess(""), 3000);
-        } catch (err: any) {
-            setPassError(err.response?.data?.message || "Failed to change password.");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setPassError(error.response?.data?.message || "Failed to change password.");
         } finally {
             setPassSaving(false);
         }
@@ -160,9 +171,9 @@ export default function ProfilePage() {
                 {/* Personal Info */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                     <Section title="Personal Information">
-                        <InputGroup label="Full Name" icon={User} value={name} onChange={(e: any) => setName(e.target.value)} placeholder="Enter your full name" />
+                        <InputGroup label="Full Name" icon={User} value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
                         <InputGroup label="Email Address" icon={Mail} value={profile?.email} disabled />
-                        <InputGroup label="Phone Number" icon={Phone} value={phone} onChange={(e: any) => setPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" />
+                        <InputGroup label="Phone Number" icon={Phone} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" />
 
                         {error && <div style={{ color: "var(--red)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--red-bg)", borderRadius: "8px", border: "1px solid rgba(255,82,82,0.1)" }}>{error}</div>}
                         {success && <div style={{ color: "var(--green)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid rgba(0,230,118,0.1)" }}>{success}</div>}
@@ -192,10 +203,10 @@ export default function ProfilePage() {
                             )}
                             <form onSubmit={handleChangePassword}>
                                 {profile?.isPasswordSet && (
-                                    <InputGroup label="Current Password" icon={Lock} type="password" value={passwords.current} onChange={(e: any) => setPasswords({ ...passwords, current: e.target.value })} placeholder="••••••••" />
+                                    <InputGroup label="Current Password" icon={Lock} type="password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} placeholder="••••••••" />
                                 )}
-                                <InputGroup label={profile?.isPasswordSet ? "New Password" : "Create Password"} icon={ShieldCheck} type="password" value={passwords.new} onChange={(e: any) => setPasswords({ ...passwords, new: e.target.value })} placeholder="••••••••" />
-                                <InputGroup label="Confirm Password" icon={ShieldCheck} type="password" value={passwords.confirm} onChange={(e: any) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="••••••••" />
+                                <InputGroup label={profile?.isPasswordSet ? "New Password" : "Create Password"} icon={ShieldCheck} type="password" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} placeholder="••••••••" />
+                                <InputGroup label="Confirm Password" icon={ShieldCheck} type="password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="••••••••" />
 
                                 {passError && <div style={{ color: "var(--red)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--red-bg)", borderRadius: "8px", border: "1px solid rgba(255,82,82,0.1)" }}>{passError}</div>}
                                 {passSuccess && <div style={{ color: "var(--green)", fontSize: "13px", marginBottom: "16px", padding: "10px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid rgba(0,230,118,0.1)" }}>{passSuccess}</div>}

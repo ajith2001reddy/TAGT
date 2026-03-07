@@ -146,10 +146,40 @@ const paymentLimiter = rateLimit({
     message: { success: false, message: "Payment request rate limit exceeded" },
 });
 
+// Heavy Reports Limiter
+const reportLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many report requests. Please wait 15 minutes." },
+});
+
+// Automation Limiter
+const automationLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Automation triggers are rate-limited to prevent abuse." },
+});
+
+// Support Ticket Limiter
+const supportLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 15,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Support ticket submission limit reached. Please try again in an hour." },
+});
+
 // Mount limiters to their specific routes
 app.use("/api/v2/auth/login", loginLimiter);
 app.use("/api/v2/auth/register-owner", signupLimiter);
 app.use("/api/v2/payments", paymentLimiter);
+app.use("/api/v2/reports", reportLimiter);
+app.use("/api/v2/automation", automationLimiter);
+app.use("/api/v2/support/tickets", supportLimiter);
 
 // Apply standard global limiter to the rest of the API
 app.use("/api", limiter);

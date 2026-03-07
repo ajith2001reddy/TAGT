@@ -22,7 +22,9 @@ export function useResidentDashboard() {
     }
 
     useEffect(() => {
-        load().finally(() => setLoading(false));
+        Promise.resolve().then(() => {
+            load().finally(() => setLoading(false));
+        });
     }, []);
 
     return { payments, requests, loading };

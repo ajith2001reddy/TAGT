@@ -56,7 +56,9 @@ export default function AdminSupportPage() {
         }
     }, [filterStatus, filterCategory, filterPriority, filterRole]);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        Promise.resolve().then(() => load());
+    }, [load]);
 
     const openTicket = async (t: SupportTicket) => {
         setSelected(t);

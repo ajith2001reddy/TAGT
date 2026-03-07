@@ -27,8 +27,26 @@ function OccupancyBar({ occupied, total }: { occupied: number; total: number }) 
     );
 }
 
+interface Room {
+    _id: string;
+    roomNumber: string;
+    rent: number;
+    totalBeds: number;
+    occupiedBeds: number;
+    maintenanceMode?: boolean;
+    propertyId: {
+        _id: string;
+        name: string;
+    } | string;
+}
+
 export default function RoomsPage() {
-    const { rooms, stats, loading, reload } = useRooms();
+    const { rooms, stats, loading, reload } = useRooms() as {
+        rooms: Room[],
+        stats: { totalBeds: number; occupiedBeds: number; avgRent: number } | null,
+        loading: boolean,
+        reload: () => void
+    };
     const { property } = useProperty();
     const [roomNumber, setRoomNumber] = useState("");
     const [rent, setRent] = useState("");
@@ -48,8 +66,9 @@ export default function RoomsPage() {
             await updateRoom(id, { rent: Number(tempRent) });
             setEditingRent(null);
             reload();
-        } catch (err: any) {
-            setError(err?.response?.data?.message || "Failed to update rent");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error?.response?.data?.message || "Failed to update rent");
         } finally { setUpdatingRent(null); }
     }
 
@@ -66,15 +85,19 @@ export default function RoomsPage() {
             setRoomNumber(""); setRent(""); setBeds("");
             setShowForm(false);
             reload();
-        } catch (err: any) {
-            setError(err?.response?.data?.message || "Failed to create room");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error?.response?.data?.message || "Failed to create room");
         } finally { setAdding(false); }
     }
 
     async function handleDelete(id: string) {
         setDeleting(id);
         try { await deleteRoom(id); reload(); }
-        catch (err: any) { setError(err?.response?.data?.message || "Failed to delete room"); }
+        catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error?.response?.data?.message || "Failed to delete room");
+        }
         finally { setDeleting(null); }
     }
 
@@ -153,11 +176,11 @@ export default function RoomsPage() {
                 <div style={{ textAlign: "center", padding: "80px 40px", border: "1px dashed var(--border-default)", borderRadius: "20px", color: "var(--text-tertiary)" }}>
                     <div style={{ fontSize: "48px", marginBottom: "16px" }}>🏠</div>
                     <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "6px" }}>No rooms yet</p>
-                    <p style={{ fontSize: "13px" }}>Click "Add Room" to get started</p>
+                    <p style={{ fontSize: "13px" }}>Click &quot;Add Room&quot; to get started</p>
                 </div>
             ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
-                    {rooms.map((room, i) => (
+                    {rooms.map((room: Room, i) => (
                         <div key={room._id} className="animate-fade-up" style={{ animationDelay: `${i * 0.05}s` }}>
                             <div style={{
                                 background: "var(--bg-card)", border: "1px solid var(--border-default)",
@@ -176,7 +199,7 @@ export default function RoomsPage() {
                                 }}
                             >
                                 {/* Maintenance badge */}
-                                {(room as any).maintenanceMode && (
+                                {room.maintenanceMode && (
                                     <div style={{
                                         position: "absolute", top: "12px", right: "12px",
                                         background: "var(--yellow-bg)", color: "var(--yellow)",
@@ -190,7 +213,7 @@ export default function RoomsPage() {
                                     <div>
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
                                             <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.1em" }}>ROOM</div>
-                                            {(room.propertyId as any)?.name && (
+                                            {typeof room.propertyId !== "string" && (
                                                 <span style={{
                                                     fontSize: "9px",
                                                     fontWeight: 700,
@@ -200,7 +223,7 @@ export default function RoomsPage() {
                                                     color: "var(--accent-primary)",
                                                     border: "1px solid rgba(255,255,255,0.08)"
                                                 }}>
-                                                    {(room.propertyId as any).name}
+                                                    {room.propertyId.name}
                                                 </span>
                                             )}
                                         </div>

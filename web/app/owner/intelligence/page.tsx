@@ -142,7 +142,7 @@ export default function IntelligenceDashboard() {
                         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
                             <li style={{ display: "flex", gap: "12px", fontSize: "13px", alignItems: "flex-start", paddingBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                                 <span style={{ color: "var(--yellow)", marginTop: "2px" }}>⚠</span>
-                                <div><strong style={{ color: "#fff" }}>Occupancy dropping:</strong> Property "Elite PG" has 3 scheduled move-outs next week.</div>
+                                <div><strong style={{ color: "#fff" }}>Occupancy dropping:</strong> Property &quot;Elite PG&quot; has 3 scheduled move-outs next week.</div>
                             </li>
                             <li style={{ display: "flex", gap: "12px", fontSize: "13px", alignItems: "flex-start", paddingBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                                 <span style={{ color: "var(--red)", marginTop: "2px" }}>⚠</span>

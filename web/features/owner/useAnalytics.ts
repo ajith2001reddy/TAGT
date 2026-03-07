@@ -8,10 +8,12 @@ export function useAnalytics() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setLoading(true);
-        fetchOwnerStats(property?._id ?? null)
-            .then(setData)
-            .finally(() => setLoading(false));
+        Promise.resolve().then(() => {
+            setLoading(true);
+            fetchOwnerStats(property?._id ?? null)
+                .then(setData)
+                .finally(() => setLoading(false));
+        });
     }, [property?._id]);
 
     return { data, loading };

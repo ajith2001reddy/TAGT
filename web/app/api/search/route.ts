@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const CACHE = new Map<string, { data: any; timestamp: number }>();
+const CACHE = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
 function buildOverpassQuery(lat: number, lon: number, radiusM = 3000) {
@@ -63,8 +63,8 @@ export async function GET(req: NextRequest) {
                 }
 
                 lastError = `Overpass error ${overpassRes.status}`;
-            } catch (err: any) {
-                lastError = err.message;
+            } catch (err: unknown) {
+                lastError = (err as Error).message;
             }
             attempts++;
         }

@@ -4,7 +4,7 @@ export const createResidentSchema = Joi.object({
     name: Joi.string().required().trim(),
     email: Joi.string().email().required().trim(),
     phoneNumber: Joi.string().optional().allow("").trim(),
-    roomId: Joi.string().optional().allow(null),
+    roomId: Joi.string().required(), // Stricter for enterprise security
     bedId: Joi.string().optional().allow(null),
     propertyId: Joi.string().optional().allow(null)
 });

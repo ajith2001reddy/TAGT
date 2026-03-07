@@ -43,7 +43,7 @@ export default function SignupPage() {
             router.push("/dashboard");
 
         } catch (err: unknown) {
-            const error = err as any;
+            const error = err as { code?: string; message?: string };
             if (error.code === "auth/email-already-in-use") {
                 setError("Email is already registered. Please login instead.");
             } else {
@@ -64,7 +64,7 @@ export default function SignupPage() {
             });
             router.push("/dashboard");
         } catch (err: unknown) {
-            const error = err as any;
+            const error = err as { code?: string };
             if (error.code !== "auth/popup-closed-by-user") {
                 setError("Google sign-up failed. Please try again.");
             }

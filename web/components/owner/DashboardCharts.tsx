@@ -2,7 +2,7 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-export function RevenueTrendChart({ data }: { data: any[] }) {
+export function RevenueTrendChart({ data }: { data: { month: string; collected: number }[] }) {
     return (
         <div style={{ height: 300, width: '100%', marginTop: '20px' }}>
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -36,7 +36,7 @@ export function RevenueTrendChart({ data }: { data: any[] }) {
                         }}
                         itemStyle={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600 }}
                         labelStyle={{ color: 'var(--text-tertiary)', fontSize: 11, marginBottom: 4 }}
-                        formatter={(v: any) => [`₹${(v || 0).toLocaleString()}`, "Revenue"]}
+                        formatter={(v: number | string | undefined) => [`₹${Number(v || 0).toLocaleString()}`, "Revenue"]}
                     />
                     <Line
                         type="monotone"

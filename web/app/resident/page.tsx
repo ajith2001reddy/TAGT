@@ -98,8 +98,9 @@ export default function ResidentDashboardPage() {
             if (res.data?.url) {
                 window.location.href = res.data.url;
             }
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Stripe payment failed");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || "Stripe payment failed");
         } finally {
             setPaying(false);
         }
@@ -121,7 +122,7 @@ export default function ResidentDashboardPage() {
             <div style={{ fontSize: "80px", marginBottom: "16px" }}>🏘️</div>
             <h2 style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.02em" }}>Welcome to TAGT</h2>
             <p style={{ color: "var(--text-tertiary)", fontSize: "18px", maxWidth: "450px", lineHeight: 1.6 }}>
-                You haven't joined a property yet. Discover premium PG accommodations and send a join request.
+                You haven&apos;t joined a property yet. Discover premium PG accommodations and send a join request.
             </p>
             <Link href="/resident/discover" style={{
                 background: "var(--accent-primary)",

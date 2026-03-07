@@ -48,13 +48,13 @@ export function ActivityTimeline({ activities }: { activities?: Activity[] }) {
                     {/* Icon */}
                     <div style={{
                         width: '32px', height: '32px', borderRadius: '50%',
-                        background: `${(COLOR_MAP as any)[act.type]}15`,
-                        border: `1px solid ${(COLOR_MAP as any)[act.type]}25`,
-                        color: (COLOR_MAP as any)[act.type],
+                        background: `${COLOR_MAP[act.type as keyof typeof COLOR_MAP]}15`,
+                        border: `1px solid ${COLOR_MAP[act.type as keyof typeof COLOR_MAP]}25`,
+                        color: COLOR_MAP[act.type as keyof typeof COLOR_MAP],
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         zIndex: 1, flexShrink: 0
                     }}>
-                        {(ICON_MAP as any)[act.type]}
+                        {ICON_MAP[act.type as keyof typeof ICON_MAP]}
                     </div>
 
                     {/* Content */}

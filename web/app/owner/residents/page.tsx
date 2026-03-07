@@ -66,31 +66,40 @@ export default function ResidentsPage() {
         try {
             const [resData, roomData] = await Promise.all([fetchResidents(), fetchRooms()]);
             setResidents(resData);
-            setRooms(roomData as any);
+            setRooms(roomData as unknown as Room[]);
         } catch { setError("Failed to load data."); } finally { setLoading(false); }
     }
     useEffect(() => { fetchData(); }, []);
 
-    async function handleCreate(e: any) {
+    async function handleCreate(e: React.FormEvent) {
         e.preventDefault(); setError(""); setCreating(true);
         try {
             await createResident({ name: form.name, email: form.email, roomId: form.roomId || null });
             setShowForm(false); setForm({ name: "", email: "", roomId: "" }); setLoading(true); await fetchData();
-        } catch (err: any) { setError(err.response?.data?.message || "Failed to create resident."); }
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error.response?.data?.message || "Failed to create resident.");
+        }
         finally { setCreating(false); }
     }
 
     async function handleDeactivate(id: string) {
         if (!confirm("Deactivate this resident? They will lose access.")) return;
         try { await deactivateResident(id); await fetchData(); setSelected(null); }
-        catch (err: any) { setError(err.response?.data?.message || "Failed."); }
+        catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error.response?.data?.message || "Failed.");
+        }
     }
 
     async function handleMoveRoom() {
         if (!selected || !moveRoomId) return;
         setMoving(true);
         try { await moveResidentRoom(selected._id, moveRoomId); await fetchData(); setMoveRoomId(""); }
-        catch (err: any) { setError(err.response?.data?.message || "Move failed."); }
+        catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error.response?.data?.message || "Move failed.");
+        }
         finally { setMoving(false); }
     }
 
@@ -153,7 +162,7 @@ export default function ResidentsPage() {
                                 {[{ label: "Full Name", key: "name", type: "text", placeholder: "John Doe" }, { label: "Email", key: "email", type: "email", placeholder: "john@email.com" }].map(({ label, key, type, placeholder }) => (
                                     <div key={key}>
                                         <label style={{ display: "block", fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "6px" }}>{label}</label>
-                                        <input className="input-field" type={type} placeholder={placeholder} required value={(form as any)[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} />
+                                        <input className="input-field" type={type} placeholder={placeholder} required value={form[key as keyof typeof form]} onChange={e => setForm({ ...form, [key]: e.target.value })} />
                                     </div>
                                 ))}
                                 <div>

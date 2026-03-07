@@ -97,8 +97,9 @@ export default function ProviderResidentsPage() {
             });
             setEditTarget(null);
             fetchAll();
-        } catch (err: any) {
-            setEditError(err.response?.data?.message || "Failed to update resident");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setEditError(error.response?.data?.message || "Failed to update resident");
         } finally { setEditSaving(false); }
     }
 
@@ -119,8 +120,9 @@ export default function ProviderResidentsPage() {
             });
             setAssignTarget(null);
             fetchAll();
-        } catch (err: any) {
-            setAssignError(err.response?.data?.message || "Failed to assign");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setAssignError(error.response?.data?.message || "Failed to assign");
         } finally { setAssigning(false); }
     }
 
@@ -129,8 +131,9 @@ export default function ProviderResidentsPage() {
         try {
             await api.delete(`/admin/residents/${r._id}`);
             fetchAll();
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to delete resident");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            alert(error.response?.data?.message || "Failed to delete resident");
         }
     }
 

@@ -9,16 +9,18 @@ export function useOwnerStats() {
     const { property } = useProperty();
 
     useEffect(() => {
-        setLoading(true);
-        const pId = property?._id || null;
+        Promise.resolve().then(() => {
+            setLoading(true);
+            const pId = property?._id || null;
 
-        Promise.all([
-            fetchOwnerStats(pId),
-            fetchDetailedStats(pId)
-        ]).then(([s, d]) => {
-            setStats(s);
-            setDetailed(d);
-        }).finally(() => setLoading(false));
+            Promise.all([
+                fetchOwnerStats(pId),
+                fetchDetailedStats(pId)
+            ]).then(([s, d]) => {
+                setStats(s);
+                setDetailed(d);
+            }).finally(() => setLoading(false));
+        });
     }, [property?._id]);
 
     return { stats, detailed, loading };

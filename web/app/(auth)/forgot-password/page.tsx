@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
             setSent(true);
 
         } catch (err: unknown) {
-            const error = err as any;
+            const error = err as { code?: string };
             console.error("Password reset error:", error);
 
             alert(

@@ -18,8 +18,13 @@ import Script from "next/script";
 
 declare global {
     interface Window {
-        recaptchaVerifier: any;
-        grecaptcha: any;
+        recaptchaVerifier: RecaptchaVerifier | null;
+        grecaptcha: {
+            enterprise: {
+                ready: (callback: () => void) => void;
+                execute: (siteKey: string, options: { action: string }) => Promise<string>;
+            };
+        };
     }
 }
 
@@ -125,7 +130,7 @@ export default function LoginPage() {
                             throw new Error(data.message || "Login failed");
                         }
                     } catch (err: unknown) {
-                        const error = err as any;
+                        const error = err as { response?: { data?: { message?: string } } };
                         setError(error.response?.data?.message || "Invalid phone number or password. Use OTP instead?");
                         setLoading(false);
                         return;
@@ -149,7 +154,7 @@ export default function LoginPage() {
                 setError("Please enter a valid email or phone number.");
             }
         } catch (err: unknown) {
-            const error = err as any;
+            const error = err as { message?: string; code?: string };
             console.error("Login Error:", error);
             if (error.message?.includes("reCAPTCHA") || error.code?.includes("captcha")) {
                 setError("Blocked by security check. Please ensure 'localhost' is whitelisted in Firebase and reCAPTCHA Enterprise is enabled in Cloud Console.");
@@ -189,7 +194,7 @@ export default function LoginPage() {
             );
             // Redirection is handled by the useEffect once context syncs
         } catch (err: unknown) {
-            const error = err as any;
+            const error = err as { code?: string };
             if (error.code !== "auth/popup-closed-by-user") {
                 setError("Google sign-in failed.");
             }

@@ -2,7 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
     if (active && payload && payload.length) {
         return (
             <div style={{
@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-export function BarChartCard({ title, data, dataKey }: { title: string; data: any[]; dataKey: string }) {
+export function BarChartCard({ title, data, dataKey }: { title: string; data: { name: string;[key: string]: string | number }[]; dataKey: string }) {
     return (
         <div className="glass-card" style={{ padding: "24px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>

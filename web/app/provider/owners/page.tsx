@@ -86,8 +86,9 @@ export default function OwnersListPage() {
             await api.put(`/v2/admin/users/${editingOwner._id}`, editForm);
             setEditingOwner(null);
             fetchAll();
-        } catch (err: any) {
-            setEditError(err.response?.data?.message || "Failed to update owner");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setEditError(error.response?.data?.message || "Failed to update owner");
         } finally { setEditSaving(false); }
     }
 
@@ -99,8 +100,9 @@ export default function OwnersListPage() {
             setForm({ name: "", email: "", password: "" });
             setShowForm(false);
             fetchAll();
-        } catch (err: any) {
-            setCreateError(err.response?.data?.message || "Failed to create owner");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setCreateError(error.response?.data?.message || "Failed to create owner");
         } finally { setCreating(false); }
     }
 
@@ -111,8 +113,9 @@ export default function OwnersListPage() {
             await api.post(`/admin/properties/${selectedPropertyId}/assign-owner`, { ownerId: assigningOwner._id });
             setAssigningOwner(null); setSelectedPropertyId("");
             fetchAll();
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to assign property");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            alert(error.response?.data?.message || "Failed to assign property");
         } finally { setAssigningLoading(false); }
     }
 
@@ -121,8 +124,9 @@ export default function OwnersListPage() {
         try {
             await api.delete(`/admin/owners/${ownerId}/properties/${propertyId}`);
             fetchAll();
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to remove property");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            alert(error.response?.data?.message || "Failed to remove property");
         }
     }
 
@@ -131,8 +135,9 @@ export default function OwnersListPage() {
         try {
             await api.delete(`/admin/owners/${owner._id}`);
             fetchAll();
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to delete owner");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            alert(error.response?.data?.message || "Failed to delete owner");
         }
     }
 
@@ -187,7 +192,7 @@ export default function OwnersListPage() {
 
                             <div style={{ padding: "14px 16px", borderRadius: "10px", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", marginBottom: "22px", fontSize: "12px", color: "var(--text-tertiary)" }}>
                                 Assigned Properties: {editingOwner.propertyIds?.map(p => getPropName(p)).join(", ") || "None"}
-                                <span style={{ marginLeft: "10px", color: "var(--text-tertiary)", opacity: 0.7 }}>— use "Assign Property" to change</span>
+                                <span style={{ marginLeft: "10px", color: "var(--text-tertiary)", opacity: 0.7 }}>— use &quot;Assign Property&quot; to change</span>
                             </div>
 
                             <div style={{ display: "flex", gap: "12px" }}>

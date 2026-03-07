@@ -16,7 +16,7 @@ interface PlatformStats {
     platformMRR: number;
     activeSubs: number;
     topProperties: { id: string; name: string; revenue: number }[];
-    recentActivity: { id: string; action: string; userName: string; createdAt: string; details: any }[];
+    recentActivity: { id: string; action: string; userName: string; createdAt: string; details: { propertyId?: string } }[];
 }
 
 interface BigStatProps { label: string; value: string | number; color: string; sub: string; icon: string; }
@@ -47,10 +47,12 @@ export default function ProviderPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        api.get("/v2/admin/platform-stats")
-            .then(r => setStats(r.data.data))
-            .catch(() => { })
-            .finally(() => setLoading(false));
+        Promise.resolve().then(() => {
+            api.get("/v2/admin/platform-stats")
+                .then(r => setStats(r.data.data))
+                .catch(() => { })
+                .finally(() => setLoading(false));
+        });
     }, []);
 
     if (loading) return (

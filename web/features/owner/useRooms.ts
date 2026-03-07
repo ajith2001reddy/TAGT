@@ -25,8 +25,10 @@ export function useRooms() {
     }
 
     useEffect(() => {
-        setLoading(true);
-        load().finally(() => setLoading(false));
+        Promise.resolve().then(() => {
+            setLoading(true);
+            load().finally(() => setLoading(false));
+        });
     }, [property?._id]); // Re-fetch when selected property changes
 
     return { rooms, stats, loading, reload: load };

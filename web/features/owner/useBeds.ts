@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Bed, fetchBeds } from "./rooms.service";
 
 export function useBeds(roomId?: string) {
@@ -6,22 +6,22 @@ export function useBeds(roomId?: string) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    async function load() {
+    const load = useCallback(async () => {
         if (!roomId) return;
         setLoading(true);
         try {
             const data = await fetchBeds({ roomId });
             setBeds(data);
-        } catch (err: any) {
-            setError(err.message || "Failed to load beds");
+        } catch (err: unknown) {
+            setError((err as Error).message || "Failed to load beds");
         } finally {
             setLoading(false);
         }
-    }
+    }, [roomId]);
 
     useEffect(() => {
         load();
-    }, [roomId]);
+    }, [load]);
 
     return { beds, loading, error, reload: load };
 }

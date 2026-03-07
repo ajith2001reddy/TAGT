@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
-interface Sub { owner: { name: string; email: string } | string; plan: string; status: string; currentPeriodEnd?: string; }
+interface Owner { _id: string; name: string; email: string; }
+interface Sub { owner: Owner | string; plan: string; status: string; currentPeriodEnd?: string; }
 
 const PLAN_COLOR: Record<string, string> = { free: "var(--text-tertiary)", pro: "var(--accent-primary)", enterprise: "#a78bfa" };
 const STATUS_COLOR: Record<string, string> = { active: "#34d399", trialing: "#fbbf24", past_due: "#ff5252", cancelled: "var(--text-tertiary)", expired: "var(--text-tertiary)" };
@@ -11,7 +12,6 @@ const STATUS_COLOR: Record<string, string> = { active: "#34d399", trialing: "#fb
 export default function AdminSubscriptionsPage() {
     const [subs, setSubs] = useState<Sub[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editing, setEditing] = useState<{ email: string; plan: string } | null>(null);
 
     async function fetchSubs() {
         const res = await api.get("/v2/admin/subscriptions");
@@ -20,9 +20,11 @@ export default function AdminSubscriptionsPage() {
     }
     useEffect(() => {
         let active = true;
-        fetchSubs()
-            .then(() => { if (active) setLoading(false); })
-            .catch(console.error);
+        Promise.resolve().then(() => {
+            fetchSubs()
+                .then(() => { if (active) setLoading(false); })
+                .catch(console.error);
+        });
         return () => { active = false; };
     }, []);
 
@@ -31,7 +33,6 @@ export default function AdminSubscriptionsPage() {
 
     async function handleSetPlan(ownerId: string, plan: string) {
         await api.patch(`/v2/admin/subscriptions/${ownerId}`, { plan });
-        setEditing(null);
         fetchSubs();
     }
 
@@ -72,7 +73,7 @@ export default function AdminSubscriptionsPage() {
                         {loading
                             ? Array.from({ length: 6 }).map((_, i) => <tr key={i}><td colSpan={5} style={{ padding: "12px 18px" }}><div className="skeleton" style={{ height: "18px", borderRadius: "5px" }} /></td></tr>)
                             : subs.map((sub, i) => {
-                                const owner = sub.owner as any;
+                                const owner = sub.owner as Owner;
                                 const ownerId = owner?._id;
                                 return (
                                     <tr key={i} style={{ borderBottom: "1px solid var(--border-subtle)", transition: "background 0.12s" }}

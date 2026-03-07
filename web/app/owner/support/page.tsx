@@ -106,7 +106,7 @@ export default function OwnerSupportPage() {
                             <div key={q} style={{ padding: "6px 0" }}>→ {q}</div>
                         ))}
                     </div>
-                    <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>Can't find your answer? Open a support ticket and we'll respond within 24 hours.</div>
+                    <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>Can&apos;t find your answer? Open a support ticket and we&apos;ll respond within 24 hours.</div>
                 </div>
             )}
 

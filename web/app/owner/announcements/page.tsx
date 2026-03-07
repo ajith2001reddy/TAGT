@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { toast } from "react-hot-toast";
 
@@ -34,7 +33,7 @@ export default function AnnouncementsPage() {
     const [sending, setSending] = useState(false);
 
     useEffect(() => {
-        loadData();
+        Promise.resolve().then(() => loadData());
     }, []);
 
     const loadData = async () => {
@@ -49,8 +48,9 @@ export default function AnnouncementsPage() {
             if (propsRes.data.data.length > 0) {
                 setSelectedPropertyId(propsRes.data.data[0]._id);
             }
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to load announcements");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || "Failed to load announcements");
         } finally {
             setLoading(false);
         }
@@ -68,8 +68,9 @@ export default function AnnouncementsPage() {
             setMessage("");
             setIsComposing(false);
             loadData(); // Refresh list
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to broadcast announcement");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || "Failed to broadcast announcement");
         } finally {
             setSending(false);
         }

@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 
 export function PropertySwitcher() {
     const { property, setCurrentProperty } = useProperty();
-    const [properties, setProperties] = useState<any[]>([]);
+    const [properties, setProperties] = useState<{ _id: string; name: string }[]>([]);
 
     useEffect(() => {
         api.get("/owner/properties")

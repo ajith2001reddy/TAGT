@@ -112,8 +112,9 @@ export default function PropertiesListPage() {
             setCreateForm({ name: "", type: "pg", address: "", city: "", gstin: "", pan: "", phone: "" });
             setShowForm(false);
             fetchProperties(1);
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to create property");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setError(error.response?.data?.message || "Failed to create property");
         } finally {
             setSubmitting(false);
         }
@@ -127,8 +128,9 @@ export default function PropertiesListPage() {
             setAssigningProperty(null);
             setSelectedOwnerId("");
             fetchProperties(pagination.page);
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to assign owner");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            alert(error.response?.data?.message || "Failed to assign owner");
         } finally {
             setAssigningLoading(false);
         }
@@ -163,8 +165,9 @@ export default function PropertiesListPage() {
             }
             setEditingProperty(null);
             fetchProperties(pagination.page);
-        } catch (err: any) {
-            setEditError(err.response?.data?.message || "Failed to update property");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setEditError(error.response?.data?.message || "Failed to update property");
         } finally {
             setEditSaving(false);
         }
@@ -175,8 +178,9 @@ export default function PropertiesListPage() {
         try {
             await api.delete(`/admin/properties/${p._id}`);
             fetchProperties(pagination.page);
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to delete property");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            alert(error.response?.data?.message || "Failed to delete property");
         }
     };
 

@@ -10,7 +10,14 @@ import { DashboardCard, ChartCard } from "@/components/ui/PremiumUI";
 import { motion } from "framer-motion";
 import { ArrowUpRight, TrendingUp, Users, Home, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
 
-function InsightCard({ type, severity, message, recommendation }: any) {
+interface Insight {
+    message: string;
+    recommendation: string;
+    severity: string;
+    type?: string;
+}
+
+function InsightCard({ severity, message, recommendation }: Insight) {
     const colors: Record<string, string> = { HIGH: "var(--red)", MEDIUM: "var(--yellow)", LOW: "var(--green)" };
     const color = colors[severity] || "var(--text-secondary)";
     return (
@@ -155,7 +162,7 @@ export default function OwnerPage() {
                             <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--red)", boxShadow: "0 0 10px var(--red)" }} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                            {stats?.insights?.map((ins: any, i: number) => (
+                            {stats?.insights?.map((ins: Insight, i: number) => (
                                 <InsightCard key={i} {...ins} />
                             )) || (
                                     <div style={{ color: "var(--text-tertiary)", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>

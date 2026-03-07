@@ -66,7 +66,7 @@ export default function ResidentSupportPage() {
         setSubmitting(true);
         try {
             await createTicket({ title: form.title, category: form.category as TicketCategory, priority: form.priority, message: form.message });
-            setSuccessMsg("Ticket submitted ✓ We'll respond within 24 hours.");
+            setSuccessMsg("Ticket submitted ✓ We&apos;ll respond within 24 hours.");
             setForm({ title: "", category: "", priority: "medium", message: "" });
             load();
             setTimeout(() => { setSuccessMsg(""); setView("list"); }, 3000);
@@ -135,7 +135,7 @@ export default function ResidentSupportPage() {
                         ))}
                     </div>
                     <div style={{ textAlign: "center" }}>
-                        <p style={{ color: "#666", fontSize: 14, marginBottom: 12 }}>Didn't find your answer?</p>
+                        <p style={{ color: "#666", fontSize: 14, marginBottom: 12 }}>Didn&apos;t find your answer?</p>
                         <button onClick={() => setView("new")} style={{ background: "#00d4ff", color: "#000", border: "none", borderRadius: 12, padding: "12px 32px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                             Open a Support Ticket
                         </button>

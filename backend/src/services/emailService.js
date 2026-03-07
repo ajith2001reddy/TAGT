@@ -109,7 +109,7 @@ const send = async (to, subject, html, attachments = []) => {
 
 export const sendWelcomeEmail = async ({ name, email, tempPassword, resetLink, propertyName }) => {
     return send(email, `Welcome to ${propertyName || "TAGT"} 🏠`, `
-                < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+        <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:16px;color:#00d4ff">TAGT</div>
             <h2>Welcome, ${name}!</h2>
             <p style="color:#aaa">Your account at <b>${propertyName || "TAGT"}</b> has been created.</p>
@@ -120,13 +120,13 @@ export const sendWelcomeEmail = async ({ name, email, tempPassword, resetLink, p
             </div>
             ${!resetLink ? `<p style="color:#aaa">Please change your password on first login at <a href="${process.env.APP_URL || "https://tagt.website"}/login" style="color:#00d4ff">tagt.website</a>.</p>` : ""}
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Property Management</div>
-        </div >
+        </div>
     `);
 };
 
 export const sendOwnerInvite = async ({ name, email, resetLink }) => {
     return send(email, `Invitation to join TAGT as Owner 🏠`, `
-    < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+    <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:16px;color:#00d4ff">TAGT</div>
             <h2>Namaste ${name},</h2>
             <p style="color:#aaa">You have been invited to join the TAGT Platform as a <b>Property Owner</b>.</p>
@@ -137,7 +137,7 @@ export const sendOwnerInvite = async ({ name, email, resetLink }) => {
             </div>
             <p style="color:#555;font-size:13px">If you didn't expect this invitation, you can safely ignore this email.</p>
             <div style="margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.05);font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
-        </div >
+        </div>
     `);
 };
 
@@ -145,7 +145,7 @@ export const sendOwnerInvite = async ({ name, email, resetLink }) => {
 export const sendPaymentConfirmation = async ({ name, email, amount, month, paidAt, paymentId, pdfBuffer }) => {
     const dateFmt = new Date(paidAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
     const template = `
-    < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+    <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00e676">TAGT</div>
             <h2>Payment received, ${name}!</h2>
             <div style="background:#0f1a1a;border:1px solid rgba(0,230,118,0.2);border-radius:12px;padding:20px;margin:20px 0">
@@ -154,7 +154,7 @@ export const sendPaymentConfirmation = async ({ name, email, amount, month, paid
             </div>
             <p style="color:#aaa">Thank you for your payment. A PDF breakdown of this receipt has been attached to this email for your records.</p>
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Property Management</div>
-        </div >
+        </div>
     `;
 
     const attachments = pdfBuffer ? [{
@@ -169,7 +169,7 @@ export const sendPaymentConfirmation = async ({ name, email, amount, month, paid
 export const sendRentReminder = async ({ name, email, amount, dueDate, month, propertyName }) => {
     const dueFmt = new Date(dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
     return send(email, `Rent Reminder – ${month} `, `
-    < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+    <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00d4ff">TAGT</div>
             <h2>Hi ${name},</h2>
             <p style="color:#aaa">Your rent for <b style="color:#fff">${month}</b> is due soon.</p>
@@ -180,14 +180,14 @@ export const sendRentReminder = async ({ name, email, amount, dueDate, month, pr
             </div>
             <p style="color:#aaa">Please pay on time to avoid late fees. Contact your property manager at <b>${propertyName || "TAGT"}</b> for any issues.</p>
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Property Management</div>
-        </div >
+        </div>
     `);
 };
 
 export const sendOverdueNotice = async ({ name, email, amount, lateFee, month }) => {
     const total = Number(amount) + Number(lateFee || 0);
     return send(email, `⚠ Overdue Rent – ${month} `, `
-    < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+    <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#ff5252">TAGT – Overdue Notice</div>
             <h2>Hi ${name},</h2>
             <p style="color:#aaa">Your rent for <b style="color:#fff">${month}</b> is <b style="color:#ff5252">overdue</b>.</p>
@@ -197,7 +197,7 @@ export const sendOverdueNotice = async ({ name, email, amount, lateFee, month })
             </div>
             <p style="color:#aaa">Please pay immediately to avoid further penalties.</p>
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Property Management</div>
-        </div >
+        </div>
     `);
 };
 
@@ -208,7 +208,7 @@ export const sendPaymentReminder = sendRentReminder;
 
 export const sendNoticeEmail = async ({ name, email, title, message, propertyName }) => {
     return send(email, `📢 Important Update: ${title} `, `
-    < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+    <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00d4ff">TAGT Notice Board</div>
             <h2>Hi ${name},</h2>
             <p style="color:#aaa">The property manager for <b style="color:#fff">${propertyName || "your building"}</b> has posted a new announcement.</p>
@@ -218,7 +218,7 @@ export const sendNoticeEmail = async ({ name, email, title, message, propertyNam
             </div>
             <p style="color:#aaa;font-size:13px">You can view this and other announcements on your TAGT Resident Dashboard.</p>
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
-        </div >
+        </div>
     `);
 };
 
@@ -226,7 +226,7 @@ export const sendNoticeEmail = async ({ name, email, title, message, propertyNam
 
 export const sendTicketCreatedEmail = async ({ name, email, ticketId, title, category }) => {
     return send(email, `🎫 Support Ticket Opened – ${title} `, `
-    < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+    <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00d4ff">TAGT Support</div>
             <h2>Hi ${name}, we received your request.</h2>
             <p style="color:#aaa">Your support ticket has been created and our team will respond shortly.</p>
@@ -240,13 +240,13 @@ export const sendTicketCreatedEmail = async ({ name, email, ticketId, title, cat
             </div>
             <p style="color:#aaa;font-size:13px">You can track your ticket status by logging into your TAGT dashboard.</p>
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
-        </div >
+        </div>
     `);
 };
 
 export const sendTicketReplyEmail = async ({ name, email, ticketId, title, repliedBy, message }) => {
     return send(email, `💬 New Reply on Your Ticket – ${title} `, `
-    < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+    <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00d4ff">TAGT Support</div>
             <h2>Hi ${name}, you have a new reply.</h2>
             <p style="color:#aaa"><b style="color:#fff">${repliedBy}</b> has replied to your support ticket.</p>
@@ -257,13 +257,13 @@ export const sendTicketReplyEmail = async ({ name, email, ticketId, title, repli
             </div>
             <p style="color:#aaa;font-size:13px">Log into your TAGT dashboard to reply or view the full conversation.</p>
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
-        </div >
+        </div>
     `);
 };
 
 export const sendTicketResolvedEmail = async ({ name, email, ticketId, title }) => {
     return send(email, `✅ Support Ticket Resolved – ${title} `, `
-    < div style = "font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px" >
+    <div style="font-family:system-ui,sans-serif;max-width:580px;margin:auto;padding:32px;background:#0d1520;color:#fff;border-radius:16px">
             <div style="font-size:24px;font-weight:700;margin-bottom:8px;color:#00e676">TAGT Support</div>
             <h2>Hi ${name}, your ticket has been resolved.</h2>
             <p style="color:#aaa">Our support team has marked your ticket as resolved.</p>
@@ -274,6 +274,6 @@ export const sendTicketResolvedEmail = async ({ name, email, ticketId, title }) 
             </div>
             <p style="color:#aaa;font-size:13px">If you still need help, you can open a new ticket from your TAGT dashboard.</p>
             <div style="margin-top:24px;font-size:12px;color:#555">TAGT Platform · Smart Property Management</div>
-        </div >
+        </div>
     `);
 };

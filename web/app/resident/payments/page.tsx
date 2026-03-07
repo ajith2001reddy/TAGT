@@ -72,11 +72,13 @@ export default function ResidentPaymentsPage() {
     const [successMsg, setSuccessMsg] = useState("");
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get("success")) setSuccessMsg("Payment successful! Your receipt will be emailed.");
-        }
-        api.get("/v2/payments").then(r => setPayments(r.data.data || [])).catch(() => { }).finally(() => setLoading(false));
+        Promise.resolve().then(() => {
+            if (typeof window !== "undefined") {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get("success")) setSuccessMsg("Payment successful! Your receipt will be emailed.");
+            }
+            api.get("/v2/payments").then(r => setPayments(r.data.data || [])).catch(() => { }).finally(() => setLoading(false));
+        });
     }, []);
 
     const totalPaid = payments.filter(p => p.status === "paid").reduce((s, p) => s + (p.totalPayable || p.amount || 0), 0);

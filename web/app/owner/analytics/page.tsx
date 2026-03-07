@@ -25,7 +25,8 @@ function MiniSparkline({ data }: { data: { month: string; collected: number }[] 
     );
 }
 
-function KpiCard({ label, value, sub, color, sparkline }: any) {
+interface KpiCardProps { label: string; value: string | number; sub?: string; color: string; sparkline?: { month: string; collected: number }[] }
+function KpiCard({ label, value, sub, color, sparkline }: KpiCardProps) {
     return (
         <div style={{
             background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px",
@@ -91,7 +92,7 @@ export default function AnalyticsPage() {
             {/* Tabs */}
             <div style={{ display: "flex", gap: "6px", background: "var(--bg-card)", border: "1px solid var(--border-subtle)", borderRadius: "12px", padding: "5px", marginBottom: "28px", width: "fit-content" }}>
                 {[{ key: "financial", label: "📊 Financial Overview" }, { key: "leak", label: "🔍 Revenue Leak" }].map(({ key, label }) => (
-                    <button key={key} onClick={() => setTab(key as any)} style={{
+                    <button key={key} onClick={() => setTab(key as "financial" | "leak")} style={{
                         padding: "9px 20px", borderRadius: "8px", border: "none", cursor: "pointer",
                         background: tab === key ? "var(--accent-primary)" : "transparent",
                         color: tab === key ? "#000" : "var(--text-secondary)",
