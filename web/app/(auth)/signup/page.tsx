@@ -200,6 +200,13 @@ export default function SignupPage() {
                 >
                     {loading ? "Creating Account..." : "Create Account →"}
                 </button>
+
+                <p style={{ fontSize: "12px", color: "var(--text-tertiary)", textAlign: "center", marginTop: "12px", lineHeight: "1.5" }}>
+                    By creating an account, you agree to our{" "}
+                    <Link href="/terms" style={{ color: "var(--accent-primary)", textDecoration: "underline" }}>Terms of Service</Link>
+                    {" "}and{" "}
+                    <Link href="/privacy" style={{ color: "var(--accent-primary)", textDecoration: "underline" }}>Privacy Policy</Link>.
+                </p>
             </form>
 
             <div style={{

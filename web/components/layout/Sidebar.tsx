@@ -55,6 +55,11 @@ const accountNav: NavItem[] = [
     { href: "/profile", label: "My Profile", icon: <User size={16} /> },
 ];
 
+const legalNav: NavItem[] = [
+    { href: "/terms", label: "Terms of Service", icon: <FileText size={16} /> },
+    { href: "/privacy", label: "Privacy Policy", icon: <FileText size={16} /> },
+];
+
 // Root-level hub routes should only activate on exact match
 const ROOT_HUBS = ["/owner", "/resident", "/provider"];
 
@@ -289,6 +294,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 )}
                 <div style={{ height: "1px", background: "var(--border-subtle)", margin: "8px 2px" }} />
                 <NavGroup title="Account" items={accountNav} pathname={pathname} onNavigate={onClose} />
+                <NavGroup title="Legal" items={legalNav} pathname={pathname} onNavigate={onClose} />
             </nav>
 
             {/* Logout */}
