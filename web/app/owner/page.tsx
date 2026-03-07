@@ -56,7 +56,7 @@ export default function OwnerPage() {
     const statItems = stats ? [
         { label: "Active Residents", value: stats.totalResidents, color: "var(--accent-primary)", sub: "Active tenants", icon: <Users size={17} />, trend: "up" as const, trendValue: "+2 this month" },
         { label: "Total Rooms", value: stats.totalRooms, color: "#a78bfa", sub: "Configured units", icon: <Home size={17} /> },
-        { label: "Occupancy Rate", value: `${stats.occupancyRate}%`, color: "#34d399", sub: "Current fill rate", icon: <TrendingUp size={17} />, trend: stats.occupancyRate >= 80 ? "up" as const : "down" as const, trendValue: stats.occupancyRate >= 80 ? "Healthy" : "Below target" },
+        { label: "Occupancy Rate", value: stats.occupancyRate, color: "#34d399", sub: "Current fill rate", icon: <TrendingUp size={17} />, trend: stats.occupancyRate >= 80 ? "up" as const : "down" as const, trendValue: stats.occupancyRate >= 80 ? "Healthy" : "Below target" },
         { label: "Pending Payments", value: stats.pendingPayments, color: "#fbbf24", sub: "Awaiting collection", icon: <Clock size={17} /> },
         { label: "Overdue Payments", value: stats.overduePayments, color: "var(--red)", sub: "Past due date", icon: <AlertTriangle size={17} />, trend: stats.overduePayments > 0 ? "down" as const : "stable" as const, trendValue: stats.overduePayments > 0 ? "Action needed" : "All clear" },
         { label: "Monthly Revenue", value: `₹${(((stats?.monthlyRevenue || 0) || 0) / 1000).toFixed(1)}k`, color: "#34d399", sub: "Collected this month", icon: <TrendingUp size={17} /> },
