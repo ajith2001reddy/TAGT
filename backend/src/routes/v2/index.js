@@ -27,6 +27,8 @@ import { createTicket, listMyTickets, listAllTickets, getTicket, replyToTicket, 
 import { getNotifications, getUnreadCount, markRead, markAllRead } from "../../controllers/v2/notificationController.js";
 // Phase 6: Broadcast Notices
 import { createNotice, listNotices } from "../../controllers/v2/noticeController.js";
+// Phase 7: Profile & User Management
+import { getProfile, updateProfile, changePassword, superAdminManageUser } from "../../controllers/v2/userController.js";
 
 import { dynamicTenantRateLimiter } from "../../middleware/tenantLimiter.js";
 
@@ -46,6 +48,7 @@ router.put("/provider/properties/:id", auth, authorize("super_admin"), logActivi
 router.put("/provider/owners/:id", auth, authorize("super_admin"), logActivity("OWNER_UPDATED_BY_ADMIN"), superAdminUpdateOwner);
 router.patch("/provider/properties/:id/status", auth, authorize("super_admin"), logActivity("PROPERTY_STATUS_CHANGED"), patchPropertyStatus);
 router.get("/admin/platform-stats", auth, authorize("super_admin"), getPlatformStats);
+router.put("/admin/users/:id", auth, authorize("super_admin"), logActivity("USER_MANAGED_BY_ADMIN"), superAdminManageUser);
 
 /* ── Analytics ── */
 router.get("/analytics/owner-dashboard", auth, authorize("super_admin", "owner"), ownerDashboardAnalytics);
@@ -149,5 +152,10 @@ router.patch("/notifications/:id/read", auth, markRead);
 /* ── Phase 6: Broadcast Notices ── */
 router.post("/notices", auth, authorize("super_admin", "owner"), createNotice);
 router.get("/notices", auth, authorize("super_admin", "owner", "resident"), listNotices);
+
+/* ── Profile & User Management ── */
+router.get("/profile", auth, getProfile);
+router.put("/profile", auth, updateProfile);
+router.post("/profile/change-password", auth, changePassword);
 
 export default router;
