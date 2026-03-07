@@ -1,14 +1,11 @@
 // backend/src/services/emailService.js
 // ─────────────────────────────────────────────────────────────────
-// Single canonical email service. Merges:
-//   - services/emailService.js (part 02) — good templates, on-brand HTML
-//   - utils/emailService.js (part 06)    — DELETE that file, use this one
+// Single canonical email service. Supports:
+//   - BREVO API (Primary for Production) -> Requires BREVO_API_KEY
+//   - SMTP (Fallback for Local Dev)      -> SMTP_HOST, USER, PASS
 //
-// Configure via .env:
-//   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
-//
-// If not configured, all calls log to console and return { mocked: true }.
-// Email failures NEVER throw — they are caught and logged internally.
+// Configure via Railway/Env:
+//   BREVO_API_KEY, SMTP_FROM_EMAIL
 // ─────────────────────────────────────────────────────────────────
 
 import nodemailer from "nodemailer";
