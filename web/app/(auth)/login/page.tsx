@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     signInWithEmailAndPassword,
     signInWithPopup,
@@ -46,19 +46,28 @@ export default function LoginPage() {
     const isEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     const isPhone = (val: string) => /^\+?[1-9]\d{9,14}$/.test(val.replace(/[\s\-\(\)]/g, ''));
 
-    const initRecaptcha = () => {
-        try {
-            // If already exists, clear it to avoid "element removed" errors on re-render
+    // Initialize reCAPTCHA once and keep it stable
+    useEffect(() => {
+        if (typeof window !== "undefined" && !window.recaptchaVerifier) {
+            try {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+                    size: "invisible",
+                    callback: () => {
+                        console.log("reCAPTCHA verified successfully");
+                    }
+                });
+            } catch (err) {
+                console.error("reCAPTCHA initialization failed:", err);
+            }
+        }
+
+        return () => {
             if (window.recaptchaVerifier) {
                 window.recaptchaVerifier.clear();
+                window.recaptchaVerifier = null;
             }
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-                size: "invisible"
-            });
-        } catch (err) {
-            console.error("Recaptcha initialization failed:", err);
-        }
-    };
+        };
+    }, []);
 
     async function handleLogin(e: React.FormEvent) {
         e.preventDefault();
@@ -72,35 +81,29 @@ export default function LoginPage() {
                 await signInWithEmailAndPassword(auth, identifier, password);
                 router.push("/dashboard");
             } else if (isPhone(identifier)) {
-                // Initialize JIT (Just In Time) to ensure the DOM element exists and ref is fresh
-                initRecaptcha();
+                if (!window.recaptchaVerifier) {
+                    setError("Security check (reCAPTCHA) failed to load. Please refresh.");
+                    setLoading(false);
+                    return;
+                }
 
                 const cleanPhone = identifier.replace(/[\s\-\(\)]/g, '');
-                // Basic check for country code
                 const formattedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+91${cleanPhone}`;
 
                 const result = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
                 setConfirmationResult(result);
                 setShowOtp(true);
             } else {
-                setError("Please enter a valid email or phone number (+91...).");
+                setError("Please enter a valid email or phone number.");
             }
         } catch (err: any) {
             console.error("Login Error:", err);
-            // Cleanup on failure
-            if (window.recaptchaVerifier) {
-                window.recaptchaVerifier.clear();
-                window.recaptchaVerifier = null;
-            }
-
-            if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found") {
-                setError("Invalid login details. Check your email/phone and password.");
-            } else if (err.code === "auth/too-many-requests") {
-                setError("Too many attempts. Please try again later.");
-            } else if (err.code === "auth/captcha-check-failed") {
-                setError("reCAPTCHA failed. Please try again.");
+            if (err.message?.includes("reCAPTCHA") || err.code?.includes("captcha")) {
+                setError("Blocked by security check. Please ensure 'localhost' is whitelisted in Firebase and reCAPTCHA Enterprise is enabled in Cloud Console.");
+            } else if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found") {
+                setError("Invalid login details.");
             } else {
-                setError("Authentication failed. " + (err.message || "Try again."));
+                setError(err.message || "Authentication failed. Try again.");
             }
         } finally {
             setLoading(false);
@@ -134,7 +137,7 @@ export default function LoginPage() {
             router.push("/dashboard");
         } catch (err: any) {
             if (err.code !== "auth/popup-closed-by-user") {
-                setError("Google sign-in failed. Please try again.");
+                setError("Google sign-in failed.");
             }
         } finally {
             setGoogleLoading(false);
@@ -143,7 +146,6 @@ export default function LoginPage() {
 
     return (
         <div className="animate-fade-in">
-            {/* Stable div for reCAPTCHA - must always be in DOM */}
             <div id="recaptcha-container"></div>
 
             <div style={{ marginBottom: "28px" }}>
@@ -265,11 +267,9 @@ export default function LoginPage() {
                 </button>
             </form>
 
-            {!showOtp && (
-                <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)", textAlign: "center", fontSize: "14px", color: "var(--text-secondary)" }}>
-                    Don't have an account? <Link href="/signup" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Create one</Link>
-                </div>
-            )}
+            <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)", textAlign: "center", fontSize: "14px", color: "var(--text-secondary)" }}>
+                Don't have an account? <Link href="/signup" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Create one</Link>
+            </div>
 
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
