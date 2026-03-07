@@ -29,7 +29,7 @@ const ownerSecondaryNav: NavItem[] = [
     { href: "/owner/investor", label: "Investor View", icon: <Building size={16} /> },
     { href: "/owner/reports", label: "Reports", icon: <FileText size={16} /> },
     { href: "/owner/announcements", label: "Announcements", icon: <Megaphone size={16} /> },
-    { href: "/subscription", label: "Subscription", icon: <Star size={16} /> },
+    { href: "/owner/subscription", label: "Subscription", icon: <Star size={16} /> },
     { href: "/owner/settings", label: "Settings", icon: <Settings size={16} /> },
     { href: "/owner/support", label: "Support", icon: <LifeBuoy size={16} /> },
 ];

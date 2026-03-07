@@ -40,21 +40,21 @@ export const getMyPlan = async (req, res, next) => {
 export const listPlans = async (req, res) => {
     const plans = [
         {
-            id: "free", name: "Free", price: 0, priceLabel: "Free forever",
+            id: "free", name: "Starter", price: 0, priceLabel: "Free",
             limits: PLAN_LIMITS.free,
-            features: ["Up to 10 rooms", "Up to 20 residents", "Basic payments", "Manual billing"],
+            features: ["Up to 10 Rooms", "Up to 20 Residents", "Basic Maintenance Tracker", "Manual Billing", "Email Support"],
             highlight: false,
         },
         {
-            id: "pro", name: "Pro", price: 999, priceLabel: "₹999/mo",
+            id: "pro", name: "Professional", price: 999, priceLabel: "₹999/mo",
             limits: PLAN_LIMITS.pro,
-            features: ["Up to 100 rooms", "Up to 500 residents", "Analytics & reports", "Auto billing", "Email reminders", "Revenue leak detector"],
+            features: ["Up to 100 Rooms", "Up to 500 Residents", "Automated Rent Invoicing", "Auto-Late Fee Calculation", "Email & SMS Reminders", "Financial Analytics Dashboard"],
             highlight: true,
         },
         {
             id: "enterprise", name: "Enterprise", price: 2999, priceLabel: "₹2,999/mo",
             limits: PLAN_LIMITS.enterprise,
-            features: ["Unlimited everything", "Priority support", "Custom branding", "API access", "White-label reports"],
+            features: ["Unlimited Properties & Rooms", "Unlimited Residents", "Revenue Leak Detection", "Prioritized 24/7 Support", "Custom API Integrations", "Dedicated Account Manager"],
             highlight: false,
         },
     ];
