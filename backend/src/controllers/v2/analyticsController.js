@@ -286,17 +286,25 @@ export const providerOverview = async (req, res, next) => {
  */
 export const platformStats = async (req, res, next) => {
     try {
-        const [totalProperties, totalOwners, totalResidents, revenueAgg, activePayments, rooms] = await Promise.all([
+        const [totalProperties, totalOwners, totalResidents, revenueAgg, activePayments, rooms, subs] = await Promise.all([
             Property.countDocuments({}),
             User.countDocuments({ role: "owner" }),
             User.countDocuments({ role: "resident", isActive: true }),
             Payment.aggregate([{ $match: { status: "paid" } }, { $group: { _id: null, total: { $sum: "$amount" }, fees: { $sum: "$lateFee" } } }]),
             Payment.countDocuments({ status: { $in: ["pending", "overdue"] } }),
             Room.aggregate([{ $group: { _id: null, total: { $sum: "$totalBeds" }, occupied: { $sum: "$occupiedBeds" } } }]),
+            import("../../models/Subscription.js").then(m => m.default.find({ status: "active" })),
         ]);
 
         const totalBeds = rooms[0]?.total || 0;
         const occupiedBeds = rooms[0]?.occupied || 0;
+
+        // Calculate MRR (Pro: 999, Enterprise: 2999)
+        const mrr = (subs || []).reduce((acc, s) => {
+            if (s.plan === "pro") return acc + 999;
+            if (s.plan === "enterprise") return acc + 2999;
+            return acc;
+        }, 0);
 
         return res.json({
             success: true, data: {
@@ -306,6 +314,8 @@ export const platformStats = async (req, res, next) => {
                 activeUnpaidBills: activePayments,
                 platformOccupancyRate: totalBeds ? Number(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0,
                 totalBeds, occupiedBeds,
+                platformMRR: mrr,
+                activeSubs: (subs || []).filter(s => s.plan !== "free").length
             }
         });
     } catch (err) { next(err); }

@@ -13,6 +13,8 @@ interface PlatformStats {
     platformOccupancyRate: number;
     totalBeds: number;
     occupiedBeds: number;
+    platformMRR: number;
+    activeSubs: number;
 }
 
 function BigStat({ label, value, color, sub, icon }: any) {
@@ -76,20 +78,22 @@ export default function ProviderPage() {
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+                        <BigStat label="Platform MRR" value={`₹${stats.platformMRR.toLocaleString()}`} color="#00d4ff" sub="Total from subscriptions" icon="📈" />
+                        <BigStat label="Active Subscriptions" value={stats.activeSubs} color="#a78bfa" sub="Pro + Enterprise" icon="💎" />
                         <BigStat label="Total Properties" value={stats.totalProperties} color="var(--accent-primary)" sub="On the platform" icon="🏢" />
                         <BigStat label="Total Owners" value={stats.totalOwners} color="#a78bfa" sub="Active accounts" icon="👤" />
                         <BigStat label="Total Residents" value={stats.totalResidents} color="#34d399" sub="Active tenants" icon="👥" />
-                        <BigStat label="Rent Collected" value={`₹${(stats.totalRentCollected / 1000).toFixed(0)}k`} color="#34d399" sub="All-time total" icon="💰" />
+                        <BigStat label="Rent Collected" value={`₹${(stats.totalRentCollected / 1000).toFixed(0)}k`} color="#34d399" sub="All-time processed" icon="💰" />
                         <BigStat label="Late Fees Earned" value={`₹${stats.totalLateFeesCollected.toLocaleString()}`} color="#fbbf24" sub="All-time" icon="⏰" />
                         <BigStat label="Unpaid Bills" value={stats.activeUnpaidBills} color="var(--red)" sub="Pending + overdue" icon="⚠" />
                     </div>
 
-                    {/* MRR estimate note */}
+                    {/* Subscription breakdown note */}
                     <div style={{ padding: "20px 24px", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", borderRadius: "14px", display: "flex", alignItems: "center", gap: "16px" }}>
-                        <div style={{ fontSize: "28px" }}>🚀</div>
+                        <div style={{ fontSize: "28px" }}>💰</div>
                         <div>
-                            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "15px", marginBottom: "4px" }}>Phase 2: Subscriptions & Stripe Coming Soon</div>
-                            <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Add plan tiers, feature gating, and direct payment collection. Your platform MRR will appear here.</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "15px", marginBottom: "4px" }}>Revenue Attribution</div>
+                            <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Your platform is currently generating monthly revenue from {stats.activeSubs} premium partners. Visit the billing tab to manage tiered limits.</div>
                         </div>
                     </div>
                 </>
