@@ -7,9 +7,17 @@ import logger from "../../utils/logger.js";
  */
 export const getProfile = async (req, res, next) => {
     try {
-        const user = await User.findById(req.user._id);
+        const user = await User.findById(req.user._id).select("+password");
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
-        res.json({ success: true, data: user });
+
+        const userData = user.toObject();
+        const responseData = {
+            ...userData,
+            isPasswordSet: !!userData.password
+        };
+        delete responseData.password;
+
+        res.json({ success: true, data: responseData });
     } catch (err) {
         next(err);
     }
@@ -73,21 +81,38 @@ export const changePassword = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        // Verify current password
-        const isMatch = await user.matchPassword(currentPassword);
-        if (!isMatch) {
-            logger.warn(`Password change failed for user ${id}: Incorrect current password.`);
-            return res.status(401).json({ success: false, message: "Incorrect current password" });
+        const hasPassword = !!user.password;
+
+        if (hasPassword) {
+            if (!currentPassword) {
+                return res.status(400).json({ success: false, message: "Current password is required to change your password." });
+            }
+            // Verify current password
+            const isMatch = await user.comparePassword(currentPassword);
+            if (!isMatch) {
+                logger.warn(`Password change failed for user ${id}: Incorrect current password.`);
+                return res.status(401).json({ success: false, message: "Incorrect current password" });
+            }
         }
 
-        // Update Firebase password
+        // Update Firebase password (if they have a UID)
         if (user.firebaseUid) {
-            await admin.auth().updateUser(user.firebaseUid, { password: newPassword });
+            try {
+                await admin.auth().updateUser(user.firebaseUid, { password: newPassword });
+            } catch (fbErr) {
+                logger.error(`Firebase password update failed for ${user.email}`, fbErr);
+                // Continue anyway if it's just a local password setup, 
+                // but usually they should stay in sync
+            }
         }
 
         // Update local password
         user.password = newPassword;
         await user.save();
+
+        const msg = hasPassword ? "Password updated successfully" : "Password created successfully. You can now login with your email/phone and password.";
+        logger.info(`${msg} for user: ${user.email || user.phoneNumber}`);
+        res.json({ success: true, message: msg });
 
         logger.info(`Password changed for user: ${user.email}`);
         res.json({ success: true, message: "Password updated successfully" });

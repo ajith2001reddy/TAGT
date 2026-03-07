@@ -18,7 +18,14 @@ export async function verifyRecaptchaToken(token, recaptchaAction = "LOGIN") {
     }
 
     try {
-        const client = new RecaptchaEnterpriseServiceClient();
+        const client = new RecaptchaEnterpriseServiceClient({
+            credentials: {
+                client_email: process.env.FIREBASE_CLIENT_EMAIL,
+                private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+            },
+            projectId: projectID,
+        });
+
         const projectPath = client.projectPath(projectID);
 
         const request = {
