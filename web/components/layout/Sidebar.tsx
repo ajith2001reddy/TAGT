@@ -7,13 +7,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Building2, BedDouble, Users, CreditCard,
     MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
-    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User
+    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; badge?: string };
 
 const ownerNav: NavItem[] = [
     { href: "/owner", label: "Dashboard", icon: <LayoutDashboard size={16} /> },
+    { href: "/owner/operations", label: "Operations", icon: <Activity size={16} /> },
     { href: "/owner/onboarding", label: "Onboarding", icon: <UserCheck size={16} /> },
     { href: "/owner/property", label: "Property", icon: <Building2 size={16} /> },
     { href: "/owner/rooms", label: "Rooms", icon: <BedDouble size={16} /> },
@@ -25,9 +26,10 @@ const ownerNav: NavItem[] = [
 const ownerSecondaryNav: NavItem[] = [
     { href: "/owner/analytics", label: "Analytics", icon: <BarChart2 size={16} /> },
     { href: "/owner/intelligence", label: "Intelligence", icon: <Cpu size={16} /> },
+    { href: "/owner/investor", label: "Investor View", icon: <Building size={16} /> },
     { href: "/owner/reports", label: "Reports", icon: <FileText size={16} /> },
     { href: "/owner/announcements", label: "Announcements", icon: <Megaphone size={16} /> },
-    { href: "/owner/subscription", label: "Subscription", icon: <Star size={16} /> },
+    { href: "/subscription", label: "Subscription", icon: <Star size={16} /> },
     { href: "/owner/settings", label: "Settings", icon: <Settings size={16} /> },
     { href: "/owner/support", label: "Support", icon: <LifeBuoy size={16} /> },
 ];

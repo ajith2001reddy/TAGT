@@ -8,35 +8,47 @@ interface Place { display_name: string; lat: string; lon: string; }
 
 const FEATURES = [
   {
-    icon: "⚡", title: "Automated Rent Engine",
-    desc: "Monthly billing, late fee escalation, and reminders run on autopilot — zero manual work.",
+    category: "Core Management",
     accent: "#00d4ff",
+    items: [
+      { icon: "🏢", title: "Property Management" },
+      { icon: "👋", title: "Resident Onboarding" },
+      { icon: "🛏️", title: "Room Allocation" },
+      { icon: "🔧", title: "Maintenance Requests" },
+      { icon: "💳", title: "Payment Tracking" }
+    ]
   },
   {
-    icon: "📊", title: "Live Intelligence",
-    desc: "Occupancy rates, churn prediction, and revenue analytics in one unified, real-time dashboard.",
+    category: "Automation",
     accent: "#a78bfa",
+    items: [
+      { icon: "⚡", title: "Automated Rent Generation" },
+      { icon: "🚨", title: "Overdue Payment Detection" },
+      { icon: "🔔", title: "Automated Reminders" },
+      { icon: "⏱️", title: "Scheduled System Tasks" }
+    ]
   },
   {
-    icon: "🔐", title: "Enterprise Security",
-    desc: "Super admin, owner, and resident roles with scoped data access and Firebase auth.",
-    accent: "#34d399",
-  },
-  {
-    icon: "🏠", title: "Multi-Property",
-    desc: "Manage an entire portfolio from one account. Instant switching, total isolation.",
+    category: "Intelligence (Unique)",
     accent: "#f59e0b",
+    items: [
+      { icon: "📈", title: "Revenue Forecasting" },
+      { icon: "🔮", title: "Occupancy Prediction" },
+      { icon: "⚠️", title: "Churn Risk Detection" },
+      { icon: "🛠️", title: "Maintenance Forecasting" },
+      { icon: "🧠", title: "Operational Insights" }
+    ]
   },
   {
-    icon: "📱", title: "Resident Portal",
-    desc: "Self-service payments, maintenance requests, and status — in resident's pocket.",
-    accent: "#ec4899",
-  },
-  {
-    icon: "🔔", title: "Smart Reminders",
-    desc: "Configurable email reminders, zero resident excuses, automated follow-ups.",
-    accent: "#06b6d4",
-  },
+    category: "Real-Time",
+    accent: "#34d399",
+    items: [
+      { icon: "📲", title: "Instant Notifications" },
+      { icon: "📜", title: "Activity Logs" },
+      { icon: "🎯", title: "Event Tracking" },
+      { icon: "📊", title: "Live Dashboards" }
+    ]
+  }
 ];
 
 const STATS = [
@@ -222,24 +234,24 @@ export default function LandingPage() {
             color: "#00d4ff",
           }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#00d4ff", boxShadow: "0 0 10px #00d4ff", display: "inline-block" }} />
-            THE FUTURE OF PG MANAGEMENT
+            AI POWERED PROPERTY OPERATIONS PLATFORM
           </span>
         </div>
 
         {/* Headline */}
         <h1 style={{
-          fontSize: "clamp(48px, 9vw, 100px)",
+          fontSize: "clamp(48px, 9vw, 92px)",
           fontWeight: 900,
           letterSpacing: "-0.04em",
-          lineHeight: 1.0,
+          lineHeight: 1.05,
           marginBottom: "28px",
-          maxWidth: "1000px",
+          maxWidth: "1100px",
           opacity: mounted ? 1 : 0,
           transform: mounted ? "translateY(0)" : "translateY(20px)",
           transition: "all 0.8s ease 0.1s",
         }}>
-          <span style={{ background: "linear-gradient(135deg, #ffffff 30%, #8bb6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Manage Every
+          <span style={{ background: "linear-gradient(135deg, #ffffff 30%, #a0b4cc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            The New Standard in
           </span>
           <br />
           <span style={{
@@ -247,22 +259,22 @@ export default function LandingPage() {
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             filter: "drop-shadow(0 0 40px rgba(0,180,255,0.3))",
           }}>
-            Bed. Bill. Tenant.
+            Property Operations
           </span>
         </h1>
 
         {/* Subheading */}
         <p style={{
-          fontSize: "clamp(16px, 2vw, 20px)", color: "rgba(255,255,255,0.55)",
-          maxWidth: "560px", lineHeight: 1.75, marginBottom: "52px",
+          fontSize: "clamp(18px, 2.5vw, 24px)", color: "rgba(255,255,255,0.65)",
+          maxWidth: "680px", lineHeight: 1.5, marginBottom: "52px",
           opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(20px)",
           transition: "all 0.8s ease 0.2s",
-          fontWeight: 400,
+          fontWeight: 500,
         }}>
-          The only platform built for serious PG operators. Rent automation, live analytics, and resident management — in one place.
+          Manage properties. Automate operations. Predict revenue.
         </p>
 
-        {/* Search box */}
+        {/* Search box - Keeping for SEO/discovery but moving down a bit */}
         <form onSubmit={handleSearch} style={{
           display: "flex", gap: "0", flexWrap: "wrap", justifyContent: "center",
           borderRadius: "18px",
@@ -279,7 +291,7 @@ export default function LandingPage() {
         }}>
           <div ref={wrapperRef} style={{ flex: 1, minWidth: "180px", position: "relative" }}>
             <input
-              placeholder="📍 City, area or PG name…"
+              placeholder="📍 Search for properties to rent…"
               value={query}
               onChange={onQueryChange}
               onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
@@ -317,20 +329,6 @@ export default function LandingPage() {
               </ul>
             )}
           </div>
-
-          <div style={{ width: "1px", background: "rgba(255,255,255,0.08)", margin: "10px 0", flexShrink: 0 }} />
-
-          <select value={type} onChange={e => setType(e.target.value)} style={{
-            flex: "0 0 auto", background: "transparent", border: "none", outline: "none",
-            color: type ? "#fff" : "rgba(255,255,255,0.4)",
-            fontFamily: "inherit", fontSize: "14px", padding: "16px 18px", cursor: "pointer",
-          }}>
-            <option value="" style={{ background: "#0d1520" }}>Type</option>
-            <option value="boys" style={{ background: "#0d1520" }}>Boys PG</option>
-            <option value="girls" style={{ background: "#0d1520" }}>Girls PG</option>
-            <option value="co-living" style={{ background: "#0d1520" }}>Co-Living</option>
-            <option value="hostel" style={{ background: "#0d1520" }}>Hostel</option>
-          </select>
 
           <button type="submit" style={{
             flexShrink: 0, margin: "8px",
@@ -388,74 +386,75 @@ export default function LandingPage() {
       {/* ─── Divider ─── */}
       <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)", margin: "0 40px" }} />
 
-      {/* ─── Features ─── */}
+      {/* ─── Platform Capabilities (Repositioned) ─── */}
       <section style={{ padding: "120px 40px", position: "relative", zIndex: 1, maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "80px" }}>
           <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", color: "#00d4ff", textTransform: "uppercase", marginBottom: "16px" }}>
-            Platform Capabilities
+            The AI Platform Advantage
           </div>
           <h2 style={{
             fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 900,
             letterSpacing: "-0.04em", lineHeight: 1.1,
             background: "linear-gradient(135deg, #fff 50%, #6090b0)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            marginBottom: "20px"
           }}>
-            Everything you need.<br />Nothing you don&apos;t.
+            Built to scale your portfolio.
           </h2>
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "18px", maxWidth: "680px", margin: "0 auto" }}>
+            Move beyond messy spreadsheets. Our unified platform combines core management with advanced AI intelligence to maximize your operational efficiency and minimize revenue leaks.
+          </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "18px" }}>
-          {FEATURES.map((f, i) => (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
+          {FEATURES.map((category, i) => (
             <div
-              key={f.title}
+              key={category.category}
               style={{
-                padding: "32px",
-                borderRadius: "22px",
+                padding: "36px 32px",
+                borderRadius: "24px",
                 border: "1px solid rgba(255,255,255,0.07)",
-                background: "rgba(255,255,255,0.03)",
+                background: "rgba(255,255,255,0.02)",
                 backdropFilter: "blur(10px)",
                 transition: "all 0.35s ease",
-                cursor: "default",
                 position: "relative", overflow: "hidden",
+                display: "flex", flexDirection: "column"
               }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.borderColor = `${f.accent}30`;
-                el.style.background = `${f.accent}05`;
-                el.style.transform = "translateY(-3px)";
-                el.style.boxShadow = `0 12px 40px ${f.accent}12`;
+                el.style.borderColor = `${category.accent}30`;
+                el.style.background = `linear-gradient(180deg, ${category.accent}0a, rgba(255,255,255,0.02))`;
+                el.style.transform = "translateY(-4px)";
+                el.style.boxShadow = `0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)`;
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.borderColor = "rgba(255,255,255,0.07)";
-                el.style.background = "rgba(255,255,255,0.03)";
+                el.style.background = "rgba(255,255,255,0.02)";
                 el.style.transform = "translateY(0)";
                 el.style.boxShadow = "none";
               }}
             >
-              {/* Subtle corner glow on hover */}
               <div style={{
-                position: "absolute", top: 0, right: 0,
-                width: "100px", height: "100px",
-                background: `radial-gradient(circle at top right, ${f.accent}10, transparent 70%)`,
-                borderRadius: "0 22px 0 0",
+                position: "absolute", top: 0, left: 0,
+                width: "100%", height: "2px",
+                background: `linear-gradient(90deg, ${category.accent}, transparent)`,
+                opacity: 0.5
               }} />
 
-              <div style={{
-                width: "50px", height: "50px", borderRadius: "14px",
-                background: `${f.accent}12`,
-                border: `1px solid ${f.accent}22`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "24px", marginBottom: "20px",
-              }}>
-                {f.icon}
-              </div>
-              <h3 style={{ fontSize: "17px", fontWeight: 700, marginBottom: "10px", letterSpacing: "-0.02em", color: "#fff" }}>
-                {f.title}
+              <h3 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "28px", letterSpacing: "-0.02em", color: "#fff", display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: category.accent, display: "inline-block", boxShadow: `0 0 10px ${category.accent}` }} />
+                {category.category}
               </h3>
-              <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "14px", lineHeight: 1.75 }}>
-                {f.desc}
-              </p>
+
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "16px", flex: 1 }}>
+                {category.items.map(item => (
+                  <li key={item.title} style={{ display: "flex", alignItems: "center", gap: "12px", color: "rgba(255,255,255,0.7)", fontSize: "15px", fontWeight: 500 }}>
+                    <span style={{ fontSize: "18px", opacity: 0.9 }}>{item.icon}</span>
+                    {item.title}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
