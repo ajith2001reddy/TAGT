@@ -15,9 +15,13 @@ interface PlatformStats {
     occupiedBeds: number;
     platformMRR: number;
     activeSubs: number;
+    topProperties: { id: string; name: string; revenue: number }[];
+    recentActivity: { id: string; action: string; userName: string; createdAt: string; details: any }[];
 }
 
-function BigStat({ label, value, color, sub, icon }: any) {
+interface BigStatProps { label: string; value: string | number; color: string; sub: string; icon: string; }
+
+function BigStat({ label, value, color, sub, icon }: BigStatProps) {
     return (
         <div style={{
             background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px",
@@ -43,7 +47,10 @@ export default function ProviderPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        api.get("/v2/admin/platform-stats").then(r => setStats(r.data.data)).catch(() => { }).finally(() => setLoading(false));
+        api.get("/v2/admin/platform-stats")
+            .then(r => setStats(r.data.data))
+            .catch(() => { })
+            .finally(() => setLoading(false));
     }, []);
 
     if (loading) return (
@@ -53,7 +60,7 @@ export default function ProviderPage() {
     );
 
     return (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in" style={{ paddingBottom: "40px" }}>
             <div style={{ marginBottom: "36px" }}>
                 <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>TAGT Control Room</div>
                 <h1 className="display-text" style={{ fontSize: "32px", marginBottom: "6px" }}>Platform Overview</h1>
@@ -65,35 +72,103 @@ export default function ProviderPage() {
                     {/* Occupancy header bar */}
                     <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px", marginBottom: "20px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                            <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Platform Occupancy Rate</span>
+                            <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Platform Occupancy</span>
                             <span style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 700, color: stats.platformOccupancyRate >= 80 ? "#34d399" : stats.platformOccupancyRate >= 60 ? "#fbbf24" : "var(--red)" }}>{stats.platformOccupancyRate}%</span>
                         </div>
                         <div style={{ height: "6px", background: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
                             <div style={{ height: "100%", width: `${stats.platformOccupancyRate}%`, background: "linear-gradient(90deg, var(--accent-primary), #34d399)", borderRadius: "3px", transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)", boxShadow: "0 0 12px rgba(0,212,255,0.4)" }} />
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px", fontSize: "12px", color: "var(--text-tertiary)" }}>
-                            <span>{stats.occupiedBeds} beds occupied</span>
-                            <span>{stats.totalBeds} total beds</span>
-                        </div>
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px", marginBottom: "24px" }}>
                         <BigStat label="Platform MRR" value={`₹${stats.platformMRR.toLocaleString()}`} color="#00d4ff" sub="Total from subscriptions" icon="📈" />
-                        <BigStat label="Active Subscriptions" value={stats.activeSubs} color="#a78bfa" sub="Pro + Enterprise" icon="💎" />
+                        <BigStat label="Active Subs" value={stats.activeSubs} color="#a78bfa" sub="Pro + Enterprise" icon="💎" />
                         <BigStat label="Total Properties" value={stats.totalProperties} color="var(--accent-primary)" sub="On the platform" icon="🏢" />
-                        <BigStat label="Total Owners" value={stats.totalOwners} color="#a78bfa" sub="Active accounts" icon="👤" />
                         <BigStat label="Total Residents" value={stats.totalResidents} color="#34d399" sub="Active tenants" icon="👥" />
                         <BigStat label="Rent Collected" value={`₹${(stats.totalRentCollected / 1000).toFixed(0)}k`} color="#34d399" sub="All-time processed" icon="💰" />
-                        <BigStat label="Late Fees Earned" value={`₹${stats.totalLateFeesCollected.toLocaleString()}`} color="#fbbf24" sub="All-time" icon="⏰" />
-                        <BigStat label="Unpaid Bills" value={stats.activeUnpaidBills} color="var(--red)" sub="Pending + overdue" icon="⚠" />
+                        <BigStat label="Late Fees" value={`₹${stats.totalLateFeesCollected.toLocaleString()}`} color="#fbbf24" sub="All-time" icon="⏰" />
                     </div>
 
-                    {/* Subscription breakdown note */}
-                    <div style={{ padding: "20px 24px", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", borderRadius: "14px", display: "flex", alignItems: "center", gap: "16px" }}>
-                        <div style={{ fontSize: "28px" }}>💰</div>
-                        <div>
-                            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "15px", marginBottom: "4px" }}>Revenue Attribution</div>
-                            <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Your platform is currently generating monthly revenue from {stats.activeSubs} premium partners. Visit the billing tab to manage tiered limits.</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: "20px", alignItems: "start" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                            {/* Top Properties Table */}
+                            <div className="glass-card" style={{ padding: "24px" }}>
+                                <h3 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
+                                    <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "var(--accent-primary)" }}></span>
+                                    Top Revenue Generating Properties
+                                </h3>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                    {stats.topProperties.map((p, i) => (
+                                        <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                                <span style={{ fontSize: "12px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", width: "20px" }}>0{i + 1}</span>
+                                                <span style={{ fontSize: "14px", fontWeight: 600 }}>{p.name}</span>
+                                            </div>
+                                            <div style={{ textAlign: "right" }}>
+                                                <div style={{ fontSize: "14px", fontWeight: 700, color: "#34d399" }}>₹{p.revenue.toLocaleString()}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {stats.topProperties.length === 0 && (
+                                        <div style={{ padding: "30px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No revenue data yet.</div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Recent Activity Feed */}
+                            <div className="glass-card" style={{ padding: "24px" }}>
+                                <h3 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
+                                    <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#f472b6" }}></span>
+                                    Living Feed: Platform Activity
+                                </h3>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                    {stats.recentActivity?.map((act) => (
+                                        <div key={act.id} style={{ display: "flex", gap: "16px", paddingBottom: "16px", borderBottom: "1px solid var(--border-subtle)" }}>
+                                            <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>⚡</div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                                                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>{act.userName}</span>
+                                                    <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{new Date(act.createdAt).toLocaleTimeString()}</span>
+                                                </div>
+                                                <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{act.action.replace(/_/g, " ")}: {act.details?.propertyId || "System"}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(!stats.recentActivity || stats.recentActivity.length === 0) && (
+                                        <div style={{ padding: "20px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "12px" }}>No recent activity.</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                            {/* Subscription Info */}
+                            <div style={{ padding: "24px", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", borderRadius: "20px" }}>
+                                <div style={{ fontSize: "32px", marginBottom: "12px" }}>💸</div>
+                                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "8px" }}>Platform Economics</h3>
+                                <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.6", marginBottom: "16px" }}>
+                                    Your platform currently supports <strong>{stats.activeSubs} premium partners</strong>. Revenue is calculated based on the current monthly subscription tiers.
+                                </p>
+                                <div style={{ paddingTop: "16px", borderTop: "1px solid rgba(0,212,255,0.1)" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "8px" }}>
+                                        <span style={{ color: "var(--text-tertiary)" }}>Conversion Rate</span>
+                                        <span>{((stats.activeSubs / (stats.totalOwners || 1)) * 100).toFixed(1)}%</span>
+                                    </div>
+                                    <div style={{ height: "4px", background: "rgba(255,255,255,0.05)", borderRadius: "2px" }}>
+                                        <div style={{ height: "100%", width: `${(stats.activeSubs / (stats.totalOwners || 1)) * 100}%`, background: "#00d4ff", borderRadius: "2px" }}></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Quick Links */}
+                            <div className="glass-card" style={{ padding: "24px" }}>
+                                <h3 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "16px" }}>Quick Controls</h3>
+                                <div style={{ display: "grid", gap: "8px" }}>
+                                    <button onClick={() => window.location.href = '/provider/owners'} style={{ padding: "10px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-subtle)", fontSize: "12px", textAlign: "left", cursor: "pointer" }}>Manage Owners</button>
+                                    <button onClick={() => window.location.href = '/provider/subscriptions'} style={{ padding: "10px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-subtle)", fontSize: "12px", textAlign: "left", cursor: "pointer" }}>Billing Control</button>
+                                    <button onClick={() => window.location.href = '/provider/support'} style={{ padding: "10px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-subtle)", fontSize: "12px", textAlign: "left", cursor: "pointer" }}>Support Tickets</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </>
@@ -101,3 +176,4 @@ export default function ProviderPage() {
         </div>
     );
 }
+

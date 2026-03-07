@@ -141,7 +141,7 @@ export default function OwnerOnboardingPage() {
                                         border: "1px solid var(--border-subtle)",
                                         fontStyle: "italic"
                                     }}>
-                                        "{request.message || "No message provided"}"
+                                        &quot;{request.message || "No message provided"}&quot;
                                     </div>
                                 </div>
                             </div>

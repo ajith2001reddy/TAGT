@@ -35,7 +35,7 @@ export default function IntelligenceDashboard() {
                     <h1 className="display-text" style={{ fontSize: "28px", margin: 0 }}>Intelligence Center</h1>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "14px", maxWidth: "600px", marginTop: "8px" }}>
-                    AI-driven forecasts, churn risk analysis, and actionable recommendations to optimize your portfolio's performance.
+                    AI-driven forecasts, churn risk analysis, and actionable recommendations to optimize your portfolio&apos;s performance.
                 </p>
             </motion.div>
 

@@ -78,7 +78,9 @@ export default function LandingPage() {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true);
+    // 🚀 Defer mounted state to avoid synchronous cascading renders
+    Promise.resolve().then(() => setMounted(true));
+
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);

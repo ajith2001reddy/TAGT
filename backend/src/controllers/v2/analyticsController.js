@@ -286,7 +286,7 @@ export const providerOverview = async (req, res, next) => {
  */
 export const platformStats = async (req, res, next) => {
     try {
-        const [totalProperties, totalOwners, totalResidents, revenueAgg, activePayments, rooms, subs] = await Promise.all([
+        const [totalProperties, totalOwners, totalResidents, revenueAgg, activePayments, rooms, subs, topProps] = await Promise.all([
             Property.countDocuments({}),
             User.countDocuments({ role: "owner" }),
             User.countDocuments({ role: "resident", isActive: true }),
@@ -294,6 +294,15 @@ export const platformStats = async (req, res, next) => {
             Payment.countDocuments({ status: { $in: ["pending", "overdue"] } }),
             Room.aggregate([{ $group: { _id: null, total: { $sum: "$totalBeds" }, occupied: { $sum: "$occupiedBeds" } } }]),
             import("../../models/Subscription.js").then(m => m.default.find({ status: "active" })),
+            Payment.aggregate([
+                { $match: { status: "paid" } },
+                { $group: { _id: "$propertyId", revenue: { $sum: "$amount" } } },
+                { $sort: { revenue: -1 } },
+                { $limit: 5 },
+                { $lookup: { from: "properties", localField: "_id", foreignField: "_id", as: "property" } },
+                { $unwind: "$property" }
+            ]),
+            import("../../models/ActivityLog.js").then(m => m.default.find({}).sort({ createdAt: -1 }).limit(5).populate("user", "name"))
         ]);
 
         const totalBeds = rooms[0]?.total || 0;
@@ -315,7 +324,19 @@ export const platformStats = async (req, res, next) => {
                 platformOccupancyRate: totalBeds ? Number(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0,
                 totalBeds, occupiedBeds,
                 platformMRR: mrr,
-                activeSubs: (subs || []).filter(s => s.plan !== "free").length
+                activeSubs: (subs || []).filter(s => s.plan !== "free").length,
+                topProperties: (topProps || []).map(p => ({
+                    id: p.property._id,
+                    name: p.property.name,
+                    revenue: p.revenue
+                })),
+                recentActivity: (recentActivity || []).map(a => ({
+                    id: a._id,
+                    action: a.action,
+                    userName: a.user?.name || "System",
+                    createdAt: a.createdAt,
+                    details: a.metadata
+                }))
             }
         });
     } catch (err) { next(err); }
