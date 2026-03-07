@@ -134,3 +134,25 @@ export const superAdminUpdateOwner = async (req, res, next) => {
         next(err);
     }
 };
+/**
+ * Get properties based on user role
+ */
+export const getMyProperties = async (req, res, next) => {
+    try {
+        let query = {};
+
+        if (req.user.role === "owner") {
+            query = { owner: req.user._id };
+        } else if (req.user.role === "resident") {
+            query = { _id: req.user.propertyId };
+        } else if (req.user.role === "super_admin") {
+            // Already handled by listProperties but good to have here for generic /v2/properties
+            query = {};
+        }
+
+        const data = await Property.find(query).lean();
+        return res.json({ success: true, data });
+    } catch (err) {
+        next(err);
+    }
+};

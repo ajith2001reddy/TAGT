@@ -832,3 +832,8 @@ select.input-field option:checked {
     font-size: 14px;
   }
 }
+
+/* Hide reCAPTCHA badge globally for a cleaner UI */
+.grecaptcha-badge {
+  visibility: hidden !important;
+}

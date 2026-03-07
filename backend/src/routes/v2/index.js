@@ -12,7 +12,7 @@ import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, down
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
 import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2, ownerDashboardSummary } from "../../controllers/v2/analyticsController.js";
 import { reportMonthlyRevenue, reportOutstanding, reportResidentLedger } from "../../controllers/v2/reportController.js";
-import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner } from "../../controllers/v2/propertiesController.js";
+import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner, getMyProperties } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
 import { createPaymentSession, createSubscriptionSession, stripeWebhook, stripeStatus } from "../../controllers/v2/stripeController.js";
@@ -124,7 +124,8 @@ router.patch("/admin/subscriptions/:ownerId", auth, authorize("super_admin"), lo
 router.get("/admin/activity-logs", auth, authorize("super_admin"), listActivityLogs);
 router.get("/owner/activity-logs", auth, authorize("owner"), myActivityLogs);
 
-/* ── Resident Discovery ── */
+/* ── Properties ── */
+router.get("/properties", auth, getMyProperties);
 router.get("/properties/discover", auth, authorize("resident"), discoverProperties);
 
 /* ── Phase 3: Intelligence ── */

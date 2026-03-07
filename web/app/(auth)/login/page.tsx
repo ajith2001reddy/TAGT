@@ -6,7 +6,8 @@ import {
     signInWithPopup,
     RecaptchaVerifier,
     signInWithPhoneNumber,
-    ConfirmationResult
+    ConfirmationResult,
+    signInWithCustomToken
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
@@ -88,7 +89,7 @@ export default function LoginPage() {
 
         setLoading(true);
         try {
-            if (isEmail(identifier)) {
+            if (isEmail(identifier) || (isPhone(identifier) && password)) {
                 // reCAPTCHA Enterprise Verification
                 if (window.grecaptcha?.enterprise) {
                     try {
@@ -112,7 +113,23 @@ export default function LoginPage() {
                     }
                 }
 
-                await signInWithEmailAndPassword(auth, identifier, password);
+                if (isEmail(identifier)) {
+                    await signInWithEmailAndPassword(auth, identifier, password);
+                } else {
+                    // Phone + Password Login (Custom Token)
+                    try {
+                        const { data } = await api.post("/auth/login", { identifier, password });
+                        if (data.success && data.data.customToken) {
+                            await signInWithCustomToken(auth, data.data.customToken);
+                        } else {
+                            throw new Error(data.message || "Login failed");
+                        }
+                    } catch (err: any) {
+                        setError(err.response?.data?.message || "Invalid phone number or password. Use OTP instead?");
+                        setLoading(false);
+                        return;
+                    }
+                }
                 // Redirection is handled by the useEffect once context syncs
             } else if (isPhone(identifier)) {
                 if (!window.recaptchaVerifier) {
@@ -245,7 +262,7 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        {(isEmail(identifier) || (!isPhone(identifier) && identifier.length > 3)) && (
+                        {(isEmail(identifier) || isPhone(identifier) || identifier.length > 3) && (
                             <div className="animate-fade-down">
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                                     <label className="label-text">Password</label>
@@ -259,6 +276,11 @@ export default function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required={isEmail(identifier)}
                                 />
+                                {isPhone(identifier) && !password && (
+                                    <p style={{ fontSize: "11px", color: "var(--text-tertiary)", marginTop: "6px" }}>
+                                        Leave empty to sign in with SMS OTP instead.
+                                    </p>
+                                )}
                             </div>
                         )}
                     </>
@@ -302,7 +324,7 @@ export default function LoginPage() {
                             </svg>
                             {showOtp ? "Verifying..." : "Processing..."}
                         </span>
-                    ) : showOtp ? "Verify OTP" : isPhone(identifier) ? "Send OTP Code" : "Sign In →"}
+                    ) : showOtp ? "Verify OTP" : (isPhone(identifier) && !password) ? "Send OTP Code" : "Sign In →"}
                 </button>
             </form>
 

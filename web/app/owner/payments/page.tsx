@@ -187,24 +187,26 @@ export default function PaymentsPage() {
                                                 {markingId === payment._id ? "…" : "Mark Paid"}
                                             </button>
                                         )}
-                                        <button
-                                            onClick={() => handleDownload(payment)}
-                                            disabled={downloadingId === payment._id}
-                                            style={{
-                                                padding: "7px 14px", borderRadius: "8px", border: "1px solid var(--border-default)",
-                                                background: "transparent", color: "var(--text-secondary)",
-                                                fontSize: "12px", fontWeight: 500, cursor: "pointer", transition: "all 0.15s ease",
-                                                display: "flex", alignItems: "center", gap: "6px",
-                                            }}
-                                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent-primary)"; (e.currentTarget as HTMLElement).style.color = "var(--accent-primary)"; }}
-                                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
-                                        >
-                                            {downloadingId === payment._id
-                                                ? <div style={{ width: "11px", height: "11px", border: "2px solid var(--accent-primary)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
-                                                : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                                            }
-                                            Invoice
-                                        </button>
+                                        {payment.status === "paid" && (
+                                            <button
+                                                onClick={() => handleDownload(payment)}
+                                                disabled={downloadingId === payment._id}
+                                                style={{
+                                                    padding: "7px 14px", borderRadius: "8px", border: "1px solid var(--border-default)",
+                                                    background: "transparent", color: "var(--text-secondary)",
+                                                    fontSize: "12px", fontWeight: 500, cursor: "pointer", transition: "all 0.15s ease",
+                                                    display: "flex", alignItems: "center", gap: "6px",
+                                                }}
+                                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent-primary)"; (e.currentTarget as HTMLElement).style.color = "var(--accent-primary)"; }}
+                                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+                                            >
+                                                {downloadingId === payment._id
+                                                    ? <div style={{ width: "11px", height: "11px", border: "2px solid var(--accent-primary)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
+                                                    : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                                                }
+                                                Invoice
+                                            </button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

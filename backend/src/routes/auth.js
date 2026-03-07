@@ -49,6 +49,64 @@ router.post("/verify-recaptcha", async (req, res) => {
 });
 
 /**
+ * POST /api/auth/login
+ * Unified login using identifier (email or phone) and password
+ * Returns a Firebase custom token to bypass OTP for phone users
+ */
+router.post("/login", async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+
+    if (!identifier || !password) {
+      return res.status(400).json({ success: false, message: "Identifier and password are required" });
+    }
+
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    let query = {};
+
+    if (isEmail) {
+      query = { email: identifier.toLowerCase() };
+    } else {
+      // Clean and format phone
+      const cleanPhone = identifier.replace(/[\s\-\(\)]/g, '');
+      const formattedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+91${cleanPhone}`;
+      query = { phoneNumber: formattedPhone };
+    }
+
+    const user = await User.findOne(query).select("+password");
+
+    if (!user || !user.password) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials or no password set. Please use OTP to login first."
+      });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Invalid credentials" });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: "Account is suspended" });
+    }
+
+    // Generate Firebase custom token
+    const customToken = await admin.auth().createCustomToken(user.firebaseUid || user._id.toString());
+
+    res.json({
+      success: true,
+      data: { customToken },
+      message: "Login successful"
+    });
+
+  } catch (err) {
+    logger.error("Login route error", { error: err.message });
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+/**
  * GET /api/auth/me
  */
 router.get("/me", auth, async (req, res) => {
@@ -103,7 +161,7 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    const { name, phoneNumber: bodyPhone } = req.body;
+    const { name, phoneNumber: bodyPhone, password } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -117,6 +175,7 @@ router.post("/register", async (req, res) => {
       email: decoded.email?.toLowerCase() || null,
       phoneNumber: decoded.phone_number || bodyPhone || null,
       name,
+      password, // Hashed by pre-save hook in User model
       role: "resident",   // default role
       isActive: true
     });

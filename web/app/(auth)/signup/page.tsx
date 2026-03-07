@@ -38,7 +38,7 @@ export default function SignupPage() {
             await createUserWithEmailAndPassword(auth, email, password);
 
             // 🔥 Do NOT manually get token
-            await api.post("/auth/register", { name, phoneNumber: phone });
+            await api.post("/auth/register", { name, phoneNumber: phone, password });
 
             router.push("/dashboard");
 
