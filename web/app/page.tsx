@@ -179,14 +179,11 @@ export default function LandingPage() {
         transition: "all 0.4s ease",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{
-            width: "32px", height: "32px", borderRadius: "10px",
-            background: "linear-gradient(135deg, #00d4ff, #0066cc)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 16px rgba(0,212,255,0.35)",
-          }}>
-            <span style={{ color: "#000", fontWeight: 900, fontSize: "14px" }}>T</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="TAGT Logo"
+            style={{ width: "32px", height: "32px", borderRadius: "8px", objectFit: "cover", boxShadow: "0 0 16px rgba(0,212,255,0.25)" }}
+          />
           <span style={{ fontWeight: 800, fontSize: "20px", letterSpacing: "-0.03em", background: "linear-gradient(135deg, #ffffff, #a0b4cc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             TAGT
           </span>

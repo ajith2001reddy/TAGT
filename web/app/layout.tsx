@@ -30,6 +30,10 @@ export const metadata = {
   verification: {
     google: "A1t2IoQGTlSEoGg91k9s8xV6cMGCpVRJrjM4ig6ygJE",
   },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
