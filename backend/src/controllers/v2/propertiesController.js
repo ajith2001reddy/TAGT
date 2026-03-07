@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Property from "../../models/Property.js";
-import Room from "../../models/Room.js";
+import Room from "../../models/rooms.js";
 import Bed from "../../models/Bed.js";
 
 /**

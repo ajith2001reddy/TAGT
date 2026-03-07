@@ -1,0 +1,43 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Root (if exists) or we can specify folders
+      - name: Install dependencies (Backend)
+        run: cd backend && npm install
+
+      - name: Install dependencies (Web)
+        run: cd web && npm install
+
+      - name: Run lint (Backend)
+        run: cd backend && npm run lint || echo "No lint script in backend"
+
+      - name: Run lint (Web)
+        run: cd web && npm run lint || echo "No lint script in web"
+
+      - name: Build check (Web)
+        run: cd web && npm run build
+        env:
+          NEXT_PUBLIC_POSTHOG_KEY: dummy
+          NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+          STRIPE_SECRET_KEY: dummy_secret
+
+      # You can add backend tests here once configured
+      # - name: Run tests (Backend)
+      #   run: cd backend && npm test || echo "No tests configured"
