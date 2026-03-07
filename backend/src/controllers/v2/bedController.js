@@ -75,8 +75,6 @@ export const assignResidentToBed = async (req, res, next) => {
 
         logger.info(`[MOVE] Resident ${user.name} moved to Room ${newRoomId} Bed ${newBedId}`);
         return res.json({ success: true, message: "Resident assigned successfully", data: { bed, user } });
-
-        return res.json({ success: true, message: "Resident assigned successfully", data: { bed, user } });
     } catch (err) {
         await session.abortTransaction();
         next(err);
@@ -92,15 +90,24 @@ export const listBeds = async (req, res, next) => {
     try {
         const { propertyId, roomId } = req.query;
         const filter = {};
-
         if (propertyId) filter.propertyId = propertyId;
         if (roomId) filter.roomId = roomId;
 
-        const beds = await Bed.find(filter)
-            .populate("residentId", "name email")
-            .lean();
+        const bedsResult = await Bed.find(filter)
+            .populate("residentId", "name email isActive isDeleted");
 
-        return res.json({ success: true, data: beds });
+        // 🔄 SELF-HEALING: Verify bed occupancy
+        const syncedBeds = await Promise.all(bedsResult.map(async (bed) => {
+            if (bed.status === "occupied" && (!bed.residentId || bed.residentId.isActive === false || bed.residentId.isDeleted === true)) {
+                logger.info(`[SYNC] Freeing Ghost Bed: Room ${bed.roomId} Bed ${bed.bedNumber}`);
+                bed.status = "available";
+                bed.residentId = null;
+                await bed.save();
+            }
+            return bed.toObject();
+        }));
+
+        return res.json({ success: true, data: syncedBeds });
     } catch (err) {
         next(err);
     }

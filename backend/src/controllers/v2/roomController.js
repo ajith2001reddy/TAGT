@@ -15,10 +15,26 @@ export const listRooms = async (req, res, next) => {
 
         const rooms = await Room.find(filter)
             .populate("propertyId", "name")
-            .sort({ createdAt: -1 })
-            .lean();
+            .sort({ createdAt: -1 });
 
-        return res.json({ success: true, data: rooms });
+        // 🔄 SELF-HEALING: Verify and sync occupancy counts
+        const User = mongoose.model("User");
+        const syncedRooms = await Promise.all(rooms.map(async (room) => {
+            const actualCount = await User.countDocuments({
+                roomId: room._id,
+                isActive: { $ne: false },
+                isDeleted: { $ne: true }
+            });
+
+            if (room.occupiedBeds !== actualCount) {
+                logger.info(`[SYNC] Fixing occupancy for Room ${room.roomNumber}: ${room.occupiedBeds} -> ${actualCount}`);
+                room.occupiedBeds = actualCount;
+                await room.save();
+            }
+            return room.toObject();
+        }));
+
+        return res.json({ success: true, data: syncedRooms });
     } catch (err) {
         logger.error(`LIST ROOMS ERROR: ${err.message}`);
         next(err);
