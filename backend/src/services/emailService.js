@@ -14,54 +14,89 @@
 import nodemailer from "nodemailer";
 import logger from "../utils/logger.js";
 
+// ─── Environment Details ──────────────────────────────────────────
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const isBrevoEnabled = !!BREVO_API_KEY;
+
+// Fallback SMTP (if needed)
 const emailEnabled = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
-const provider = process.env.EMAIL_PROVIDER || "SMTP";
-const FROM = process.env.SMTP_FROM || '"TAGT Platform" <noreply@tagt.app>';
+const provider = process.env.EMAIL_PROVIDER || (isBrevoEnabled ? "BREVO" : "SMTP");
 
-// ─── Provider Setup ──────────────────────────────────────────────
+// "TAGT Platform" <support@tagt.website>
+const FROM_NAME = "TAGT Platform";
+const FROM_EMAIL = process.env.SMTP_FROM_EMAIL || "support@tagt.website";
+const FROM = process.env.SMTP_FROM || `"${FROM_NAME}" <${FROM_EMAIL}>`;
 
+// ─── Legacy SMTP Setup (Keep for local dev if chosen) ──────────────
 let transporter = null;
 if (provider === "SMTP" && emailEnabled) {
-    logger.info(`[SMTP INIT] Attempting connection to ${process.env.SMTP_HOST}:${process.env.SMTP_PORT} with user ${process.env.SMTP_USER}`);
+    logger.info(`[SMTP INIT] Attempting connection to ${process.env.SMTP_HOST}:${process.env.SMTP_PORT}`);
     transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT) || 587,
         secure: Number(process.env.SMTP_PORT) === 465,
         auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
         tls: { rejectUnauthorized: false },
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 10000,
-        socketTimeout: 30000,
-        debug: true, // Show detailed logs
-        logger: true  // Log into winston/console
-    });
-    // Verify connection on startup
-    transporter.verify((error, success) => {
-        if (error) {
-            logger.error("❌ SMTP Connection Error:", { error: error.message });
-        } else {
-            logger.info("✅ SMTP Server is ready to take our messages");
-        }
+        family: 4
     });
 }
 
-// Internal send helper — never throws
+// ─── Internal Send Helper ──────────────────────────────────────────
 const send = async (to, subject, html, attachments = []) => {
-    if (provider === "RESEND") {
-        if (!process.env.RESEND_API_KEY) {
-            logger.info(`[RESEND MOCK] To: ${to} | Subject: ${subject}`);
+    // 1️⃣ BREVO API (RECOMMENDED FOR CLOUD)
+    if (provider === "BREVO") {
+        if (!BREVO_API_KEY) {
+            logger.info(`[BREVO MOCK] To: ${to} | Subject: ${subject}`);
             return { mocked: true };
         }
-        // Future: Integration with resend package
-        logger.info(`[RESEND] Sending...`, { to, subject });
-        return { success: true };
+
+        try {
+            const body = {
+                sender: { name: FROM_NAME, email: FROM_EMAIL },
+                to: [{ email: to }],
+                subject: subject,
+                htmlContent: html,
+            };
+
+            // Handle Attachments (Brevo expects base64)
+            if (attachments.length > 0) {
+                body.attachment = attachments.map(att => ({
+                    name: att.filename,
+                    content: typeof att.content === "string" ? att.content : att.content.toString("base64")
+                }));
+            }
+
+            const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+                method: "POST",
+                headers: {
+                    "api-key": BREVO_API_KEY,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(body)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                logger.info(`[BREVO] Sent: ${subject}`, { to, messageId: result.messageId });
+                return { success: true, messageId: result.messageId };
+            } else {
+                logger.error(`[BREVO] Failed: ${subject}`, { to, error: result.message || JSON.stringify(result) });
+                return { error: result.message };
+            }
+        } catch (err) {
+            logger.error(`[BREVO] Network Error: ${subject}`, { to, error: err.message });
+            return { error: err.message };
+        }
     }
 
-    // Default: SMTP
+    // 2️⃣ LEGACY SMTP
     if (!transporter) {
         logger.info(`[EMAIL MOCK] To: ${to} | Subject: ${subject}`);
         return { mocked: true };
     }
+
     try {
         const info = await transporter.sendMail({ from: FROM, to, subject, html, attachments });
         logger.info(`[EMAIL] Sent: ${subject}`, { to, messageId: info.messageId });
