@@ -5,8 +5,27 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "f
 import { auth } from "@/lib/firebase";
 import { api } from "@/lib/api";
 
+export interface DbUser {
+    _id: string;
+    name: string;
+    email: string;
+    role: "resident" | "owner" | "super_admin";
+    verification?: {
+        status: "pending" | "approved" | "rejected";
+        selfiePhoto?: string;
+        idFront?: string;
+        idBack?: string;
+        propertyDocument?: string;
+        aiScore?: number;
+        fraudRisk?: "low" | "medium" | "high" | "unknown";
+    };
+    propertyIds?: string[];
+    createdAt: string;
+}
+
 type AuthContextType = {
     user: User | null;
+    dbUser: DbUser | null;
     role: string | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
@@ -17,7 +36,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
-    const [dbUser, setDbUser] = useState<any>(null);
+    const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
@@ -31,10 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     await firebaseUser.getIdToken(true);
 
                     const { data } = await api.get("/auth/me");
-                    setRole(data.data?.role || null);
-                    setDbUser(data.data || null);
-                } catch (err: any) {
-                    if (err.response?.status !== 401) {
+                    const userData = data.data as DbUser;
+                    setRole(userData.role || null);
+                    setDbUser(userData || null);
+                } catch (err: unknown) {
+                    if (err instanceof Error && (err as any).response?.status !== 401) {
                         console.error("Auth sync error:", err);
                     }
                     setRole(null);
@@ -61,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, dbUser, role, loading, login, logout } as any}>
+        <AuthContext.Provider value={{ user, dbUser, role, loading, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

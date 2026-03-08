@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import { upload } from "../config/cloudinary.js";
 import { fraudDetection } from "../utils/fraudDetection.js";
 import protect from "../middleware/auth.js";
+import { uploadToCloudinary } from "../utils/cloudinaryHelper.js";
 
 const router = express.Router();
 
@@ -40,9 +41,14 @@ router.post(
                 user.verification = {};
             }
 
-            user.verification.selfiePhoto = req.files.selfie[0].path;
-            user.verification.idFront = req.files.idFront[0].path;
-            user.verification.idBack = req.files.idBack[0].path;
+            // Manual Uploads to Cloudinary
+            const selfieUrl = await uploadToCloudinary(req.files.selfie[0].buffer, "tagt_verification");
+            const idFrontUrl = await uploadToCloudinary(req.files.idFront[0].buffer, "tagt_verification");
+            const idBackUrl = await uploadToCloudinary(req.files.idBack[0].buffer, "tagt_verification");
+
+            user.verification.selfiePhoto = selfieUrl;
+            user.verification.idFront = idFrontUrl;
+            user.verification.idBack = idBackUrl;
 
             // Property proof for owners
             if (user.role === "owner") {
@@ -52,7 +58,8 @@ router.post(
                         message: "Property document is required for owners.",
                     });
                 }
-                user.verification.propertyDocument = req.files.propertyDoc[0].path;
+                const propertyDocUrl = await uploadToCloudinary(req.files.propertyDoc[0].buffer, "tagt_verification");
+                user.verification.propertyDocument = propertyDocUrl;
             }
 
             // Run fraud detection

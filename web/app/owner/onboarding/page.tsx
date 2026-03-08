@@ -49,8 +49,9 @@ export default function OwnerOnboardingPage() {
             await api.patch(`/v2/join-requests/${id}/${action}`);
             toast.success(`Request ${action}d successfully`);
             setRequests(prev => prev.filter(r => r._id !== id));
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || `Failed to ${action} request`);
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || `Failed to ${action} request`);
         } finally {
             setProcessingId(null);
         }

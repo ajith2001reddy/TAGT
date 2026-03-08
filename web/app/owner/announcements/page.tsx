@@ -124,7 +124,7 @@ export default function AnnouncementsPage() {
                             </div>
                             <div className="input-group">
                                 <label>Priority / Severity</label>
-                                <select value={priority} onChange={e => setPriority(e.target.value as any)}>
+                                <select value={priority} onChange={e => setPriority(e.target.value as "info" | "warning" | "critical")}>
                                     <option value="info">Information (Blue)</option>
                                     <option value="warning">Warning (Yellow)</option>
                                     <option value="critical">Critical / Urgent (Red)</option>

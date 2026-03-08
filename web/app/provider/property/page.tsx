@@ -184,7 +184,7 @@ function Input({
     type = "text",
 }: {
     label: string;
-    value: any;
+    value: string | number;
     onChange: (v: string) => void;
     type?: string;
 }) {
@@ -216,7 +216,7 @@ function Detail({
     value,
 }: {
     label: string;
-    value: any;
+    value: string | number;
 }) {
     return (
         <div style={{ marginBottom: 12 }}>
@@ -230,7 +230,7 @@ function StatCard({
     value,
 }: {
     title: string;
-    value: any;
+    value: string | number;
 }) {
     return (
         <div

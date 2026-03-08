@@ -1,15 +1,12 @@
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import { cloudinary } from "../config/cloudinary.js";
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: "tagt_general",
-        allowed_formats: ["jpg", "jpeg", "png", "webp", "pdf"]
-    },
+const storage = multer.memoryStorage();
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB limit for general
+    }
 });
-
-const upload = multer({ storage: storage });
 
 export default upload;

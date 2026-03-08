@@ -54,9 +54,10 @@ export default function SubscriptionPage() {
             } else {
                 throw new Error("No checkout URL returned");
             }
-        } catch (e: any) {
-            console.error(e);
-            alert(e.response?.data?.message || "Failed to initiate upgrade. Check Stripe configuration.");
+        } catch (err: unknown) {
+            console.error(err);
+            const error = err as { response?: { data?: { message?: string } } };
+            alert(error.response?.data?.message || "Failed to initiate upgrade. Check Stripe configuration.");
             setUpgrading(null);
         }
     }

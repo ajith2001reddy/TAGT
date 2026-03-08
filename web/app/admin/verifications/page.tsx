@@ -31,7 +31,7 @@ export default function AdminVerificationsPage() {
             await updateVerificationStatus(id, action);
             toast.success(`Verification ${action} successfully`);
             setPending((prev) => prev.filter((v) => v._id !== id));
-        } catch (error) {
+        } catch {
             toast.error(`Failed to ${action} verification. Please try again.`);
         }
     };
@@ -74,8 +74,8 @@ export default function AdminVerificationsPage() {
                             </div>
                             <div className="flex gap-4 items-center">
                                 <div className={`px-3 py-1 rounded-full text-xs font-bold ${user.verification.fraudRisk === "high" ? "bg-red-100 text-red-700" :
-                                        user.verification.fraudRisk === "medium" ? "bg-yellow-100 text-yellow-700" :
-                                            "bg-green-100 text-green-700"
+                                    user.verification.fraudRisk === "medium" ? "bg-yellow-100 text-yellow-700" :
+                                        "bg-green-100 text-green-700"
                                     }`}>
                                     Risk: {user.verification.fraudRisk.toUpperCase()}
                                 </div>

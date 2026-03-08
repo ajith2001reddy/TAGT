@@ -8,7 +8,7 @@ import { ShieldAlert, ShieldCheck, UploadCloud, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function VerificationPage() {
-    const { dbUser } = useAuth() as any;
+    const { dbUser } = useAuth();
 
     const [selfie, setSelfie] = useState<File | null>(null);
     const [idFront, setIdFront] = useState<File | null>(null);
@@ -84,7 +84,7 @@ export default function VerificationPage() {
             } else {
                 toast.error(data.message || "Failed to upload documents.");
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
             toast.error("An error occurred during upload. Please try again.");
         } finally {
@@ -163,7 +163,7 @@ export default function VerificationPage() {
                             selectedFile={idBack}
                         />
                     </div>
-                    <p className="px-2 text-sm text-gray-500">Supported IDs: Driver's License, National ID Card, or Passport.</p>
+                    <p className="px-2 text-sm text-gray-500">Supported IDs: Driver&apos;s License, National ID Card, or Passport.</p>
                 </div>
 
                 {/* Conditional Owner Section */}

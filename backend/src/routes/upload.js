@@ -1,5 +1,6 @@
 import express from "express";
 import upload from "../middleware/upload.js";
+import { uploadToCloudinary } from "../utils/cloudinaryHelper.js";
 
 const router = express.Router();
 
@@ -14,9 +15,11 @@ router.post("/", upload.single("file"), async (req, res) => {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        // multer-storage-cloudinary automatically uploads the file and attaches the url to req.file.path
+        // Upload buffer to Cloudinary manually
+        const url = await uploadToCloudinary(req.file.buffer, "tagt_general");
+
         res.json({
-            url: req.file.path
+            url: url
         });
     } catch (err) {
         console.error("General upload error:", err);
