@@ -6,6 +6,7 @@ import admin from "../config/firebase.js";
 import mongoose from "mongoose";
 import { sendOwnerInvite } from "../services/emailService.js";
 import logger from "../utils/logger.js";
+import Joi from "joi";
 
 /* ===========================
    CREATE PROPERTY
@@ -16,16 +17,31 @@ export const createProperty = async (req, res, next) => {
             return res.status(403).json({ success: false, message: "Super admin only" });
         }
 
-        const { name, type, address, city, gstin, pan, phone } = req.body;
+        const schema = Joi.object({
+            name: Joi.string().min(2).max(100).required(),
+            type: Joi.string().valid("pg", "hostel", "apartment", "other").required(),
+            address: Joi.string().required(),
+            city: Joi.string().required(),
+            gstin: Joi.string().allow(""),
+            pan: Joi.string().allow(""),
+            phone: Joi.string().allow("")
+        });
+
+        const { error, value } = schema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ success: false, message: error.details[0].message });
+        }
+
+        const { name, type, address, city, gstin, pan, phone } = value;
 
         const property = await Property.create({
-            name,
-            type,
-            address,
-            city,
-            gstin: gstin || "",
-            pan: pan || "",
-            phone: phone || "",
+            name: String(name).trim(),
+            type: String(type),
+            address: String(address).trim(),
+            city: String(city).trim(),
+            gstin: String(gstin || "").trim(),
+            pan: String(pan || "").trim(),
+            phone: String(phone || "").trim(),
             owner: null
         });
 
@@ -44,27 +60,34 @@ export const createOwner = async (req, res, next) => {
             return res.status(403).json({ success: false, message: "Super admin only" });
         }
 
-        const { name, email, password } = req.body;
+        const schema = Joi.object({
+            name: Joi.string().min(2).max(100).required(),
+            email: Joi.string().email().required(),
+            password: Joi.string().min(6).allow("")
+        });
 
-        if (!email || !name) {
-            return res.status(400).json({ success: false, message: "Name and Email are required" });
+        const { error, value } = schema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
-        const normalizedEmail = email.toLowerCase().trim();
+        const { name, email, password } = value;
+
+        const normalizedEmail = String(email).toLowerCase().trim();
 
         // 1️⃣ Create Firebase user — set password directly if provided
         const firebaseUser = await admin.auth().createUser({
             email: normalizedEmail,
-            displayName: name,
+            displayName: String(name).trim(),
             ...(password && password.length >= 6 ? { password } : {}),
         });
 
         // 2️⃣ Create Mongo user
         const user = await User.create({
-            name,
+            name: String(name).trim(),
             email: normalizedEmail,
             role: "owner",
-            firebaseUid: firebaseUser.uid,
+            firebaseUid: String(firebaseUser.uid),
             propertyIds: []
         });
 

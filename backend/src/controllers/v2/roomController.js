@@ -6,6 +6,7 @@ import Property from "../../models/Property.js";
 import propertyService from "../../services/propertyService.js";
 import logger from "../../utils/logger.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
+import Joi from "joi";
 
 /**
  * List all rooms for a property
@@ -51,24 +52,23 @@ export const createRoom = async (req, res, next) => {
     if (session) session.startTransaction();
 
     try {
-        const { roomNumber, rent, totalBeds, note, maintenanceMode, maintenanceNote } = req.body;
-        const propertyId = req.body.propertyId || req.user.propertyId;
+        const schema = Joi.object({
+            roomNumber: Joi.string().required(),
+            rent: Joi.number().min(0).required(),
+            totalBeds: Joi.number().integer().min(1).required(),
+            propertyId: Joi.string().required(),
+            note: Joi.string().allow(""),
+            maintenanceMode: Joi.boolean(),
+            maintenanceNote: Joi.string().allow("")
+        });
 
-        if (!propertyId) {
+        const { error, value } = schema.validate({ ...req.body, propertyId: req.body.propertyId || req.user.propertyId });
+        if (error) {
             if (session) await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "propertyId is required" });
+            return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
-        // 🔐 SECURITY: Ensure owner owns this property
-        if (req.user.role === "owner" && !req.user.propertyIds?.some(id => id.toString() === propertyId.toString())) {
-            if (session) await session.abortTransaction();
-            return res.status(403).json({ success: false, message: "Unauthorized property access" });
-        }
-
-        if (!roomNumber || !rent || !totalBeds) {
-            if (session) await session.abortTransaction();
-            return res.status(400).json({ success: false, message: "Room number, rent, and total beds are required" });
-        }
+        const { roomNumber, rent, totalBeds, note, maintenanceMode, maintenanceNote, propertyId } = value;
 
         // Check if room number exists for this property
         const exists = await Room.findOne({ roomNumber, propertyId }).session(session);
@@ -78,14 +78,14 @@ export const createRoom = async (req, res, next) => {
         }
 
         const [room] = await Room.create([{
-            propertyId,
-            roomNumber,
+            propertyId: String(propertyId),
+            roomNumber: String(roomNumber).trim(),
             rent: Number(rent),
             totalBeds: Number(totalBeds),
             occupiedBeds: 0,
             maintenanceMode: Boolean(maintenanceMode),
-            maintenanceNote: maintenanceNote || "",
-            note: note || ""
+            maintenanceNote: String(maintenanceNote || "").trim(),
+            note: String(note || "").trim()
         }], { session });
 
         // Generate Beds

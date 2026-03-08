@@ -15,6 +15,8 @@ export const createMockOwner = async () => {
     });
 };
 
+export const createOwner = createMockOwner;
+
 /**
  * Creates a mock property for an owner.
  */

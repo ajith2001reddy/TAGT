@@ -1,20 +1,25 @@
 import User from "../../models/User.js";
 import ActivityLog from "../../models/ActivityLog.js";
 import admin from "firebase-admin";
+import Joi from "joi";
 
 export const login = async (req, res) => {
     try {
-        const { firebaseToken } = req.body;
-        if (firebaseToken) {
-            const decoded = await admin.auth().verifyIdToken(firebaseToken);
-            const user = await User.findOne({ firebaseUid: decoded.uid });
+        const token = req.body.firebaseToken || req.headers.authorization?.split("Bearer ")[1];
+
+        if (token) {
+            const decoded = await admin.auth().verifyIdToken(token);
+            // Sanitize input to prevent injection
+            const firebaseUid = String(decoded.uid);
+            const user = await User.findOne({ firebaseUid });
+
             if (user) {
                 await ActivityLog.create({
                     action: "LOGIN_SUCCESS",
                     performedBy: user._id,
                     role: user.role,
                     propertyId: user.propertyId || null,
-                    ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown",
+                    ipAddress: String(req.ip || req.headers["x-forwarded-for"] || "unknown"),
                     route: "POST /api/v2/auth/login"
                 });
             }
@@ -32,16 +37,23 @@ export const login = async (req, res) => {
 
 export const registerOwner = async (req, res) => {
     try {
-        const { name, email } = req.body;
+        const schema = Joi.object({
+            name: Joi.string().min(2).max(100).required(),
+            email: Joi.string().email().required()
+        });
 
-        if (!name || !email) {
+        const { error, value } = schema.validate(req.body);
+        if (error) {
             return res.status(400).json({
                 success: false,
-                message: "Name and email required"
+                message: error.details[0].message
             });
         }
 
-        const existing = await User.findOne({ email: email.toLowerCase() });
+        const { name, email } = value;
+
+        const sanitizedEmail = String(email || "").toLowerCase().trim();
+        const existing = await User.findOne({ email: sanitizedEmail });
 
         if (existing) {
             return res.json({
@@ -51,8 +63,8 @@ export const registerOwner = async (req, res) => {
         }
 
         const newOwner = await User.create({
-            name,
-            email: email.toLowerCase(),
+            name: String(name).trim(),
+            email: sanitizedEmail,
             role: "owner",
             isActive: true
         });

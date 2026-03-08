@@ -1,17 +1,6 @@
 import mongoose from "mongoose";
 
 /**
- */
-export const getPropertyScope = (user) => {
-    if (user.role === "super_admin") return {};
-
-    if (user.role === "owner") {
-        return { _id: { $in: user.propertyIds } };
-    }
-
-    return { _id: user.propertyId };
-};
-
 /**
  * Returns a filter for scoping resources by propertyId (or owner)
  * @param {Object} user - The user object from req.user

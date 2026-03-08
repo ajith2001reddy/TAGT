@@ -6,6 +6,7 @@ import User from "../../models/User.js";
 import propertyService from "../../services/propertyService.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
+import Joi from "joi";
 
 /**
  * List all properties (Super Admin only)

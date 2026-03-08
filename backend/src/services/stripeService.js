@@ -27,6 +27,8 @@ export const createCheckoutSession = async ({ paymentId, residentEmail, amount, 
         metadata: { paymentId },
         success_url: successUrl,
         cancel_url: cancelUrl,
+    }, {
+        idempotencyKey: `checkout_${paymentId}`
     });
 
     return session;
@@ -50,6 +52,8 @@ export const createSubscriptionCheckoutSession = async ({ priceId, ownerEmail, o
         metadata: { planId },
         success_url: successUrl,
         cancel_url: cancelUrl,
+    }, {
+        idempotencyKey: `sub_${ownerId}_${planId}`
     });
 
     return session;

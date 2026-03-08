@@ -46,10 +46,13 @@ app.use(compression());
 
 app.use(metricsMiddleware);
 app.get("/metrics", (req, res, next) => {
-    if (req.headers["x-admin-key"] !== process.env.ADMIN_KEY) {
-        return res.status(403).send("Forbidden");
+    // Only allow in non-production OR if correct admin key is provided
+    if (process.env.NODE_ENV !== "production") return next();
+
+    if (req.headers["x-admin-key"] === process.env.ADMIN_KEY && process.env.ADMIN_KEY) {
+        return next();
     }
-    next();
+    return res.status(403).send("Forbidden");
 }, metricsEndpoint);
 
 /* ================= SECURITY ================= */
@@ -83,13 +86,15 @@ app.use(
     })
 );
 
-const allowedOrigins = [
-    "https://tagt.website",
-    "https://www.tagt.website",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:5173", // in case you ever use Vite
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : [
+        "https://tagt.website",
+        "https://www.tagt.website",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:5173",
+    ];
 
 app.use(cors({
     origin: function (origin, callback) {
