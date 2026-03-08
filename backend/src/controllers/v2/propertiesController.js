@@ -95,14 +95,63 @@ export const updateProperty = async (req, res, next) => {
 
 
 /**
+ * Create a new property
+ */
+export const createProperty = async (req, res, next) => {
+    try {
+        const schema = Joi.object({
+            name: Joi.string().min(2).max(100).required(),
+            type: Joi.string().valid("pg", "hotel").required(),
+            address: Joi.string().required(),
+            city: Joi.string().required(),
+            phone: Joi.string().allow(""),
+            gstin: Joi.string().allow(""),
+            pan: Joi.string().allow("")
+        });
+
+        const { error, value } = schema.validate(req.body);
+        if (error) return res.status(400).json({ success: false, message: error.details[0].message });
+
+        const { name, type, address, city, phone, gstin, pan } = value;
+
+        // Generate Join Code
+        const joinCode = propertyService.generateJoinCode(name, city);
+
+        const property = await Property.create({
+            name: String(name).trim(),
+            type: String(type),
+            address: String(address).trim(),
+            city: String(city).trim(),
+            phone: String(phone || "").trim(),
+            gstin: String(gstin || "").trim(),
+            pan: String(pan || "").trim(),
+            owner: req.user._id,
+            joinCode
+        });
+
+        // If owner, add to their property list
+        if (req.user.role === "owner") {
+            await User.findByIdAndUpdate(req.user._id, {
+                $addToSet: { propertyIds: property._id }
+            });
+        }
+
+        logger.info(`Property created by ${req.user.role}: ${property._id} with code ${joinCode}`);
+        return res.status(201).json({ success: true, data: property });
+    } catch (err) { next(err); }
+};
+
+/**
  * Public/Resident Discovery: Search for properties
  */
 export const discoverProperties = async (req, res, next) => {
     try {
-        const { search } = req.query;
-        let query = { status: "active" }; // Only show approved/active properties
+        const { search, joinCode } = req.query;
+        let query = { status: "active", isDeleted: false };
 
-        if (search) {
+        if (joinCode) {
+            query.joinCode = joinCode.toUpperCase().trim();
+        } else if (search) {
             query.$or = [
                 { name: { $regex: search, $options: "i" } },
                 { city: { $regex: search, $options: "i" } },
@@ -111,8 +160,8 @@ export const discoverProperties = async (req, res, next) => {
         }
 
         const properties = await Property.find(query)
-            .select("name address city phone heroImage images")
-            .limit(50)
+            .select("name address city phone heroImage images joinCode")
+            .limit(20)
             .lean();
 
         return res.json({ success: true, data: properties });

@@ -137,6 +137,7 @@ router.get("/me", auth, async (req, res) => {
       email: userData.email,
       role: userData.role,
       propertyId: userData.propertyId?._id || userData.propertyId || null,
+      propertyIds: userData.propertyIds || [],
       propertyDetails: req.user.role === "resident" ? userData.propertyId : null,
       ownerId: userData.ownerId ?? null,
       roomId: userData.roomId?._id || userData.roomId || null,
@@ -179,7 +180,7 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    const { name, phoneNumber: bodyPhone, password } = req.body;
+    const { name, phoneNumber: bodyPhone, password, role } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -194,13 +195,13 @@ router.post("/register", async (req, res) => {
       phoneNumber: decoded.phone_number || bodyPhone || null,
       name,
       password, // Hashed by pre-save hook in User model
-      role: "resident",   // default role
+      role: role || "resident",
       isActive: true
     });
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "Registration successful",
       data: newUser
     });
 

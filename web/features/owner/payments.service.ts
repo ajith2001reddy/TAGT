@@ -23,5 +23,5 @@ export async function fetchPayments(): Promise<Payment[]> {
 }
 
 export async function markPaymentPaid(id: string) {
-    return api.patch(`/v2/payments/${id}/paid`);
+    return api.patch(`/v2/payments/${id}/paid`, { method: "cash" });
 }

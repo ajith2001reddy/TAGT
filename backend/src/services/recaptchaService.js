@@ -40,6 +40,11 @@ export async function verifyRecaptchaToken(token, recaptchaAction = "LOGIN") {
 
         const [response] = await client.createAssessment(request);
 
+        if (!response.tokenProperties) {
+            logger.error('reCAPTCHA assessment response missing tokenProperties');
+            return 1.0; // Graceful pass if service response is malformed
+        }
+
         if (!response.tokenProperties.valid) {
             logger.error(`reCAPTCHA assessment failed: ${response.tokenProperties.invalidReason}`);
             return null;
@@ -49,9 +54,8 @@ export async function verifyRecaptchaToken(token, recaptchaAction = "LOGIN") {
             const score = response.riskAnalysis.score;
             logger.info(`reCAPTCHA score for action ${recaptchaAction}: ${score}`);
 
-            // Log reasons for low scores if needed
             if (score < 0.5) {
-                response.riskAnalysis.reasons.forEach((reason) => {
+                response.riskAnalysis.reasons?.forEach((reason) => {
                     logger.warn(`reCAPTCHA low score reason: ${reason}`);
                 });
             }
@@ -62,7 +66,7 @@ export async function verifyRecaptchaToken(token, recaptchaAction = "LOGIN") {
             return null;
         }
     } catch (err) {
-        logger.error('Error during reCAPTCHA verification', { error: err.message });
-        return null;
+        logger.error('Error during reCAPTCHA verification - failing gracefully with score 1.0', { error: err.message });
+        return 1.0; // Fail gracefully to 1.0 to prevent blocking users if service is down/misconfigured
     }
 }

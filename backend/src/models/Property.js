@@ -17,6 +17,7 @@ const propertySchema = new mongoose.Schema(
         gstin: { type: String, trim: true, default: "", set: encrypt, get: decrypt },
         pan: { type: String, trim: true, default: "", set: encrypt, get: decrypt },
         phone: { type: String, trim: true, default: "", set: encrypt, get: decrypt },
+        joinCode: { type: String, unique: true, sparse: true, trim: true, index: true },
         isActive: { type: Boolean, default: true, index: true },
 
         // 🖼️ Visual Assets

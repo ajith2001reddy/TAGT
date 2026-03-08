@@ -5,7 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 export function RevenueTrendChart({ data }: { data: { month: string; collected: number }[] }) {
     return (
         <div style={{ height: 300, width: '100%', marginTop: '20px' }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <LineChart data={data}>
                     <defs>
                         <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
@@ -61,7 +61,7 @@ export function OccupancyPieChart({ occupied, total }: { occupied: number, total
 
     return (
         <div style={{ height: 220, width: '100%', position: 'relative' }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <PieChart>
                     <Pie
                         data={data}

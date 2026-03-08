@@ -28,6 +28,7 @@ export default function SignupPage() {
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState("");
+    const [role, setRole] = useState<"owner" | "resident">("resident");
 
     async function handleSignup(e: React.FormEvent) {
         e.preventDefault();
@@ -37,8 +38,8 @@ export default function SignupPage() {
         try {
             await createUserWithEmailAndPassword(auth, email, password);
 
-            // 🔥 Do NOT manually get token
-            await api.post("/auth/register", { name, phoneNumber: phone, password });
+            // 🔥 Unified registration with role
+            await api.post("/v2/auth/register", { name, email, phoneNumber: phone, password, role });
 
             router.push("/dashboard");
 
@@ -59,8 +60,10 @@ export default function SignupPage() {
         setError("");
         try {
             const result = await signInWithPopup(auth, googleProvider);
-            await api.post("/auth/register", {
-                name: result.user.displayName || result.user.email?.split("@")[0] || "User"
+            await api.post("/v2/auth/register", {
+                name: result.user.displayName || result.user.email?.split("@")[0] || "User",
+                email: result.user.email,
+                role
             });
             router.push("/dashboard");
         } catch (err: unknown) {
@@ -87,8 +90,42 @@ export default function SignupPage() {
                     Create your account
                 </h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-                    Start managing your properties today
+                    Select your role to get started
                 </p>
+            </div>
+
+            {/* Role Selection */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "24px" }}>
+                <div
+                    onClick={() => setRole("resident")}
+                    style={{
+                        padding: "16px",
+                        borderRadius: "16px",
+                        border: `2px solid ${role === "resident" ? "var(--accent-primary)" : "var(--border-strong)"}`,
+                        background: role === "resident" ? "rgba(var(--accent-primary-rgb), 0.1)" : "rgba(255,255,255,0.02)",
+                        cursor: "pointer",
+                        textAlign: "center",
+                        transition: "all 0.2s ease"
+                    }}
+                >
+                    <div style={{ fontSize: "24px", marginBottom: "8px" }}>🏠</div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: role === "resident" ? "var(--accent-primary)" : "var(--text-primary)" }}>Resident</div>
+                </div>
+                <div
+                    onClick={() => setRole("owner")}
+                    style={{
+                        padding: "16px",
+                        borderRadius: "16px",
+                        border: `2px solid ${role === "owner" ? "var(--accent-primary)" : "var(--border-strong)"}`,
+                        background: role === "owner" ? "rgba(var(--accent-primary-rgb), 0.1)" : "rgba(255,255,255,0.02)",
+                        cursor: "pointer",
+                        textAlign: "center",
+                        transition: "all 0.2s ease"
+                    }}
+                >
+                    <div style={{ fontSize: "24px", marginBottom: "8px" }}>🏢</div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: role === "owner" ? "var(--accent-primary)" : "var(--text-primary)" }}>Property Owner</div>
+                </div>
             </div>
 
             {/* Google Sign-Up */}
@@ -123,14 +160,14 @@ export default function SignupPage() {
                         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                     </svg>
                 ) : <GoogleIcon />}
-                {googleLoading ? "Connecting..." : "Sign up with Google"}
+                {googleLoading ? "Connecting..." : `Sign up as ${role === 'owner' ? 'Owner' : 'Resident'}`}
             </button>
 
             {/* Divider */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
                 <div style={{ flex: 1, height: "1px", background: "var(--border-subtle)" }} />
                 <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
-                    OR
+                    OR EMAIL SIGNUP
                 </span>
                 <div style={{ flex: 1, height: "1px", background: "var(--border-subtle)" }} />
             </div>

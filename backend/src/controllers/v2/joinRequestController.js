@@ -10,11 +10,26 @@ import eventBus from "../../utils/eventBus.js";
  */
 export const createJoinRequest = async (req, res, next) => {
     try {
-        const { propertyId, message } = req.body;
+        const { propertyId, joinCode, message } = req.body;
         const residentId = req.user._id;
 
+        let targetPropertyId = propertyId;
+
+        // If joinCode provided, find the property
+        if (joinCode) {
+            const property = await Property.findOne({ joinCode: joinCode.toUpperCase().trim(), isDeleted: false });
+            if (!property) {
+                return res.status(404).json({ success: false, message: "Property with this code not found" });
+            }
+            targetPropertyId = property._id;
+        }
+
+        if (!targetPropertyId) {
+            return res.status(400).json({ success: false, message: "Property ID or Join Code is required" });
+        }
+
         // Check if property exists
-        const property = await Property.findById(propertyId);
+        const property = await Property.findById(targetPropertyId);
         if (!property) {
             return res.status(404).json({ success: false, message: "Property not found" });
         }
@@ -22,7 +37,7 @@ export const createJoinRequest = async (req, res, next) => {
         // Check if resident already has a pending or approved request for this property
         const existing = await JoinRequest.findOne({
             residentId,
-            propertyId,
+            propertyId: targetPropertyId,
             status: { $in: ["pending", "approved"] },
             isDeleted: false
         });
@@ -38,11 +53,11 @@ export const createJoinRequest = async (req, res, next) => {
 
         const request = await JoinRequest.create({
             residentId,
-            propertyId,
+            propertyId: targetPropertyId,
             message
         });
 
-        eventBus.publish("resident.request.created", { requestId: request._id, residentId, propertyId });
+        eventBus.publish("resident.request.created", { requestId: request._id, residentId, propertyId: targetPropertyId });
         res.status(201).json({ success: true, data: request });
     } catch (err) {
         next(err);

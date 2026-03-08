@@ -31,7 +31,7 @@ export function BarChartCard({ title, data, dataKey }: { title: string; data: { 
                 <span className="label-text">LIVE</span>
             </div>
             <div style={{ height: "240px" }}>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minHeight={0}>
                     <BarChart data={data} barSize={36}>
                         <XAxis
                             dataKey="name"

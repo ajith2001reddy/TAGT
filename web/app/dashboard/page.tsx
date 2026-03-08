@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardPage() {
-    const { role, loading } = useAuth();
+    const { role, loading, dbUser } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -16,23 +16,32 @@ export default function DashboardPage() {
             return;
         }
 
-        const routes: Record<string, string> = {
-            super_admin: "/provider",
-            admin: "/provider",
-            owner: "/owner",
-            resident: "/resident",
-        };
-
-        const destination = routes[role];
-
-        if (destination) {
-            router.replace(destination);
-        } else {
+        // 🚀 Smart Redirection Logic
+        if (role === "owner") {
+            const hasProperties = dbUser?.propertyIds && dbUser.propertyIds.length > 0;
+            if (!hasProperties) {
+                router.replace("/owner/setup");
+                return;
+            }
+            router.replace("/owner");
+        }
+        else if (role === "resident") {
+            const isAssigned = dbUser?.propertyId;
+            if (!isAssigned) {
+                router.replace("/resident/join");
+                return;
+            }
+            router.replace("/resident");
+        }
+        else if (role === "super_admin" || role === "admin") {
+            router.replace("/provider");
+        }
+        else {
             console.warn("Unknown role:", role);
             router.replace("/login");
         }
 
-    }, [role, loading, router]);
+    }, [role, loading, dbUser, router]);
 
     return (
         <div style={{

@@ -20,6 +20,7 @@ export interface DbUser {
         fraudRisk?: "low" | "medium" | "high" | "unknown";
     };
     propertyIds?: string[];
+    propertyId?: string;
     createdAt: string;
 }
 

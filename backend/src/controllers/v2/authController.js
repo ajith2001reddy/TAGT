@@ -35,11 +35,12 @@ export const login = async (req, res) => {
     });
 };
 
-export const registerOwner = async (req, res) => {
+export const register = async (req, res) => {
     try {
         const schema = Joi.object({
             name: Joi.string().min(2).max(100).required(),
-            email: Joi.string().email().required()
+            email: Joi.string().email().required(),
+            role: Joi.string().valid("owner", "resident").default("resident")
         });
 
         const { error, value } = schema.validate(req.body);
@@ -50,7 +51,7 @@ export const registerOwner = async (req, res) => {
             });
         }
 
-        const { name, email } = value;
+        const { name, email, role } = value;
 
         const sanitizedEmail = String(email || "").toLowerCase().trim();
         const existing = await User.findOne({ email: sanitizedEmail });
@@ -58,24 +59,25 @@ export const registerOwner = async (req, res) => {
         if (existing) {
             return res.json({
                 success: true,
-                message: "Owner already exists"
+                message: "User already registered",
+                data: existing
             });
         }
 
-        const newOwner = await User.create({
+        const newUser = await User.create({
             name: String(name).trim(),
             email: sanitizedEmail,
-            role: "owner",
+            role: role,
             isActive: true
         });
 
         await ActivityLog.create({
-            action: "OWNER_REGISTERED",
-            performedBy: newOwner._id,
-            role: "owner",
+            action: "USER_REGISTERED",
+            performedBy: newUser._id,
+            role: role,
             propertyId: null,
             ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown",
-            route: "POST /api/v2/auth/register-owner"
+            route: "POST /api/v2/auth/register"
         });
 
         res.status(201).json({

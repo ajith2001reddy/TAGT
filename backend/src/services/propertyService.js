@@ -74,6 +74,20 @@ class PropertyService extends BaseService {
     }
 
     /**
+     * Generate a unique join code for a property.
+     * Format: NAME-CITY-XXXX (XXXX is random hex)
+     * @param {string} name 
+     * @param {string} city 
+     * @returns {string}
+     */
+    generateJoinCode(name, city) {
+        const cleanName = name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
+        const cleanCity = city.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 3);
+        const random = Math.floor(1000 + Math.random() * 9000);
+        return `${cleanName}-${cleanCity}-${random}`;
+    }
+
+    /**
      * Placeholder for updating property stats (room counts, bed counts etc)
      * @param {string} propertyId 
      */

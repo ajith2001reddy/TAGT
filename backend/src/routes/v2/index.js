@@ -12,14 +12,14 @@ import { createTicketSchema, replyToTicketSchema, updateTicketStatusSchema, addI
 import { createRequestSchema, updateRequestSchema } from "../../validations/request.validation.js";
 import { createBedSchema, updateBedStatusSchema, assignBedSchema } from "../../validations/bed.validation.js";
 import { updateProfileSchema, changePasswordSchema } from "../../validations/user.validation.js";
-import { login, registerOwner } from "../../controllers/v2/authController.js";
+import { login, register } from "../../controllers/v2/authController.js";
 import { listRooms, createRoom, updateRoom, deleteRoom, getRoomStats } from "../../controllers/v2/roomController.js";
 import { listResidents, createResident, moveResidentRoom, deactivateResident, approveResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident } from "../../controllers/v2/residentController.js";
 import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, downloadInvoice } from "../../controllers/v2/paymentController.js";
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
 import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2, ownerDashboardSummary } from "../../controllers/v2/analyticsController.js";
 import { reportMonthlyRevenue, reportOutstanding, reportResidentLedger } from "../../controllers/v2/reportController.js";
-import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner, getMyProperties } from "../../controllers/v2/propertiesController.js";
+import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner, getMyProperties, createProperty } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
 import { createPaymentSession, createSubscriptionSession, stripeWebhook, stripeStatus } from "../../controllers/v2/stripeController.js";
@@ -47,7 +47,7 @@ const router = Router();
 
 /* ── Auth ── */
 router.post("/auth/login", validate(loginSchema), login);
-router.post("/auth/register-owner", validate(registerOwnerSchema), registerOwner);
+router.post("/auth/register", register);
 
 /* ── Super Admin ── */
 router.get("/provider/overview", auth, authorize("super_admin"), getProviderOverview);
@@ -135,6 +135,7 @@ router.get("/owner/activity-logs", auth, authorize("owner"), myActivityLogs);
 
 /* ── Properties ── */
 router.get("/properties", auth, getMyProperties);
+router.post("/properties", auth, authorize("owner", "super_admin"), createProperty);
 router.get("/properties/discover", auth, authorize("resident"), discoverProperties);
 
 /* ── Phase 3: Intelligence ── */

@@ -20,15 +20,14 @@ const PRIORITY_COLOR: Record<string, { bg: string; text: string }> = {
     high: { bg: "rgba(255,82,82,0.1)", text: "#ff5252" },
 };
 
-const STATUS_OPTS = ["pending", "open", "resolved", "closed"] as const;
+const STATUS_OPTS = ["pending", "in-progress", "resolved"] as const;
 const STATUS_COLOR: Record<string, string> = {
     pending: "#fbbf24",
-    open: "var(--accent-primary)",
+    "in-progress": "var(--accent-primary)",
     resolved: "#34d399",
-    closed: "var(--text-tertiary)",
 };
 const STATUS_ICON: Record<string, string> = {
-    pending: "🕐", open: "🔧", resolved: "✅", closed: "🔒",
+    pending: "🕐", "in-progress": "🔧", resolved: "✅",
 };
 
 function StatusSelector({ requestId, current, onChanged }: { requestId: string; current: string; onChanged: () => void }) {
@@ -93,7 +92,7 @@ export default function OwnerRequestsPage() {
     });
 
     const pending = requests.filter(r => r.status === "pending").length;
-    const open = requests.filter(r => r.status === "open").length;
+    const inProgress = requests.filter(r => r.status === "in-progress").length;
     const resolved = requests.filter(r => r.status === "resolved").length;
 
     return (
@@ -102,14 +101,14 @@ export default function OwnerRequestsPage() {
             <div style={{ marginBottom: "28px" }}>
                 <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Maintenance</div>
                 <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "4px" }}>Resident Requests</h1>
-                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{requests.length} total · {pending + open} need attention</p>
+                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{requests.length} total · {pending + inProgress} need attention</p>
             </div>
 
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "12px", marginBottom: "24px" }}>
                 {[
                     { label: "Pending", count: pending, color: "#fbbf24" },
-                    { label: "Open", count: open, color: "var(--accent-primary)" },
+                    { label: "Processing", count: inProgress, color: "var(--accent-primary)" },
                     { label: "Resolved", count: resolved, color: "#34d399" },
                     { label: "Total", count: requests.length, color: "var(--text-primary)" },
                 ].map(({ label, count, color }) => (
