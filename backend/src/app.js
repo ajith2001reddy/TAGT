@@ -181,7 +181,7 @@ const supportLimiter = rateLimit({
 
 // Mount limiters to their specific routes
 app.use("/api/v2/auth/login", loginLimiter);
-app.use("/api/v2/auth/register-owner", signupLimiter);
+app.use("/api/v2/auth/register", signupLimiter);
 app.use("/api/v2/payments", paymentLimiter);
 app.use("/api/v2/reports", reportLimiter);
 app.use("/api/v2/automation", automationLimiter);

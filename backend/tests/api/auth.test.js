@@ -27,10 +27,10 @@ describe("Auth Endpoints", () => {
         });
     });
 
-    describe("POST /api/v2/auth/register-owner", () => {
+    describe("POST /api/v2/auth/register", () => {
         it("should return 201 if valid owner", async () => {
             const res = await request(app)
-                .post("/api/v2/auth/register-owner")
+                .post("/api/v2/auth/register")
                 .send({
                     name: "Test Owner",
                     email: "owner@example.com",
@@ -49,10 +49,10 @@ describe("Auth Endpoints", () => {
                 password: "password123"
             };
 
-            await request(app).post("/api/v2/auth/register-owner").send(payload);
+            await request(app).post("/api/v2/auth/register").send(payload);
 
             const res = await request(app)
-                .post("/api/v2/auth/register-owner")
+                .post("/api/v2/auth/register")
                 .send(payload);
 
             expect(res.statusCode).toEqual(200);
