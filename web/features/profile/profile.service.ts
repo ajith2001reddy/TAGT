@@ -8,7 +8,9 @@ export interface UserProfile {
     role: "super_admin" | "owner" | "resident";
     isActive: boolean;
     firebaseUid?: string;
-    propertyId?: string;
+    propertyId?: any;
+    roomId?: any;
+    bedId?: any;
     propertyIds?: string[];
     isPasswordSet: boolean;
 }

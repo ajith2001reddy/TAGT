@@ -289,7 +289,11 @@ export const residentDashboard = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
         const [profile, payments, requests] = await Promise.all([
-            User.findOne({ _id: req.user._id }).populate("roomId", "roomNumber rent totalBeds occupiedBeds").lean(),
+            User.findOne({ _id: req.user._id })
+                .populate("propertyId", "name address city heroImage")
+                .populate("roomId", "roomNumber rent totalBeds occupiedBeds")
+                .populate("bedId", "bedNumber")
+                .lean(),
             Payment.find(scope).sort({ createdAt: -1 }).limit(12).lean(),
             Request.find(scope).sort({ createdAt: -1 }).limit(20).lean()
         ]);
@@ -307,8 +311,9 @@ export const residentDashboardV2 = async (req, res, next) => {
 
         const [profile, payments] = await Promise.all([
             User.findById(req.user._id)
-                .populate("propertyId", "name address city phone")
+                .populate("propertyId", "name address city phone heroImage")
                 .populate("roomId", "roomNumber rent totalBeds occupiedBeds")
+                .populate("bedId", "bedNumber")
                 .lean(),
             Payment.find({ resident: req.user._id, ...scope }).sort({ month: -1 }).lean(),
         ]);

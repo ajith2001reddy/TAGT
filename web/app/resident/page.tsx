@@ -19,10 +19,15 @@ interface DashboardData {
         };
     };
     room: {
+        _id: string;
         roomNumber: string;
         rent: number;
         totalBeds: number;
         occupiedBeds: number;
+    } | null;
+    bed?: {
+        _id: string;
+        bedNumber: string;
     } | null;
     currentPayment: {
         _id: string;
@@ -80,7 +85,12 @@ export default function ResidentDashboardPage() {
                 api.get("/v2/resident/dashboard/v2"),
                 api.get("/v2/notices?limit=3")
             ]);
-            setData({ ...dashRes.data.data, notices: noticesRes.data.data });
+            const dashboardData = dashRes.data.data;
+            setData({
+                ...dashboardData,
+                bed: dashboardData.profile?.bedId || null,
+                notices: noticesRes.data.data
+            });
         } catch (err) {
             console.error("Dashboard load error", err);
         } finally {
@@ -390,8 +400,8 @@ export default function ResidentDashboardPage() {
                 }}>
                     <div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-                            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Your Room</div>
-                            <div style={{ padding: "6px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", fontSize: "12px", fontWeight: 600 }}>#{data.room?.roomNumber || "000"}</div>
+                            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Your Room & Bed</div>
+                            <div style={{ padding: "6px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", fontSize: "12px", fontWeight: 600 }}>#{data.room?.roomNumber || "000"}{data.bed?.bedNumber ? ` - ${data.bed.bedNumber}` : ""}</div>
                         </div>
                         <div style={{ fontSize: "32px", fontWeight: 800, marginBottom: "8px" }}>₹{data.room?.rent.toLocaleString()}<span style={{ fontSize: "14px", color: "var(--text-tertiary)", fontWeight: 400 }}>/mo</span></div>
                         <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Shared with {data.room ? (data.room.occupiedBeds - 1) : 0} others</p>

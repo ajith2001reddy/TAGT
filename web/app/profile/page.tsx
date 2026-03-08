@@ -230,7 +230,10 @@ export default function ProfilePage() {
                                     </div>
                                     <div>
                                         <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Property</div>
-                                        <div style={{ fontSize: "14px", fontWeight: 600 }}>Resident Property</div>
+                                        <div style={{ fontSize: "14px", fontWeight: 600 }}>{profile?.propertyId?.name || "Not Assigned"}</div>
+                                        {profile?.propertyId?.address && (
+                                            <div style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{profile?.propertyId.address}, {profile?.propertyId.city}</div>
+                                        )}
                                     </div>
                                 </div>
                                 <div style={{ padding: "16px", background: "var(--bg-card-subtle)", borderRadius: "12px", border: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: "16px" }}>
@@ -239,7 +242,10 @@ export default function ProfilePage() {
                                     </div>
                                     <div>
                                         <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Room / Bed</div>
-                                        <div style={{ fontSize: "14px", fontWeight: 600 }}>Assigned Unit</div>
+                                        <div style={{ fontSize: "14px", fontWeight: 600 }}>
+                                            {profile?.roomId?.roomNumber ? `Room ${profile.roomId.roomNumber}` : "No Room"}
+                                            {profile?.bedId?.bedNumber ? ` — ${profile.bedId.bedNumber}` : ""}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
