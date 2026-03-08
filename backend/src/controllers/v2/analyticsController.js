@@ -5,7 +5,6 @@ import Property from "../../models/Property.js";
 import Request from "../../models/Request.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
-import { revenueForecast, smartAlerts } from "../../analytics/intelligenceEngine.js";
 import { predictChurn } from "../../analytics/churnEngine.js";
 import { predictMaintenanceCost } from "../../analytics/maintenanceForecast.js";
 
@@ -75,14 +74,10 @@ export const ownerFinancialDashboard = async (req, res, next) => {
         const cacheKey = getCacheKey(req.user, "owner_financial");
 
         // 1. Try Redis Cache
-        try {
-            const cached = await redis.get(cacheKey);
-            if (cached) {
-                logger.info("Financial Cache Hit (Redis)", { key: cacheKey });
-                return res.json(JSON.parse(cached));
-            }
-        } catch (err) {
-            logger.warn("Redis Cache Get Error (Financial)", { error: err.message });
+        const cached = await cacheService.get(cacheKey);
+        if (cached) {
+            logger.info("Financial Cache Hit (via Service)", { key: cacheKey });
+            return res.json(cached);
         }
 
         // 🔐 SECURITY: Always scope queries to this user's property/properties
@@ -130,12 +125,7 @@ export const ownerFinancialDashboard = async (req, res, next) => {
             }
         };
 
-        // 2. Cache in Redis
-        try {
-            await redis.setex(cacheKey, ANALYTICS_CACHE_TTL, JSON.stringify(result));
-        } catch (err) {
-            logger.error("Redis Cache Set Error (Financial)", { error: err.message });
-        }
+        await cacheService.set(cacheKey, result, ANALYTICS_CACHE_TTL);
 
         return res.json(result);
     } catch (err) { next(err); }
@@ -149,14 +139,10 @@ export const revenueLeakReport = async (req, res, next) => {
         const cacheKey = getCacheKey(req.user, "owner_leakage");
 
         // 1. Try Redis Cache
-        try {
-            const cached = await redis.get(cacheKey);
-            if (cached) {
-                logger.info("Leakage Cache Hit (Redis)", { key: cacheKey });
-                return res.json(JSON.parse(cached));
-            }
-        } catch (err) {
-            logger.warn("Redis Cache Get Error (Leakage)", { error: err.message });
+        const cached = await cacheService.get(cacheKey);
+        if (cached) {
+            logger.info("Leakage Cache Hit (via Service)", { key: cacheKey });
+            return res.json(cached);
         }
 
         // 🔐 SECURITY: Always scope queries to this user's property/properties
@@ -206,12 +192,7 @@ export const revenueLeakReport = async (req, res, next) => {
             }
         };
 
-        // 2. Cache in Redis
-        try {
-            await redis.setex(cacheKey, ANALYTICS_CACHE_TTL, JSON.stringify(result));
-        } catch (err) {
-            logger.error("Redis Cache Set Error (Leakage)", { error: err.message });
-        }
+        await cacheService.set(cacheKey, result, ANALYTICS_CACHE_TTL);
 
         return res.json(result);
     } catch (err) { next(err); }
