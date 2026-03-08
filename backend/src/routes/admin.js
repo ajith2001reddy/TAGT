@@ -27,6 +27,7 @@ router.delete("/residents/:id", auth, isAdmin, deleteResident);
 router.delete("/properties/:id", auth, isAdmin, deleteProperty);
 
 // Verification approval
+router.get("/verifications/pending", auth, isAdmin, getPendingVerifications);
 router.post("/approve/:id", auth, isAdmin, approveVerification);
 router.post("/reject/:id", auth, isAdmin, rejectVerification);
 

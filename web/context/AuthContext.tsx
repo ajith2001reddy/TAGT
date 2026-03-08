@@ -17,6 +17,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [dbUser, setDbUser] = useState<any>(null);
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
@@ -31,15 +32,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                     const { data } = await api.get("/auth/me");
                     setRole(data.data?.role || null);
+                    setDbUser(data.data || null);
                 } catch (err: any) {
                     if (err.response?.status !== 401) {
                         console.error("Auth sync error:", err);
                     }
                     setRole(null);
+                    setDbUser(null);
                 }
             } else {
                 setUser(null);
                 setRole(null);
+                setDbUser(null);
             }
 
             setLoading(false);
@@ -57,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, role, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, dbUser, role, loading, login, logout } as any}>
             {children}
         </AuthContext.Provider>
     );

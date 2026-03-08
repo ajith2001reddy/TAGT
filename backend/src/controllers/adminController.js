@@ -424,3 +424,22 @@ export const rejectVerification = async (req, res, next) => {
         next(err);
     }
 };
+
+/* ===========================
+   GET PENDING VERIFICATIONS
+=========================== */
+export const getPendingVerifications = async (req, res, next) => {
+    try {
+        if (req.user.role !== "super_admin") {
+            return res.status(403).json({ success: false, message: "Super admin only" });
+        }
+
+        const users = await User.find({ "verification.status": "pending" })
+            .select("name email role verification createdAt")
+            .lean();
+
+        res.json({ success: true, data: users });
+    } catch (err) {
+        next(err);
+    }
+};
