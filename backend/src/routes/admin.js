@@ -11,7 +11,8 @@ import {
     deleteResident,
     deleteProperty,
     approveVerification,
-    rejectVerification
+    rejectVerification,
+    getPendingVerifications
 } from "../controllers/adminController.js";
 
 const router = Router();
