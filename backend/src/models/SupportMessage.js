@@ -31,9 +31,20 @@ const SupportMessageSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        // 🗑️ Soft delete fields
+        isDeleted: { type: Boolean, default: false, index: true },
+        deletedAt: { type: Date, default: null },
     },
     { timestamps: true }
 );
+
+// 🗑️ Soft-delete middleware
+SupportMessageSchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
 
 SupportMessageSchema.index({ ticketId: 1, createdAt: 1 });
 

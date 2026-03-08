@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const requestHistorySchema = new mongoose.Schema(
     {
@@ -78,5 +79,8 @@ requestHistorySchema.pre(/^find/, function (next) {
 requestHistorySchema.index({ propertyId: 1, residentId: 1 });
 
 requestHistorySchema.index({ residentId: 1, resolvedAt: -1 });
+
+// Apply tenant isolation
+requestHistorySchema.plugin(tenantIsolationPlugin);
 
 export default mongoose.model("RequestHistory", requestHistorySchema);

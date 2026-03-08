@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const enquirySchema = new mongoose.Schema(
     {
@@ -46,5 +47,8 @@ enquirySchema.pre(/^find/, function (next) {
 
 // ✅ Compound index for multi-tenant list/filter
 enquirySchema.index({ propertyId: 1, status: 1 });
+
+// Apply tenant isolation
+enquirySchema.plugin(tenantIsolationPlugin);
 
 export default mongoose.model("Enquiry", enquirySchema);

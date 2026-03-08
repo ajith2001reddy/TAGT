@@ -36,8 +36,8 @@ export const ownerDashboardAnalytics = async (req, res, next) => {
             Room.countDocuments({ ...scope }),
             Payment.countDocuments({ status: "pending", ...scope }),
             Payment.countDocuments({ status: "pending", dueDate: { $lt: new Date() }, ...scope }),
-            Payment.aggregate([{ $match: { status: "paid", ...scope } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
-            Room.aggregate([{ $match: scope }, { $group: { _id: null, occupied: { $sum: "$occupiedBeds" }, total: { $sum: "$totalBeds" } } }])
+            Payment.aggregate([{ $match: { status: "paid", isDeleted: { $ne: true }, ...scope } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
+            Room.aggregate([{ $match: { isDeleted: { $ne: true }, ...scope } }, { $group: { _id: null, occupied: { $sum: "$occupiedBeds" }, total: { $sum: "$totalBeds" } } }])
         ]);
 
         const occupied = occupancyAgg[0]?.occupied || 0;
@@ -105,7 +105,7 @@ export const ownerFinancialDashboard = async (req, res, next) => {
 
         // 6-month revenue trend
         const trendAgg = await Payment.aggregate([
-            { $match: { ...scope, status: "paid" } },
+            { $match: { ...scope, status: "paid", isDeleted: { $ne: true } } },
             { $group: { _id: "$month", collected: { $sum: "$amount" } } },
             { $sort: { _id: -1 } }, { $limit: 6 },
         ]);
@@ -207,7 +207,7 @@ export const providerOverview = async (req, res, next) => {
             Property.countDocuments({}),
             User.countDocuments({ role: "owner" }),
             User.countDocuments({ role: "resident" }),
-            Payment.aggregate([{ $match: { status: "paid" } }, { $group: { _id: null, total: { $sum: "$amount" } } }])
+            Payment.aggregate([{ $match: { status: "paid", isDeleted: { $ne: true } } }, { $group: { _id: null, total: { $sum: "$amount" } } }])
         ]);
         return res.json({
             success: true,
@@ -230,12 +230,12 @@ export const platformStats = async (req, res, next) => {
             Property.countDocuments({}),
             User.countDocuments({ role: "owner" }),
             User.countDocuments({ role: "resident", isActive: true }),
-            Payment.aggregate([{ $match: { status: "paid" } }, { $group: { _id: null, total: { $sum: "$amount" }, fees: { $sum: "$lateFee" } } }]),
-            Payment.countDocuments({ status: { $in: ["pending", "overdue"] } }),
-            Room.aggregate([{ $group: { _id: null, total: { $sum: "$totalBeds" }, occupied: { $sum: "$occupiedBeds" } } }]),
+            Payment.aggregate([{ $match: { status: "paid", isDeleted: { $ne: true } } }, { $group: { _id: null, total: { $sum: "$amount" }, fees: { $sum: "$lateFee" } } }]),
+            Payment.countDocuments({ status: { $in: ["pending", "overdue"] }, isDeleted: { $ne: true } }),
+            Room.aggregate([{ $match: { isDeleted: { $ne: true } } }, { $group: { _id: null, total: { $sum: "$totalBeds" }, occupied: { $sum: "$occupiedBeds" } } }]),
             import("../../models/Subscription.js").then(m => m.default.find({ status: "active" })),
             Payment.aggregate([
-                { $match: { status: "paid" } },
+                { $match: { status: "paid", isDeleted: { $ne: true } } },
                 { $group: { _id: "$propertyId", revenue: { $sum: "$amount" } } },
                 { $sort: { revenue: -1 } },
                 { $limit: 5 },

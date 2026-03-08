@@ -9,7 +9,7 @@ import Request from "../models/Request.js";
 
 export const calculateOccupancyKPI = async (scope) => {
     const roomTotals = await Room.aggregate([
-        { $match: { ...scope } },
+        { $match: { ...scope, isDeleted: { $ne: true } } },
         {
             $group: {
                 _id: null,
@@ -30,7 +30,7 @@ export const calculatePaymentKPI = async (scope, fromDate, toDate) => {
     const paymentDateFilter = fromDate && toDate ? { paidAt: { $gte: new Date(fromDate), $lte: new Date(toDate) } } : {};
 
     const paymentStats = await Payment.aggregate([
-        { $match: { ...paymentDateFilter, ...scope } },
+        { $match: { ...paymentDateFilter, ...scope, isDeleted: { $ne: true } } },
         {
             $group: {
                 _id: null,
@@ -53,7 +53,7 @@ export const calculateMaintenanceKPI = async (scope, fromDate, toDate) => {
     const requestDateFilter = fromDate && toDate ? { createdAt: { $gte: new Date(fromDate), $lte: new Date(toDate) } } : {};
 
     const resolvedRequests = await Request.aggregate([
-        { $match: { ...scope, status: "resolved", ...requestDateFilter } },
+        { $match: { ...scope, status: "resolved", ...requestDateFilter, isDeleted: { $ne: true } } },
         {
             $project: {
                 resolutionHours: {

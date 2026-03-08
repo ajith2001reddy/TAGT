@@ -11,7 +11,7 @@ import Request from "../models/Request.js";
 /* ── Revenue Forecast ── */
 export const calculateRevenueForecast = async (scope) => {
     const history = await Payment.aggregate([
-        { $match: { ...scope, status: "paid" } },
+        { $match: { ...scope, status: "paid", isDeleted: { $ne: true } } },
         { $group: { _id: "$month", collected: { $sum: "$amount" }, count: { $sum: 1 } } },
         { $sort: { _id: 1 } },
     ]);
@@ -59,14 +59,14 @@ export const calculateOccupancyTrends = async (scope) => {
     const currentOccupied = rooms.reduce((s, r) => s + (r.occupiedBeds || 0), 0);
 
     const paymentsByMonth = await Payment.aggregate([
-        { $match: { ...scope } },
+        { $match: { ...scope, isDeleted: { $ne: true } } },
         { $group: { _id: "$month", billed: { $sum: "$amount" }, paid: { $sum: { $cond: [{ $eq: ["$status", "paid"] }, "$amount", 0] } }, count: { $sum: 1 } } },
         { $sort: { _id: 1 } },
         { $limit: 12 },
     ]);
 
     const residentsByMonth = await User.aggregate([
-        { $match: { ...scope, role: "resident" } },
+        { $match: { ...scope, role: "resident", isDeleted: { $ne: true } } },
         { $group: { _id: { $substr: ["$createdAt", 0, 7] }, newResidents: { $sum: 1 } } },
         { $sort: { _id: 1 } },
     ]);
@@ -106,8 +106,8 @@ export const calculateSmartAlerts = async (scope) => {
     const [rooms, payments, residents, requests] = await Promise.all([
         Room.find(scope).lean(),
         Payment.find(scope).lean(),
-        User.find({ ...scope, role: "resident", isActive: true }).lean(),
-        Request.find({ ...scope, status: { $in: ["pending", "open"] } }).lean(),
+        User.find({ ...scope, role: "resident", isActive: true, isDeleted: { $ne: true } }).lean(),
+        Request.find({ ...scope, status: { $in: ["pending", "open"] }, isDeleted: { $ne: true } }).lean(),
     ]);
 
     const now = new Date();

@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 import propertyService from "../../services/propertyService.js";
 import User from "../../models/User.js";
 import Room from "../../models/rooms.js";
+import Bed from "../../models/Bed.js";
 import logger from "../../utils/logger.js";
+import { buildPropertyFilter } from "../../utils/tenantScope.js";
 
 /**
  * Assign a resident to a bed (Atomic update)
@@ -89,9 +91,9 @@ export const assignResidentToBed = async (req, res, next) => {
  */
 export const listBeds = async (req, res, next) => {
     try {
-        const { propertyId, roomId } = req.query;
-        const filter = {};
-        if (propertyId) filter.propertyId = propertyId;
+        const { propertyId: requestedPropertyId, roomId } = req.query;
+        const scope = buildPropertyFilter(req.user, requestedPropertyId);
+        const filter = { ...scope };
         if (roomId) filter.roomId = roomId;
 
         const bedsResult = await Bed.find(filter)

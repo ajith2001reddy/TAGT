@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const internalNoteSchema = new mongoose.Schema({
     note: { type: String, required: true },
@@ -75,11 +76,25 @@ const SupportTicketSchema = new mongoose.Schema(
         },
 
         internalNotes: [internalNoteSchema],
+        // 🗑️ Soft delete fields
+        isDeleted: { type: Boolean, default: false, index: true },
+        deletedAt: { type: Date, default: null },
     },
     { timestamps: true }
 );
 
+// 🗑️ Soft-delete middleware
+SupportTicketSchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
+
 SupportTicketSchema.index({ status: 1, priority: 1, createdAt: -1 });
 SupportTicketSchema.index({ userId: 1, status: 1 });
+
+// Apply tenant isolation
+SupportTicketSchema.plugin(tenantIsolationPlugin);
 
 export default mongoose.model("SupportTicket", SupportTicketSchema);

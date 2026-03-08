@@ -158,11 +158,10 @@ export const getMyProperties = async (req, res, next) => {
         let query = {};
 
         if (req.user.role === "owner") {
-            query = { owner: req.user._id };
+            query = buildPropertyFilter(req.user, null, "owner");
         } else if (req.user.role === "resident") {
             query = { _id: req.user.propertyId };
         } else if (req.user.role === "super_admin") {
-            // Already handled by listProperties but good to have here for generic /v2/properties
             query = {};
         }
 

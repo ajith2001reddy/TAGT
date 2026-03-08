@@ -41,9 +41,20 @@ const NotificationSchema = new mongoose.Schema(
             default: false,
             index: true,
         },
+        // 🗑️ Soft delete fields
+        isDeleted: { type: Boolean, default: false, index: true },
+        deletedAt: { type: Date, default: null },
     },
     { timestamps: true }
 );
+
+// 🗑️ Soft-delete middleware
+NotificationSchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
 
 NotificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
 

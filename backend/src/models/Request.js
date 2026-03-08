@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const RequestSchema = new mongoose.Schema(
     {
@@ -73,5 +74,8 @@ RequestSchema.pre("validate", function (next) {
 RequestSchema.index({ propertyId: 1, status: 1 });
 RequestSchema.index({ propertyId: 1, status: 1, createdAt: -1 });
 RequestSchema.index({ propertyId: 1, priority: 1, status: 1 });
+
+// Apply tenant isolation
+RequestSchema.plugin(tenantIsolationPlugin);
 
 export default mongoose.model("Request", RequestSchema);

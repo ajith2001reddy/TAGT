@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 const ActivityLogSchema = new mongoose.Schema(
     {
@@ -52,6 +53,7 @@ ActivityLogSchema.pre(/^find/, function (next) {
 });
 
 // ✅ Compound index for multi-tenant analytics/history
-ActivityLogSchema.index({ propertyId: 1, createdAt: -1 });
+// Apply tenant isolation
+ActivityLogSchema.plugin(tenantIsolationPlugin);
 
 export default mongoose.model("ActivityLog", ActivityLogSchema);

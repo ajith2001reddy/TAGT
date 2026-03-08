@@ -56,13 +56,22 @@ export const tenantIsolationPlugin = function (schema) {
         }
 
         // 3. Force the query to be scoped to the active tenant
-        // Use normalization or check multiple fields
-        // Most models in TAGT use 'propertyId' or 'owner' or 'ownerId'
-        if (schema.paths.ownerId) {
-            this.where({ ownerId: tenantId });
+        // TAGT models use various fields for multi-tenancy.
+        // We check for the most common ones and apply the filter.
+        const conditions = {};
+
+        if (schema.paths.propertyId) {
+            conditions.propertyId = tenantId;
         } else if (schema.paths.owner) {
-            this.where({ owner: tenantId });
+            conditions.owner = tenantId;
+        } else if (schema.paths.ownerId) {
+            conditions.ownerId = tenantId;
         }
+
+        if (Object.keys(conditions).length > 0) {
+            this.where(conditions);
+        }
+
         next();
     };
 

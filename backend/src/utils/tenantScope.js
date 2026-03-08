@@ -13,13 +13,14 @@ export const getPropertyScope = (user) => {
 };
 
 /**
- * Returns a filter for scoping resources by propertyId
+ * Returns a filter for scoping resources by propertyId (or owner)
  * @param {Object} user - The user object from req.user
  * @param {string} [requestedPropertyId] - Optional specific property to filter by
+ * @param {string} [fieldName] - The field name to use in the filter (default: "propertyId")
  */
-export const buildPropertyFilter = (user, requestedPropertyId = null) => {
+export const buildPropertyFilter = (user, requestedPropertyId = null, fieldName = "propertyId") => {
     if (user.role === "super_admin") {
-        return requestedPropertyId ? { propertyId: requestedPropertyId } : {};
+        return requestedPropertyId ? { [fieldName]: requestedPropertyId } : {};
     }
 
     if (user.role === "owner") {
@@ -27,18 +28,23 @@ export const buildPropertyFilter = (user, requestedPropertyId = null) => {
 
         // Block if owner has no properties configured
         if (allowedIds.length === 0) {
-            return { propertyId: new mongoose.Types.ObjectId() }; // unreachable ID to block all data
+            return { [fieldName]: new mongoose.Types.ObjectId() }; // unreachable ID to block all data
         }
 
         if (requestedPropertyId) {
             const isAllowed = allowedIds.some(id => id.toString() === requestedPropertyId.toString());
             // 🛡️ SECURITY: Hard block if access is attempted to an unowned property
-            return isAllowed ? { propertyId: requestedPropertyId } : { propertyId: new mongoose.Types.ObjectId() };
+            return isAllowed ? { [fieldName]: requestedPropertyId } : { [fieldName]: new mongoose.Types.ObjectId() };
         }
 
-        return { propertyId: { $in: allowedIds } };
+        // For owner-level items like 'Property' itself, we filter by 'owner' field
+        if (fieldName === "owner") {
+            return { owner: user._id };
+        }
+
+        return { [fieldName]: { $in: allowedIds } };
     }
 
     // Residents only see their own property
-    return { propertyId: user.propertyId };
+    return { [fieldName]: user.propertyId };
 };

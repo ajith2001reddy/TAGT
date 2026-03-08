@@ -26,7 +26,18 @@ const SubscriptionSchema = new mongoose.Schema({
     stripeCustomerId: { type: String, default: null },
     stripeSubscriptionId: { type: String, default: null },
     cancelAtPeriodEnd: { type: Boolean, default: false },
+    // 🗑️ Soft delete fields
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
 }, { timestamps: true });
+
+// 🗑️ Soft-delete middleware
+SubscriptionSchema.pre(/^find/, function (next) {
+    if (this._conditions.isDeleted === undefined) {
+        this.where({ isDeleted: { $ne: true } });
+    }
+    next();
+});
 
 export const Plan = mongoose.model("Plan", PlanSchema);
 export const Subscription = mongoose.model("Subscription", SubscriptionSchema);
