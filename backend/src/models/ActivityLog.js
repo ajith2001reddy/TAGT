@@ -30,6 +30,10 @@ const ActivityLogSchema = new mongoose.Schema(
             default: null, // null for super_admin system-wide actions
             index: true
         },
+        details: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
+        },
         // 🗑️ Soft delete fields
         isDeleted: { type: Boolean, default: false, index: true },
         deletedAt: { type: Date, default: null },
