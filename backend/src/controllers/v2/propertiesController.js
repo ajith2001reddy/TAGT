@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Property from "../../models/Property.js";
 import Room from "../../models/rooms.js";
 import Bed from "../../models/Bed.js";
+import User from "../../models/User.js";
 import propertyService from "../../services/propertyService.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
@@ -117,8 +118,7 @@ export const discoverProperties = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-import User from "../../models/User.js";
-import logger from "../../utils/logger.js";
+
 
 /**
  * Super Admin: Full edit of any owner's account details

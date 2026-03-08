@@ -21,7 +21,6 @@ export const listRooms = async (req, res, next) => {
             .sort({ createdAt: -1 });
 
         // 🔄 SELF-HEALING: Verify and sync occupancy counts
-        const User = mongoose.model("User");
         const syncedRooms = await Promise.all(rooms.map(async (room) => {
             const actualCount = await User.countDocuments({
                 roomId: room._id,
