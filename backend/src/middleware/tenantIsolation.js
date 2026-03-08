@@ -13,26 +13,23 @@ export const tenantContext = new AsyncLocalStorage();
  * Extracts the user ID (ownerId) from the authenticated request.
  */
 export const enforceTenantIsolation = (req, res, next) => {
-    // Determine tenant ID: owner gets isolated to their own ID.
-    // If it's a super_admin, they bypass isolation.
-    // Residents might have their own scoping logic depending on the route, 
-    // but for core SaaS data (Rooms, Payments, Residents), isolation hinges on ownerId.
-    let tenantId = null;
-
+    // Determine tenant context: role, id, and propertyIds.
+    let context = null;
     if (req.user) {
+        context = {
+            id: String(req.user._id),
+            role: req.user.role,
+            propertyIds: (req.user.propertyIds || []).map(id => String(id)),
+            ownerId: req.user.ownerId ? String(req.user.ownerId) : null
+        };
+
         if (req.user.role === "super_admin") {
-            // Bypass isolation for super admin.
-            tenantId = "SUPER_ADMIN_BYPASS";
-        } else if (req.user.role === "owner") {
-            tenantId = String(req.user._id);
-        } else if (req.user.role === "resident" && req.user.ownerId) {
-            // Residents operate within their owner's tenant space
-            tenantId = String(req.user.ownerId);
+            context.role = "SUPER_ADMIN_BYPASS";
         }
     }
 
     // Run the rest of the request within this async context
-    tenantContext.run(tenantId, () => {
+    tenantContext.run(context, () => {
         next();
     });
 };
@@ -48,25 +45,38 @@ export const tenantIsolationPlugin = function (schema) {
     }
 
     const enforceTenantFilter = function (next) {
-        const tenantId = tenantContext.getStore();
+        const context = tenantContext.getStore();
 
-        // 1. If there's no active context (e.g., background cron job not in an HTTP request), OR
-        // 2. If it's a super admin bypassing isolation
-        if (!tenantId || tenantId === "SUPER_ADMIN_BYPASS") {
+        // 1. If there's no active context, 
+        // 2. OR If it's a super admin bypassing isolation
+        if (!context || context.role === "SUPER_ADMIN_BYPASS") {
             return next();
         }
 
         // 3. Force the query to be scoped to the active tenant
-        // TAGT models use various fields for multi-tenancy.
-        // We check for the most common ones and apply the filter.
         const conditions = {};
 
-        if (schema.paths.propertyId) {
-            conditions.propertyId = tenantId;
-        } else if (schema.paths.owner) {
-            conditions.owner = tenantId;
-        } else if (schema.paths.ownerId) {
-            conditions.ownerId = tenantId;
+        if (context.role === "owner") {
+            // For Models with propertyId (Rooms, Residents, Beds, Payments)
+            if (schema.paths.propertyId) {
+                conditions.propertyId = { $in: context.propertyIds };
+            }
+            // For Models with owner/ownerId (Property, Subscription)
+            else if (schema.paths.owner) {
+                conditions.owner = context.id;
+            } else if (schema.paths.ownerId) {
+                conditions.ownerId = context.id;
+            }
+        }
+        else if (context.role === "resident") {
+            // Residents are usually scoped to their assigned owner for global data
+            if (schema.paths.ownerId) {
+                conditions.ownerId = context.ownerId;
+            } else if (schema.paths.owner) {
+                conditions.owner = context.ownerId;
+            }
+            // If the model has propertyId, we could also scope them to THEIR property
+            // but usually ownerId is the primary tenant field.
         }
 
         if (Object.keys(conditions).length > 0) {
