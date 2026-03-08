@@ -20,6 +20,7 @@ export const enforceTenantIsolation = (req, res, next) => {
             id: String(req.user._id),
             role: req.user.role,
             propertyIds: (req.user.propertyIds || []).map(id => String(id)),
+            propertyId: req.user.propertyId ? String(req.user.propertyId) : null,
             ownerId: req.user.ownerId ? String(req.user.ownerId) : null
         };
 
@@ -69,14 +70,20 @@ export const tenantIsolationPlugin = function (schema) {
             }
         }
         else if (context.role === "resident") {
-            // Residents are usually scoped to their assigned owner for global data
-            if (schema.paths.ownerId) {
+            // Residents are scoped to their assigned property OR their owner
+            if (schema.paths.propertyId && context.propertyId) {
+                conditions.propertyId = context.propertyId;
+            } else if (schema.paths.ownerId && context.ownerId) {
                 conditions.ownerId = context.ownerId;
-            } else if (schema.paths.owner) {
+            } else if (schema.paths.owner && context.ownerId) {
                 conditions.owner = context.ownerId;
             }
-            // If the model has propertyId, we could also scope them to THEIR property
-            // but usually ownerId is the primary tenant field.
+
+            // SECURITY: If it's the User model, allow them to see THEIR OWN profile even if ownerId isn't set yet
+            if (schema.tree.role && conditions.propertyId === undefined && conditions.ownerId === undefined && conditions.owner === undefined) {
+                // Fallback to allow 'me' queries to work while migration is pending
+                this.where({ _id: context.id });
+            }
         }
 
         if (Object.keys(conditions).length > 0) {
