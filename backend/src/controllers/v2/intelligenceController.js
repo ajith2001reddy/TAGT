@@ -1,7 +1,7 @@
-// src/controllers/v2/intelligenceController.js
-import { revenueForecast, occupancyTrends, smartAlerts } from "../../analytics/intelligenceEngine.js";
+import { calculateRevenueForecast, calculateOccupancyTrends, calculateSmartAlerts } from "../../analytics/intelligenceEngine.js";
 import { predictChurn } from "../../analytics/churnEngine.js";
-import redis from "../../config/redis.js";
+import cacheService from "../../services/cacheService.js";
+import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
 
 /* ─────────────────────────────────────────────────
@@ -9,7 +9,8 @@ import logger from "../../utils/logger.js";
 ───────────────────────────────────────────────── */
 export const getRevenueForecast = async (req, res, next) => {
     try {
-        const data = await revenueForecast(req);
+        const scope = buildPropertyFilter(req.user);
+        const data = await calculateRevenueForecast(scope);
         return res.json({ success: true, data });
     } catch (err) { next(err); }
 };
@@ -19,7 +20,8 @@ export const getRevenueForecast = async (req, res, next) => {
 ───────────────────────────────────────────────── */
 export const getOccupancyTrends = async (req, res, next) => {
     try {
-        const data = await occupancyTrends(req);
+        const scope = buildPropertyFilter(req.user);
+        const data = await calculateOccupancyTrends(scope);
         return res.json({ success: true, data });
     } catch (err) { next(err); }
 };
@@ -29,7 +31,8 @@ export const getOccupancyTrends = async (req, res, next) => {
 ───────────────────────────────────────────────── */
 export const getSmartAlerts = async (req, res, next) => {
     try {
-        const data = await smartAlerts(req);
+        const scope = buildPropertyFilter(req.user);
+        const data = await calculateSmartAlerts(scope);
         return res.json({ success: true, data });
     } catch (err) { next(err); }
 };
@@ -51,21 +54,21 @@ export const getChurnAnalysis = async (req, res, next) => {
 ───────────────────────────────────────────────── */
 export const getIntelligenceSummary = async (req, res, next) => {
     try {
-        const propertyId = req.user.propertyId || "global";
-        const cacheKey = `intelligence:summary:${propertyId}`;
+        const scope = buildPropertyFilter(req.user);
+        const cacheKey = cacheService.generateKey("intelligence_summary", JSON.stringify(scope));
 
         // 1. Try Cache
-        const cachedData = await redis.get(cacheKey);
+        const cachedData = await cacheService.get(cacheKey);
         if (cachedData) {
-            logger.info("[Intelligence] Cache Hit", { propertyId });
-            return res.json({ success: true, data: JSON.parse(cachedData), cached: true });
+            logger.info("[Intelligence] Cache Hit", { scope });
+            return res.json({ success: true, data: cachedData, cached: true });
         }
 
         // 2. Compute
         const [forecast, trends, alerts, churn] = await Promise.allSettled([
-            revenueForecast(req),
-            occupancyTrends(req),
-            smartAlerts(req),
+            calculateRevenueForecast(scope),
+            calculateOccupancyTrends(scope),
+            calculateSmartAlerts(scope),
             predictChurn(req),
         ]);
 
@@ -77,8 +80,8 @@ export const getIntelligenceSummary = async (req, res, next) => {
         };
 
         // 3. Save Cache (5 minutes)
-        await redis.setex(cacheKey, 300, JSON.stringify(result));
-        logger.info("[Intelligence] Cache Set", { propertyId });
+        await cacheService.set(cacheKey, result, 300);
+        logger.info("[Intelligence] Cache Set", { scope });
 
         return res.json({
             success: true,
