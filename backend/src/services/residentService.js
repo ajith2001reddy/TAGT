@@ -29,14 +29,18 @@ class ResidentService extends BaseService {
             if (roomDoc.occupiedBeds >= roomDoc.totalBeds) throw new Error("Room is full");
         }
 
-        // 2️⃣ Create Firebase user
+        // 2️⃣ Fetch Property to get the Owner
+        const property = await Property.findById(propertyId).session(session);
+        if (!property) throw new Error("Property not found");
+
+        // 3️⃣ Create Firebase user
         const firebaseUser = await admin.auth().createUser({
             email: normalizedEmail,
             displayName: name,
             ...(password && password.length >= 6 ? { password } : {}),
         });
 
-        // 3️⃣ Create Mongo user
+        // 4️⃣ Create Mongo user
         const [resident] = await User.create(
             [{
                 name,
@@ -44,6 +48,7 @@ class ResidentService extends BaseService {
                 firebaseUid: firebaseUser.uid,
                 role: "resident",
                 propertyId,
+                ownerId: property.owner, // 👈 Link to owner
                 roomId: roomDoc?._id || null,
                 isActive: true
             }],

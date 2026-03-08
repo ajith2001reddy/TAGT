@@ -58,6 +58,13 @@ const userSchema = new mongoose.Schema(
             index: true,
         },
 
+        // ✅ Explicit link to owner for residents
+        ownerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            index: true,
+        },
+
         // ✅ Multi-property support for owners
         propertyIds: [
             {

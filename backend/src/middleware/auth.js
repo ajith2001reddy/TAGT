@@ -52,7 +52,8 @@ const firebaseAuth = async (req, res, next) => {
         }
 
         // 3️⃣ Attach user
-        req.user = dbUser;
+        req.user = dbUser.toObject();
+        req.user._id = dbUser._id; // Ensure ID is present as ObjectId if needed
 
         // 4️⃣ Enforce multi-tenant database isolation
         enforceTenantIsolation(req, res, next);

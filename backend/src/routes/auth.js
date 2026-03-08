@@ -124,6 +124,7 @@ router.get("/me", auth, async (req, res) => {
       email: req.user.email,
       role: req.user.role,
       propertyId: req.user.propertyId ?? null,
+      ownerId: req.user.ownerId ?? null,
       roomId: req.user.roomId ?? null,
     },
     message: "Authenticated user profile fetched",
