@@ -9,7 +9,9 @@ import {
     removePropertyFromOwner,
     deleteOwner,
     deleteResident,
-    deleteProperty
+    deleteProperty,
+    approveVerification,
+    rejectVerification
 } from "../controllers/adminController.js";
 
 const router = Router();
@@ -24,5 +26,8 @@ router.delete("/owners/:id", auth, isAdmin, deleteOwner);
 router.delete("/residents/:id", auth, isAdmin, deleteResident);
 router.delete("/properties/:id", auth, isAdmin, deleteProperty);
 
+// Verification approval
+router.post("/approve/:id", auth, isAdmin, approveVerification);
+router.post("/reject/:id", auth, isAdmin, rejectVerification);
 
 export default router;

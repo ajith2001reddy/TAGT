@@ -35,6 +35,35 @@ const userSchema = new mongoose.Schema(
             get: decrypt
         },
 
+        emailVerified: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+        phoneVerified: {
+            type: Boolean,
+            default: false,
+        },
+
+        verification: {
+            status: {
+                type: String,
+                enum: ["pending", "approved", "rejected"],
+                default: "pending",
+                index: true,
+            },
+            selfiePhoto: { type: String, default: null },
+            idFront: { type: String, default: null },
+            idBack: { type: String, default: null },
+            propertyDocument: { type: String, default: null },
+            aiScore: { type: Number, default: 0 },
+            fraudRisk: {
+                type: String,
+                enum: ["low", "medium", "high", "unknown"],
+                default: "unknown"
+            }
+        },
+
         password: {
             type: String,
             minlength: 6,

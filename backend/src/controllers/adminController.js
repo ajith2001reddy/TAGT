@@ -374,3 +374,53 @@ export const removePropertyFromOwner = async (req, res, next) => {
         session.endSession();
     }
 };
+
+/* ===========================
+   VERIFICATION APPROVAL
+=========================== */
+export const approveVerification = async (req, res, next) => {
+    try {
+        if (req.user.role !== "super_admin") {
+            return res.status(403).json({ success: false, message: "Super admin only" });
+        }
+
+        const { id } = req.params;
+        const user = await User.findById(id);
+
+        if (!user || !user.verification) {
+            return res.status(404).json({ success: false, message: "User or verification details not found" });
+        }
+
+        user.verification.status = "approved";
+        await user.save();
+
+        res.json({ success: true, message: "User verification approved" });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/* ===========================
+   VERIFICATION REJECTION
+=========================== */
+export const rejectVerification = async (req, res, next) => {
+    try {
+        if (req.user.role !== "super_admin") {
+            return res.status(403).json({ success: false, message: "Super admin only" });
+        }
+
+        const { id } = req.params;
+        const user = await User.findById(id);
+
+        if (!user || !user.verification) {
+            return res.status(404).json({ success: false, message: "User or verification details not found" });
+        }
+
+        user.verification.status = "rejected";
+        await user.save();
+
+        res.json({ success: true, message: "User verification rejected" });
+    } catch (err) {
+        next(err);
+    }
+};

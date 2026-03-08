@@ -28,6 +28,7 @@ import residentDashboardRoutes from "./residentDashboard.js";
 import enquiryRoutes from "./enquiry.routes.js";
 import residentProfileRoutes from "./residentProfile.js";
 import joinRequestRoutes from "./joinRequestRoutes.js";
+import verifyRoutes from "./verify.js";
 
 const router = Router();
 
@@ -39,6 +40,7 @@ router.use("/v2", v2Routes);
 router.use("/resident", residentDashboardRoutes);
 router.use("/resident", residentProfileRoutes);
 router.use("/enquiries", enquiryRoutes);
+router.use("/verify", verifyRoutes);
 
 router.get("/", (req, res) => {
     res.json({ success: true, message: "TAGT API is running" });
