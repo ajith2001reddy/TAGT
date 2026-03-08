@@ -1,5 +1,7 @@
-import mongoose from "mongoose";
 import propertyService from "../../services/propertyService.js";
+import Property from "../../models/Property.js";
+import Room from "../../models/rooms.js";
+import Bed from "../../models/Bed.js";
 
 /**
  * List all properties (Super Admin only)
