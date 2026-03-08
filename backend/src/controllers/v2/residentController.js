@@ -4,7 +4,7 @@ import Payment from "../../models/Payment.js";
 import Room from "../../models/rooms.js";
 import Bed from "../../models/Bed.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
-import { createResidentWorkflow, sendWelcomeEmailSafe } from "../../services/residentService.js";
+import residentService from "../../services/residentService.js";
 /**
  * List residents for a property
  */
@@ -126,7 +126,7 @@ export const createResident = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized property access" });
         }
 
-        const { resident, resetLink } = await createResidentWorkflow({
+        const { resident, resetLink } = await residentService.createResidentWorkflow({
             ...req.body,
             propertyId
         }, session);
@@ -134,7 +134,7 @@ export const createResident = async (req, res) => {
         await session.commitTransaction();
 
         // Async welcome email (fire-and-forget)
-        sendWelcomeEmailSafe(resident, propertyId, resetLink);
+        residentService.sendWelcomeEmailSafe(resident, propertyId, resetLink);
 
         return res.status(201).json({ success: true, data: resident });
     } catch (err) {
@@ -228,6 +228,19 @@ export const deactivateResident = async (req, res, next) => {
             await Bed.findByIdAndUpdate(oldBedId, { status: "available", residentId: null });
         }
 
+        return res.json({ success: true, data: resident });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * Approve a resident (Step in Phase 1)
+ */
+export const approveResident = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const resident = await residentService.approveResident(id, req.user._id);
         return res.json({ success: true, data: resident });
     } catch (err) {
         next(err);

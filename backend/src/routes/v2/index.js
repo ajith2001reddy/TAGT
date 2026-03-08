@@ -14,7 +14,7 @@ import { createBedSchema, updateBedStatusSchema, assignBedSchema } from "../../v
 import { updateProfileSchema, changePasswordSchema } from "../../validations/user.validation.js";
 import { login, registerOwner } from "../../controllers/v2/authController.js";
 import { listRooms, createRoom, updateRoom, deleteRoom, getRoomStats } from "../../controllers/v2/roomController.js";
-import { listResidents, createResident, moveResidentRoom, deactivateResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident } from "../../controllers/v2/residentController.js";
+import { listResidents, createResident, moveResidentRoom, deactivateResident, approveResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident } from "../../controllers/v2/residentController.js";
 import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, downloadInvoice } from "../../controllers/v2/paymentController.js";
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
 import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2, ownerDashboardSummary } from "../../controllers/v2/analyticsController.js";
@@ -82,6 +82,7 @@ router.get("/residents", auth, authorize("super_admin", "owner", "resident"), li
 router.post("/residents", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createResidentSchema), logActivity("RESIDENT_CREATED"), createResident);
 router.patch("/residents/:id/move-room", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_RELOCATED"), moveResidentRoom);
 router.patch("/residents/:id/deactivate", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_DEACTIVATED"), deactivateResident);
+router.patch("/residents/:id/approve", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_APPROVED"), approveResident);
 router.post("/residents/:id/notes", auth, authorize("super_admin", "owner"), addResidentNote);
 router.post("/residents/:id/notification", auth, authorize("super_admin", "owner"), sendNotification);
 router.get("/residents/:id/history", auth, authorize("super_admin", "owner"), getResidentHistory);

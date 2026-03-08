@@ -6,6 +6,8 @@ import { connectDB } from "./config/db.js";
 import { generateMonthlyRent } from "./jobs/rentGenerator.js";
 import { markOverduePayments } from "./jobs/overdueStatusJob.js";
 import { sendUpcomingRentReminders, sendOverdueNotices } from "./jobs/emailReminderJob.js";
+import "./events/workers/residentWorker.js";
+import "./events/workers/billingWorker.js";
 
 const QUEUE_NAME = "main-task-queue";
 
@@ -52,7 +54,9 @@ async function startWorker() {
             logger.error(`Job ${job.id} has failed with ${err.message}`);
         });
 
-        logger.info(`👷‍♂️ Background Worker Process Started for queue: ${QUEUE_NAME}`);
+        logger.info(`👷‍♂️ Background Workers Initialized.`);
+        logger.info(`- Main Task Queue: ${QUEUE_NAME}`);
+        logger.info(`- Event Bus Queue: events`);
 
         // Graceful Shutdown Handlers for Worker
         process.on("SIGINT", async () => {

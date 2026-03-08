@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import Bed from "../../models/Bed.js";
-import Room from "../../models/rooms.js";
+import propertyService from "../../services/propertyService.js";
 import User from "../../models/User.js";
+import Room from "../../models/rooms.js";
 import logger from "../../utils/logger.js";
 
 /**
@@ -167,13 +167,8 @@ export const updateBedStatus = async (req, res, next) => {
         const { id } = req.params;
         const { status, residentId } = req.body;
 
-        const bed = await Bed.findById(id);
+        const bed = await propertyService.update(id, { status, residentId });
         if (!bed) return res.status(404).json({ success: false, message: "Bed not found" });
-
-        if (status) bed.status = status;
-        if (residentId !== undefined) bed.residentId = residentId;
-
-        await bed.save();
 
         return res.json({ success: true, data: bed });
     } catch (err) {

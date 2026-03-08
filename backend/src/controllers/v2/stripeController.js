@@ -4,6 +4,7 @@ import { sendPaymentConfirmation } from "../../services/emailService.js";
 import { generateInvoiceBuffer } from "../../utils/invoiceGenerator.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
+import eventBus from "../../events/publisher.js";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
@@ -91,65 +92,15 @@ export const stripeWebhook = async (req, res) => {
 
         if (event.type === "checkout.session.completed") {
             const session = event.data.object;
-
-            if (session.mode === "payment") {
-                // One-off rent payment logic
-                const paymentId = session.metadata?.paymentId;
-                if (paymentId) {
-                    const payment = await Payment.findByIdAndUpdate(
-                        paymentId,
-                        { status: "paid", paidAt: new Date(), method: "online", transactionId: session.id },
-                        { new: true }
-                    ).populate("resident", "name email").populate("propertyId", "name");
-
-                    // Generate PDF receipt in-memory
-                    let pdfBuffer = null;
-                    try {
-                        pdfBuffer = await generateInvoiceBuffer(payment);
-                    } catch (pdfErr) {
-                        logger.error("[STRIPE] Failed to generate PDF buffer for receipt", { paymentId: payment._id, error: pdfErr.message });
-                    }
-
-                    // Send confirmation email WITH PDF ATTACHMENT
-                    if (payment && payment.resident?.email) {
-                        await sendPaymentConfirmation({
-                            name: payment.resident.name,
-                            email: payment.resident.email,
-                            amount: payment.amount,
-                            month: payment.month,
-                            paidAt: payment.paidAt,
-                            propertyName: payment.propertyId?.name,
-                            paymentId: payment._id.toString(),
-                            pdfBuffer
-                        });
-                    }
-
-                    logger.info(`[STRIPE] Payment processed successfuly`, { paymentId: payment._id });
-                }
-            } else if (session.mode === "subscription") {
-                // Subscription upgrade logic
-                const ownerId = session.client_reference_id;
-                const planId = session.metadata?.planId || "pro";
-                const subscriptionId = session.subscription;
-                const customerId = session.customer;
-
-                if (ownerId) {
-                    import("../../models/Subscription.js").then(({ Subscription }) => {
-                        Subscription.findOneAndUpdate(
-                            { owner: ownerId },
-                            {
-                                plan: planId,
-                                status: "active",
-                                stripeSubscriptionId: subscriptionId,
-                                stripeCustomerId: customerId,
-                                currentPeriodStart: new Date(),
-                                currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Rough approx based on checkout, webhook usually handles invoice.payment_succeeded to sync dates perfectly
-                            },
-                            { new: true, upsert: true }
-                        ).catch(e => logger.error("[STRIPE WEBHOOK] Failed to activate subscription:", e));
-                    });
-                }
-            }
+            await eventBus.publish("billing.checkout.completed", {
+                sessionId: session.id,
+                mode: session.mode,
+                metadata: session.metadata,
+                clientReferenceId: session.client_reference_id,
+                subscriptionId: session.subscription,
+                customerId: session.customer
+            });
+            logger.info(`[STRIPE WEBHOOK] Checkout session event published: ${session.id}`);
         }
 
         return res.json({ received: true });

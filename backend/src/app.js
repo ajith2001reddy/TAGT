@@ -11,6 +11,7 @@ import apiRoutes from "./routes/index.js";
 import { metricsMiddleware, metricsEndpoint } from "./middleware/metrics.js";
 import { initEventHandlers } from "./events/handlers.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { auditLogger } from "./middleware/auditLogger.js";
 import { swaggerSpec, swaggerUi } from "./swagger.js";
 import "./jobs/scheduler.js"; // Initialize chron jobs
 import logger from "./utils/logger.js"; // Assuming logger is available
@@ -196,6 +197,7 @@ app.post(
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(auditLogger);
 
 /* ================= HEALTH CHECK ================= */
 

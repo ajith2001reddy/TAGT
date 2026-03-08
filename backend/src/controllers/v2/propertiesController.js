@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import Property from "../../models/Property.js";
-import Room from "../../models/rooms.js";
-import Bed from "../../models/Bed.js";
+import propertyService from "../../services/propertyService.js";
 
 /**
  * List all properties (Super Admin only)
@@ -54,9 +52,8 @@ export const updatePropertyStatus = async (req, res, next) => {
         }
 
         const { status } = req.body;
-        const property = await Property.findByIdAndUpdate(id, { status }, { new: true });
+        const property = await propertyService.updateStatus(id, status);
 
-        if (!property) return res.status(404).json({ success: false, message: "Property not found" });
         return res.json({ success: true, data: property });
     } catch (err) { next(err); }
 };
@@ -79,8 +76,7 @@ export const updateProperty = async (req, res, next) => {
             }
         }
 
-        const property = await Property.findByIdAndUpdate(id, updates, { new: true, runValidators: true })
-            .populate("owner", "name email");
+        const property = await propertyService.update(id, updates);
 
         if (!property) return res.status(404).json({ success: false, message: "Property not found" });
         return res.json({ success: true, data: property });

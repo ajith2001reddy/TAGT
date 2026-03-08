@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
-import Room from "../../models/rooms.js";
-import Bed from "../../models/Bed.js";
+import propertyService from "../../services/propertyService.js";
 import logger from "../../utils/logger.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 
@@ -135,7 +134,7 @@ export const updateRoom = async (req, res, next) => {
             ...(req.body.note !== undefined ? { note: req.body.note } : {})
         };
 
-        const room = await Room.findOneAndUpdate(filter, update, { new: true });
+        const room = await propertyService.update(id, update);
 
         if (!room) return res.status(404).json({ success: false, message: "Room not found" });
 
