@@ -110,22 +110,39 @@ router.post("/login", async (req, res) => {
  * GET /api/auth/me
  */
 router.get("/me", auth, async (req, res) => {
-
   // 🚨 Prevent browser caching
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
 
+  let userData = req.user;
+
+  // If resident, populate unit details for the dashboard
+  if (req.user.role === "resident") {
+    const populatedUser = await User.findById(req.user._id)
+      .populate("propertyId", "name address city heroImage")
+      .populate("roomId", "roomNumber rent")
+      .populate("bedId", "bedNumber")
+      .lean();
+    if (populatedUser) {
+      userData = populatedUser;
+    }
+  }
+
   return res.status(200).json({
     success: true,
     data: {
-      id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role,
-      propertyId: req.user.propertyId ?? null,
-      ownerId: req.user.ownerId ?? null,
-      roomId: req.user.roomId ?? null,
+      id: userData._id,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
+      propertyId: userData.propertyId?._id || userData.propertyId || null,
+      propertyDetails: req.user.role === "resident" ? userData.propertyId : null,
+      ownerId: userData.ownerId ?? null,
+      roomId: userData.roomId?._id || userData.roomId || null,
+      roomDetails: req.user.role === "resident" ? userData.roomId : null,
+      bedId: userData.bedId?._id || userData.bedId || null,
+      bedDetails: req.user.role === "resident" ? userData.bedId : null,
     },
     message: "Authenticated user profile fetched",
   });
