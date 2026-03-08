@@ -40,7 +40,9 @@ export const register = async (req, res) => {
         const schema = Joi.object({
             name: Joi.string().min(2).max(100).required(),
             email: Joi.string().email().required(),
-            role: Joi.string().valid("owner", "resident").default("resident")
+            role: Joi.string().valid("owner", "resident").default("resident"),
+            phoneNumber: Joi.string().allow(""),
+            password: Joi.string().allow("")
         });
 
         const { error, value } = schema.validate(req.body);
@@ -51,7 +53,7 @@ export const register = async (req, res) => {
             });
         }
 
-        const { name, email, role } = value;
+        const { name, email, role, phoneNumber, password } = value;
 
         const sanitizedEmail = String(email || "").toLowerCase().trim();
         const existing = await User.findOne({ email: sanitizedEmail });
@@ -67,6 +69,8 @@ export const register = async (req, res) => {
         const newUser = await User.create({
             name: String(name).trim(),
             email: sanitizedEmail,
+            phoneNumber: phoneNumber || null,
+            password: password || null,
             role: role,
             isActive: true
         });
@@ -82,7 +86,7 @@ export const register = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            data: newOwner
+            data: newUser
         });
 
     } catch (err) {

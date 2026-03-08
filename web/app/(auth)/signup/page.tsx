@@ -197,13 +197,12 @@ export default function SignupPage() {
                     />
                 </div>
                 <div>
-                    <label className="label-text" style={{ display: "block", marginBottom: "7px" }}>Phone Number</label>
+                    <label className="label-text" style={{ display: "block", marginBottom: "7px" }}>Phone Number (Optional)</label>
                     <input
                         className="input-field"
                         placeholder="+91 98765 43210"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        required
                     />
                 </div>
 
