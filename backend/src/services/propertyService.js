@@ -72,6 +72,16 @@ class PropertyService extends BaseService {
         logger.info(`Property ${propertyId} status updated to ${status}`);
         return property;
     }
+
+    /**
+     * Placeholder for updating property stats (room counts, bed counts etc)
+     * @param {string} propertyId 
+     */
+    async updatePropertyStats(propertyId) {
+        // This would traditionally update cached counts on the property document
+        // In current implementation, we fetch these dynamically in listProperties
+        logger.debug(`Property stats sync requested for ${propertyId}`);
+    }
 }
 
 export default new PropertyService();

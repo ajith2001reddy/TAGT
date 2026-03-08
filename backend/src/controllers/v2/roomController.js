@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import Room from "../../models/rooms.js";
+import Bed from "../../models/Bed.js";
+import User from "../../models/User.js";
+import Property from "../../models/Property.js";
 import propertyService from "../../services/propertyService.js";
 import logger from "../../utils/logger.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";

@@ -34,7 +34,10 @@ export const buildPropertyFilter = (user, requestedPropertyId = null, fieldName 
         if (requestedPropertyId) {
             const isAllowed = allowedIds.some(id => id.toString() === requestedPropertyId.toString());
             // 🛡️ SECURITY: Hard block if access is attempted to an unowned property
-            return isAllowed ? { [fieldName]: requestedPropertyId } : { [fieldName]: new mongoose.Types.ObjectId() };
+            // ✅ Casting to ObjectId ensures compatibility with aggregate pipelines
+            return isAllowed
+                ? { [fieldName]: new mongoose.Types.ObjectId(requestedPropertyId) }
+                : { [fieldName]: new mongoose.Types.ObjectId() };
         }
 
         // For owner-level items like 'Property' itself, we filter by 'owner' field

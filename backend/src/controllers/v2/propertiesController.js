@@ -1,7 +1,10 @@
-import propertyService from "../../services/propertyService.js";
+import mongoose from "mongoose";
 import Property from "../../models/Property.js";
 import Room from "../../models/rooms.js";
 import Bed from "../../models/Bed.js";
+import propertyService from "../../services/propertyService.js";
+import { buildPropertyFilter } from "../../utils/tenantScope.js";
+import logger from "../../utils/logger.js";
 
 /**
  * List all properties (Super Admin only)

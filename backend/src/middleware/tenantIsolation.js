@@ -41,8 +41,9 @@ export const enforceTenantIsolation = (req, res, next) => {
  * Mongoose Plugin to automatically append the `ownerId` to queries.
  */
 export const tenantIsolationPlugin = function (schema) {
-    // Only apply to schemas that actually have an ownerId field
-    if (!schema.paths.ownerId) {
+    // Only apply to schemas that actually have a tenant-scoping field
+    const paths = schema.paths;
+    if (!paths.ownerId && !paths.propertyId && !paths.owner) {
         return;
     }
 
