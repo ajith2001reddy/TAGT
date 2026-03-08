@@ -24,10 +24,10 @@ export const enforceTenantIsolation = (req, res, next) => {
             // Bypass isolation for super admin.
             tenantId = "SUPER_ADMIN_BYPASS";
         } else if (req.user.role === "owner") {
-            tenantId = req.user.uid;
+            tenantId = String(req.user._id);
         } else if (req.user.role === "resident" && req.user.ownerId) {
             // Residents operate within their owner's tenant space
-            tenantId = req.user.ownerId;
+            tenantId = String(req.user.ownerId);
         }
     }
 
@@ -56,7 +56,13 @@ export const tenantIsolationPlugin = function (schema) {
         }
 
         // 3. Force the query to be scoped to the active tenant
-        this.where({ ownerId: tenantId });
+        // Use normalization or check multiple fields
+        // Most models in TAGT use 'propertyId' or 'owner' or 'ownerId'
+        if (schema.paths.ownerId) {
+            this.where({ ownerId: tenantId });
+        } else if (schema.paths.owner) {
+            this.where({ owner: tenantId });
+        }
         next();
     };
 

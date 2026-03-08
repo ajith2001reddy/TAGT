@@ -24,9 +24,12 @@ export const listProperties = async (req, res, next) => {
 
         // Enrich with real-time room/bed counts
         const enrichedItems = await Promise.all(items.map(async (prop) => {
-            const totalRooms = await Room.countDocuments({ property: prop._id });
-            const totalBeds = await Bed.countDocuments({ room: { $in: await Room.find({ property: prop._id }).distinct('_id') } });
-            const occupiedBeds = await Bed.countDocuments({ room: { $in: await Room.find({ property: prop._id }).distinct('_id') }, isOccupied: true });
+            const roomsInProp = await Room.find({ propertyId: prop._id }).distinct('_id');
+            const [totalRooms, totalBeds, occupiedBeds] = await Promise.all([
+                Room.countDocuments({ propertyId: prop._id }),
+                Bed.countDocuments({ roomId: { $in: roomsInProp } }),
+                Bed.countDocuments({ roomId: { $in: roomsInProp }, status: "occupied" })
+            ]);
             return {
                 ...prop,
                 totalRooms,
