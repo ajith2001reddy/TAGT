@@ -1,4 +1,5 @@
 import { cloudinary } from "../config/cloudinary.js";
+import { Readable } from "stream";
 
 /**
  * Uploads a file buffer to Cloudinary
@@ -17,10 +18,11 @@ export const uploadToCloudinary = (buffer, folder = "tagt_general") => {
                 if (error) {
                     return reject(error);
                 }
+                resolve(result.secure_url);
             }
         );
 
-        uploadStream.end(buffer);
+        Readable.from([buffer]).pipe(uploadStream);
     });
 };
 
