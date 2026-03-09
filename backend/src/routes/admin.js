@@ -30,6 +30,7 @@ router.delete("/properties/:id", auth, isAdmin, deleteProperty);
 // Verification approval
 router.get("/verifications/pending", auth, isAdmin, getPendingVerifications);
 router.post("/approve/:id", auth, isAdmin, approveVerification);
+router.post("/approved/:id", auth, isAdmin, approveVerification); // Alias for typo/old frontend
 router.post("/reject/:id", auth, isAdmin, rejectVerification);
 
 export default router;

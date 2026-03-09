@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import User from "../../models/User.js";
 import Payment from "../../models/Payment.js";
-import Room from "../../models/rooms.js";
+import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import residentService from "../../services/residentService.js";

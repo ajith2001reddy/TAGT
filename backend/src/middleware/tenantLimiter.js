@@ -16,7 +16,7 @@ export const dynamicTenantRateLimiter = async (req, res, next) => {
         // We need the ownerId to check the subscription
         let targetOwnerId;
         if (req.user.role === "owner") {
-            targetOwnerId = req.user.uid;
+            targetOwnerId = req.user._id;
         } else if (req.user.role === "resident" && req.user.ownerId) {
             targetOwnerId = req.user.ownerId;
         } else if (req.user.role === "super_admin") {
@@ -29,7 +29,7 @@ export const dynamicTenantRateLimiter = async (req, res, next) => {
         }
 
         // Fetch subscription tier
-        const sub = await Subscription.findOne({ owner: targetOwnerId }).lean();
+        const sub = await Subscription.findOne({ ownerId: targetOwnerId }).lean();
         const tier = sub?.plan || "free";
 
         let maxRequests;

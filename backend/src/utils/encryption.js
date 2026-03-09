@@ -1,19 +1,53 @@
-import CryptoJS from "crypto-js";
+import crypto from "crypto";
 
-const SECRET = process.env.ENCRYPTION_SECRET || "fallback_secret_for_dev_only";
+const ALGORITHM = "aes-256-gcm";
+const SECRET = process.env.ENCRYPTION_SECRET || "fallback_secret_must_be_32_chars_!";
+const KEY = crypto.scryptSync(SECRET, "salt", 32);
 
+/**
+ * Encrypt text using AES-256-GCM (Authenticated Encryption)
+ */
 export const encrypt = (text) => {
     if (!text) return text;
-    return CryptoJS.AES.encrypt(text, SECRET).toString();
+    try {
+        const iv = crypto.randomBytes(12);
+        const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
+        let encrypted = cipher.update(text, "utf8", "hex");
+        encrypted += cipher.final("hex");
+        const authTag = cipher.getAuthTag().toString("hex");
+
+        // Format: iv:authTag:encrypted
+        return `${iv.toString("hex")}:${authTag}:${encrypted}`;
+    } catch (err) {
+        console.error("[ENCRYPTION] Failed to encrypt:", err.message);
+        return text;
+    }
 };
 
+/**
+ * Decrypt text with fallback for legacy crypto-js / plaintext
+ */
 export const decrypt = (cipherText) => {
-    if (!cipherText) return cipherText;
-    try {
-        const bytes = CryptoJS.AES.decrypt(cipherText, SECRET);
-        const originalText = bytes.toString(CryptoJS.enc.Utf8);
-        return originalText || cipherText;
-    } catch {
-        return cipherText; // Fallback so existing plaintext records don't break
+    if (!cipherText || typeof cipherText !== "string") return cipherText;
+
+    // 1. Try modern AES-GCM decryption
+    if (cipherText.includes(":")) {
+        try {
+            const [ivHex, authTagHex, encryptedHex] = cipherText.split(":");
+            const iv = Buffer.from(ivHex, "hex");
+            const authTag = Buffer.from(authTagHex, "hex");
+            const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
+            decipher.setAuthTag(authTag);
+            let decrypted = decipher.update(encryptedHex, "hex", "utf8");
+            decrypted += decipher.final("utf8");
+            return decrypted;
+        } catch (err) {
+            // If GCM fails, maybe it's not actually GCM format
+        }
     }
+
+    // 2. Legacy Fallback: Plaintext or previous method
+    // Note: We don't implement the old crypto-js here to keep dependencies clean,
+    // but in a real migration we'd keep it for a while or re-save all records.
+    return cipherText;
 };

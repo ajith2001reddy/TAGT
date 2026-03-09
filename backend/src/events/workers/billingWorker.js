@@ -86,7 +86,7 @@ async function handleSubscriptionUpgrade(data) {
     if (!ownerId) return;
 
     await Subscription.findOneAndUpdate(
-        { owner: ownerId },
+        { ownerId: ownerId },
         {
             plan: planId,
             status: "active",

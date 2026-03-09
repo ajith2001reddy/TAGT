@@ -1,93 +1,83 @@
 import { jest } from '@jest/globals';
-import ResidentService from '../../src/services/residentService.js';
-import User from '../../src/models/User.js';
-import eventBus from '../../src/events/publisher.js';
-
-// Mock the dependencies
-jest.unstable_mockModule('../../src/models/User.js', () => ({
-    default: {
-        create: jest.fn(),
-        findByIdAndUpdate: jest.fn(),
-        findOne: jest.fn()
-    }
-}));
-
-jest.unstable_mockModule('../../src/events/publisher.js', () => ({
-    default: {
-        publish: jest.fn()
-    }
-}));
+import mongoose from "mongoose";
 
 describe('ResidentService', () => {
-    let residentService;
+    let residentService, User, Room, Payment, Property, dbSetup, fixtures;
 
-    beforeEach(() => {
-        residentService = new ResidentService(User);
+    beforeAll(async () => {
+        dbSetup = await import('../dbSetup.js');
+        await dbSetup.connect();
+        fixtures = await import('../fixtures.js');
+
+        // Dynamic imports for the actual service and models
+        residentService = (await import('../../src/services/residentService.js')).default;
+        User = (await import('../../src/models/User.js')).default;
+        Room = (await import('../../src/models/Room.js')).default;
+        Payment = (await import('../../src/models/Payment.js')).default;
+        Property = (await import('../../src/models/Property.js')).default;
+    });
+
+    afterAll(async () => {
+        await dbSetup.closeDatabase();
+    });
+
+    beforeEach(async () => {
+        await mongoose.connection.dropDatabase();
         jest.clearAllMocks();
     });
 
     describe('approveResident', () => {
-        it('should approve a resident and publish an event', async () => {
-            const mockResidentId = '65b1234567890abcdef12345';
-            const mockResident = {
-                _id: mockResidentId,
-                name: 'John Doe',
-                email: 'john@example.com',
-                status: 'pending',
-                isActive: false
-            };
-
-            // Mock implementation
-            User.findByIdAndUpdate.mockResolvedValue({
-                ...mockResident,
-                status: 'active',
-                isActive: true
+        it('should approve a resident', async () => {
+            const owner = await fixtures.createMockOwner();
+            const property = await fixtures.createMockProperty(owner._id);
+            const resident = await User.create({
+                name: "John Doe",
+                email: "john@test.com",
+                role: "resident",
+                status: "pending",
+                propertyId: property._id,
+                firebaseUid: "test-uid"
             });
 
-            const result = await residentService.approveResident(mockResidentId);
+            const result = await residentService.approveResident(resident._id, owner._id);
 
-            expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
-                mockResidentId,
-                { status: 'active', isActive: true },
-                { new: true }
-            );
-
-            expect(eventBus.publish).toHaveBeenCalledWith('resident.approved', expect.objectContaining({
-                residentId: mockResidentId
-            }));
-
-            expect(result.status).toBe('active');
-            expect(result.isActive).toBe(true);
-        });
-
-        it('should throw an error if resident is not found', async () => {
-            User.findByIdAndUpdate.mockResolvedValue(null);
-
-            await expect(residentService.approveResident('invalid-id'))
-                .rejects.toThrow('Resident not found');
+            expect(result.status).toBe('approved');
+            const updated = await User.findById(resident._id);
+            expect(updated.status).toBe('approved');
         });
     });
 
     describe('createResidentWorkflow', () => {
-        it('should create a resident and publish an event', async () => {
-            const residentData = {
-                name: 'Jane Doe',
-                email: 'jane@example.com',
-                propertyId: 'prop123'
-            };
-
-            User.create.mockResolvedValue({
-                _id: 'new-id',
-                ...residentData
+        it('should create a resident and a first bill', async () => {
+            const owner = await fixtures.createMockOwner();
+            const property = await fixtures.createMockProperty(owner._id);
+            const room = await Room.create({
+                roomNumber: "R1",
+                rent: 1000,
+                totalBeds: 2,
+                propertyId: property._id
             });
 
-            const result = await residentService.createResidentWorkflow(residentData);
+            const residentData = {
+                name: "Jane Smith",
+                email: "jane@test.com",
+                propertyId: property._id.toString(),
+                roomId: room._id.toString(),
+                phoneNumber: "1234567890",
+                password: "password123"
+            };
 
-            expect(User.create).toHaveBeenCalledWith(expect.objectContaining(residentData));
-            expect(eventBus.publish).toHaveBeenCalledWith('resident.created', expect.objectContaining({
-                residentId: 'new-id'
-            }));
-            expect(result._id).toBe('new-id');
+            const { resident } = await residentService.createResidentWorkflow(residentData);
+
+            expect(resident.name).toBe("Jane Smith");
+            expect(resident.email).toBe("jane@test.com");
+            expect(resident.roomId.toString()).toBe(room._id.toString());
+
+            // Check if payment was generated
+            const payment = await Payment.findOne({ resident: resident._id });
+            expect(payment).toBeDefined();
+            expect(payment.amount).toBe(1000);
+            expect(payment.room.toString()).toBe(room._id.toString());
         });
     });
 });

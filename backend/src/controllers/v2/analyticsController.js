@@ -1,5 +1,5 @@
 import User from "../../models/User.js";
-import Room from "../../models/rooms.js";
+import Room from "../../models/Room.js";
 import Payment from "../../models/Payment.js";
 import Property from "../../models/Property.js";
 import Request from "../../models/Request.js";

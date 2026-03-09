@@ -11,18 +11,18 @@ const isTest = process.env.NODE_ENV === "test";
 
 if (!admin.apps.length) {
   try {
-    if (FIREBASE_PROJECT_ID && FIREBASE_CLIENT_EMAIL && FIREBASE_PRIVATE_KEY) {
+    if (isTest) {
+      // Always use mock for testing to prevent dummy key crashes
+      admin.initializeApp({
+        projectId: "test-project"
+      });
+    } else if (FIREBASE_PROJECT_ID && FIREBASE_CLIENT_EMAIL && FIREBASE_PRIVATE_KEY) {
       admin.initializeApp({
         credential: admin.credential.cert({
           projectId: FIREBASE_PROJECT_ID,
           clientEmail: FIREBASE_CLIENT_EMAIL,
           privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
         }),
-      });
-    } else if (isTest) {
-      // Mock initialization for testing if keys are missing
-      admin.initializeApp({
-        projectId: "test-project"
       });
     }
   } catch (e) {

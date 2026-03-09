@@ -87,6 +87,13 @@ const userSchema = new mongoose.Schema(
             index: true,
         },
 
+        status: {
+            type: String,
+            enum: ["pending", "approved", "active", "inactive"],
+            default: "active",
+            index: true,
+        },
+
         // ✅ Explicit link to owner for residents
         ownerId: {
             type: mongoose.Schema.Types.ObjectId,

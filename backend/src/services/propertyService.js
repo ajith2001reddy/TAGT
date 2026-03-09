@@ -1,6 +1,6 @@
 import BaseService from "./BaseService.js";
 import Property from "../models/Property.js";
-import Room from "../models/rooms.js";
+import Room from "../models/Room.js";
 import Bed from "../models/Bed.js";
 import logger from "../utils/logger.js";
 

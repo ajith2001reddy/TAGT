@@ -1,5 +1,6 @@
 import admin from "../config/firebase.js";
 import User from "../models/User.js";
+import Property from "../models/Property.js";
 import logger from "../utils/logger.js";
 import { enforceTenantIsolation } from "./tenantIsolation.js";
 

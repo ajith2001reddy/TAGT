@@ -48,7 +48,7 @@ router.get("/properties", auth, authorize("owner", "super_admin"), async (req, r
         }
 
         // Fetch properties and aggregate room stats in parallel
-        const Room = (await import("../models/rooms.js")).default;
+        const Room = (await import("../models/Room.js")).default;
         const properties = await Property.find(filter).lean();
 
         if (properties.length === 0) {

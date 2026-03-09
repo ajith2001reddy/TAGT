@@ -1,4 +1,4 @@
-import Room from "../models/rooms.js";
+import Room from "../models/Room.js";
 async function getCurrentOccupancy() {
     const rooms = await Room.find({}, "totalBeds occupiedBeds").lean();
 

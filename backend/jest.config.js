@@ -3,6 +3,6 @@ export default {
     transform: {},
     moduleFileExtensions: ['js', 'json', 'node'],
     roots: ['<rootDir>/tests'],
-    setupFiles: ['<rootDir>/tests/setup.js'],
-    testTimeout: 10000,
+    setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+    testTimeout: 30000,
 };

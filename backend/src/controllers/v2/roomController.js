@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Room from "../../models/rooms.js";
+import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
 import User from "../../models/User.js";
 import Property from "../../models/Property.js";

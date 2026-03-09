@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 let replSet;
 
 export const connect = async () => {
+    if (mongoose.connection.readyState === 1) return;
+
     if (!replSet) {
         replSet = await MongoMemoryReplSet.create({
             replSet: { storageEngine: 'wiredTiger', count: 1 }

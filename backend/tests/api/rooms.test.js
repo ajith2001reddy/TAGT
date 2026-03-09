@@ -33,7 +33,7 @@ describe("Rooms Real Transaction Suite", () => {
                 totalBeds: 2,
                 propertyId: property._id.toString()
             },
-            user: { ...owner, propertyId: property._id }
+            user: { ...owner, propertyId: property._id.toString() }
         };
 
         const res = {
@@ -48,6 +48,10 @@ describe("Rooms Real Transaction Suite", () => {
         });
 
         await createRoom(req, res, next);
+
+        if (res.statusCode !== 201) {
+            console.error("CREATE ROOM FAILED:", res.body);
+        }
 
         expect(res.statusCode).toBe(201);
         expect(res.body.success).toBe(true);

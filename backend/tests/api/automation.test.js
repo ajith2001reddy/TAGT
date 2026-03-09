@@ -13,7 +13,7 @@ describe("Automation Worker Integration Suite", () => {
 
         // Dynamic imports for models and services
         User = (await import("../../src/models/User.js")).default;
-        Room = (await import("../../src/models/rooms.js")).default;
+        Room = (await import("../../src/models/Room.js")).default;
         Payment = (await import("../../src/models/Payment.js")).default;
         Property = (await import("../../src/models/Property.js")).default;
 

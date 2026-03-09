@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Property from "../../models/Property.js";
-import Room from "../../models/rooms.js";
+import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
 import User from "../../models/User.js";
 import propertyService from "../../services/propertyService.js";
@@ -219,6 +219,39 @@ export const getMyProperties = async (req, res, next) => {
 
         const data = await Property.find(query).lean();
         return res.json({ success: true, data });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * Get a single property by ID — tenant-isolated.
+ * Owners can only fetch their own property; super_admin can fetch any.
+ */
+export const getPropertyById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid property id" });
+        }
+
+        let query = { _id: id };
+
+        // Tenant isolation: owners can only see their own properties
+        if (req.user.role === "owner") {
+            query.ownerId = req.user._id;
+        } else if (req.user.role === "resident") {
+            // Residents can only see their assigned property
+            query._id = req.user.propertyId;
+        }
+        // super_admin: no extra filter
+
+        const property = await Property.findOne(query).lean();
+        if (!property) {
+            return res.status(404).json({ success: false, message: "Property not found" });
+        }
+
+        return res.json({ success: true, data: property });
     } catch (err) {
         next(err);
     }

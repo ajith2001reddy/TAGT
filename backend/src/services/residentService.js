@@ -1,6 +1,7 @@
+import mongoose from "mongoose";
 import BaseService from "./BaseService.js";
 import User from "../models/User.js";
-import Room from "../models/rooms.js";
+import Room from "../models/Room.js";
 import Payment from "../models/Payment.js";
 import Property from "../models/Property.js";
 import admin from "../config/firebase.js";
@@ -17,21 +18,34 @@ class ResidentService extends BaseService {
      * Core logic for creating a resident, assigning them to a room,
      * and generating their first bill.
      */
-    async createResidentWorkflow({ name, email, password, roomId, propertyId }, session) {
+    async createResidentWorkflow({ name, email, password, roomId, propertyId, phoneNumber }, session) {
         const normalizedEmail = email.toLowerCase().trim();
 
         // 1️⃣ Validate room
         let roomDoc = null;
         if (roomId) {
-            roomDoc = await Room.findOne({ _id: roomId, propertyId }).session(session);
-            if (!roomDoc) throw new Error("Invalid room selected");
+            // Coerce to ObjectId to avoid string/ObjectId mismatch in query
+            const roomObjId = mongoose.Types.ObjectId.isValid(roomId) ? new mongoose.Types.ObjectId(String(roomId)) : roomId;
+            const propObjId = mongoose.Types.ObjectId.isValid(propertyId) ? new mongoose.Types.ObjectId(String(propertyId)) : propertyId;
+            roomDoc = await Room.findOne({ _id: roomObjId, propertyId: propObjId }).session(session);
+            if (!roomDoc) {
+                console.error(`[ResidentService] Room ${roomId} not found in property ${propertyId}. Checking room alone...`);
+                const roomAny = await Room.findById(roomObjId).lean();
+                console.error(`[ResidentService] Room found without scope?`, roomAny ? JSON.stringify({ _id: roomAny._id, propertyId: roomAny.propertyId }) : "NOT FOUND");
+                throw new Error("Invalid room selected");
+            }
             if (roomDoc.maintenanceMode) throw new Error("Room is under maintenance");
             if (roomDoc.occupiedBeds >= roomDoc.totalBeds) throw new Error("Room is full");
         }
 
         // 2️⃣ Fetch Property to get the Owner
+        console.log(`[ResidentService] Looking up property: ${propertyId} in DB: ${mongoose.connection.name}`);
         const property = await Property.findById(propertyId).session(session);
-        if (!property) throw new Error("Property not found");
+        if (!property) {
+            const allProps = await Property.find({}).limit(10);
+            console.error(`[ResidentService] Property NOT found. Total properties in DB: ${await Property.countDocuments()}. Sample:`, allProps.map(p => p._id));
+            throw new Error("Property not found");
+        }
 
         // 3️⃣ Create Firebase user
         const firebaseUser = await admin.auth().createUser({
@@ -48,8 +62,9 @@ class ResidentService extends BaseService {
                 firebaseUid: firebaseUser.uid,
                 role: "resident",
                 propertyId,
-                ownerId: property.owner, // 👈 Link to owner
+                ownerId: property.ownerId, // 👈 Link to owner
                 roomId: roomDoc?._id || null,
+                phoneNumber: phoneNumber || null,
                 isActive: true
             }],
             { session }
@@ -78,7 +93,7 @@ class ResidentService extends BaseService {
             await Payment.create([{
                 propertyId,
                 resident: resident._id,
-                roomId: roomDoc._id,
+                room: roomDoc._id,
                 amount: rent,
                 totalPayable: rent,
                 month: currentMonth,
@@ -120,7 +135,11 @@ class ResidentService extends BaseService {
      */
     async sendWelcomeEmailSafe(resident, propertyId, resetLink) {
         try {
+            console.log(`[ResidentService] sendWelcomeEmailSafe looking up property: ${propertyId}`);
             const propertyDoc = await Property.findById(propertyId).lean();
+            if (!propertyDoc) {
+                console.error(`[ResidentService] sendWelcomeEmailSafe: Property ${propertyId} NOT FOUND in DB ${mongoose.connection.name}`);
+            }
             await sendWelcomeEmail({
                 name: resident.name,
                 email: resident.email,

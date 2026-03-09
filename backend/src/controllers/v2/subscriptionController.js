@@ -1,7 +1,7 @@
 // src/controllers/v2/subscriptionController.js
 import { Subscription, PLAN_LIMITS } from "../../models/Subscription.js";
 import User from "../../models/User.js";
-import Room from "../../models/rooms.js";
+import Room from "../../models/Room.js";
 
 /* ─────────────────────────────────────────────────
    GET /v2/subscription/my-plan
