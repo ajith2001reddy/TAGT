@@ -218,4 +218,37 @@ router.post("/register", async (req, res) => {
   }
 });
 
+/**
+ * POST /api/auth/verify
+ * Mark user as email-verified in Mongo after Firebase confirmation
+ */
+router.post("/verify", async (req, res) => {
+  try {
+    const { firebaseUid } = req.body;
+
+    if (!firebaseUid) {
+      return res.status(400).json({ success: false, message: "firebaseUid is required" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { firebaseUid },
+      { emailVerified: true, status: "active" },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Email verification synced with system",
+      data: user
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;

@@ -58,6 +58,31 @@ router.patch("/provider/properties/:id/status", auth, authorize("super_admin"), 
 router.get("/admin/platform-stats", auth, authorize("super_admin"), getPlatformStats);
 router.put("/admin/users/:id", auth, authorize("super_admin"), logActivity("USER_MANAGED_BY_ADMIN"), superAdminManageUser);
 
+// Consolidated from legacy admin.js
+import {
+    createOwner,
+    assignOwnerToProperty,
+    listOwners,
+    removePropertyFromOwner,
+    deleteOwner,
+    deleteResident,
+    deleteProperty,
+    getPendingVerifications,
+    approveVerification,
+    rejectVerification
+} from "../../controllers/adminController.js";
+
+router.get("/admin/owners", auth, authorize("super_admin"), listOwners);
+router.post("/admin/owners", auth, authorize("super_admin"), createOwner);
+router.post("/admin/properties/:id/assign-owner", auth, authorize("super_admin"), assignOwnerToProperty);
+router.delete("/admin/owners/:ownerId/properties/:propertyId", auth, authorize("super_admin"), removePropertyFromOwner);
+router.delete("/admin/owners/:id", auth, authorize("super_admin"), deleteOwner);
+router.delete("/admin/residents/:id", auth, authorize("super_admin"), deleteResident);
+router.delete("/admin/properties/:id", auth, authorize("super_admin"), deleteProperty);
+router.get("/admin/verifications/pending", auth, authorize("super_admin"), getPendingVerifications);
+router.post("/admin/verifications/:id/approve", auth, authorize("super_admin"), approveVerification);
+router.post("/admin/verifications/:id/reject", auth, authorize("super_admin"), rejectVerification);
+
 /* ── Analytics ── */
 router.get("/analytics/owner-dashboard", auth, authorize("super_admin", "owner"), ownerDashboardAnalytics);
 router.get("/analytics/financial-dashboard", auth, authorize("super_admin", "owner"), ownerFinancialDashboard);
