@@ -24,6 +24,8 @@ export const fetchPendingVerifications = async (): Promise<PendingVerification[]
 };
 
 export const updateVerificationStatus = async (userId: string, status: "approved" | "rejected") => {
-    const res = await api.post(`/admin/${status}/${userId}`);
+    // Backend expects `/admin/approve/:id` and `/admin/reject/:id`
+    const route = status === "approved" ? "approve" : "reject";
+    const res = await api.post(`/admin/${route}/${userId}`);
     return res.data;
 };
