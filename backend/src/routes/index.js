@@ -25,6 +25,10 @@ import ownerRoutes from "./owner.js";
 import joinRequestRoutes from "./joinRequestRoutes.js";
 import verifyRoutes from "./verify.js";
 import uploadRoutes from "./upload.js";
+import v2Routes from "./v2/index.js";
+import residentDashboardRoutes from "./residentDashboard.js";
+import residentProfileRoutes from "./residentProfile.js";
+import enquiryRoutes from "./enquiry.routes.js";
 
 const router = Router();
 
