@@ -50,7 +50,12 @@ function InsightCard({ severity, message, recommendation }: Insight) {
 
 export default function OwnerPage() {
     const { stats, detailed, loading } = useOwnerStats();
-    const { dbUser } = useAuth();
+    const { dbUser, refreshUser } = useAuth();
+
+    useEffect(() => {
+        refreshUser();
+    }, []);
+
     const verificationStatus = dbUser?.verification?.status || "pending";
 
     const hour = new Date().getHours();

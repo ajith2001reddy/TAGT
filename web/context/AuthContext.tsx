@@ -31,6 +31,7 @@ type AuthContextType = {
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -40,6 +41,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const refreshUser = async () => {
+        if (!auth.currentUser) return;
+        try {
+            const { data } = await api.get("/auth/me");
+            const userData = data.data as DbUser;
+            setRole(userData.role || null);
+            setDbUser(userData || null);
+        } catch (err) {
+            console.error("Error refreshing user:", err);
+        }
+    };
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             // If we have a user, we must keep loading true while we fetch the role
@@ -82,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, dbUser, role, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, dbUser, role, loading, login, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );
