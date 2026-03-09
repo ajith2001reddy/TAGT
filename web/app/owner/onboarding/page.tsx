@@ -1,202 +1,153 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { toast } from "react-hot-toast";
-
-interface JoinRequest {
-    _id: string;
-    residentId: {
-        _id: string;
-        name: string;
-        email: string;
-        phone?: string;
-        photo?: string;
-    };
-    propertyId: {
-        _id: string;
-        name: string;
-    };
-    message: string;
-    status: "pending" | "approved" | "rejected";
-    createdAt: string;
-}
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Home, Bed, Users, Rocket, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
 
 export default function OwnerOnboardingPage() {
-    const [requests, setRequests] = useState<JoinRequest[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [processingId, setProcessingId] = useState<string | null>(null);
+    const [step, setStep] = useState(1);
+    const [formData, setFormData] = useState({
+        name: "", address: "", rooms: 5, beds: 15
+    });
 
-    useEffect(() => {
-        fetchRequests();
-    }, []);
+    const nextStep = () => setStep(s => s + 1);
+    const prevStep = () => setStep(s => s - 1);
 
-    const fetchRequests = async () => {
-        try {
-            const res = await api.get("/v2/join-requests/owner");
-            setRequests(res.data.data);
-        } catch (err) {
-            console.error("Failed to fetch requests", err);
-            toast.error("Failed to load onboarding requests");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAction = async (id: string, action: "approve" | "reject") => {
-        setProcessingId(id);
-        try {
-            await api.patch(`/v2/join-requests/${id}/${action}`);
-            toast.success(`Request ${action}d successfully`);
-            setRequests(prev => prev.filter(r => r._id !== id));
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            toast.error(error.response?.data?.message || `Failed to ${action} request`);
-        } finally {
-            setProcessingId(null);
-        }
-    };
-
-    if (loading) return (
-        <div style={{ padding: "40px" }}>
-            <div className="skeleton" style={{ height: "40px", width: "300px", marginBottom: "32px", borderRadius: "12px" }} />
-            <div style={{ display: "grid", gap: "20px" }}>
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="skeleton" style={{ height: "120px", borderRadius: "24px" }} />
-                ))}
-            </div>
-        </div>
-    );
-
-    // Filter out any requests where the resident or property was deleted
-    const pendingRequests = requests.filter(r => r.status === "pending" && r.residentId && r.propertyId);
+    const steps = [
+        { id: 1, label: "Basic Info", icon: <Home size={18} /> },
+        { id: 2, label: "Capacity", icon: <Bed size={18} /> },
+        { id: 3, label: "Launch", icon: <Rocket size={18} /> },
+    ];
 
     return (
-        <div style={{ padding: "40px", maxWidth: "1000px", margin: "0 auto", animation: "fadeIn 0.6s ease-out" }}>
-            <div style={{ marginBottom: "40px" }}>
-                <h1 style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: "8px" }}>Onboarding Center</h1>
-                <p style={{ color: "var(--text-tertiary)" }}>Manage incoming join requests from prospective residents.</p>
+        <div style={{ maxWidth: "800px", margin: "40px auto", padding: "0 24px" }}>
+            {/* Progress Stepper */}
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "48px", position: "relative" }}>
+                <div style={{ position: "absolute", top: "20px", left: "40px", right: "40px", height: "2px", background: "rgba(255,255,255,0.05)", zIndex: 0 }} />
+                <div style={{ position: "absolute", top: "20px", left: "40px", width: `${(step - 1) * 50}%`, height: "2px", background: "var(--accent-primary)", zIndex: 0, transition: "width 0.5s ease" }} />
+
+                {steps.map(s => (
+                    <div key={s.id} style={{ position: "relative", zIndex: 1, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                        <div style={{
+                            width: "40px", height: "40px", borderRadius: "12px",
+                            background: step >= s.id ? "var(--accent-primary)" : "var(--bg-elevated)",
+                            color: step >= s.id ? "#000" : "var(--text-tertiary)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            border: step >= s.id ? "none" : "1px solid var(--border-subtle)",
+                            transition: "all 0.3s"
+                        }}>
+                            {step > s.id ? <CheckCircle2 size={20} /> : s.icon}
+                        </div>
+                        <span style={{ fontSize: "12px", fontWeight: 700, color: step >= s.id ? "var(--text-primary)" : "var(--text-tertiary)" }}>{s.label}</span>
+                    </div>
+                ))}
             </div>
 
-            {pendingRequests.length === 0 ? (
-                <div style={{
-                    background: "var(--bg-glass)",
-                    border: "1px dashed var(--border-default)",
-                    borderRadius: "32px",
-                    padding: "80px 40px",
-                    textAlign: "center"
-                }}>
-                    <div style={{ fontSize: "48px", marginBottom: "20px" }}>✨</div>
-                    <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "8px" }}>All caught up!</h3>
-                    <p style={{ color: "var(--text-tertiary)" }}>No pending join requests at the moment.</p>
-                </div>
-            ) : (
-                <div style={{ display: "grid", gap: "24px" }}>
-                    {pendingRequests.map(request => (
-                        <div key={request._id} style={{
-                            background: "var(--bg-glass)",
-                            border: "1px solid var(--border-default)",
-                            borderRadius: "28px",
-                            padding: "24px 32px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            transition: "all 0.3s",
-                            gap: "24px"
-                        }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "20px", flexGrow: 1 }}>
-                                <div style={{
-                                    width: "60px",
-                                    height: "60px",
-                                    borderRadius: "20px",
-                                    background: "var(--bg-elevated)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: "24px",
-                                    overflow: "hidden",
-                                    border: "1px solid var(--border-subtle)"
-                                }}>
-                                    {request.residentId?.photo ? (
-                                        <div style={{ backgroundImage: `url(${request.residentId.photo})`, backgroundSize: 'cover', backgroundPosition: 'center', width: "100%", height: "100%" }} />
-                                    ) : (
-                                        request.residentId?.name?.charAt(0) ?? "?"
-                                    )}
+            <main className="glass-card" style={{ padding: "48px", borderRadius: "32px", minHeight: "450px", display: "flex", flexDirection: "column" }}>
+                <AnimatePresence mode="wait">
+                    {step === 1 && (
+                        <motion.div
+                            key="step1"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            style={{ flex: 1 }}
+                        >
+                            <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "8px" }}>Tell us about your property.</h2>
+                            <p style={{ color: "var(--text-secondary)", marginBottom: "40px" }}>Start by giving your property a name and location.</p>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                                <div>
+                                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-tertiary)", marginBottom: "8px" }}>PROPERTY NAME</label>
+                                    <input className="input-field" placeholder="e.g. Skyline Residency" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                                 </div>
-                                <div style={{ flexGrow: 1 }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                                        <h4 style={{ fontSize: "18px", fontWeight: 700 }}>{request.residentId?.name ?? "Unknown Resident"}</h4>
-                                        <span style={{ fontSize: "11px", background: "var(--accent-primary)", color: "white", padding: "2px 8px", borderRadius: "10px", fontWeight: 600 }}>
-                                            Join Request
-                                        </span>
-                                    </div>
-                                    <div style={{ fontSize: "13px", color: "var(--text-tertiary)", marginBottom: "8px" }}>
-                                        {request.residentId?.email} • {request.residentId?.phone || "No phone provided"}
-                                    </div>
-                                    <div style={{
-                                        fontSize: "14px",
-                                        lineHeight: 1.5,
-                                        padding: "12px 16px",
-                                        background: "rgba(0,0,0,0.03)",
-                                        borderRadius: "16px",
-                                        border: "1px solid var(--border-subtle)",
-                                        fontStyle: "italic"
-                                    }}>
-                                        &quot;{request.message || "No message provided"}&quot;
-                                    </div>
+                                <div>
+                                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-tertiary)", marginBottom: "8px" }}>STREET ADDRESS</label>
+                                    <input className="input-field" placeholder="123 Tech Park, Indiranagar" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {step === 2 && (
+                        <motion.div
+                            key="step2"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            style={{ flex: 1 }}
+                        >
+                            <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "8px" }}>Configure Inventory.</h2>
+                            <p style={{ color: "var(--text-secondary)", marginBottom: "40px" }}>Define your capacity. You can refine specific room details later.</p>
+
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                                <div>
+                                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-tertiary)", marginBottom: "8px" }}>TOTAL ROOMS</label>
+                                    <input type="number" className="input-field" value={formData.rooms} onChange={e => setFormData({ ...formData, rooms: parseInt(e.target.value) })} />
+                                </div>
+                                <div>
+                                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-tertiary)", marginBottom: "8px" }}>ESTIMATED TOTAL BEDS</label>
+                                    <input type="number" className="input-field" value={formData.beds} onChange={e => setFormData({ ...formData, beds: parseInt(e.target.value) })} />
                                 </div>
                             </div>
 
-                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "160px" }}>
-                                <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textAlign: "center", marginBottom: "4px" }}>
-                                    Requested for: <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{request.propertyId?.name ?? "Unknown Property"}</span>
+                            <div style={{ marginTop: "40px", padding: "20px", borderRadius: "16px", background: "rgba(0,212,255,0.03)", border: "1px solid rgba(0,212,255,0.1)" }}>
+                                <div style={{ display: "flex", gap: "12px" }}>
+                                    <Bed size={20} color="var(--accent-primary)" />
+                                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>
+                                        <strong>Pro Tip:</strong> Most owners start with a ratio of 3 beds per room. TAGT will auto-generate your digital floor plan based on these numbers.
+                                    </p>
                                 </div>
-                                <button
-                                    disabled={processingId === request._id}
-                                    onClick={() => handleAction(request._id, "approve")}
-                                    style={{
-                                        padding: "12px",
-                                        borderRadius: "14px",
-                                        background: "var(--accent-primary)",
-                                        color: "white",
-                                        border: "none",
-                                        fontWeight: 700,
-                                        cursor: "pointer",
-                                        transition: "all 0.2s"
-                                    }}
-                                    onMouseOver={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
-                                    onMouseOut={(e) => (e.currentTarget.style.transform = "translateY(0)")}
-                                >
-                                    {processingId === request._id ? "Processing..." : "Approve & Admit"}
-                                </button>
-                                <button
-                                    disabled={processingId === request._id}
-                                    onClick={() => handleAction(request._id, "reject")}
-                                    style={{
-                                        padding: "12px",
-                                        borderRadius: "14px",
-                                        background: "rgba(255, 82, 82, 0.1)",
-                                        color: "#ff5252",
-                                        border: "1px solid rgba(255, 82, 82, 0.2)",
-                                        fontWeight: 600,
-                                        cursor: "pointer",
-                                        transition: "all 0.2s"
-                                    }}
-                                >
-                                    Reject
-                                </button>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        </motion.div>
+                    )}
 
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
+                    {step === 3 && (
+                        <motion.div
+                            key="step3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            style={{ textAlign: "center", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}
+                        >
+                            <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(52,211,153,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#34d399", margin: "0 auto 32px" }}>
+                                <CheckCircle2 size={40} />
+                            </div>
+                            <h2 style={{ fontSize: "28px", fontWeight: 800, marginBottom: "12px" }}>Ready for takeoff.</h2>
+                            <p style={{ color: "var(--text-secondary)", marginBottom: "40px", maxWidth: "400px", margin: "0 auto 40px" }}>
+                                Your property <strong>{formData.name}</strong> is about to be deployed to the cloud. You&apos;ll be able to invite residents immediately.
+                            </p>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "300px", margin: "0 auto" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "var(--text-tertiary)" }}>
+                                    <span>Plan Status</span>
+                                    <span style={{ color: "var(--green)", fontWeight: 700 }}>VERIFIED</span>
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "var(--text-tertiary)" }}>
+                                    <span>Inventory Mapping</span>
+                                    <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>{formData.rooms} Rooms</span>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "auto", paddingTop: "40px" }}>
+                    {step > 1 ? (
+                        <button onClick={prevStep} className="btn-ghost" style={{ gap: "8px" }}>
+                            <ArrowLeft size={16} /> Back
+                        </button>
+                    ) : <div />}
+
+                    <button
+                        onClick={step === 3 ? () => window.location.href = "/owner" : nextStep}
+                        className="btn-primary"
+                        style={{ gap: "8px", minWidth: "140px" }}
+                    >
+                        {step === 3 ? "Complete Launch" : "Continue"} <ArrowRight size={16} />
+                    </button>
+                </div>
+            </main>
         </div>
     );
 }

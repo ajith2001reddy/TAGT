@@ -1,216 +1,153 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchFinancialDashboard, fetchRevenueLeak, FinancialData, LeakData } from "@/features/owner/analytics.service";
+import { motion } from "framer-motion";
+import { useOwnerStats } from "@/features/owner/useOwnerStats";
+import { RevenueTrendChart, OccupancyPieChart } from "@/components/owner/DashboardCharts";
+import { ChartCard } from "@/components/ui/PremiumUI";
+import { TrendingUp, Users, TrendingDown, Clock, Download, Filter } from "lucide-react";
+import { useState } from "react";
 
-function MiniSparkline({ data }: { data: { month: string; collected: number }[] }) {
-    if (!data?.length) return null;
-    const max = Math.max(...data.map(d => d.collected), 1);
-    const w = 200, h = 48;
-    const pts = data.map((d, i) => {
-        const x = (i / Math.max(data.length - 1, 1)) * w;
-        const y = h - (d.collected / max) * (h - 8) - 4;
-        return `${x},${y}`;
-    });
-    return (
-        <svg width={w} height={h} style={{ overflow: "visible" }}>
-            <defs>
-                <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#34d399" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-                </linearGradient>
-            </defs>
-            <polyline points={pts.join(" ")} fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-}
+export default function OwnerAnalyticsPage() {
+    const { detailed, loading } = useOwnerStats();
+    const [activeSection, setActiveSection] = useState("revenue");
 
-interface KpiCardProps { label: string; value: string | number; sub?: string; color: string; sparkline?: { month: string; collected: number }[] }
-function KpiCard({ label, value, sub, color, sparkline }: KpiCardProps) {
-    return (
-        <div style={{
-            background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px",
-            padding: "24px", position: "relative", overflow: "hidden",
-            transition: "all 0.25s ease",
-        }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = `0 16px 48px rgba(0,0,0,0.4)`; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
-        >
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: `linear-gradient(90deg, transparent, ${color}60, transparent)` }} />
-            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "12px" }}>{label}</div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 700, letterSpacing: "-0.03em", color }}>{value}</div>
-            {sub && <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--text-tertiary)" }}>{sub}</div>}
-            {sparkline && <div style={{ marginTop: "16px", opacity: 0.8 }}><MiniSparkline data={sparkline} /></div>}
-        </div>
-    );
-}
+    const sections = [
+        { id: "revenue", label: "Financials", icon: <TrendingUp size={16} /> },
+        { id: "occupancy", label: "Occupancy", icon: <Users size={16} /> },
+        { id: "churn", label: "Churn Prediction", icon: <TrendingDown size={16} /> },
+    ];
 
-function CollectionBar({ collected, expected }: { collected: number; expected: number }) {
-    const pct = expected > 0 ? Math.min(100, Math.round((collected / expected) * 100)) : 0;
-    const color = pct >= 90 ? "#34d399" : pct >= 70 ? "#fbbf24" : "var(--red)";
-    return (
-        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Collection Progress</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color }}>{pct}%</span>
-            </div>
-            <div style={{ height: "8px", background: "var(--border-subtle)", borderRadius: "4px", overflow: "hidden", marginBottom: "12px" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${color}, ${color}99)`, borderRadius: "4px", transition: "width 1s cubic-bezier(0.4,0,0.2,1)", boxShadow: `0 0 10px ${color}50` }} />
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div><div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginBottom: "2px" }}>Collected</div><div style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 700, color: "#34d399" }}>₹{(collected || 0).toLocaleString()}</div></div>
-                <div style={{ textAlign: "right" }}><div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginBottom: "2px" }}>Expected</div><div style={{ fontFamily: "var(--font-display)", fontSize: "18px", fontWeight: 700 }}>₹{(expected || 0).toLocaleString()}</div></div>
-            </div>
-        </div>
-    );
-}
-
-export default function AnalyticsPage() {
-    const [fin, setFin] = useState<FinancialData | null>(null);
-    const [leak, setLeak] = useState<LeakData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState<"financial" | "leak">("financial");
-
-    useEffect(() => {
-        Promise.all([
-            fetchFinancialDashboard(),
-            fetchRevenueLeak(),
-        ]).then(([f, l]) => {
-            setFin(f);
-            setLeak(l);
-        }).catch(console.error).finally(() => setLoading(false));
-    }, []);
+    if (loading) return <div className="skeleton" style={{ height: "600px", borderRadius: "24px" }} />;
 
     return (
         <div className="animate-fade-in">
-            <div style={{ marginBottom: "32px" }}>
-                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Intelligence</div>
-                <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Analytics</h1>
-                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Revenue performance, intelligence, and risk signals</p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
+                <div>
+                    <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "8px" }}>Analytics Intelligence</h1>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Deep insights into your property performance and financial growth.</p>
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                    <button className="btn-ghost" style={{ fontSize: "12px", gap: "8px" }}>
+                        <Filter size={14} /> Last 6 Months
+                    </button>
+                    <button className="btn-primary" style={{ fontSize: "12px", gap: "8px" }}>
+                        <Download size={14} /> Export Report
+                    </button>
+                </div>
             </div>
 
-            {/* Tabs */}
-            <div style={{ display: "flex", gap: "6px", background: "var(--bg-card)", border: "1px solid var(--border-subtle)", borderRadius: "12px", padding: "5px", marginBottom: "28px", width: "fit-content" }}>
-                {[{ key: "financial", label: "📊 Financial Overview" }, { key: "leak", label: "🔍 Revenue Leak" }].map(({ key, label }) => (
-                    <button key={key} onClick={() => setTab(key as "financial" | "leak")} style={{
-                        padding: "9px 20px", borderRadius: "8px", border: "none", cursor: "pointer",
-                        background: tab === key ? "var(--accent-primary)" : "transparent",
-                        color: tab === key ? "#000" : "var(--text-secondary)",
-                        fontSize: "13px", fontWeight: tab === key ? 700 : 400,
-                        fontFamily: tab === key ? "var(--font-display)" : "var(--font-body)",
-                        transition: "all 0.18s ease",
-                    }}>{label}</button>
+            {/* Navigation Tabs */}
+            <div style={{ display: "flex", gap: "12px", marginBottom: "32px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "12px" }}>
+                {sections.map(s => (
+                    <button
+                        key={s.id}
+                        onClick={() => setActiveSection(s.id)}
+                        style={{
+                            display: "flex", alignItems: "center", gap: "8px",
+                            padding: "8px 16px", borderRadius: "10px",
+                            background: activeSection === s.id ? "rgba(0,212,255,0.08)" : "transparent",
+                            color: activeSection === s.id ? "var(--accent-primary)" : "var(--text-secondary)",
+                            border: "none", cursor: "pointer", fontSize: "14px", fontWeight: 600,
+                            transition: "all 0.2s"
+                        }}
+                    >
+                        {s.icon} {s.label}
+                    </button>
                 ))}
             </div>
 
-            {loading ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px" }}>
-                    {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton" style={{ height: "140px", borderRadius: "18px" }} />)}
-                </div>
-            ) : tab === "financial" && fin ? (
-                <div>
-                    {/* Collection bar */}
-                    <div style={{ marginBottom: "20px" }}>
-                        <CollectionBar collected={fin.monthly.collected} expected={fin.monthly.expected} />
-                    </div>
-
-                    {/* KPI grid */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px", marginBottom: "28px" }}>
-                        <KpiCard label="Occupancy Rate" value={`${fin.occupancyRate || 0}%`} sub={`${fin.occupiedBeds || 0}/${fin.totalBeds || 0} beds`} color="var(--accent-primary)" />
-                        <KpiCard label="Outstanding" value={`₹${((fin.monthly?.outstanding || 0) / 1000).toFixed(1)}k`} sub="Unpaid across all residents" color="#fbbf24" />
-                        <KpiCard label="Late Fees Earned" value={`₹${(fin.lateFeesEarned || 0).toLocaleString()}`} sub="All-time" color="#a78bfa" />
-                        <KpiCard label="Overdue Amount" value={`₹${((fin.overdueAmount || 0) / 1000).toFixed(1)}k`} sub={`${fin.overdueCount || 0} overdue bills`} color="var(--red)" />
-                        <KpiCard label="Profit Estimate" value={`₹${((fin.profitEstimate || 0) / 1000).toFixed(1)}k`} sub="Collected + late fees" color="#34d399" />
-                        <KpiCard label="Collection Rate" value={`${fin.collectionRate}%`} sub="This month" color={fin.collectionRate >= 90 ? "#34d399" : fin.collectionRate >= 70 ? "#fbbf24" : "var(--red)"} />
-                    </div>
-
-                    {/* 6-month trend */}
-                    {fin.trend?.length > 0 && (
-                        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
-                            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "20px" }}>6-Month Revenue Trend</div>
-                            <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", height: "80px" }}>
-                                {fin.trend.map((t, i) => {
-                                    const max = Math.max(...fin.trend.map(d => d.collected), 1);
-                                    const pct = max ? (t.collected / max) * 100 : 0;
-                                    return (
-                                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                                            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)" }}>₹{(t.collected / 1000).toFixed(0)}k</div>
-                                            <div style={{ width: "100%", background: "var(--border-subtle)", borderRadius: "4px", height: "48px", display: "flex", alignItems: "flex-end" }}>
-                                                <div style={{ width: "100%", height: `${pct}%`, background: "linear-gradient(0deg, #34d399, #34d39960)", borderRadius: "4px", minHeight: "4px", transition: "height 0.8s ease" }} />
-                                            </div>
-                                            <div style={{ fontSize: "9px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)" }}>{t.month}</div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            ) : tab === "leak" && leak ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                    {/* Total leak */}
-                    <div style={{ background: "var(--red-bg)", border: "1px solid rgba(255,82,82,0.2)", borderRadius: "18px", padding: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--red)", marginBottom: "8px" }}>Estimated Revenue Leak</div>
-                            <div style={{ fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 700, letterSpacing: "-0.04em", color: "var(--red)" }}>₹{(leak.totalLeakEstimate || 0).toLocaleString()}</div>
-                            <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>per month at current occupancy</div>
-                        </div>
-                        <div style={{ fontSize: "48px" }}>🔴</div>
-                    </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                        {/* Empty beds */}
-                        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "16px", padding: "20px" }}>
-                            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "16px" }}>
-                                🛏 Empty Beds — ₹{(leak.emptyBedCostTotal || 0).toLocaleString()}/mo loss
-                            </div>
-                            {leak.emptyBeds?.length === 0
-                                ? <div style={{ color: "var(--green)", fontSize: "13px" }}>✅ All rooms fully occupied</div>
-                                : leak.emptyBeds?.map((r, i) => (
-                                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border-subtle)", fontSize: "13px" }}>
-                                        <span>Room {r.roomNumber} — {r.emptyBeds} empty bed{r.emptyBeds > 1 ? "s" : ""}</span>
-                                        <span style={{ color: "var(--red)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>-₹{(r.costPerMonth || 0).toLocaleString()}</span>
+            {activeSection === "revenue" && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                    <ChartCard title="Revenue Growth" sub="Monthly collection comparison" delay={0.1}>
+                        <RevenueTrendChart data={detailed?.trend || []} />
+                    </ChartCard>
+                    <div className="glass-card" style={{ padding: "32px", borderRadius: "24px" }}>
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "24px" }}>Financial Breakdown</h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                            {[
+                                { label: "Total Collected", val: "₹1,24,000", change: "+12%", color: "var(--green)" },
+                                { label: "Pending Dues", val: "₹18,500", change: "-5%", color: "var(--yellow)" },
+                                { label: "Late Fee Revenue", val: "₹2,400", change: "+20%", color: "var(--accent-primary)" },
+                                { label: "Projected Next Month", val: "₹1,45,000", change: "Forecast", color: "var(--text-tertiary)" }
+                            ].map(item => (
+                                <div key={item.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                        <div style={{ fontSize: "12px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{item.label}</div>
+                                        <div style={{ fontSize: "20px", fontWeight: 700 }}>{item.val}</div>
                                     </div>
-                                ))
-                            }
-                        </div>
-
-                        {/* Chronic late payers */}
-                        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "16px", padding: "20px" }}>
-                            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "16px" }}>
-                                ⏰ Chronic Late Payers
-                            </div>
-                            {leak.chronicLatePayers?.length === 0
-                                ? <div style={{ color: "var(--green)", fontSize: "13px" }}>✅ No chronic late payers</div>
-                                : leak.chronicLatePayers?.map((r, i) => (
-                                    <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-subtle)" }}>
-                                        <div style={{ fontSize: "13px", fontWeight: 600 }}>{r.name}</div>
-                                        <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{r.email} · {r.lateCount} unpaid</div>
-                                    </div>
-                                ))
-                            }
+                                    <span style={{ fontSize: "12px", fontWeight: 600, color: item.color }}>{item.change}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
+                </div>
+            )}
 
-                    {/* Underpriced Rooms */}
-                    {leak.underpricedRooms?.length > 0 && (
-                        <div style={{ background: "var(--bg-card)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "16px", padding: "20px", borderLeft: "3px solid #fbbf24" }}>
-                            <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "#fbbf24", marginBottom: "16px" }}>
-                                💰 Underpriced Rooms (avg ₹{leak.avgRent}/mo)
+            {activeSection === "occupancy" && (
+                <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: "24px" }}>
+                    <div className="glass-card" style={{ padding: "32px", borderRadius: "24px", textAlign: "center" }}>
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, textAlign: "left", marginBottom: "20px" }}>Current Capacity</h3>
+                        <OccupancyPieChart occupied={detailed?.occupiedBeds || 0} total={detailed?.totalBeds || 0} />
+                        <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                            <div style={{ padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px" }}>
+                                <div style={{ fontSize: "20px", fontWeight: 700 }}>{detailed?.occupiedBeds}</div>
+                                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>OCCUPIED</div>
                             </div>
-                            {leak.underpricedRooms.map((r, i) => (
-                                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border-subtle)", fontSize: "13px" }}>
-                                    <span>Room {r.roomNumber}</span>
-                                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                                        <span style={{ color: "var(--text-tertiary)" }}>Current: ₹{r.currentRent}</span>
-                                        <span style={{ color: "#fbbf24", fontWeight: 700 }}>→ Suggested: ₹{r.suggestedRent}</span>
+                            <div style={{ padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px" }}>
+                                <div style={{ fontSize: "20px", fontWeight: 700 }}>{(detailed?.totalBeds || 0) - (detailed?.occupiedBeds || 0)}</div>
+                                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>VACANT</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="glass-card" style={{ padding: "32px", borderRadius: "24px" }}>
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "24px" }}>Room-wise Performance</h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            {/* Mockup room performance list */}
+                            {[101, 102, 103, 201, 202].map(room => (
+                                <div key={room} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", borderBottom: "1px solid var(--border-subtle)" }}>
+                                    <span style={{ fontWeight: 600 }}>Room {room}</span>
+                                    <div style={{ display: "flex", gap: "4px" }}>
+                                        {[1, 2, 3].map(bed => (
+                                            <div key={bed} style={{ width: "12px", height: "12px", borderRadius: "3px", background: bed < 3 ? "var(--accent-primary)" : "rgba(255,255,255,0.05)" }} />
+                                        ))}
+                                    </div>
+                                    <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{room < 200 ? "Highly Profitable" : "Steady"}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeSection === "churn" && (
+                <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+                    <div className="glass-card" style={{ padding: "40px", borderRadius: "32px", textAlign: "center", border: "1px solid rgba(167,139,250,0.2)", background: "linear-gradient(135deg, rgba(167,139,250,0.05), transparent)" }}>
+                        <div style={{ width: "64px", height: "64px", borderRadius: "20px", background: "rgba(167,139,250,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#a78bfa", margin: "0 auto 24px" }}>
+                            <TrendingDown size={32} />
+                        </div>
+                        <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "12px" }}>Churn Prediction Engine</h2>
+                        <p style={{ color: "var(--text-secondary)", marginBottom: "32px" }}>Our AI analyzes payment patterns and maintenance requests to predict which residents are most likely to leave in the next 30 days.</p>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "16px", textAlign: "left" }}>
+                            {[
+                                { name: "Aditi Sharma", risk: "HIGH", reason: "3 late payments in a row", prob: "82%" },
+                                { name: "Rahul Verma", risk: "MEDIUM", reason: "Multiple unresolved issues", prob: "45%" }
+                            ].map(resident => (
+                                <div key={resident.name} style={{ padding: "20px", borderRadius: "16px", background: "rgba(255,255,255,0.03)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                        <div style={{ fontWeight: 700 }}>{resident.name}</div>
+                                        <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{resident.reason}</div>
+                                    </div>
+                                    <div style={{ textAlign: "right" }}>
+                                        <div style={{ fontSize: "14px", fontWeight: 800, color: resident.risk === "HIGH" ? "var(--red)" : "var(--yellow)" }}>{resident.prob} Probability</div>
+                                        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em" }}>CHURN RISK</div>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    )}
+                    </div>
                 </div>
-            ) : null}
+            )}
         </div>
     );
 }

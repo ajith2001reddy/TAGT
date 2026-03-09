@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Building2, BedDouble, Users, CreditCard,
     MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
-    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building, ShieldAlert
+    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building, ShieldAlert, UserPlus
 } from "lucide-react";
 import { PropertySelector } from "./PropertySelector";
 
@@ -20,6 +20,7 @@ const ownerNav: NavItem[] = [
     { href: "/owner/property", label: "Property", icon: <Building2 size={16} /> },
     { href: "/owner/rooms", label: "Rooms", icon: <BedDouble size={16} /> },
     { href: "/owner/residents", label: "Residents", icon: <Users size={16} /> },
+    { href: "/owner/invite", label: "Invite System", icon: <UserPlus size={16} /> },
     { href: "/owner/payments", label: "Payments", icon: <CreditCard size={16} /> },
     { href: "/owner/requests", label: "Requests", icon: <MessageSquare size={16} /> },
     { href: "/verify", label: "Identity Verification", icon: <UserCheck size={16} /> },
@@ -49,6 +50,8 @@ const adminNav: NavItem[] = [
 
 const residentNav: NavItem[] = [
     { href: "/resident", label: "Dashboard", icon: <LayoutDashboard size={16} /> },
+    { href: "/resident/announcements", label: "Announcements", icon: <Megaphone size={16} /> },
+    { href: "/resident/lease", label: "Lease & Docs", icon: <FileText size={16} /> },
     { href: "/resident/payments", label: "My Payments", icon: <CreditCard size={16} /> },
     { href: "/resident/requests", label: "My Requests", icon: <MessageSquare size={16} /> },
     { href: "/resident/support", label: "Support", icon: <LifeBuoy size={16} /> },
