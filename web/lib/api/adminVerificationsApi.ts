@@ -18,14 +18,14 @@ export interface PendingVerification {
 }
 
 export const fetchPendingVerifications = async (): Promise<PendingVerification[]> => {
-    // Note: To support this frontend, I'll need to create a simple `GET /admin/verifications/pending` in the backend
-    const res = await api.get("/admin/verifications/pending");
+    // Note: To support this frontend, I'll need to create a simple `GET /v2/admin/verifications/pending` in the backend
+    const res = await api.get("/v2/admin/verifications/pending");
     return res.data.data || [];
 };
 
 export const updateVerificationStatus = async (userId: string, status: "approved" | "rejected") => {
-    // Backend expects `/admin/approve/:id` and `/admin/reject/:id`
+    // Backend expects `/v2/admin/verifications/:id/approve` and `/v2/admin/verifications/:id/reject`
     const route = status === "approved" ? "approve" : "reject";
-    const res = await api.post(`/admin/${route}/${userId}`);
+    const res = await api.post(`/v2/admin/verifications/${userId}/${route}`);
     return res.data;
 };
