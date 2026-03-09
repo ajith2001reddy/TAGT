@@ -85,13 +85,13 @@ export const listAllSubscriptions = async (req, res, next) => {
 
         // 🛡️ Filter out stale subscriptions for non-existent/deleted owners
         const initialCount = subs.length;
-        subs = subs.filter(s => s.ownerId !== null);
+        subs = subs.filter(s => s.ownerId && s.ownerId._id);
         if (subs.length < initialCount) {
             console.warn(`[Subscription] Filtered out ${initialCount - subs.length} stale subscription records.`);
         }
 
         // Owners without a subscription record = free
-        const ownersWithSub = new Set(subs.map(s => String(s.ownerId._id)));
+        const ownersWithSub = new Set(subs.map(s => String(s.ownerId?._id)));
         const allOwners = await User.find({ role: "owner" }, "name email createdAt").lean();
         const unsubOwners = allOwners.filter(o => !ownersWithSub.has(String(o._id))).map(o => ({
             ownerId: o, plan: "free", status: "active", currentPeriodEnd: null,
