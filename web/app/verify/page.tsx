@@ -2,13 +2,15 @@
 
 import React, { useState } from "react";
 import FileUploader from "../../components/ui/FileUploader";
+import { useRouter } from "next/navigation";
 import { submitVerificationDocuments } from "../../lib/api/uploadApi";
 import { useAuth } from "../../context/AuthContext";
-import { ShieldAlert, ShieldCheck, UploadCloud, Loader2 } from "lucide-react";
+import { ShieldAlert, ShieldCheck, UploadCloud, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function VerificationPage() {
     const { dbUser } = useAuth();
+    const router = useRouter();
 
     const [selfie, setSelfie] = useState<File | null>(null);
     const [idFront, setIdFront] = useState<File | null>(null);
@@ -50,6 +52,13 @@ export default function VerificationPage() {
                     <p className="text-gray-600">
                         Your documents have been submitted and are currently being reviewed by our administrators. We will notify you once your account is approved.
                     </p>
+                    <button
+                        onClick={() => router.push(dbUser?.role === "owner" ? "/owner" : "/resident")}
+                        className="mt-4 px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Go to Dashboard
+                    </button>
                 </div>
             </div>
         );
@@ -102,8 +111,8 @@ export default function VerificationPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Submission Successful</h1>
                     <p className="text-gray-600">{successMessage}</p>
                     <button
-                        onClick={() => window.location.reload()}
-                        className="mt-6 px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                        onClick={() => router.push(dbUser?.role === "owner" ? "/owner" : "/resident")}
+                        className="mt-6 px-6 py-2 bg-[#FC6435] text-white font-medium rounded-lg hover:bg-orange-600 transition-colors shadow-md shadow-orange-500/10"
                     >
                         Return to Dashboard
                     </button>

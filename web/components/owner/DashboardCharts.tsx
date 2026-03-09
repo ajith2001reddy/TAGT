@@ -1,8 +1,11 @@
 "use client";
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useMounted } from '@/hooks/useMounted';
 
 export function RevenueTrendChart({ data }: { data: { month: string; collected: number }[] }) {
+    const mounted = useMounted();
+    if (!mounted) return <div style={{ height: 300, width: '100%', marginTop: '20px' }} />;
     return (
         <div style={{ height: 300, width: '100%', marginTop: '20px' }}>
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
@@ -54,10 +57,13 @@ export function RevenueTrendChart({ data }: { data: { month: string; collected: 
 }
 
 export function OccupancyPieChart({ occupied, total }: { occupied: number, total: number }) {
+    const mounted = useMounted();
     const data = [
         { name: 'Occupied', value: occupied, color: 'var(--accent-primary)' },
         { name: 'Available', value: Math.max(0, total - occupied), color: 'rgba(255,255,255,0.05)' }
     ];
+
+    if (!mounted) return <div style={{ height: 220, width: '100%' }} />;
 
     return (
         <div style={{ height: 220, width: '100%', position: 'relative' }}>

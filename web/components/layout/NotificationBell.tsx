@@ -77,8 +77,9 @@ export function NotificationBell() {
         });
         socketRef.current = socket;
 
-        socket.on("connect", () => {
-            socket.emit("user:join", user.uid);
+        socket.on("connect", async () => {
+            const token = await user.getIdToken();
+            socket.emit("user:join", token);
         });
 
         socket.on("notification:new", (notif: Notification) => {

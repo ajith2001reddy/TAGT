@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useMounted } from "@/hooks/useMounted";
 
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
     if (active && payload && payload.length) {
@@ -22,6 +23,7 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 };
 
 export function BarChartCard({ title, data, dataKey }: { title: string; data: { name: string;[key: string]: string | number }[]; dataKey: string }) {
+    const mounted = useMounted();
     return (
         <div className="glass-card" style={{ padding: "24px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
@@ -31,30 +33,32 @@ export function BarChartCard({ title, data, dataKey }: { title: string; data: { 
                 <span className="label-text">LIVE</span>
             </div>
             <div style={{ height: "240px" }}>
-                <ResponsiveContainer width="100%" height="100%" minHeight={0}>
-                    <BarChart data={data} barSize={36}>
-                        <XAxis
-                            dataKey="name"
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "var(--font-mono)" }}
-                        />
-                        <YAxis
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "var(--font-mono)" }}
-                        />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)", radius: 6 }} />
-                        <Bar dataKey={dataKey} radius={[6, 6, 0, 0]}>
-                            {data.map((_, index) => (
-                                <Cell
-                                    key={index}
-                                    fill={index === 0 ? "var(--accent-primary)" : "rgba(0,212,255,0.25)"}
-                                />
-                            ))}
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
+                {mounted ? (
+                    <ResponsiveContainer width="100%" height="100%" minHeight={0}>
+                        <BarChart data={data} barSize={36}>
+                            <XAxis
+                                dataKey="name"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "var(--font-mono)" }}
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "var(--font-mono)" }}
+                            />
+                            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)", radius: 6 }} />
+                            <Bar dataKey={dataKey} radius={[6, 6, 0, 0]}>
+                                {data.map((_, index) => (
+                                    <Cell
+                                        key={index}
+                                        fill={index === 0 ? "var(--accent-primary)" : "rgba(0,212,255,0.25)"}
+                                    />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                ) : null}
             </div>
         </div>
     );
