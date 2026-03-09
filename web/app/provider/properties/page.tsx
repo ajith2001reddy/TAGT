@@ -96,7 +96,7 @@ export default function PropertiesListPage() {
 
     const fetchOwners = async () => {
         try {
-            const res = await api.get("/admin/owners");
+            const res = await api.get("/v2/admin/owners");
             setOwners(res.data.data);
         } catch (err) {
             console.error("Failed to fetch owners", err);
@@ -108,7 +108,7 @@ export default function PropertiesListPage() {
         setSubmitting(true);
         setError("");
         try {
-            await api.post("/admin/properties", createForm);
+            await api.post("/v2/properties", createForm);
             setCreateForm({ name: "", type: "pg", address: "", city: "", gstin: "", pan: "", phone: "" });
             setShowForm(false);
             fetchProperties(1);
@@ -124,7 +124,7 @@ export default function PropertiesListPage() {
         if (!selectedOwnerId || !assigningProperty) return;
         setAssigningLoading(true);
         try {
-            await api.post(`/admin/properties/${assigningProperty._id}/assign-owner`, { ownerId: selectedOwnerId });
+            await api.post(`/v2/admin/properties/${assigningProperty._id}/assign-owner`, { ownerId: selectedOwnerId });
             setAssigningProperty(null);
             setSelectedOwnerId("");
             fetchProperties(pagination.page);
@@ -161,7 +161,7 @@ export default function PropertiesListPage() {
             await api.put(`/v2/provider/properties/${editingProperty._id}`, editForm);
             // If the owner changed, also call assign-owner
             if (newOwnerId && newOwnerId !== editingProperty.owner?._id) {
-                await api.post(`/admin/properties/${editingProperty._id}/assign-owner`, { ownerId: newOwnerId });
+                await api.post(`/v2/admin/properties/${editingProperty._id}/assign-owner`, { ownerId: newOwnerId });
             }
             setEditingProperty(null);
             fetchProperties(pagination.page);
@@ -176,7 +176,7 @@ export default function PropertiesListPage() {
     const handleDeleteProperty = async (p: Property) => {
         if (!confirm(`Permanently delete "${p.name}"?\n\nThis will delete:\n• The property\n• All its rooms\n• All payment records\n\nNote: Delete will be blocked if residents are still assigned.\n\nThis cannot be undone.`)) return;
         try {
-            await api.delete(`/admin/properties/${p._id}`);
+            await api.delete(`/v2/admin/properties/${p._id}`);
             fetchProperties(pagination.page);
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };

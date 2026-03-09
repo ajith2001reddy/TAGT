@@ -129,7 +129,7 @@ export default function ProviderResidentsPage() {
     async function handleDeleteResident(r: Resident) {
         if (!confirm(`Permanently delete "${r.name || r.email}"?\n\nThis will:\n• Remove them from MongoDB\n• Delete their Firebase account\n• Delete all their payment records\n\nThis cannot be undone.`)) return;
         try {
-            await api.delete(`/admin/residents/${r._id}`);
+            await api.delete(`/v2/admin/residents/${r._id}`);
             fetchAll();
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };

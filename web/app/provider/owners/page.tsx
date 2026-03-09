@@ -64,7 +64,7 @@ export default function OwnersListPage() {
         try {
             setLoading(true);
             const [oRes, pRes] = await Promise.all([
-                api.get("/admin/owners"),
+                api.get("/v2/admin/owners"),
                 api.get("/v2/provider/properties?limit=100"),
             ]);
             setOwners(oRes.data.data || []);
@@ -96,7 +96,7 @@ export default function OwnersListPage() {
         e.preventDefault();
         setCreating(true); setCreateError("");
         try {
-            await api.post("/admin/owners", form);
+            await api.post("/v2/admin/owners", form);
             setForm({ name: "", email: "", password: "" });
             setShowForm(false);
             fetchAll();
@@ -110,7 +110,7 @@ export default function OwnersListPage() {
         if (!selectedPropertyId || !assigningOwner) return;
         setAssigningLoading(true);
         try {
-            await api.post(`/admin/properties/${selectedPropertyId}/assign-owner`, { ownerId: assigningOwner._id });
+            await api.post(`/v2/admin/properties/${selectedPropertyId}/assign-owner`, { ownerId: assigningOwner._id });
             setAssigningOwner(null); setSelectedPropertyId("");
             fetchAll();
         } catch (err: unknown) {
@@ -122,7 +122,7 @@ export default function OwnersListPage() {
     async function handleRemoveProperty(ownerId: string, propertyId: string) {
         if (!confirm("Remove this property from this owner?")) return;
         try {
-            await api.delete(`/admin/owners/${ownerId}/properties/${propertyId}`);
+            await api.delete(`/v2/admin/owners/${ownerId}/properties/${propertyId}`);
             fetchAll();
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };
@@ -133,7 +133,7 @@ export default function OwnersListPage() {
     async function handleDeleteOwner(owner: Owner) {
         if (!confirm(`Permanently delete "${owner.name}"?\n\nThis will:\n• Remove them from MongoDB\n• Delete their Firebase account\n• Unlink all assigned properties\n\nThis cannot be undone.`)) return;
         try {
-            await api.delete(`/admin/owners/${owner._id}`);
+            await api.delete(`/v2/admin/owners/${owner._id}`);
             fetchAll();
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };
