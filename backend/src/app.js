@@ -98,15 +98,23 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use(cors({
     origin: function (origin, callback) {
+        // allow requests with no origin 
+        // (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
 
-        if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
-            return callback(null, true);
-        }
+        const isAllowed = allowedOrigins.includes(origin) ||
+            origin.endsWith(".vercel.app") ||
+            origin === 'https://www.tagt.website' ||
+            origin === 'https://tagt.website';
 
-        return callback(new Error("Not allowed by CORS"));
+        if (isAllowed) {
+            return callback(null, true);
+        } else {
+            logger.warn(`CORS blocked for origin: ${origin}`);
+            return callback(new Error("Not allowed by CORS"));
+        }
     },
-    credentials: true, // IMPORTANT: Allows cookies/auth headers like Firebase token to flow
+    credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-requested-with"],
 }));
