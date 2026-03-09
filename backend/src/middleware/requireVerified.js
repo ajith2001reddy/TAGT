@@ -3,17 +3,27 @@
  * Use this to protect routes that require verified users.
  */
 export const requireVerified = (req, res, next) => {
-    if (!req.user || req.user.role === "super_admin") {
-        // Super admins skip verification
-        return next();
-    }
 
-    if (req.user.verification?.status !== "approved") {
-        return res.status(403).json({
+    if (!req.user) {
+        return res.status(401).json({
             success: false,
-            message: "Account verification required. Please complete your identity verification.",
+            message: "Authentication required"
         });
     }
 
-    next();
+    // super admin bypass
+    if (req.user.role === "super_admin") {
+        return next();
+    }
+
+    // allow verified users
+    if (req.user.verification?.status === "approved") {
+        return next();
+    }
+
+    return res.status(403).json({
+        success: false,
+        message: "Account verification required. Please complete identity verification."
+    });
 };
+
