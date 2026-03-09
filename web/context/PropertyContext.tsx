@@ -42,11 +42,23 @@ export function PropertyProvider({
             setLoading(true);
 
             const res = await api.get("/owner/properties");
+            const fetched = res.data.data || [];
+            setProperties(fetched);
 
-            setProperties(res.data.data || []);
+            // 🛠️ Persistence: Load last selected from localStorage
+            const savedId = localStorage.getItem("selected_property_id");
+            if (savedId) {
+                const found = fetched.find((p: any) => p._id === savedId);
+                if (found) {
+                    setProperty(found);
+                    setLoading(false);
+                    return;
+                }
+            }
 
-            if (res.data.data?.length > 0) {
-                setProperty(res.data.data[0]);
+            // Default to first property if nothing saved
+            if (fetched.length > 0) {
+                setProperty(fetched[0]);
             }
         } catch (err) {
             console.error("Failed to fetch properties");
@@ -62,10 +74,14 @@ export function PropertyProvider({
     function setCurrentProperty(id: string) {
         if (!id) {
             setProperty(null); // "All Properties" selected
+            localStorage.removeItem("selected_property_id");
             return;
         }
         const selected = properties.find((p) => p._id === id);
-        if (selected) setProperty(selected);
+        if (selected) {
+            setProperty(selected);
+            localStorage.setItem("selected_property_id", id);
+        }
     }
 
     useEffect(() => {

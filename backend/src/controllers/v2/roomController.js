@@ -68,18 +68,23 @@ export const createRoom = async (req, res, next) => {
             return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
-        // 🔐 CTO FIX: Owners must have a selected propertyId to create rooms
-        if (req.user.role === 'owner' && !req.user.propertyId) {
-            if (session) await session.abortTransaction();
-            return res.status(400).json({
-                success: false,
-                message: "Owner must have a selected property to create a room."
-            });
+        // 🔐 Determine propertyId based on role
+        let propertyId = value.propertyId;
+
+        if (req.user.role === "owner") {
+            const allowedIds = (req.user.propertyIds || []).map(id => id.toString());
+            if (!allowedIds.includes(String(propertyId))) {
+                if (session) await session.abortTransaction();
+                return res.status(403).json({ success: false, message: "You do not have access to this property." });
+            }
+        } else if (req.user.role === "resident") {
+            propertyId = req.user.propertyId;
         }
 
-        // Residents shouldn't create rooms, but if they could, we'd use their propertyId
-        const propertyId = req.user.role === 'owner' ? req.user.propertyId : (value.propertyId || req.user.propertyId);
-
+        if (!propertyId) {
+            if (session) await session.abortTransaction();
+            return res.status(400).json({ success: false, message: "A valid Property ID is required." });
+        }
         const { roomNumber, rent, totalBeds, note, maintenanceMode, maintenanceNote } = value;
 
         // Check if room number exists for this property

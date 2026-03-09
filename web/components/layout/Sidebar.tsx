@@ -9,6 +9,7 @@ import {
     MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
     LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building, ShieldAlert
 } from "lucide-react";
+import { PropertySelector } from "./PropertySelector";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; badge?: string };
 
@@ -281,6 +282,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     }}>{roleLabel}</div>
                 </div>
             </motion.div>
+
+            {/* Property Selector */}
+            {(role === "owner" || role === "super_admin") && <PropertySelector />}
 
             {/* Navigation */}
             <nav style={{ flex: 1, padding: "8px 10px", overflowY: "auto" }}>

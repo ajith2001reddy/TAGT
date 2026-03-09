@@ -5,7 +5,7 @@ import { encrypt, decrypt } from "../utils/encryption.js";
 const propertySchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true, index: true },
-        type: { type: String, enum: ["pg", "hotel"], required: true, index: true },
+        type: { type: String, enum: ["pg", "hostel", "apartment", "other"], required: true, index: true },
         ownerId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

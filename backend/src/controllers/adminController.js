@@ -268,7 +268,7 @@ export const deleteResident = async (req, res, next) => {
 };
 
 /* ===========================
-   DELETE PROPERTY (cascade: rooms, beds, payments, owner reference)
+   DELETE PROPERTY (Full Cascade Cleanup)
 =========================== */
 export const deleteProperty = async (req, res, next) => {
     const session = await mongoose.startSession();
@@ -276,41 +276,50 @@ export const deleteProperty = async (req, res, next) => {
     try {
         const { id } = req.params;
 
+        if (req.user.role !== "super_admin") {
+            await session.abortTransaction();
+            return res.status(403).json({ success: false, message: "Super admin only" });
+        }
+
         const property = await Property.findById(id).session(session);
         if (!property) {
             await session.abortTransaction();
             return res.status(404).json({ success: false, message: "Property not found" });
         }
 
-        // 1. Check if any residents are still attached — block if so
+        // 1. Check for active residents - safer to fail if residents still exist
         const activeResidents = await User.countDocuments({ propertyId: id, role: "resident" });
         if (activeResidents > 0) {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: `Cannot delete — ${activeResidents} resident(s) are still assigned to this property`
+                message: `Delete failed: ${activeResidents} resident(s) are still assigned to this property. Please unassign or delete them first.`
             });
         }
 
-        // 2. Delete all payments for rooms in this property
-        await Payment.deleteMany({ propertyId: id }, { session });
+        // 2. Full Cascade Cleanup (Rooms, Beds, Payments, Notices, etc.)
+        // We delete beds first because they depend on rooms
+        await mongoose.model("Bed").deleteMany({ propertyId: id }).session(session);
+        await mongoose.model("Room").deleteMany({ propertyId: id }).session(session);
+        await mongoose.model("Payment").deleteMany({ propertyId: id }).session(session);
+        await mongoose.model("Notice").deleteMany({ propertyId: id }).session(session);
+        await mongoose.model("JoinRequest").deleteMany({ propertyId: id }).session(session);
 
-        // 3. Delete all rooms (cascade deletes beds via Room model)
-        await Room.deleteMany({ propertyId: id }, { session });
+        // Optional: Clean up notifications/activity logs related to this property
+        await mongoose.model("Notification").deleteMany({ propertyId: id }).session(session);
 
-        // 4. Remove property from owner's list logic removed (dynamic)
-        if (property.ownerId) {
-            logger.info(`Property ${id} deleted, owner ${property.ownerId} list will reflect this on next fetch`);
-        }
-
-        // 5. Hard delete the property
+        // 3. Final: Delete the Property
         await Property.deleteOne({ _id: id }, { session });
 
         await session.commitTransaction();
-        logger.info(`Property ${id} fully deleted with cascade`);
-        res.json({ success: true, message: "Property and all associated data deleted" });
+        logger.info(`[ADMIN] Property ${id} and all related data fully deleted by ${req.user.email}`);
+
+        res.json({
+            success: true,
+            message: "Property and all associated units, beds, and records deleted successfully"
+        });
     } catch (err) {
-        await session.abortTransaction();
+        if (session.inTransaction()) await session.abortTransaction();
         next(err);
     } finally {
         session.endSession();

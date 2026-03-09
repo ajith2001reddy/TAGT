@@ -172,10 +172,16 @@ export default function RoomsPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
                     {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton" style={{ height: "170px", borderRadius: "18px" }} />)}
                 </div>
+            ) : !property ? (
+                <div style={{ textAlign: "center", padding: "80px 40px", border: "1px dashed var(--border-default)", borderRadius: "20px", color: "var(--text-tertiary)" }}>
+                    <div style={{ fontSize: "48px", marginBottom: "16px" }}>🏢</div>
+                    <p style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>No Property Selected</p>
+                    <p style={{ fontSize: "13px" }}>Please select a property from the sidebar to manage its rooms.</p>
+                </div>
             ) : rooms.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "80px 40px", border: "1px dashed var(--border-default)", borderRadius: "20px", color: "var(--text-tertiary)" }}>
                     <div style={{ fontSize: "48px", marginBottom: "16px" }}>🏠</div>
-                    <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "6px" }}>No rooms yet</p>
+                    <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "6px" }}>No rooms in {property?.name}</p>
                     <p style={{ fontSize: "13px" }}>Click &quot;Add Room&quot; to get started</p>
                 </div>
             ) : (
