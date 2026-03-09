@@ -60,9 +60,6 @@ export default function ForgotPasswordPage() {
     return (
         <>
             <div style={{ marginBottom: "32px" }}>
-                <Link href="/" style={{ display: "inline-block", marginBottom: "20px" }}>
-                    <img src="/logo.png" alt="TAGT Logo" style={{ width: "64px", height: "64px", borderRadius: "14px", border: "1px solid var(--border-subtle)" }} />
-                </Link>
                 <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "8px" }}>Reset password</h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
                     We&apos;ll send a reset link to your email

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Building2, BedDouble, Users, CreditCard,
     MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
-    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building
+    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building, ShieldAlert
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; badge?: string };
@@ -43,6 +43,7 @@ const adminNav: NavItem[] = [
     { href: "/provider/subscriptions", label: "Subscriptions", icon: <Star size={16} /> },
     { href: "/provider/activity", label: "Activity Logs", icon: <Activity size={16} /> },
     { href: "/provider/support", label: "Support Desk", icon: <LifeBuoy size={16} /> },
+    { href: "/admin/verifications", label: "Verifications", icon: <ShieldAlert size={16} /> },
 ];
 
 const residentNav: NavItem[] = [
@@ -103,6 +104,7 @@ function NavGroup({
                             <Link
                                 href={link.href}
                                 onClick={onNavigate}
+                                target={link.href.startsWith("/terms") || link.href.startsWith("/privacy") ? "_blank" : undefined}
                                 style={{
                                     display: "flex", alignItems: "center", gap: "10px",
                                     padding: "9px 12px", borderRadius: "10px",
@@ -199,24 +201,25 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
-                    style={{ display: "flex", alignItems: "center", gap: "12px" }}
                 >
-                    <img
-                        src="/logo.png"
-                        alt="TAGT Logo"
-                        style={{ width: "40px", height: "40px", borderRadius: "8px", objectFit: "cover" }}
-                    />
-                    <div>
-                        <div style={{
-                            fontFamily: "var(--font-display)", fontWeight: 700,
-                            fontSize: "16px", letterSpacing: "-0.02em",
-                            color: "var(--text-primary)"
-                        }}>TAGT</div>
-                        <div style={{
-                            fontSize: "9px", color: "var(--text-tertiary)",
-                            letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "1px"
-                        }}>Property OS</div>
-                    </div>
+                    <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none" }}>
+                        <img
+                            src="/logo.png"
+                            alt="TAGT Logo"
+                            style={{ width: "40px", height: "40px", borderRadius: "8px", objectFit: "cover" }}
+                        />
+                        <div>
+                            <div style={{
+                                fontFamily: "var(--font-display)", fontWeight: 700,
+                                fontSize: "16px", letterSpacing: "-0.02em",
+                                color: "var(--text-primary)"
+                            }}>TAGT</div>
+                            <div style={{
+                                fontSize: "9px", color: "var(--text-tertiary)",
+                                letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "1px"
+                            }}>Property OS</div>
+                        </div>
+                    </Link>
                 </motion.div>
 
                 {/* Close button — only visible on mobile */}

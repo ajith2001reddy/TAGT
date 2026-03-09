@@ -22,13 +22,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 backdropFilter: "blur(24px)",
                 WebkitBackdropFilter: "blur(24px)",
             }}>
-                <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-                    <div style={{
-                        width: "28px", height: "28px", borderRadius: "8px",
-                        background: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                        <span style={{ color: "#000", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "13px" }}>T</span>
-                    </div>
+                <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+                    <img
+                        src="/logo.png"
+                        alt="TAGT Logo"
+                        style={{ width: "28px", height: "28px", borderRadius: "6px", objectFit: "cover" }}
+                    />
                     <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
                         TAGT
                     </span>

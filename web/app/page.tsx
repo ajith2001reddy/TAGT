@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 interface Place { display_name: string; lat: string; lon: string; }
 
@@ -65,6 +66,7 @@ const TESTIMONIALS = [
 ];
 
 export default function LandingPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Place[]>([]);
@@ -189,24 +191,39 @@ export default function LandingPage() {
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Link href="/login" style={{
-            padding: "9px 20px", borderRadius: "10px", fontSize: "13px", fontWeight: 500,
-            color: "rgba(255,255,255,0.7)", textDecoration: "none",
-            transition: "all 0.2s",
-          }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#fff"}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)"}
-          >Sign In</Link>
-          <Link href="/signup" style={{
-            padding: "9px 22px", borderRadius: "10px", fontSize: "13px", fontWeight: 600,
-            background: "linear-gradient(135deg, #00d4ff, #0066cc)",
-            color: "#000", textDecoration: "none",
-            boxShadow: "0 0 20px rgba(0,212,255,0.3)",
-            transition: "all 0.25s",
-          }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 28px rgba(0,212,255,0.45)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 0 20px rgba(0,212,255,0.3)"; }}
-          >Get Started →</Link>
+          {user ? (
+            <Link href="/dashboard" style={{
+              padding: "9px 22px", borderRadius: "10px", fontSize: "13px", fontWeight: 600,
+              background: "linear-gradient(135deg, #00d4ff, #0066cc)",
+              color: "#000", textDecoration: "none",
+              boxShadow: "0 0 20px rgba(0,212,255,0.3)",
+              transition: "all 0.25s",
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 28px rgba(0,212,255,0.45)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 0 20px rgba(0,212,255,0.3)"; }}
+            >Go to Dashboard →</Link>
+          ) : (
+            <>
+              <Link href="/login" style={{
+                padding: "9px 20px", borderRadius: "10px", fontSize: "13px", fontWeight: 500,
+                color: "rgba(255,255,255,0.7)", textDecoration: "none",
+                transition: "all 0.2s",
+              }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#fff"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)"}
+              >Sign In</Link>
+              <Link href="/signup" style={{
+                padding: "9px 22px", borderRadius: "10px", fontSize: "13px", fontWeight: 600,
+                background: "linear-gradient(135deg, #00d4ff, #0066cc)",
+                color: "#000", textDecoration: "none",
+                boxShadow: "0 0 20px rgba(0,212,255,0.3)",
+                transition: "all 0.25s",
+              }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 28px rgba(0,212,255,0.45)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 0 20px rgba(0,212,255,0.3)"; }}
+              >Get Started →</Link>
+            </>
+          )}
         </div>
       </nav>
 
