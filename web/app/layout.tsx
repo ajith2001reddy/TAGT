@@ -11,6 +11,7 @@ export const viewport = {
 };
 
 export const metadata = {
+  metadataBase: new URL("https://www.tagt.website"),
   title: "TAGT - Manage Every Bed. Bill. Tenant.",
   description:
     "TAGT helps PG owners manage tenants, beds, billing, and payments in one platform.",
@@ -20,10 +21,13 @@ export const metadata = {
     "tenant management",
     "property management SaaS"
   ],
+  alternates: {
+    canonical: "https://www.tagt.website",
+  },
   openGraph: {
     title: "TAGT",
     description: "Manage every bed, bill, and tenant.",
-    url: "https://tagt.website",
+    url: "https://www.tagt.website",
     siteName: "TAGT",
     type: "website",
   },
