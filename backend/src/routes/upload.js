@@ -15,8 +15,9 @@ router.post("/", upload.single("file"), async (req, res) => {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        // Upload buffer to Cloudinary manually
-        const url = await uploadToCloudinary(req.file.buffer, "tagt_general");
+        // Use folder from request body, default to tagt_general
+        const folder = req.body.folder || "tagt_general";
+        const url = await uploadToCloudinary(req.file.buffer, folder);
 
         res.json({
             url: url

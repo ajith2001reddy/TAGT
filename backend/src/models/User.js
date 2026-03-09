@@ -48,8 +48,8 @@ const userSchema = new mongoose.Schema(
         verification: {
             status: {
                 type: String,
-                enum: ["pending", "approved", "rejected"],
-                default: "pending",
+                enum: ["unverified", "pending", "approved", "rejected"],
+                default: "unverified",
                 index: true,
             },
             selfiePhoto: { type: String, default: null },

@@ -5,6 +5,7 @@ import Payment from "../models/Payment.js";
 import admin from "../config/firebase.js";
 import mongoose from "mongoose";
 import { sendOwnerInvite } from "../services/emailService.js";
+import { deleteCloudinaryFolder } from "../utils/cloudinaryHelper.js";
 import logger from "../utils/logger.js";
 import Joi from "joi";
 
@@ -313,6 +314,13 @@ export const deleteProperty = async (req, res, next) => {
 
         await session.commitTransaction();
         logger.info(`[ADMIN] Property ${id} and all related data fully deleted by ${req.user.email}`);
+
+        // 4. Delete Cloudinary Folder for Property (Non-blocking)
+        deleteCloudinaryFolder(`tagt_properties/${id}`).then(() => {
+            logger.info(`Cloudinary folder tagt_properties/${id} deleted`);
+        }).catch(err => {
+            logger.warn(`Failed to delete Cloudinary folder tagt_properties/${id}:`, err);
+        });
 
         res.json({
             success: true,

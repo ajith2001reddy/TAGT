@@ -3,6 +3,7 @@ import Room from "../../models/Room.js";
 import Payment from "../../models/Payment.js";
 import Property from "../../models/Property.js";
 import Request from "../../models/Request.js";
+import JoinRequest from "../../models/JoinRequest.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
 import { predictChurn } from "../../analytics/churnEngine.js";
@@ -318,6 +319,13 @@ export const residentDashboardV2 = async (req, res, next) => {
             Payment.find({ resident: req.user._id, ...scope }).sort({ month: -1 }).lean(),
         ]);
 
+        let pendingRequest = null;
+        if (!profile?.propertyId) {
+            pendingRequest = await JoinRequest.findOne({ residentId: req.user._id, status: "pending", isDeleted: false })
+                .populate("propertyId", "name city")
+                .lean();
+        }
+
         const currentPayment = payments.find(p => p.month === currentMonth);
         const nextDue = currentPayment?.dueDate ? new Date(currentPayment.dueDate) : null;
         const daysUntilDue = nextDue ? Math.ceil((nextDue - Date.now()) / 86400000) : null;
@@ -339,6 +347,7 @@ export const residentDashboardV2 = async (req, res, next) => {
             success: true,
             data: {
                 profile,
+                pendingRequest,
                 room: profile?.roomId || null,
                 currentPayment: currentPayment || null,
                 daysUntilDue,

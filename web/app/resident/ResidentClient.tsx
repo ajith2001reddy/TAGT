@@ -61,6 +61,14 @@ interface DashboardData {
         priority: string;
         createdAt: string;
     }[];
+    pendingRequest?: {
+        _id: string;
+        message: string;
+        propertyId?: {
+            name: string;
+            city: string;
+        };
+    } | null;
 }
 
 const STATUS_COLOR: Record<string, { main: string; bg: string; border: string }> = {
@@ -127,28 +135,42 @@ export default function ResidentClient() {
         </div>
     );
 
-    if (!data?.profile?.propertyId) return (
-        <div style={{ height: "80vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "24px", textAlign: "center", animation: "fadeIn 0.8s ease-out" }}>
-            <div style={{ fontSize: "80px", marginBottom: "16px" }}>🏘️</div>
-            <h2 style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.02em" }}>Welcome to TAGT</h2>
-            <p style={{ color: "var(--text-tertiary)", fontSize: "18px", maxWidth: "450px", lineHeight: 1.6 }}>
-                You haven&apos;t joined a property yet. Discover premium PG accommodations and send a join request.
-            </p>
-            <Link href="/resident/discover" style={{
-                background: "var(--accent-primary)",
-                color: "white",
-                textDecoration: "none",
-                padding: "16px 40px",
-                borderRadius: "20px",
-                fontSize: "16px",
-                fontWeight: 700,
-                boxShadow: "0 20px 40px rgba(0, 212, 255, 0.2)",
-                transition: "transform 0.3s"
-            }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                Find My Property →
-            </Link>
-        </div>
-    );
+    if (!data?.profile?.propertyId) {
+        if (data?.pendingRequest) {
+            return (
+                <div style={{ height: "80vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "24px", textAlign: "center", animation: "fadeIn 0.8s ease-out" }}>
+                    <div style={{ fontSize: "64px", marginBottom: "8px" }}>⏳</div>
+                    <h2 style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.02em" }}>Approval Pending</h2>
+                    <p style={{ color: "var(--text-tertiary)", fontSize: "18px", maxWidth: "450px", lineHeight: 1.6 }}>
+                        Your request to join <strong>{data.pendingRequest.propertyId?.name}</strong> is currently pending owner approval. You will gain access once approved.
+                    </p>
+                </div>
+            );
+        }
+
+        return (
+            <div style={{ height: "80vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "24px", textAlign: "center", animation: "fadeIn 0.8s ease-out" }}>
+                <div style={{ fontSize: "80px", marginBottom: "16px" }}>🏘️</div>
+                <h2 style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.02em" }}>Welcome to TAGT</h2>
+                <p style={{ color: "var(--text-tertiary)", fontSize: "18px", maxWidth: "450px", lineHeight: 1.6 }}>
+                    You haven&apos;t joined a property yet. Discover premium PG accommodations and send a join request.
+                </p>
+                <Link href="/resident/discover" style={{
+                    background: "var(--accent-primary)",
+                    color: "white",
+                    textDecoration: "none",
+                    padding: "16px 40px",
+                    borderRadius: "20px",
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    boxShadow: "0 20px 40px rgba(0, 212, 255, 0.2)",
+                    transition: "transform 0.3s"
+                }} onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")} onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+                    Find My Property →
+                </Link>
+            </div>
+        );
+    }
 
     const firstName = data.profile.name.split(" ")[0];
     const property = data.profile.propertyId;
