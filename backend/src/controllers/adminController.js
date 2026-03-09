@@ -24,7 +24,8 @@ export const createProperty = async (req, res, next) => {
             city: Joi.string().required(),
             gstin: Joi.string().allow(""),
             pan: Joi.string().allow(""),
-            phone: Joi.string().allow("")
+            phone: Joi.string().allow(""),
+            ownerEmail: Joi.string().email().allow("")
         });
 
         const { error, value } = schema.validate(req.body);
@@ -32,7 +33,15 @@ export const createProperty = async (req, res, next) => {
             return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
-        const { name, type, address, city, gstin, pan, phone } = value;
+        const { name, type, address, city, gstin, pan, phone, ownerEmail } = value;
+
+        let ownerId = null;
+        if (ownerEmail) {
+            const owner = await User.findOne({ email: ownerEmail.toLowerCase().trim(), role: "owner" });
+            if (owner) {
+                ownerId = owner._id;
+            }
+        }
 
         const property = await Property.create({
             name: String(name).trim(),
@@ -42,7 +51,7 @@ export const createProperty = async (req, res, next) => {
             gstin: String(gstin || "").trim(),
             pan: String(pan || "").trim(),
             phone: String(phone || "").trim(),
-            ownerId: null
+            ownerId
         });
 
         res.status(201).json({ success: true, data: property });
@@ -80,6 +89,7 @@ export const createOwner = async (req, res, next) => {
             email: normalizedEmail,
             displayName: String(name).trim(),
             ...(password && password.length >= 6 ? { password } : {}),
+            emailVerified: true // Pre-verify manually created owners
         });
 
         // 2️⃣ Create Mongo user
@@ -87,7 +97,12 @@ export const createOwner = async (req, res, next) => {
             name: String(name).trim(),
             email: normalizedEmail,
             role: "owner",
-            firebaseUid: String(firebaseUser.uid)
+            firebaseUid: String(firebaseUser.uid),
+            status: "active",
+            emailVerified: true,
+            verification: {
+                status: "approved"
+            }
         });
 
         // 3️⃣ If no password provided, generate a reset link so they can set one via email
@@ -102,8 +117,8 @@ export const createOwner = async (req, res, next) => {
         res.status(201).json({
             success: true,
             message: password
-                ? "Owner created — they can now log in with the provided password"
-                : "Owner created and invitation email sent",
+                ? "Owner created and pre-approved — they can now log in"
+                : "Owner created, pre-approved, and invitation email sent",
             data: user
         });
     } catch (err) {
