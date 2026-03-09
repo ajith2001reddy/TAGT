@@ -3,7 +3,6 @@ import logger from "../utils/logger.js";
 const requiredEnvVars = [
     "MONGO_URI",
     "JWT_SECRET",
-    "REDIS_URL",
     "FIREBASE_PROJECT_ID",
     "FIREBASE_CLIENT_EMAIL",
     "FIREBASE_PRIVATE_KEY"
