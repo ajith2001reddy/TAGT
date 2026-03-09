@@ -10,7 +10,7 @@ import Room from "../../models/rooms.js";
 export const getMyPlan = async (req, res, next) => {
     try {
         const ownerId = req.user._id;
-        const sub = await Subscription.findOne({ owner: ownerId }).lean();
+        const sub = await Subscription.findOne({ ownerId: ownerId }).lean();
         const plan = sub?.plan || "free";
         const limits = PLAN_LIMITS[plan];
 
@@ -81,20 +81,20 @@ export const upgradePlan = async (req, res, next) => {
 ───────────────────────────────────────────────── */
 export const listAllSubscriptions = async (req, res, next) => {
     try {
-        let subs = await Subscription.find({}).populate("owner", "name email").sort({ updatedAt: -1 }).lean();
+        let subs = await Subscription.find({}).populate("ownerId", "name email").sort({ updatedAt: -1 }).lean();
 
         // 🛡️ Filter out stale subscriptions for non-existent/deleted owners
         const initialCount = subs.length;
-        subs = subs.filter(s => s.owner !== null);
+        subs = subs.filter(s => s.ownerId !== null);
         if (subs.length < initialCount) {
             console.warn(`[Subscription] Filtered out ${initialCount - subs.length} stale subscription records.`);
         }
 
         // Owners without a subscription record = free
-        const ownersWithSub = new Set(subs.map(s => String(s.owner._id)));
+        const ownersWithSub = new Set(subs.map(s => String(s.ownerId._id)));
         const allOwners = await User.find({ role: "owner" }, "name email createdAt").lean();
         const unsubOwners = allOwners.filter(o => !ownersWithSub.has(String(o._id))).map(o => ({
-            owner: o, plan: "free", status: "active", currentPeriodEnd: null,
+            ownerId: o, plan: "free", status: "active", currentPeriodEnd: null,
         }));
 
         return res.json({ success: true, data: [...subs, ...unsubOwners] });
@@ -111,10 +111,10 @@ export const adminSetPlan = async (req, res, next) => {
         if (plan && !["free", "pro", "enterprise"].includes(plan)) return res.status(400).json({ success: false, message: "Invalid plan" });
 
         const sub = await Subscription.findOneAndUpdate(
-            { owner: req.params.ownerId },
+            { ownerId: req.params.ownerId },
             { ...(plan ? { plan } : {}), ...(status ? { status } : {}) },
             { new: true, upsert: true }
-        ).populate("owner", "name email");
+        ).populate("ownerId", "name email");
 
         return res.json({ success: true, data: sub });
     } catch (err) { next(err); }

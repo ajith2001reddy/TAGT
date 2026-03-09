@@ -42,7 +42,7 @@ export const createProperty = async (req, res, next) => {
             gstin: String(gstin || "").trim(),
             pan: String(pan || "").trim(),
             phone: String(phone || "").trim(),
-            owner: null
+            ownerId: null
         });
 
         res.status(201).json({ success: true, data: property });
@@ -87,8 +87,7 @@ export const createOwner = async (req, res, next) => {
             name: String(name).trim(),
             email: normalizedEmail,
             role: "owner",
-            firebaseUid: String(firebaseUser.uid),
-            propertyIds: []
+            firebaseUid: String(firebaseUser.uid)
         });
 
         // 3️⃣ If no password provided, generate a reset link so they can set one via email
@@ -141,24 +140,16 @@ export const assignOwnerToProperty = async (req, res, next) => {
         }
 
         // Step 1: Remove property from old owner (if any)
-        if (property.owner && property.owner.toString() !== ownerId) {
-            await User.findByIdAndUpdate(
-                property.owner,
-                { $pull: { propertyIds: property._id } },
-                { session }
-            );
+        if (property.ownerId && property.ownerId.toString() !== ownerId) {
+            // No need to $pull from User.propertyIds as it's removed
+            logger.info(`Property ${property._id} transferred from old owner ${property.ownerId}`);
         }
 
         // Step 2: Update property's owner
-        property.owner = owner._id;
+        property.ownerId = owner._id;
         await property.save({ session });
 
-        // Step 3: Add property to new owner's list
-        await User.findByIdAndUpdate(
-            owner._id,
-            { $addToSet: { propertyIds: property._id } },
-            { session }
-        );
+        // Step 3: Add property to new owner's list logic removed (dynamic fetch)
 
         await session.commitTransaction();
         res.json({ success: true, message: "Owner assigned successfully" });
@@ -186,13 +177,11 @@ export const deleteOwner = async (req, res, next) => {
         }
 
         // Remove owner reference from all their properties
-        if (owner.propertyIds?.length) {
-            await Property.updateMany(
-                { _id: { $in: owner.propertyIds } },
-                { $unset: { owner: "" } },
-                { session }
-            );
-        }
+        await Property.updateMany(
+            { ownerId: id },
+            { $unset: { ownerId: "" } },
+            { session }
+        );
 
         // Hard delete from MongoDB
         await User.deleteOne({ _id: id }, { session });
@@ -294,13 +283,9 @@ export const deleteProperty = async (req, res, next) => {
         // 3. Delete all rooms (cascade deletes beds via Room model)
         await Room.deleteMany({ propertyId: id }, { session });
 
-        // 4. Remove property from owner's list
-        if (property.owner) {
-            await User.findByIdAndUpdate(
-                property.owner,
-                { $pull: { propertyIds: property._id } },
-                { session }
-            );
+        // 4. Remove property from owner's list logic removed (dynamic)
+        if (property.ownerId) {
+            logger.info(`Property ${id} deleted, owner ${property.ownerId} list will reflect this on next fetch`);
         }
 
         // 5. Hard delete the property
@@ -327,11 +312,16 @@ export const listOwners = async (req, res, next) => {
         }
 
         const owners = await User.find({ role: "owner" })
-            .select("name email propertyIds createdAt")
-            .populate("propertyIds", "name")
+            .select("name email createdAt")
             .lean();
 
-        res.json({ success: true, data: owners });
+        // Enrich with properties if needed for list
+        const enrichedOwners = await Promise.all(owners.map(async (o) => {
+            const props = await Property.find({ ownerId: o._id }, 'name city').lean();
+            return { ...o, properties: props };
+        }));
+
+        res.json({ success: true, data: enrichedOwners });
     } catch (err) {
         next(err);
     }
@@ -351,17 +341,10 @@ export const removePropertyFromOwner = async (req, res, next) => {
 
         const { ownerId, propertyId } = req.params;
 
-        // Remove property from owner's list
-        await User.findByIdAndUpdate(
-            ownerId,
-            { $pull: { propertyIds: propertyId } },
-            { session }
-        );
-
         // Clear owner reference on the property
         await Property.findByIdAndUpdate(
             propertyId,
-            { $unset: { owner: "" } },
+            { $unset: { ownerId: "" } },
             { session }
         );
 

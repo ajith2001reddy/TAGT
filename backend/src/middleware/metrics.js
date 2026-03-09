@@ -24,8 +24,25 @@ export const businessEventsCounter = new client.Counter({
     labelNames: ["event_type"],
 });
 
+// 3. Worker Job Duration Histogram
+export const workerJobDuration = new client.Histogram({
+    name: "worker_job_duration_seconds",
+    help: "Duration of background jobs in seconds",
+    labelNames: ["job_name", "status"],
+    buckets: [1, 5, 10, 30, 60, 120, 300, 600], // buckets up to 10 mins
+});
+
+// 4. Worker Job Total Counter
+export const workerJobCounter = new client.Counter({
+    name: "worker_job_total",
+    help: "Total count of background jobs",
+    labelNames: ["job_name", "status"],
+});
+
 register.registerMetric(httpRequestDuration);
 register.registerMetric(businessEventsCounter);
+register.registerMetric(workerJobDuration);
+register.registerMetric(workerJobCounter);
 
 /**
  * Middleware to track request latency

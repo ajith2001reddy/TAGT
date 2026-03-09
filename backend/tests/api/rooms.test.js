@@ -33,7 +33,7 @@ describe("Rooms Real Transaction Suite", () => {
                 totalBeds: 2,
                 propertyId: property._id.toString()
             },
-            user: owner
+            user: { ...owner, propertyId: property._id }
         };
 
         const res = {

@@ -14,7 +14,9 @@ import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { auditLogger } from "./middleware/auditLogger.js";
 import { swaggerSpec, swaggerUi } from "./swagger.js";
 import "./jobs/scheduler.js"; // Initialize chron jobs
-import logger from "./utils/logger.js"; // Assuming logger is available
+import logger from "./utils/logger.js";
+import mongoose from "mongoose";
+import redis from "./config/redis.js";
 
 // Initialize Sentry if DSN is provided
 if (process.env.SENTRY_DSN) {
@@ -213,6 +215,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(auditLogger);
 
 /* ================= HEALTH CHECK ================= */
+
+app.get("/health", async (req, res) => {
+    const health = {
+        status: "OK",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        checks: {
+            database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+            redis: redis.status === "ready" ? "ready" : "not_ready"
+        }
+    };
+
+    const isHealthy = health.checks.database === "connected" && health.checks.redis === "ready";
+    res.status(isHealthy ? 200 : 503).json(health);
+});
 
 app.get("/", (req, res) => {
     res.status(200).json({

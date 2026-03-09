@@ -8,6 +8,8 @@ import { markOverduePayments } from "./jobs/overdueStatusJob.js";
 import { sendUpcomingRentReminders, sendOverdueNotices } from "./jobs/emailReminderJob.js";
 import "./events/workers/residentWorker.js";
 import "./events/workers/billingWorker.js";
+import { workerJobDuration, workerJobCounter } from "./middleware/metrics.js";
+import Sentry from "@sentry/node";
 
 const QUEUE_NAME = "main-task-queue";
 
@@ -20,6 +22,15 @@ const jobRegistry = {
 
 async function startWorker() {
     try {
+        if (process.env.SENTRY_DSN) {
+            Sentry.init({
+                dsn: process.env.SENTRY_DSN,
+                environment: process.env.NODE_ENV,
+                tracesSampleRate: 1.0,
+            });
+            logger.info("[WORKER] 🛡️ Sentry initialized.");
+        }
+
         await connectDB();
         logger.info("[WORKER] ✅ Database connected");
 
@@ -32,12 +43,24 @@ async function startWorker() {
 
                 if (jobRegistry[name]) {
                     await jobRegistry[name](data);
-                    const duration = Date.now() - startTime;
-                    logger.info(`[WORKER] Job completed: ${name}`, { duration: `${duration}ms` });
+                    const durationInSeconds = (Date.now() - startTime) / 1000;
+
+                    workerJobDuration.labels(name, "success").observe(durationInSeconds);
+                    workerJobCounter.labels(name, "success").inc();
+
+                    logger.info(`[WORKER] Job completed: ${name}`, { duration: `${durationInSeconds * 1000}ms` });
                 } else {
                     throw new Error(`Job type '${name}' not found in registry`);
                 }
             } catch (err) {
+                const durationInSeconds = (Date.now() - startTime) / 1000;
+                workerJobDuration.labels(name, "failed").observe(durationInSeconds);
+                workerJobCounter.labels(name, "failed").inc();
+
+                if (process.env.SENTRY_DSN) {
+                    Sentry.captureException(err, { tags: { jobName: name } });
+                }
+
                 logger.error(`[WORKER] Job failed: ${name}`, { error: err.message, stack: err.stack });
                 throw err;
             }

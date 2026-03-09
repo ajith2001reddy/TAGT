@@ -9,7 +9,6 @@ export const createMockOwner = async () => {
         name: "Mock Owner",
         email: "mock-owner@example.com",
         role: "owner",
-        propertyIds: [],
         isActive: true,
         firebaseUid: "mock-owner-uid"
     });
@@ -26,13 +25,11 @@ export const createMockProperty = async (ownerId) => {
         type: "pg",
         address: "123 Mock St",
         city: "Mock City",
-        owner: ownerId,
+        ownerId: ownerId,
         isActive: true
     });
 
-    if (ownerId) {
-        await User.findByIdAndUpdate(ownerId, { $push: { propertyIds: property._id } });
-    }
+    return property;
 
     return property;
 };

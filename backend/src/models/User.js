@@ -94,15 +94,6 @@ const userSchema = new mongoose.Schema(
             index: true,
         },
 
-        // ✅ Multi-property support for owners
-        propertyIds: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Property",
-                index: true,
-            },
-        ],
-
         // ✅ Single property for resident
         propertyId: {
             type: mongoose.Schema.Types.ObjectId,

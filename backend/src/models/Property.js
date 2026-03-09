@@ -6,7 +6,7 @@ const propertySchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true, index: true },
         type: { type: String, enum: ["pg", "hotel"], required: true, index: true },
-        owner: {
+        ownerId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             default: null,
@@ -43,7 +43,7 @@ propertySchema.pre(/^find/, function (next) {
     next();
 });
 
-propertySchema.index({ owner: 1, isActive: 1 });
+propertySchema.index({ ownerId: 1, isActive: 1 });
 
 // Apply tenant isolation
 propertySchema.plugin(tenantIsolationPlugin);

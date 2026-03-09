@@ -19,7 +19,7 @@ export const listProperties = async (req, res, next) => {
 
         const [items, total] = await Promise.all([
             Property.find()
-                .populate("owner", "name email")
+                .populate("ownerId", "name email")
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit)
@@ -125,15 +125,14 @@ export const createProperty = async (req, res, next) => {
             phone: String(phone || "").trim(),
             gstin: String(gstin || "").trim(),
             pan: String(pan || "").trim(),
-            owner: req.user._id,
+            ownerId: req.user._id,
             joinCode
         });
 
-        // If owner, add to their property list
+        // If owner, sync count (redundant field removed from user)
         if (req.user.role === "owner") {
-            await User.findByIdAndUpdate(req.user._id, {
-                $addToSet: { propertyIds: property._id }
-            });
+            // Logic to add to owner's property list in Firebase/User removed as we now fetch dynamically
+            logger.info(`Property added to owner: ${req.user._id}`);
         }
 
         logger.info(`Property created by ${req.user.role}: ${property._id} with code ${joinCode}`);

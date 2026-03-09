@@ -57,7 +57,7 @@ describe("Auth Endpoints", () => {
 
             expect(res.statusCode).toEqual(200);
             expect(res.body.success).toBe(true);
-            expect(res.body.message).toContain("exists");
+            expect(res.body.message).toContain("registered");
         });
     });
 });

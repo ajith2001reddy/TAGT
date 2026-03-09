@@ -62,13 +62,25 @@ export const createRoom = async (req, res, next) => {
             maintenanceNote: Joi.string().allow("")
         });
 
-        const { error, value } = schema.validate({ ...req.body, propertyId: req.body.propertyId || req.user.propertyId });
+        const { error, value } = schema.validate(req.body);
         if (error) {
             if (session) await session.abortTransaction();
             return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
-        const { roomNumber, rent, totalBeds, note, maintenanceMode, maintenanceNote, propertyId } = value;
+        // 🔐 CTO FIX: Owners must have a selected propertyId to create rooms
+        if (req.user.role === 'owner' && !req.user.propertyId) {
+            if (session) await session.abortTransaction();
+            return res.status(400).json({
+                success: false,
+                message: "Owner must have a selected property to create a room."
+            });
+        }
+
+        // Residents shouldn't create rooms, but if they could, we'd use their propertyId
+        const propertyId = req.user.role === 'owner' ? req.user.propertyId : (value.propertyId || req.user.propertyId);
+
+        const { roomNumber, rent, totalBeds, note, maintenanceMode, maintenanceNote } = value;
 
         // Check if room number exists for this property
         const exists = await Room.findOne({ roomNumber, propertyId }).session(session);

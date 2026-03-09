@@ -29,9 +29,9 @@ export const buildPropertyFilter = (user, requestedPropertyId = null, fieldName 
                 : { [fieldName]: new mongoose.Types.ObjectId() };
         }
 
-        // For owner-level items like 'Property' itself, we filter by 'owner' field
-        if (fieldName === "owner") {
-            return { owner: user._id };
+        // For owner-level items like 'Property' itself, we filter by 'ownerId' field
+        if (fieldName === "owner" || fieldName === "ownerId") {
+            return { ownerId: user._id };
         }
 
         return { [fieldName]: { $in: allowedIds } };

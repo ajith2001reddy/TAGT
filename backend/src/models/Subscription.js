@@ -17,7 +17,7 @@ const PlanSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const SubscriptionSchema = new mongoose.Schema({
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
     plan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
     status: { type: String, enum: ["active", "trialing", "past_due", "cancelled", "expired"], default: "active" },
     trialEndsAt: { type: Date, default: null },
@@ -51,7 +51,7 @@ export const PLAN_LIMITS = {
 };
 
 export const getPlanForOwner = async (ownerId) => {
-    const sub = await Subscription.findOne({ owner: ownerId }).lean();
+    const sub = await Subscription.findOne({ ownerId: ownerId }).lean();
     if (!sub || sub.status === "expired" || sub.status === "cancelled") return "free";
     return sub.plan || "free";
 };

@@ -63,10 +63,9 @@ export const tenantIsolationPlugin = function (schema) {
                 conditions.propertyId = { $in: context.propertyIds };
             }
             // For Models with owner/ownerId (Property, Subscription)
-            else if (schema.paths.owner) {
-                conditions.owner = context.id;
-            } else if (schema.paths.ownerId) {
-                conditions.ownerId = context.id;
+            else if (schema.paths.owner || schema.paths.ownerId) {
+                const field = schema.paths.ownerId ? "ownerId" : "owner";
+                conditions[field] = context.id;
             }
         }
         else if (context.role === "resident") {

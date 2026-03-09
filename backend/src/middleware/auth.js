@@ -56,7 +56,16 @@ const firebaseAuth = async (req, res, next) => {
         }
 
         // 3️⃣ Attach user
-        req.user = dbUser.toObject();
+        const userData = dbUser.toObject();
+        req.user = userData;
+
+        // 🔐 CTO FIX: Dynamically fetch property IDs for owners 
+        // This allows us to remove req.user.propertyIds from the DB
+        if (userData.role === "owner") {
+            const properties = await Property.find({ ownerId: dbUser._id }, "_id");
+            req.user.propertyIds = properties.map(p => p._id);
+        }
+
         req.user._id = dbUser._id; // Ensure ID is present as ObjectId if needed
 
         // 4️⃣ Enforce multi-tenant database isolation
@@ -73,4 +82,5 @@ const firebaseAuth = async (req, res, next) => {
     }
 };
 
+export const protect = firebaseAuth;
 export default firebaseAuth;
