@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home, Bed, Users, Rocket, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
+import { createProperty } from "@/features/owner/property.service";
+import { toast } from "react-hot-toast";
 
 export default function OwnerOnboardingPage() {
     const [step, setStep] = useState(1);
@@ -18,6 +20,16 @@ export default function OwnerOnboardingPage() {
         { id: 2, label: "Capacity", icon: <Bed size={18} /> },
         { id: 3, label: "Launch", icon: <Rocket size={18} /> },
     ];
+
+    const handleLaunch = async () => {
+        try {
+            await createProperty(formData);
+            toast.success("Property created successfully!");
+            window.location.href = "/owner";
+        } catch {
+            toast.error("Failed to create property.");
+        }
+    };
 
     return (
         <div style={{ maxWidth: "800px", margin: "40px auto", padding: "0 24px" }}>
@@ -140,7 +152,7 @@ export default function OwnerOnboardingPage() {
                     ) : <div />}
 
                     <button
-                        onClick={step === 3 ? () => window.location.href = "/owner" : nextStep}
+                        onClick={step === 3 ? handleLaunch : nextStep}
                         className="btn-primary"
                         style={{ gap: "8px", minWidth: "140px" }}
                     >
