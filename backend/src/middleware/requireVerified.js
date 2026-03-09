@@ -11,12 +11,17 @@ export const requireVerified = (req, res, next) => {
         });
     }
 
-    // super admin bypass
+    // Skip check for super admins
     if (req.user.role === "super_admin") {
         return next();
     }
 
-    // allow verified users
+    // fallback: if an owner is already marked as 'active', treat them as verified
+    if (req.user.role === "owner" && req.user.status === "active") {
+        return next();
+    }
+
+    // allow explicitly approved users
     if (req.user.verification?.status === "approved") {
         return next();
     }
@@ -26,4 +31,5 @@ export const requireVerified = (req, res, next) => {
         message: "Account verification required. Please complete identity verification."
     });
 };
+
 
