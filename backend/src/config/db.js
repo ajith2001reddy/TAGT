@@ -1,5 +1,9 @@
 ﻿import mongoose from "mongoose";
 import winston from "winston";
+import dns from "dns";
+
+// 🛠️ FIX: Force reliable DNS for MongoDB+SRV resolution
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const logger = winston.createLogger({
     level: "info",
