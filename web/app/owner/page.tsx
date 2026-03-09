@@ -8,7 +8,8 @@ import { RevenueTrendChart, OccupancyPieChart } from "@/components/owner/Dashboa
 import { ActivityTimeline } from "@/components/owner/ActivityTimeline";
 import { DashboardCard, ChartCard } from "@/components/ui/PremiumUI";
 import { motion } from "framer-motion";
-import { ArrowUpRight, TrendingUp, Users, Home, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { ArrowUpRight, TrendingUp, Users, Home, Clock, AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 
 interface Insight {
     message: string;
@@ -49,6 +50,9 @@ function InsightCard({ severity, message, recommendation }: Insight) {
 
 export default function OwnerPage() {
     const { stats, detailed, loading } = useOwnerStats();
+    const { dbUser } = useAuth();
+    const verificationStatus = dbUser?.verification?.status || "pending";
+
     const hour = new Date().getHours();
     const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
@@ -71,6 +75,49 @@ export default function OwnerPage() {
 
     return (
         <div className="animate-fade-in">
+            {/* Verification Alert */}
+            {verificationStatus !== "approved" && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                        marginBottom: "24px",
+                        padding: "16px 20px",
+                        background: verificationStatus === "rejected" ? "rgba(255,82,82,0.1)" : "rgba(251,191,36,0.1)",
+                        border: `1px solid ${verificationStatus === "rejected" ? "rgba(255,82,82,0.2)" : "rgba(251,191,36,0.2)"}`,
+                        borderRadius: "16px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "16px"
+                    }}
+                >
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{
+                            width: "36px", height: "36px", borderRadius: "10px",
+                            background: verificationStatus === "rejected" ? "rgba(255,82,82,0.2)" : "rgba(251,191,36,0.2)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: verificationStatus === "rejected" ? "#ff5252" : "#fbbf24"
+                        }}>
+                            <ShieldAlert size={20} />
+                        </div>
+                        <div>
+                            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
+                                {verificationStatus === "rejected" ? "Verification Rejected" : "Identity Verification Required"}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                                {verificationStatus === "rejected"
+                                    ? "Your documents were not accepted. Please re-upload clear copies."
+                                    : "Please upload your ID and property documents to complete your profile."}
+                            </div>
+                        </div>
+                    </div>
+                    <Link href="/verify" className="btn-primary" style={{ fontSize: "12px", padding: "8px 16px", borderRadius: "10px" }}>
+                        Verify Now
+                    </Link>
+                </motion.div>
+            )}
+
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -12 }}

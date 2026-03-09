@@ -60,8 +60,8 @@ app.get("/metrics", (req, res, next) => {
 app.set("trust proxy", 1);
 app.use(
     helmet({
-        // Needed for Firebase popup auth flows (window.close / window.closed in popup).
-        crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+        // Relaxed for Firebase popup auth flows
+        crossOriginOpenerPolicy: { policy: "unsafe-none" },
         // Keep COEP disabled to avoid breaking third-party auth SDK resources.
         crossOriginEmbedderPolicy: false,
         // Strict SOC2 Header Hardening

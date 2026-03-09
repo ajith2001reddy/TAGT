@@ -34,8 +34,15 @@ export function initSocket(httpServer) {
     io.on("connection", (socket) => {
         // Client sends their firebase token after connecting
         socket.on("user:join", async (token) => {
-            if (!token) return;
+            if (!token) {
+                logger.warn(`[Socket] No token provided for socket ${socket.id}`);
+                return;
+            }
             try {
+                // Log token prefix/suffix for debugging (SECURE: don't log full token)
+                const tokenSnippet = `${token.substring(0, 10)}...${token.slice(-10)}`;
+                logger.info(`[Socket] Verifying token for socket ${socket.id}: ${tokenSnippet}`);
+
                 const decoded = await admin.auth().verifyIdToken(token);
                 const userId = decoded.uid; // Firebase UID
                 socket.join(`user:${userId}`);

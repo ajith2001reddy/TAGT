@@ -21,6 +21,7 @@ const ownerNav: NavItem[] = [
     { href: "/owner/residents", label: "Residents", icon: <Users size={16} /> },
     { href: "/owner/payments", label: "Payments", icon: <CreditCard size={16} /> },
     { href: "/owner/requests", label: "Requests", icon: <MessageSquare size={16} /> },
+    { href: "/verify", label: "Identity Verification", icon: <UserCheck size={16} /> },
 ];
 
 const ownerSecondaryNav: NavItem[] = [
@@ -49,6 +50,7 @@ const residentNav: NavItem[] = [
     { href: "/resident/payments", label: "My Payments", icon: <CreditCard size={16} /> },
     { href: "/resident/requests", label: "My Requests", icon: <MessageSquare size={16} /> },
     { href: "/resident/support", label: "Support", icon: <LifeBuoy size={16} /> },
+    { href: "/verify", label: "Identity Verification", icon: <UserCheck size={16} /> },
 ];
 
 const accountNav: NavItem[] = [

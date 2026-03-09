@@ -10,6 +10,10 @@ const firebaseAuth = async (req, res, next) => {
         const header = req.headers.authorization;
 
         if (!header || !header.startsWith("Bearer ")) {
+            logger.warn("[AUTH] Missing or invalid Authorization header", {
+                hasHeader: !!header,
+                requestId: req.id
+            });
             return res.status(401).json({
                 success: false,
                 message: "Unauthorized"
