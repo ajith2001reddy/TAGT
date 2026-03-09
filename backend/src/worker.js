@@ -9,7 +9,7 @@ import { sendUpcomingRentReminders, sendOverdueNotices } from "./jobs/emailRemin
 import "./events/workers/residentWorker.js";
 import "./events/workers/billingWorker.js";
 import { workerJobDuration, workerJobCounter } from "./middleware/metrics.js";
-import Sentry from "@sentry/node";
+import * as Sentry from "@sentry/node";
 
 const QUEUE_NAME = "main-task-queue";
 
@@ -92,6 +92,19 @@ async function startWorker() {
             logger.info("🛑 SIGTERM received. Shutting down worker gracefully...");
             await worker.close();
             process.exit(0);
+        });
+
+        // 🚀 Global Crash Handlers (Prevent silent failures)
+        process.on("uncaughtException", (err) => {
+            logger.error("🛑 Uncaught Exception - Worker Crash:", { error: err.message, stack: err.stack });
+            if (process.env.SENTRY_DSN) Sentry.captureException(err);
+            // Allow process to exit so it can be restarted by orchestrator
+            setTimeout(() => process.exit(1), 1000);
+        });
+
+        process.on("unhandledRejection", (reason, promise) => {
+            logger.error("🛑 Unhandled Rejection at:", { promise, reason });
+            if (process.env.SENTRY_DSN) Sentry.captureException(reason);
         });
 
     } catch (err) {
