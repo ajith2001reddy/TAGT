@@ -17,10 +17,10 @@ export const uploadToCloudinary = (buffer, folder = "tagt_general") => {
                 if (error) {
                     return reject(error);
                 }
-                resolve(result.secure_url);
             }
         );
 
+        uploadStream.end(buffer);
     });
 };
 
