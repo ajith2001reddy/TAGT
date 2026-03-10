@@ -45,3 +45,17 @@ export const createMockProperty = async (ownerId) => {
 
     return property;
 };
+/**
+ * Creates a mock resident user.
+ */
+export const createMockResident = async (propertyId, ownerId = null) => {
+    return await User.create({
+        name: "Mock Resident",
+        email: "mock-resident-" + Date.now() + "@example.com",
+        role: "resident",
+        isActive: true,
+        propertyId,
+        ownerId,
+        firebaseUid: "mock-resident-uid-" + Date.now()
+    });
+};

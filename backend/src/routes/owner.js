@@ -9,7 +9,8 @@ import {
     moveResidentRoom,
     deactivateResident,
     addResidentNote,
-    getResidentHistory
+    getResidentHistory,
+    deleteResident
 } from "../controllers/v2/residentController.js";
 
 import Request from "../models/Request.js";
@@ -27,6 +28,7 @@ router.put("/residents/:id/move-room", auth, authorize("owner"), moveResidentRoo
 router.put("/residents/:id/deactivate", auth, authorize("owner"), deactivateResident);
 router.post("/residents/:id/notes", auth, authorize("owner"), addResidentNote);
 router.get("/residents/:id/history", auth, authorize("owner"), getResidentHistory);
+router.delete("/residents/:id", auth, authorize("owner"), deleteResident);
 
 router.get("/requests", auth, authorize("owner"), async (req, res, next) => {
     try {

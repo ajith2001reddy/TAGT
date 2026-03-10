@@ -95,7 +95,8 @@ jest.unstable_mockModule("firebase-admin", () => ({
                 });
             }),
             createUser: jest.fn((data) => Promise.resolve({ uid: "new-user-uid", ...data })),
-            generatePasswordResetLink: jest.fn(() => Promise.resolve("https://reset.link"))
+            generatePasswordResetLink: jest.fn(() => Promise.resolve("https://reset.link")),
+            deleteUser: jest.fn(() => Promise.resolve())
         }),
         apps: [],
         initializeApp: jest.fn(),

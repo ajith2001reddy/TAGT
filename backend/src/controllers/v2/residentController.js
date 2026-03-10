@@ -5,6 +5,8 @@ import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import residentService from "../../services/residentService.js";
+import admin from "../../config/firebase.js";
+import logger from "../../utils/logger.js";
 /**
  * List residents for a property
  */
@@ -330,3 +332,52 @@ export const getResidentHistory = async (req, res) => {
         return res.status(500).json({ success: false, message: err.message });
     }
 };
+
+export const deleteResident = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const scope = buildPropertyFilter(req.user);
+        const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
+
+        // Find resident within owner's scope
+        const resident = await User.findOne({ _id: id, role: "resident", ...pm });
+        if (!resident) {
+            return res.status(404).json({ success: false, message: "Resident not found or unauthorized" });
+        }
+
+        const oldRoomId = resident.roomId;
+        const oldBedId = resident.bedId;
+
+        // Perform Soft Delete
+        resident.isDeleted = true;
+        resident.deletedAt = new Date();
+        resident.status = "inactive";
+        resident.isActive = false;
+        resident.roomId = null;
+        resident.bedId = null;
+        await resident.save();
+
+        // Cleanup Room occupancy
+        if (oldRoomId) {
+            await Room.findByIdAndUpdate(oldRoomId, { $inc: { occupiedBeds: -1 } });
+        }
+
+        // Cleanup Bed assignment
+        if (oldBedId) {
+            await Bed.findByIdAndUpdate(oldBedId, { status: "available", residentId: null });
+        }
+
+        // Delete from Firebase Auth (non-blocking)
+        if (resident.firebaseUid) {
+            admin.auth().deleteUser(resident.firebaseUid)
+                .then(() => logger.info(`Firebase user deleted for soft-deleted resident: ${resident.firebaseUid}`))
+                .catch(err => logger.warn(`Firebase delete failed for resident ${id}: ${err.message}`));
+        }
+
+        return res.json({ success: true, message: "Resident deleted successfully (soft-delete)" });
+    } catch (err) {
+        console.error("DELETE RESIDENT CONTROLLER ERROR:", err);
+        next(err);
+    }
+};
+
