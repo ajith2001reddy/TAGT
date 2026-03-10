@@ -90,14 +90,25 @@ export const listAllSubscriptions = async (req, res, next) => {
             console.warn(`[Subscription] Filtered out ${initialCount - subs.length} stale subscription records.`);
         }
 
+        // Map ownerId to owner for compatibility with frontend
+        const mappedSubs = subs.map(s => ({
+            ...s,
+            owner: s.ownerId,
+            ownerId: s.ownerId?._id // Keep ID for reference if needed
+        }));
+
         // Owners without a subscription record = free
         const ownersWithSub = new Set(subs.map(s => String(s.ownerId?._id)));
         const allOwners = await User.find({ role: "owner" }, "name email createdAt").lean();
         const unsubOwners = allOwners.filter(o => !ownersWithSub.has(String(o._id))).map(o => ({
-            ownerId: o, plan: "free", status: "active", currentPeriodEnd: null,
+            owner: o,
+            ownerId: o._id,
+            plan: "free",
+            status: "active",
+            currentPeriodEnd: null,
         }));
 
-        return res.json({ success: true, data: [...subs, ...unsubOwners] });
+        return res.json({ success: true, data: [...mappedSubs, ...unsubOwners] });
     } catch (err) { next(err); }
 };
 
@@ -114,8 +125,8 @@ export const adminSetPlan = async (req, res, next) => {
             { ownerId: req.params.ownerId },
             { ...(plan ? { plan } : {}), ...(status ? { status } : {}) },
             { new: true, upsert: true }
-        ).populate("ownerId", "name email");
+        ).populate("ownerId", "name email").lean();
 
-        return res.json({ success: true, data: sub });
+        return res.json({ success: true, data: { ...sub, owner: sub.ownerId } });
     } catch (err) { next(err); }
 };
