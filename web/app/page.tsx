@@ -76,6 +76,7 @@ export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -90,9 +91,10 @@ export default function LandingPage() {
 
   // Auto rotate testimonials
   useEffect(() => {
+    if (isPaused) return;
     const iv = setInterval(() => setActiveTestimonial(v => (v + 1) % TESTIMONIALS.length), 4000);
     return () => clearInterval(iv);
-  }, []);
+  }, [isPaused]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -480,7 +482,12 @@ export default function LandingPage() {
       <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, rgba(139,92,246,0.15), transparent)", margin: "0 40px" }} />
 
       {/* ─── Testimonials ─── */}
-      <section style={{ padding: "120px 40px", position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
+      <section
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onClick={() => setIsPaused(true)}
+        style={{ padding: "120px 40px", position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", textAlign: "center" }}
+      >
         <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", color: "#a78bfa", textTransform: "uppercase", marginBottom: "16px" }}>
           Trusted by Operators
         </div>
