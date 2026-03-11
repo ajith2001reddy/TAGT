@@ -412,7 +412,7 @@ export const listOwners = async (req, res, next) => {
         // Enrich with properties if needed for list
         const enrichedOwners = await Promise.all(owners.map(async (o) => {
             const props = await Property.find({ ownerId: o._id }, 'name city').lean();
-            return { ...o, properties: props };
+            return { ...o, propertyIds: props };
         }));
 
         res.json({ success: true, data: enrichedOwners });

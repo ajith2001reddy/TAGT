@@ -25,6 +25,10 @@ describe("Startup Readiness Simulation", () => {
         });
         ownerId = owner._id;
         ownerToken = generateMockToken(owner);
+
+        // Sync indexes to prevent MongoDB Transaction LockTimeout 112
+        await User.init();
+        await Property.init();
     });
 
     afterAll(async () => {
@@ -80,6 +84,7 @@ describe("Startup Readiness Simulation", () => {
                 phoneNumber: "1234567890"
             });
 
+        if (res.status !== 201) console.error("Error creating resident:", res.body);
         expect(res.status).toBe(201);
         residentId = res.body.data._id;
 

@@ -37,6 +37,7 @@ export const listProperties = async (req, res, next) => {
             ]);
             return {
                 ...prop,
+                owner: prop.ownerId,
                 totalRooms,
                 totalBeds,
                 occupiedBeds
