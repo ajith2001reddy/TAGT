@@ -13,7 +13,7 @@ export const createCheckoutSession = async ({ paymentId, residentEmail, amount, 
     if (!stripe) throw new Error("Stripe is not configured. Set STRIPE_SECRET_KEY in .env");
 
     const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
+        payment_method_types: ["card", "upi"],
         customer_email: residentEmail,
         line_items: [{
             price_data: {
@@ -41,7 +41,7 @@ export const createSubscriptionCheckoutSession = async ({ priceId, ownerEmail, o
     if (!stripe) throw new Error("Stripe is not configured");
 
     const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
+        payment_method_types: ["card", "upi"],
         customer_email: ownerEmail,
         line_items: [{
             price: priceId,
