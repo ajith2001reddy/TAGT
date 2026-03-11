@@ -3,7 +3,7 @@ import auth from "../../middleware/auth.js";
 import authorize from "../../middleware/authorize.js";
 import verifyPropertyAccess from "../../middleware/verifyPropertyAccess.js";
 import validate from "../../middleware/validate.js";
-import { loginSchema, registerOwnerSchema } from "../../validations/auth.validation.js";
+import { loginSchema } from "../../validations/auth.validation.js";
 import { createRoomSchema, updateRoomSchema } from "../../validations/room.validation.js";
 import { createResidentSchema, updateResidentSchema } from "../../validations/resident.validation.js";
 import { updatePropertySchema, updatePropertyStatusSchema } from "../../validations/property.validation.js";

@@ -6,6 +6,9 @@ let replSet;
 export const connect = async () => {
     if (mongoose.connection.readyState === 1) return;
 
+    // Globally disable auto-indexing during testing to prevent LockTimeouts
+    mongoose.set('autoIndex', false);
+
     if (!replSet) {
         replSet = await MongoMemoryReplSet.create({
             replSet: { storageEngine: 'wiredTiger', count: 1 }
@@ -13,6 +16,7 @@ export const connect = async () => {
         const uri = replSet.getUri();
         await mongoose.connect(uri, {
             serverSelectionTimeoutMS: 30000,
+            autoIndex: false
         });
     }
 };

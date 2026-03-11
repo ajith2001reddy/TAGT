@@ -179,4 +179,9 @@ userSchema.methods.comparePassword = async function (plain) {
 // Apply tenant isolation
 userSchema.plugin(tenantIsolationPlugin);
 
+// 📊 Compound Indexes for Dashboard/Query Performance
+userSchema.index({ ownerId: 1, isDeleted: 1 });
+userSchema.index({ propertyId: 1, isDeleted: 1 });
+userSchema.index({ firebaseUid: 1, isDeleted: 1 });
+
 export default mongoose.models.User || mongoose.model("User", userSchema);

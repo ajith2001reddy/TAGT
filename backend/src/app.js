@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -258,15 +258,3 @@ app.use(notFound);
 app.use(errorHandler);
 
 export default app;
-
-// 🚀 Global Crash Handlers (Prevent silent failures)
-process.on("uncaughtException", (err) => {
-    logger.error("🛑 Uncaught Exception - API Crash:", { error: err.message, stack: err.stack });
-    // In production, we might want to capture to Sentry here too, 
-    // but Sentry is initialized asynchronously in this file.
-    setTimeout(() => process.exit(1), 1000);
-});
-
-process.on("unhandledRejection", (reason, promise) => {
-    logger.error("🛑 Unhandled Rejection at:", { promise, reason });
-});

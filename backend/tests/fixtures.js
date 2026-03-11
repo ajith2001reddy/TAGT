@@ -9,6 +9,7 @@ export const createMockOwner = async () => {
         name: "Mock Owner",
         email: "mock-owner@example.com",
         role: "owner",
+        verification: { status: "approved" },
         isActive: true,
         firebaseUid: "mock-owner-uid"
     });

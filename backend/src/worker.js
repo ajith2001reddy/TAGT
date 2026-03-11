@@ -38,8 +38,8 @@ async function startWorker() {
             const { name, data } = job;
             logger.info(`[WORKER] Starting job: ${name}`, { jobId: job.id });
 
+            const startTime = Date.now();
             try {
-                const startTime = Date.now();
 
                 if (jobRegistry[name]) {
                     await jobRegistry[name](data);

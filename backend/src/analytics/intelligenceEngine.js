@@ -103,14 +103,12 @@ export const calculateOccupancyTrends = async (scope) => {
 /* ── Smart Alerts ── */
 export const calculateSmartAlerts = async (scope) => {
     const alerts = [];
-    const [rooms, payments, residents, requests] = await Promise.all([
+    const [rooms, payments, requests] = await Promise.all([
         Room.find(scope).lean(),
         Payment.find(scope).lean(),
-        User.find({ ...scope, role: "resident", isActive: true, isDeleted: { $ne: true } }).lean(),
         Request.find({ ...scope, status: { $in: ["pending", "open"] }, isDeleted: { $ne: true } }).lean(),
     ]);
 
-    const now = new Date();
     const totalBeds = rooms.reduce((s, r) => s + (r.totalBeds || 0), 0);
     const occupiedBeds = rooms.reduce((s, r) => s + (r.occupiedBeds || 0), 0);
     const occupancyRate = totalBeds ? (occupiedBeds / totalBeds) * 100 : 0;

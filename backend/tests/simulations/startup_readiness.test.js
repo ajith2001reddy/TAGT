@@ -20,6 +20,7 @@ describe("Startup Readiness Simulation", () => {
             name: "Audit Owner",
             email: `owner_${Date.now()}@test.com`,
             role: "owner",
+            verification: { status: "approved" },
             firebaseUid: `uid_${Date.now()}`
         });
         ownerId = owner._id;

@@ -47,6 +47,9 @@ noticeSchema.pre(/^find/, function (next) {
     next();
 });
 
+// 📊 Compound index for dashboard queries
+noticeSchema.index({ propertyId: 1, isDeleted: 1, createdAt: -1 });
+
 // Apply tenant isolation
 noticeSchema.plugin(tenantIsolationPlugin);
 

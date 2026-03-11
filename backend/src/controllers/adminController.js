@@ -433,7 +433,7 @@ export const removePropertyFromOwner = async (req, res, next) => {
             return res.status(403).json({ success: false, message: "Super admin only" });
         }
 
-        const { ownerId, propertyId } = req.params;
+        const { propertyId } = req.params;
 
         // Clear owner reference on the property
         await Property.findByIdAndUpdate(

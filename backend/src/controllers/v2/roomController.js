@@ -2,8 +2,6 @@ import mongoose from "mongoose";
 import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
 import User from "../../models/User.js";
-import Property from "../../models/Property.js";
-import propertyService from "../../services/propertyService.js";
 import logger from "../../utils/logger.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import Joi from "joi";
@@ -163,7 +161,7 @@ export const updateRoom = async (req, res, next) => {
             ...(req.body.note !== undefined ? { note: req.body.note } : {})
         };
 
-        const room = await propertyService.update(id, update);
+        const room = await Room.findOneAndUpdate(filter, update, { new: true, runValidators: true });
 
         if (!room) return res.status(404).json({ success: false, message: "Room not found" });
 

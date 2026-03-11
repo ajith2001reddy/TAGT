@@ -1,7 +1,5 @@
 import Payment from "../../models/Payment.js";
 import { createCheckoutSession, createSubscriptionCheckoutSession, constructWebhookEvent, isStripeEnabled } from "../../services/stripeService.js";
-import { sendPaymentConfirmation } from "../../services/emailService.js";
-import { generateInvoiceBuffer } from "../../utils/invoiceGenerator.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
 import eventBus from "../../events/publisher.js";

@@ -12,6 +12,10 @@ describe("Resident Deletion Multi-Tenancy Suite", () => {
         fixtures = await import('../fixtures.js');
         await dbSetup.connect();
 
+        // ⏱️ Wait for implicit index builds to finish to prevent transaction LockTimeouts
+        await User.init();
+        await Property.init();
+
         // Setup Owner 1 and Property 1 with a resident
         owner1 = await fixtures.createMockOwner();
         property1 = await fixtures.createMockProperty(owner1._id);

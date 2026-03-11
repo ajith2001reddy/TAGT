@@ -6,12 +6,10 @@ import Request from "../../models/Request.js";
 import JoinRequest from "../../models/JoinRequest.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
-import { predictChurn } from "../../analytics/churnEngine.js";
-import { predictMaintenanceCost } from "../../analytics/maintenanceForecast.js";
 
 import cacheService from "../../services/cacheService.js";
 import { getKPIsInternal } from "../../analytics/kpiCalculator.js";
-import { calculateRevenueForecast, calculateSmartAlerts, calculateOccupancyTrends } from "../../analytics/intelligenceEngine.js";
+import { calculateRevenueForecast, calculateSmartAlerts } from "../../analytics/intelligenceEngine.js";
 
 // Redis Cache Config
 const ANALYTICS_CACHE_TTL = 300; // 5 minutes (in seconds for Redis)

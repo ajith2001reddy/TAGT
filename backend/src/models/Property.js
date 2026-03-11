@@ -44,6 +44,7 @@ propertySchema.pre(/^find/, function (next) {
 });
 
 propertySchema.index({ ownerId: 1, isActive: 1 });
+propertySchema.index({ ownerId: 1, isDeleted: 1 }); // Required for soft-delete fast lookups
 
 // Apply tenant isolation
 propertySchema.plugin(tenantIsolationPlugin);

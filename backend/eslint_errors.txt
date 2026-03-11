@@ -1,0 +1,32 @@
+
+C:\my project\TAGT\backend\src\analytics\intelligenceEngine.js
+  106:29  error  'residents' is assigned a value but never used  no-unused-vars
+  113:11  error  'now' is assigned a value but never used        no-unused-vars
+
+C:\my project\TAGT\backend\src\controllers\adminController.js
+  436:17  error  'ownerId' is assigned a value but never used  no-unused-vars
+
+C:\my project\TAGT\backend\src\controllers\v2\analyticsController.js
+   9:10  error  'predictChurn' is defined but never used              no-unused-vars
+  10:10  error  'predictMaintenanceCost' is defined but never used    no-unused-vars
+  14:58  error  'calculateOccupancyTrends' is defined but never used  no-unused-vars
+
+C:\my project\TAGT\backend\src\controllers\v2\roomController.js
+    5:8   error  'Property' is defined but never used         no-unused-vars
+  155:15  error  'filter' is assigned a value but never used  no-unused-vars
+
+C:\my project\TAGT\backend\src\controllers\v2\stripeController.js
+  3:10  error  'sendPaymentConfirmation' is defined but never used  no-unused-vars
+  4:10  error  'generateInvoiceBuffer' is defined but never used    no-unused-vars
+
+C:\my project\TAGT\backend\src\routes\v2\index.js
+  6:23  error  'registerOwnerSchema' is defined but never used  no-unused-vars
+
+C:\my project\TAGT\backend\src\utils\encryption.js
+  44:18  error  'err' is defined but never used  no-unused-vars
+
+C:\my project\TAGT\backend\src\worker.js
+  56:57  error  'startTime' is not defined  no-undef
+
+✖ 13 problems (13 errors, 0 warnings)
+

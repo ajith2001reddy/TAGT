@@ -41,7 +41,7 @@ export const decrypt = (cipherText) => {
             let decrypted = decipher.update(encryptedHex, "hex", "utf8");
             decrypted += decipher.final("utf8");
             return decrypted;
-        } catch (err) {
+        } catch {
             // If GCM fails, maybe it's not actually GCM format
         }
     }

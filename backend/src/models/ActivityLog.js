@@ -53,6 +53,8 @@ ActivityLogSchema.pre(/^find/, function (next) {
 });
 
 // ✅ Compound index for multi-tenant analytics/history
+ActivityLogSchema.index({ propertyId: 1, isDeleted: 1, createdAt: -1 });
+
 // Apply tenant isolation
 ActivityLogSchema.plugin(tenantIsolationPlugin);
 
