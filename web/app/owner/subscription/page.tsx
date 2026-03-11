@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useRazorpay } from "react-razorpay";
 
 interface PlanLimits { properties: number; rooms: number; residents: number; reports: boolean; analytics: boolean; emailReminders: boolean; }
 interface Plan { id: string; name: string; price: number; priceLabel: string; limits: PlanLimits; features: string[]; highlight: boolean; }
@@ -43,21 +44,45 @@ export default function SubscriptionPage() {
     }
     useEffect(() => { fetchData().catch(console.error); }, []);
 
+    const { Razorpay } = useRazorpay();
+
     async function handleUpgrade(planId: string) {
-        if (planId === myPlan?.plan || planId === "free") return; // Free plan downgrade usually requires support
+        if (planId === myPlan?.plan || planId === "free") return; 
+
+        if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+            alert("Razorpay Key ID missing from frontend environment.");
+            return;
+        }
 
         setUpgrading(planId);
         try {
-            const res = await api.post("/v2/stripe/checkout-subscription", { planId });
-            if (res.data?.data?.url) {
-                window.location.href = res.data.data.url;
-            } else {
-                throw new Error("No checkout URL returned");
-            }
+            const res = await api.post("/v2/razorpay/checkout-subscription", { planId });
+            const subscriptionId = res.data.data.subscriptionId;
+
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                subscription_id: subscriptionId,
+                name: "TAGT SaaS",
+                description: `Upgrade to ${planId.toUpperCase()} plan`,
+                handler: async function (response: any) {
+                    setUpgraded(true);
+                    setUpgrading(null);
+                    setTimeout(() => setUpgraded(false), 5000);
+                    fetchData(); // Refresh plan data after successful upgrade
+                },
+                theme: { color: "#8b5cf6" },
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.on("payment.failed", function (response: any) {
+                alert(response.error.description);
+                setUpgrading(null);
+            });
+            rzp.open();
         } catch (err: unknown) {
             console.error(err);
             const error = err as { response?: { data?: { message?: string } } };
-            alert(error.response?.data?.message || "Failed to initiate upgrade. Check Stripe configuration.");
+            alert(error.response?.data?.message || "Failed to initiate upgrade. Check Razorpay configuration.");
             setUpgrading(null);
         }
     }

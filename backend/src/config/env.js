@@ -6,7 +6,8 @@ const requiredEnvVars = [
     "FIREBASE_PROJECT_ID",
     "FIREBASE_CLIENT_EMAIL",
     "FIREBASE_PRIVATE_KEY",
-    "STRIPE_SECRET_KEY",
+    "RAZORPAY_KEY_ID",
+    "RAZORPAY_KEY_SECRET",
     "REDIS_URL"
 ];
 

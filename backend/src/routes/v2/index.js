@@ -22,7 +22,7 @@ import { reportMonthlyRevenue, reportOutstanding, reportResidentLedger } from ".
 import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner, getMyProperties, createProperty, getPropertyById } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
-import { createPaymentSession, createSubscriptionSession, stripeWebhook, stripeStatus } from "../../controllers/v2/stripeController.js";
+import { createPaymentSession, createSubscriptionSession, razorpayWebhook, razorpayStatus, verifyPayment } from "../../controllers/v2/razorpayController.js";
 import { getMyPlan, listPlans, upgradePlan, listAllSubscriptions, adminSetPlan } from "../../controllers/v2/subscriptionController.js";
 import { listActivityLogs, myActivityLogs, logActivity } from "../../controllers/v2/activityController.js";
 import { listBeds, createBeds, updateBedStatus, assignResidentToBed } from "../../controllers/v2/bedController.js";
@@ -140,12 +140,13 @@ router.post("/automation/monthly-rent", auth, authorize("super_admin", "owner"),
 router.post("/automation/late-fees", auth, authorize("super_admin", "owner"), runLateFeeUpdate);
 router.post("/automation/tick", auth, authorize("super_admin"), runAutomationTickNow);
 
-/* ── Phase 2: Stripe ── */
-router.get("/stripe/status", auth, stripeStatus);
-router.post("/stripe/checkout-session", auth, authorize("resident"), createPaymentSession);
-router.post("/stripe/checkout-subscription", auth, authorize("owner"), createSubscriptionSession);
+/* ── Phase 2: Razorpay ── */
+router.get("/razorpay/status", auth, razorpayStatus);
+router.post("/razorpay/checkout-session", auth, authorize("resident"), createPaymentSession);
+router.post("/razorpay/verify-payment", auth, authorize("resident"), verifyPayment);
+router.post("/razorpay/checkout-subscription", auth, authorize("owner"), createSubscriptionSession);
 // Webhook: must use raw body (registered separately in app.js — see below)
-router.post("/stripe/webhook", raw({ type: "application/json" }), stripeWebhook);
+router.post("/razorpay/webhook", raw({ type: "application/json" }), razorpayWebhook);
 
 /* ── Phase 2: Subscriptions ── */
 router.get("/subscription/plans", listPlans);

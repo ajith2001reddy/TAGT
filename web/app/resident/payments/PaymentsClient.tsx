@@ -33,35 +33,81 @@ function InvoiceBtn({ paymentId }: { paymentId: string }) {
     );
 }
 
+import { useRazorpay } from "react-razorpay";
+
 function PayOnlineBtn({ payment, onPaid }: { payment: Payment; onPaid: () => void }) {
     const [loading, setLoading] = useState(false);
-    const [stripeReady, setStripeReady] = useState<boolean | null>(null);
+    const [razorpayReady, setRazorpayReady] = useState<boolean | null>(null);
+    const { Razorpay } = useRazorpay();
 
     useEffect(() => {
-        api.get("/v2/stripe/status").then(r => setStripeReady(r.data.data.enabled)).catch(() => setStripeReady(false));
+        api.get("/v2/razorpay/status").then(r => setRazorpayReady(r.data.data.enabled)).catch(() => setRazorpayReady(false));
     }, []);
 
     async function pay() {
+         if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+             alert("Razorpay Key ID missing from frontend environment.");
+             return;
+         }
+
         setLoading(true);
         try {
-            const res = await api.post("/v2/stripe/checkout-session", { paymentId: payment._id });
-            window.location.href = res.data.data.url;
+            const res = await api.post("/v2/razorpay/checkout-session", { paymentId: payment._id });
+            const { orderId, amount, currency, prefill } = res.data.data;
+
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                amount: amount.toString(),
+                currency: currency,
+                name: "TAGT Properties",
+                description: `Rent payment for ${payment.month}`,
+                order_id: orderId,
+                handler: async (response: any) => {
+                    try {
+                        await api.post("/v2/razorpay/verify-payment", {
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            paymentId: payment._id
+                        });
+                        onPaid();
+                    } catch (err: any) {
+                        alert("Payment verification failed. Please contact support.");
+                    }
+                },
+                prefill: prefill || {
+                    name: "Resident",
+                    email: "resident@example.com",
+                    contact: "9999999999"
+                },
+                theme: {
+                    color: "#00d4ff",
+                },
+            };
+
+             const rzp = new (window as any).Razorpay(options);
+             rzp.on("payment.failed", function (response: any) {
+                 alert(response.error.description);
+             });
+             rzp.open();
+             
         } catch (err: any) {
             alert(err.response?.data?.message || "Unable to start payment. Contact your manager.");
+        } finally {
             setLoading(false);
         }
     }
 
-    if (stripeReady === null) return null;
+    if (razorpayReady === null) return null;
 
-    if (!stripeReady) return (
+    if (!razorpayReady) return (
         <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)", padding: "4px 9px", borderRadius: "6px", letterSpacing: "0.08em" }}>PAY OFFLINE</span>
     );
 
     return (
         <button onClick={pay} disabled={loading} className="btn-primary" style={{ fontSize: "12px", padding: "7px 14px", gap: "6px" }}>
             {loading ? <div style={{ width: "11px", height: "11px", border: "1.5px solid #000", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} /> : "💳"}
-            {loading ? "Redirecting…" : "Pay Online"}
+            Pay via Razorpay
         </button>
     );
 }

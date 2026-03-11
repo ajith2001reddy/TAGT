@@ -202,12 +202,12 @@ app.use("/api", limiter);
 
 /* ================= BODY PARSER ================= */
 
-// Stripe Webhook MUST have raw body for signature verification
-import { stripeWebhook } from "./controllers/v2/stripeController.js";
+// Razorpay Webhook MUST have raw body for signature verification
+import { razorpayWebhook } from "./controllers/v2/razorpayController.js";
 app.post(
-    "/api/v2/stripe/webhook",
+    "/api/v2/razorpay/webhook",
     express.raw({ type: "application/json" }),
-    stripeWebhook
+    razorpayWebhook
 );
 
 app.use(express.json({ limit: "1mb" }));

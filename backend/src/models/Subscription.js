@@ -4,7 +4,7 @@ const PlanSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true }, // "free", "pro", "enterprise"
     displayName: { type: String, required: true },         // "Free", "Pro", "Enterprise"
     price: { type: Number, required: true, default: 0 },   // monthly price in INR
-    stripePriceId: { type: String, default: null },
+    razorpayPlanId: { type: String, default: null },
     limits: {
         properties: { type: Number, default: 1 },
         rooms: { type: Number, default: 5 },
@@ -23,8 +23,8 @@ const SubscriptionSchema = new mongoose.Schema({
     trialEndsAt: { type: Date, default: null },
     currentPeriodStart: { type: Date, default: Date.now },
     currentPeriodEnd: { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
-    stripeCustomerId: { type: String, default: null },
-    stripeSubscriptionId: { type: String, default: null },
+    razorpayCustomerId: { type: String, default: null },
+    razorpaySubscriptionId: { type: String, default: null },
     cancelAtPeriodEnd: { type: Boolean, default: false },
     // 🗑️ Soft delete fields
     isDeleted: { type: Boolean, default: false, index: true },
