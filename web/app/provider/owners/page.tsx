@@ -131,9 +131,12 @@ export default function OwnersListPage() {
     }
 
     async function handleDeleteOwner(owner: Owner) {
-        if (!confirm(`Permanently delete "${owner.name}"?\n\nThis will:\n• Remove them from MongoDB\n• Delete their Firebase account\n• Unlink all assigned properties\n\nThis cannot be undone.`)) return;
+        if (!confirm(`Permanently delete owner "${owner.name}"?\n\nThis will remove them from the system completely.`)) return;
+        
+        const cascade = confirm(`Do you ALSO want to delete all properties owned by "${owner.name}"?\n\nOK = Yes, cascade delete all their properties, rooms, beds, and residents.\nCancel = No, keep their properties but remove the owner.`);
+        
         try {
-            await api.delete(`/v2/admin/owners/${owner._id}`);
+            await api.delete(`/v2/admin/owners/${owner._id}`, { data: { cascade } });
             fetchAll();
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };

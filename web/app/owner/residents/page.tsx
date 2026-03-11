@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Resident, fetchResidents, createResident, deactivateResident, moveResidentRoom, addResidentNote, fetchResidentHistory, ResidentHistory, sendNotification as sendResidentNotification } from "@/features/owner/residents.service";
 import { fetchRooms } from "@/features/owner/rooms.service";
+import { useAuth } from "@/context/AuthContext";
 
 interface Room { _id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; }
 
@@ -44,6 +45,7 @@ function PaymentHistoryPanel({ residentId }: { residentId: string }) {
 }
 
 export default function ResidentsPage() {
+    const { dbUser } = useAuth();
     const [residents, setResidents] = useState<Resident[]>([]);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [loading, setLoading] = useState(true);
@@ -143,7 +145,7 @@ export default function ResidentsPage() {
                         <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "4px" }}>Residents</h1>
                         <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{residents.length} total · <span style={{ color: "#34d399" }}>{active} active</span></p>
                     </div>
-                    <button className="btn-primary" onClick={() => setShowForm(!showForm)} style={{ fontSize: "13px", gap: "8px" }}>
+                    <button className="btn-primary" onClick={() => (dbUser?.verification?.status === 'approved' ? setShowForm(!showForm) : alert("Your account is pending verification. You cannot add residents until your documents are approved."))} style={{ fontSize: "13px", gap: "8px", opacity: dbUser?.verification?.status === 'approved' ? 1 : 0.6 }}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                         Add Resident
                     </button>

@@ -1,4 +1,4 @@
-﻿import Property from "../models/Property.js";
+import Property from "../models/Property.js";
 import User from "../models/User.js";
 import Room from "../models/Room.js";
 import Payment from "../models/Payment.js";
@@ -192,14 +192,60 @@ export const deleteOwner = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "Owner not found" });
         }
 
-        // Remove owner reference from all their properties
-        await Property.updateMany(
-            { ownerId: id },
-            { $unset: { ownerId: "" } },
-            { session }
-        );
+        const { cascade } = req.body; // New: Optional flag for full cleanup
 
-        // Hard delete from MongoDB
+        if (cascade === true) {
+            const properties = await Property.find({ ownerId: id }).session(session);
+            logger.info(`[CASCADE] Owner ${id} deletion: Cleaning up ${properties.length} properties.`);
+            
+            for (const prop of properties) {
+                // Cleanup Residents for this property
+                const residents = await User.find({ propertyId: prop._id, role: "resident" }).session(session);
+                if (residents.length > 0) {
+                    const residentIds = residents.map(r => r._id);
+                    await User.updateMany(
+                        { _id: { $in: residentIds } },
+                        { 
+                            isDeleted: true, 
+                            deletedAt: new Date(), 
+                            status: "inactive", 
+                            isActive: false,
+                            roomId: null,
+                            bedId: null 
+                        },
+                        { session }
+                    );
+
+                    // Firebase cleanup for residents (fire-and-forget)
+                    residents.forEach(r => {
+                        if (r.firebaseUid) {
+                            admin.auth().deleteUser(r.firebaseUid)
+                                .catch(err => logger.warn(`[CASCADE-OWNER] Firebase delete failed for resident ${r._id}: ${err.message}`));
+                        }
+                    });
+                }
+
+                // Cleanup Resources
+                await mongoose.model("Bed").deleteMany({ propertyId: prop._id }).session(session);
+                await mongoose.model("Room").deleteMany({ propertyId: prop._id }).session(session);
+                await mongoose.model("Payment").deleteMany({ propertyId: prop._id }).session(session);
+                await mongoose.model("Notice").deleteMany({ propertyId: prop._id }).session(session);
+                await mongoose.model("JoinRequest").deleteMany({ propertyId: prop._id }).session(session);
+                await mongoose.model("Notification").deleteMany({ propertyId: prop._id }).session(session);
+
+                // Delete Property
+                await Property.deleteOne({ _id: prop._id }, { session });
+            }
+        } else {
+            // Remove owner reference from all their properties (Original behavior)
+            await Property.updateMany(
+                { ownerId: id },
+                { $unset: { ownerId: "" } },
+                { session }
+            );
+        }
+
+        // Hard delete owner from MongoDB
         await User.deleteOne({ _id: id }, { session });
 
         await session.commitTransaction();
@@ -288,25 +334,41 @@ export const deleteProperty = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "Property not found" });
         }
 
-        // 1. Check for active residents - safer to fail if residents still exist
-        const activeResidents = await User.countDocuments({ propertyId: id, role: "resident" });
-        if (activeResidents > 0) {
-            await session.abortTransaction();
-            return res.status(400).json({
-                success: false,
-                message: `Delete failed: ${activeResidents} resident(s) are still assigned to this property. Please unassign or delete them first.`
+        // 1. Full Cascade Cleanup: Residents
+        const residents = await User.find({ propertyId: id, role: "resident" }).session(session);
+        
+        // Soft delete residents in DB and delete from Firebase Auth
+        if (residents.length > 0) {
+            const residentIds = residents.map(r => r._id);
+            await User.updateMany(
+                { _id: { $in: residentIds } },
+                { 
+                    isDeleted: true, 
+                    deletedAt: new Date(), 
+                    status: "inactive", 
+                    isActive: false,
+                    roomId: null,
+                    bedId: null 
+                },
+                { session }
+            );
+
+            // Firebase cleanup (fire-and-forget)
+            residents.forEach(r => {
+                if (r.firebaseUid) {
+                    admin.auth().deleteUser(r.firebaseUid)
+                        .catch(err => logger.warn(`[CASCADE] Firebase delete failed for resident ${r._id}: ${err.message}`));
+                }
             });
+            logger.info(`[CASCADE] Soft-deleted ${residents.length} residents for property ${id}`);
         }
 
-        // 2. Full Cascade Cleanup (Rooms, Beds, Payments, Notices, etc.)
-        // We delete beds first because they depend on rooms
+        // 2. Full Cascade Cleanup: Other Resources
         await mongoose.model("Bed").deleteMany({ propertyId: id }).session(session);
         await mongoose.model("Room").deleteMany({ propertyId: id }).session(session);
         await mongoose.model("Payment").deleteMany({ propertyId: id }).session(session);
         await mongoose.model("Notice").deleteMany({ propertyId: id }).session(session);
         await mongoose.model("JoinRequest").deleteMany({ propertyId: id }).session(session);
-
-        // Optional: Clean up notifications/activity logs related to this property
         await mongoose.model("Notification").deleteMany({ propertyId: id }).session(session);
 
         // 3. Final: Delete the Property

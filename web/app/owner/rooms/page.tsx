@@ -5,6 +5,7 @@ import { useRooms } from "@/features/owner/useRooms";
 import { createRoom, deleteRoom, updateRoom } from "@/features/owner/rooms.service";
 import { BedGrid } from "@/features/owner/BedGrid";
 import { useProperty } from "@/context/PropertyContext";
+import { useAuth } from "@/context/AuthContext";
 
 function OccupancyBar({ occupied, total }: { occupied: number; total: number }) {
     const pct = total > 0 ? Math.round((occupied / total) * 100) : 0;
@@ -41,6 +42,7 @@ interface Room {
 }
 
 export default function RoomsPage() {
+    const { dbUser } = useAuth();
     const { rooms, stats, loading, reload } = useRooms() as {
         rooms: Room[],
         stats: { totalBeds: number; occupiedBeds: number; avgRent: number } | null,
@@ -110,7 +112,7 @@ export default function RoomsPage() {
                     <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Rooms</h1>
                     <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{rooms.length} unit{rooms.length !== 1 ? "s" : ""} configured</p>
                 </div>
-                <button className="btn-primary" onClick={() => setShowForm(!showForm)} style={{ gap: "8px", fontSize: "13.5px" }}>
+                <button className="btn-primary" onClick={() => (dbUser?.verification?.status === 'approved' ? setShowForm(!showForm) : alert("Your account is pending verification. You cannot add rooms until your documents are approved."))} style={{ gap: "8px", fontSize: "13.5px", opacity: dbUser?.verification?.status === 'approved' ? 1 : 0.6 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                     Add Room
                 </button>

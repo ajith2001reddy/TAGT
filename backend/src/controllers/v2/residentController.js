@@ -124,9 +124,21 @@ export const createResident = async (req, res) => {
         }
 
         // 🔐 SECURITY: Ensure owner owns this property
-        if (req.user.role === "owner" && !req.user.propertyIds?.some(id => id.toString() === propertyId.toString())) {
-            await session.abortTransaction();
-            return res.status(403).json({ success: false, message: "Unauthorized property access" });
+        if (req.user.role === "owner") {
+            // 1. Verification Gate
+            if (req.user.verification?.status !== "approved") {
+                await session.abortTransaction();
+                return res.status(403).json({
+                    success: false,
+                    message: "Your account is not yet verified. Please upload your identity and property documents for verification."
+                });
+            }
+
+            // 2. Property Access Check
+            if (!req.user.propertyIds?.some(id => id.toString() === propertyId.toString())) {
+                await session.abortTransaction();
+                return res.status(403).json({ success: false, message: "Unauthorized property access" });
+            }
         }
 
         const { resident, resetLink } = await residentService.createResidentWorkflow({

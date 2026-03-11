@@ -68,6 +68,15 @@ export const createRoom = async (req, res, next) => {
             return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
+        // 🔐 VERIFICATION GATE: Owners must be approved to create resources
+        if (req.user.role === "owner" && req.user.verification?.status !== "approved") {
+            if (session) await session.abortTransaction();
+            return res.status(403).json({
+                success: false,
+                message: "Your account is not yet verified. Please upload your identity and property documents for verification."
+            });
+        }
+
         // 🔐 Determine propertyId based on role
         let propertyId = value.propertyId;
 

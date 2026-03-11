@@ -174,7 +174,7 @@ export default function PropertiesListPage() {
     };
 
     const handleDeleteProperty = async (p: Property) => {
-        if (!confirm(`Permanently delete "${p.name}"?\n\nThis will delete:\n• The property\n• All its rooms\n• All payment records\n\nNote: Delete will be blocked if residents are still assigned.\n\nThis cannot be undone.`)) return;
+        if (!confirm(`Permanently delete "${p.name}"?\n\nThis will delete:\n• The property\n• All its rooms and beds\n• All associated residents (including app access)\n• All payment records and notices\n\nThis cannot be undone.`)) return;
         try {
             await api.delete(`/v2/admin/properties/${p._id}`);
             fetchProperties(pagination.page);
