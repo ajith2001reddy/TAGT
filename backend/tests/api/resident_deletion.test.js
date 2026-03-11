@@ -45,7 +45,7 @@ describe("Resident Deletion Multi-Tenancy Suite", () => {
         const ownerUser = await User.findById(owner1._id).lean();
         const req = {
             params: { id: resident1._id.toString() },
-            user: ownerUser
+            user: { ...ownerUser, propertyIds: [property1._id] }
         };
 
         const res = {
@@ -78,7 +78,7 @@ describe("Resident Deletion Multi-Tenancy Suite", () => {
         const ownerUser = await User.findById(owner1._id).lean();
         const req = {
             params: { id: resident2._id.toString() },
-            user: ownerUser
+            user: { ...ownerUser, propertyIds: [property1._id] }
         };
 
         const res = {

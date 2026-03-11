@@ -7,6 +7,7 @@ import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import residentService from "../../services/residentService.js";
 import admin from "../../config/firebase.js";
 import logger from "../../utils/logger.js";
+
 /**
  * List residents for a property
  */
@@ -274,9 +275,6 @@ export const addResidentNote = async (req, res) => {
 };
 
 /**
- * Get detailed history (payments) for a resident
- */
-/**
  * Send a notification to a resident
  */
 export const sendNotification = async (req, res) => {
@@ -333,15 +331,21 @@ export const getResidentHistory = async (req, res) => {
     }
 };
 
+/**
+ * Delete a resident (Soft Delete + Tenant Isolation)
+ */
 export const deleteResident = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
         const { id } = req.params;
         const scope = buildPropertyFilter(req.user);
         const pm = scope.propertyId ? { propertyId: scope.propertyId } : {};
 
         // Find resident within owner's scope
-        const resident = await User.findOne({ _id: id, role: "resident", ...pm });
+        const resident = await User.findOne({ _id: id, role: "resident", ...pm }).session(session);
         if (!resident) {
+            await session.abortTransaction();
             return res.status(404).json({ success: false, message: "Resident not found or unauthorized" });
         }
 
@@ -355,17 +359,19 @@ export const deleteResident = async (req, res, next) => {
         resident.isActive = false;
         resident.roomId = null;
         resident.bedId = null;
-        await resident.save();
+        await resident.save({ session });
 
         // Cleanup Room occupancy
         if (oldRoomId) {
-            await Room.findByIdAndUpdate(oldRoomId, { $inc: { occupiedBeds: -1 } });
+            await Room.findByIdAndUpdate(oldRoomId, { $inc: { occupiedBeds: -1 } }).session(session);
         }
 
         // Cleanup Bed assignment
         if (oldBedId) {
-            await Bed.findByIdAndUpdate(oldBedId, { status: "available", residentId: null });
+            await Bed.findByIdAndUpdate(oldBedId, { status: "available", residentId: null }).session(session);
         }
+
+        await session.commitTransaction();
 
         // Delete from Firebase Auth (non-blocking)
         if (resident.firebaseUid) {
@@ -376,8 +382,9 @@ export const deleteResident = async (req, res, next) => {
 
         return res.json({ success: true, message: "Resident deleted successfully (soft-delete)" });
     } catch (err) {
-        console.error("DELETE RESIDENT CONTROLLER ERROR:", err);
+        await session.abortTransaction();
         next(err);
+    } finally {
+        session.endSession();
     }
 };
-

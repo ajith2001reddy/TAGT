@@ -1,9 +1,22 @@
-
+﻿
 > tagt-backend@1.0.0 test
 > cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest tests/api/resident_deletion.test.js
 
-(node:34612) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
-(Use `node --trace-warnings ...` to show where the warning was created)
+npm : (node:8352) ExperimentalWarning: VM 
+Modules is an experimental feature and might 
+change at any time
+At line:1 char:1
++ npm test tests/api/resident_deletion.test.js 
+2>&1 | Out-File -FilePat ...
++ 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((no 
+   de:8352) Exp...nge at any time:String) [], R  
+  emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where 
+the warning was created)
   console.error
     DELETE RESIDENT ERROR: MongoServerError: Unable to acquire IX lock on '{5678211074163229429: Collection, 1066525055735841525, test.users}' within 5ms. opId: 46081, op: conn19, connId: 19.
         at Connection.sendCommand (C:\my project\TAGT\backend\node_modules\mongoose\node_modules\mongodb\src\cmap\connection.ts:559:17)
@@ -29,22 +42,22 @@
         code: 24,
         codeName: 'LockTimeout',
         '$clusterTime': {
-          clusterTime: new Timestamp({ t: 1773250489, i: 57 }),
+          clusterTime: new Timestamp({ t: 1773250409, i: 7 }),
           signature: [Object]
         },
-        operationTime: new Timestamp({ t: 1773250489, i: 50 })
+        operationTime: new Timestamp({ t: 1773250408, i: 54 })
       },
       ok: 0,
       code: 24,
       codeName: 'LockTimeout',
       '$clusterTime': {
-        clusterTime: new Timestamp({ t: 1773250489, i: 57 }),
+        clusterTime: new Timestamp({ t: 1773250409, i: 7 }),
         signature: {
           hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
           keyId: 0
         }
       },
-      operationTime: new Timestamp({ t: 1773250489, i: 50 })
+      operationTime: new Timestamp({ t: 1773250408, i: 54 })
     }
 
     [0m [90m 57 |[39m
@@ -84,22 +97,22 @@
         code: 24,
         codeName: 'LockTimeout',
         '$clusterTime': {
-          clusterTime: new Timestamp({ t: 1773250489, i: 57 }),
+          clusterTime: new Timestamp({ t: 1773250409, i: 7 }),
           signature: [Object]
         },
-        operationTime: new Timestamp({ t: 1773250489, i: 50 })
+        operationTime: new Timestamp({ t: 1773250408, i: 54 })
       },
       ok: 0,
       code: 24,
       codeName: 'LockTimeout',
       '$clusterTime': {
-        clusterTime: new Timestamp({ t: 1773250489, i: 57 }),
+        clusterTime: new Timestamp({ t: 1773250409, i: 7 }),
         signature: {
           hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
           keyId: 0
         }
       },
-      operationTime: new Timestamp({ t: 1773250489, i: 50 })
+      operationTime: new Timestamp({ t: 1773250408, i: 54 })
     }
 
     [0m [90m 63 |[39m
@@ -114,28 +127,44 @@
 
 FAIL tests/api/resident_deletion.test.js
   Resident Deletion Multi-Tenancy Suite
-    × should allow owner1 to delete their own resident1 (501 ms)
-    √ should NOT allow owner1 to delete resident2 from owner2's property (14 ms)
+    ├ù should allow owner1 to delete their own 
+resident1 (440 ms)
+    ΓêÜ should NOT allow owner1 to delete 
+resident2 from owner2's property (49 ms)
 
-  ● Resident Deletion Multi-Tenancy Suite › should allow owner1 to delete their own resident1
+  ΓùÅ Resident Deletion Multi-Tenancy Suite ΓÇ║ 
+should allow owner1 to delete their own resident1
 
-    expect(received).toBe(expected) // Object.is equality
+    expect(received).toBe(expected) // Object.is 
+equality
 
     Expected: true
     Received: undefined
 
     [0m [90m 66 |[39m         }
      [90m 67 |[39m
-    [31m[1m>[22m[39m[90m 68 |[39m         expect(res[33m.[39mbody[33m.[39msuccess)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
-     [90m    |[39m                                  [31m[1m^[22m[39m
+    [31m[1m>[22m[39m[90m 68 |[39m         e
+xpect(res[33m.[39mbody[33m.[39msuccess)[33m.
+[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m    |[39m                             
+     [31m[1m^[22m[39m
      [90m 69 |[39m
-     [90m 70 |[39m         [36mconst[39m deletedResident [33m=[39m [36mawait[39m [33mUser[39m[33m.[39mfindOne({ _id[33m:[39m resident1[33m.[39m_id[33m,[39m isDeleted[33m:[39m [36mtrue[39m })[33m;[39m
-     [90m 71 |[39m         expect(deletedResident)[33m.[39mnot[33m.[39mtoBeNull()[33m;[39m[0m
+     [90m 70 |[39m         [36mconst[39m 
+deletedResident [33m=[39m [36mawait[39m 
+[33mUser[39m[33m.[39mfindOne({ 
+_id[33m:[39m 
+resident1[33m.[39m_id[33m,[39m 
+isDeleted[33m:[39m [36mtrue[39m })[33m;[39m
+     [90m 71 |[39m         expect(deletedReside
+nt)[33m.[39mnot[33m.[39mtoBeNull()[33m;[39m
+[0m
 
-      at Object.<anonymous> (tests/api/resident_deletion.test.js:68:34)
+      at Object.<anonymous> 
+(tests/api/resident_deletion.test.js:68:34)
 
 Test Suites: 1 failed, 1 total
 Tests:       1 failed, 1 passed, 2 total
 Snapshots:   0 total
-Time:        4.492 s, estimated 5 s
-Ran all test suites matching /tests\\api\\resident_deletion.test.js/i.
+Time:        4.879 s, estimated 7 s
+Ran all test suites matching 
+/tests\\api\\resident_deletion.test.js/i.
