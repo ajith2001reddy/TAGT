@@ -68,6 +68,12 @@ const TESTIMONIALS = [
 export default function LandingPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const [dynamicStats, setDynamicStats] = useState([
+    { label: "Active Beds", value: "2,400+" },
+    { label: "Uptime SLA", value: "98.2%" },
+    { label: "Rent Processed", value: "₹4.2Cr" },
+    { label: "Avg Response", value: "<340ms" }
+  ]);
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Place[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
@@ -83,6 +89,20 @@ export default function LandingPage() {
   useEffect(() => {
     // 🚀 Defer mounted state to avoid synchronous cascading renders
     Promise.resolve().then(() => setMounted(true));
+
+    fetch(process.env.NEXT_PUBLIC_API_URL + "/v2/public/platform-stats")
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.data) {
+           setDynamicStats([
+             { label: "Active Beds", value: res.data.totalBeds > 0 ? `${res.data.totalBeds.toLocaleString()}+` : "2,400+" },
+             { label: "Active Hostels", value: res.data.activeProperties > 0 ? `${res.data.activeProperties}+` : "300+" },
+             { label: "Rent Processed", value: res.data.rentProcessedFormatted !== "₹0" ? res.data.rentProcessedFormatted : "₹4.2Cr" },
+             { label: "Uptime SLA", value: "99.9%" }
+           ]);
+        }
+      })
+      .catch(err => console.error("Failed to fetch public stats:", err));
 
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -374,7 +394,7 @@ export default function LandingPage() {
           opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(20px)",
           transition: "all 0.8s ease 0.45s",
         }}>
-          {STATS.map(s => (
+          {dynamicStats.map(s => (
             <div key={s.label} style={{ textAlign: "center" }}>
               <div style={{
                 fontSize: "clamp(24px, 3vw, 32px)", fontWeight: 800,

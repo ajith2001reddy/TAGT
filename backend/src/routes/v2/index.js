@@ -26,6 +26,7 @@ import { createPaymentSession, createSubscriptionSession, razorpayWebhook, razor
 import { getMyPlan, listPlans, upgradePlan, listAllSubscriptions, adminSetPlan } from "../../controllers/v2/subscriptionController.js";
 import { listActivityLogs, myActivityLogs, logActivity } from "../../controllers/v2/activityController.js";
 import { listBeds, createBeds, updateBedStatus, assignResidentToBed } from "../../controllers/v2/bedController.js";
+import { getPlatformStats } from "../../controllers/v2/publicController.js";
 // Phase 3
 import { getRevenueForecast, getOccupancyTrends, getSmartAlerts, getChurnAnalysis, getIntelligenceSummary } from "../../controllers/v2/intelligenceController.js";
 // Phase 4: Support
@@ -48,6 +49,9 @@ const router = Router();
 /* ── Auth ── */
 router.post("/auth/login", validate(loginSchema), login);
 router.post("/auth/register", register);
+
+/* ── Public ── */
+router.get("/public/platform-stats", getPlatformStats);
 
 /* ── Super Admin ── */
 router.get("/provider/overview", auth, authorize("super_admin"), getProviderOverview);
