@@ -38,7 +38,7 @@ export const createPaymentOrder = async ({ paymentId, amount }) => {
  * First, creates a customer if they don't exist, then creates the subscription.
  * Note: Requires pre-configured Razorpay Plans on the Dashboard.
  */
-export const createSubscriptionOrder = async ({ planId, ownerEmail, ownerId, ownerName }) => {
+export const createSubscriptionOrder = async ({ planId, ownerId }) => {
     if (!razorpay) throw new Error("Razorpay is not configured");
 
     // Map your internal plan IDs ("pro", "enterprise") to Razorpay Plan IDs from env

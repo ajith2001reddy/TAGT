@@ -1,5 +1,4 @@
 import Payment from "../../models/Payment.js";
-import User from "../../models/User.js";
 import { createPaymentOrder, createSubscriptionOrder, verifyPaymentSignature, verifyWebhookSignature, isRazorpayEnabled } from "../../services/razorpayService.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
