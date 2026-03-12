@@ -14,7 +14,7 @@ import { createBedSchema, updateBedStatusSchema, assignBedSchema } from "../../v
 import { updateProfileSchema, changePasswordSchema } from "../../validations/user.validation.js";
 import { login, register } from "../../controllers/v2/authController.js";
 import { listRooms, createRoom, updateRoom, deleteRoom, getRoomStats } from "../../controllers/v2/roomController.js";
-import { listResidents, createResident, moveResidentRoom, deactivateResident, approveResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident } from "../../controllers/v2/residentController.js";
+import { listResidents, createResident, moveResidentRoom, deactivateResident, approveResident, addResidentNote, sendNotification, getResidentHistory, assignResidentToProperty, superAdminUpdateResident, downloadLease } from "../../controllers/v2/residentController.js";
 import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, downloadInvoice } from "../../controllers/v2/paymentController.js";
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
 import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2, ownerDashboardSummary } from "../../controllers/v2/analyticsController.js";
@@ -143,6 +143,7 @@ router.patch("/requests/join/:id/reject", auth, authorize("owner"), rejectJoinRe
 router.get("/resident/dashboard", auth, authorize("resident"), getResidentDashboard);
 router.get("/resident/dashboard/v2", auth, authorize("resident"), getResidentDashboardV2);
 router.post("/resident/requests", auth, authorize("resident"), validate(createRequestSchema), residentCreateRequest);
+router.get("/resident/lease", auth, authorize("resident"), downloadLease);
 router.post("/join-requests", auth, authorize("resident"), createJoinRequest);
 
 /* ── Automation ── */

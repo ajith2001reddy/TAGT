@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
+import PDFDocument from "pdfkit";
 import User from "../../models/User.js";
 import Payment from "../../models/Payment.js";
 import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
+import Property from "../../models/Property.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import residentService from "../../services/residentService.js";
 import admin from "../../config/firebase.js";
@@ -418,5 +420,108 @@ export const deleteResident = async (req, res, next) => {
         next(err);
     } finally {
         session.endSession();
+    }
+};
+
+/**
+ * Generate and stream a PDF lease agreement for the logged-in resident
+ */
+export const downloadLease = async (req, res, next) => {
+    try {
+        const resident = await User.findById(req.user._id)
+            .populate("propertyId", "name address")
+            .populate("roomId", "roomNumber rent")
+            .lean();
+
+        if (!resident) {
+            return res.status(404).json({ success: false, message: "Resident not found" });
+        }
+
+        const propertyName = resident.propertyId?.name || "N/A";
+        const propertyAddress = resident.propertyId?.address || "";
+        const roomNumber = resident.roomId?.roomNumber || "N/A";
+        const rent = resident.roomId?.rent || resident.rent || 0;
+        const deposit = resident.securityDeposit || rent * 2;
+        const leaseStart = resident.leaseStart ? new Date(resident.leaseStart).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }) : "Dec 01, 2025";
+        const leaseEnd = resident.leaseEnd ? new Date(resident.leaseEnd).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }) : "Nov 30, 2026";
+
+        const doc = new PDFDocument({ margin: 50, size: "A4" });
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename=lease-agreement-${resident.name?.replace(/\s+/g, "-") || "resident"}.pdf`);
+
+        doc.pipe(res);
+
+        // Header
+        doc.fontSize(22).font("Helvetica-Bold").fillColor("#1a1a2e").text("TAGT Property Management", { align: "center" });
+        doc.fontSize(12).font("Helvetica").fillColor("#666").text("Residential Lease Agreement", { align: "center" });
+        doc.moveDown(0.5);
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor("#00d4ff").lineWidth(2).stroke();
+        doc.moveDown(1);
+
+        // Section: Parties
+        doc.fontSize(14).font("Helvetica-Bold").fillColor("#1a1a2e").text("1. PARTIES");
+        doc.moveDown(0.4);
+        doc.fontSize(11).font("Helvetica").fillColor("#333");
+        doc.text(`Resident Name:        ${resident.name || "N/A"}`);
+        doc.text(`Email:                ${resident.email || "N/A"}`);
+        doc.text(`Phone:                ${resident.phone || "N/A"}`);
+        doc.moveDown(0.5);
+
+        // Section: Property
+        doc.fontSize(14).font("Helvetica-Bold").fillColor("#1a1a2e").text("2. PROPERTY");
+        doc.moveDown(0.4);
+        doc.fontSize(11).font("Helvetica").fillColor("#333");
+        doc.text(`Property Name:        ${propertyName}`);
+        doc.text(`Address:              ${propertyAddress}`);
+        doc.text(`Room Number:          ${roomNumber}`);
+        doc.moveDown(0.5);
+
+        // Section: Lease Terms
+        doc.fontSize(14).font("Helvetica-Bold").fillColor("#1a1a2e").text("3. LEASE TERMS");
+        doc.moveDown(0.4);
+        doc.fontSize(11).font("Helvetica").fillColor("#333");
+        doc.text(`Lease Start Date:     ${leaseStart}`);
+        doc.text(`Lease End Date:       ${leaseEnd}`);
+        doc.text(`Monthly Rent:         ₹${rent.toLocaleString("en-IN")}`);
+        doc.text(`Security Deposit:     ₹${deposit.toLocaleString("en-IN")}`);
+        doc.text(`Notice Period:        30 days`);
+        doc.moveDown(0.5);
+
+        // Section: Rules
+        doc.fontSize(14).font("Helvetica-Bold").fillColor("#1a1a2e").text("4. PROPERTY RULES");
+        doc.moveDown(0.4);
+        doc.fontSize(11).font("Helvetica").fillColor("#333");
+        const rules = [
+            "Quiet hours are observed from 11 PM to 7 AM.",
+            "No smoking is allowed within the premises.",
+            "Trash must be segregated and disposed of daily.",
+            "Visitors are allowed until 10 PM.",
+            "Rent is due on or before the 5th of each month.",
+            "Subletting of the room is strictly prohibited.",
+            "Residents must maintain cleanliness in common areas.",
+        ];
+        rules.forEach((rule, i) => {
+            doc.text(`${i + 1}. ${rule}`);
+        });
+        doc.moveDown(0.5);
+
+        // Section: Signatures
+        doc.fontSize(14).font("Helvetica-Bold").fillColor("#1a1a2e").text("5. SIGNATURES");
+        doc.moveDown(1);
+        doc.fontSize(11).font("Helvetica").fillColor("#333");
+        doc.text("Resident Signature: ____________________________       Date: ____________", { align: "left" });
+        doc.moveDown(1.5);
+        doc.text("Owner/Manager Signature: ______________________       Date: ____________", { align: "left" });
+
+        // Footer
+        doc.moveDown(2);
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor("#eee").lineWidth(1).stroke();
+        doc.moveDown(0.5);
+        doc.fontSize(9).fillColor("#aaa").text(`Generated by TAGT Platform on ${new Date().toLocaleDateString("en-IN")}`, { align: "center" });
+
+        doc.end();
+    } catch (err) {
+        next(err);
     }
 };

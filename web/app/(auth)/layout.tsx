@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { CheckCircle2, ShieldCheck, Users, Home, Sparkles, Zap, TrendingUp, BarChart3 } from "lucide-react";
 
 // Context for sharing role state between Layout and Client
@@ -15,8 +15,22 @@ const AuthContext = createContext<{
 
 export const useAuthContext = () => useContext(AuthContext);
 
+interface PlatformStats {
+    totalResidents: number;
+    activeProperties: number;
+    rentProcessedFormatted: string;
+}
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
     const [activeRole, setActiveRole] = useState<"resident" | "owner">("resident");
+    const [stats, setStats] = useState<PlatformStats | null>(null);
+
+    useEffect(() => {
+        fetch("/api/v2/public/platform-stats")
+            .then(r => r.json())
+            .then(d => { if (d.success) setStats(d.data); })
+            .catch(() => {});
+    }, []);
 
     const features = {
         resident: [
@@ -119,7 +133,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                             <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "1px solid var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-primary)" }}>
                                 <CheckCircle2 size={12} />
                             </div>
-                            {activeRole === "resident" ? "Trusted by 50k+ residents nationwide" : "Join 10k+ active property owners"}
+                            {activeRole === "resident"
+                                ? stats ? `Trusted by ${stats.totalResidents.toLocaleString()}+ residents` : "Trusted by residents nationwide"
+                                : stats ? `${stats.activeProperties.toLocaleString()}+ active properties managed` : "Join active property owners"}
                         </div>
                     </div>
 
