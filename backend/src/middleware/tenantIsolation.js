@@ -62,9 +62,17 @@ export const tenantIsolationPlugin = function (schema) {
             if (schema.paths.propertyId) {
                 conditions.propertyId = { $in: context.propertyIds };
             }
-            // For Models with owner/ownerId (Property, Subscription)
+            // For Models with owner/ownerId (Property, Subscription, User)
             else if (schema.paths.owner || schema.paths.ownerId) {
                 const field = schema.paths.ownerId ? "ownerId" : "owner";
+                
+                // SECURITY: If it's the User model, an owner can see residents where ownerId = them
+                // AND they must be able to see THEMSELVES (where _id = them)
+                if (schema.tree.role) {
+                    this.where({ $or: [{ [field]: context.id }, { _id: context.id }] });
+                    return next();
+                }
+
                 conditions[field] = context.id;
             }
         }

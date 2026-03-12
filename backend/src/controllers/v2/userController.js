@@ -123,9 +123,6 @@ export const changePassword = async (req, res, next) => {
         const msg = hasPassword ? "Password updated successfully" : "Password created successfully. You can now login with your email/phone and password.";
         logger.info(`${msg} for user: ${user.email || user.phoneNumber}`);
         res.json({ success: true, message: msg });
-
-        logger.info(`Password changed for user: ${user.email}`);
-        res.json({ success: true, message: "Password updated successfully" });
     } catch (err) {
         next(err);
     }
