@@ -10,8 +10,11 @@ import Script from "next/script";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Lock, ArrowRight, Github, Chrome, Compass, Eye, EyeOff } from "lucide-react";
 
+import { useAuthContext } from "../layout";
+
 export default function SignupClient() {
     const router = useRouter();
+    const { activeRole: role, setActiveRole: setRole } = useAuthContext();
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [username, setUsername] = useState("");
@@ -21,7 +24,6 @@ export default function SignupClient() {
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState("");
-    const [role, setRole] = useState<"owner" | "resident">("resident");
 
     async function handleSignup(e: React.FormEvent) {
         e.preventDefault();
@@ -241,12 +243,12 @@ export default function SignupClient() {
 
                     <motion.button
                         variants={itemVariants}
-                        whileHover={{ scale: 1.01, boxShadow: "0 0 20px rgba(205, 255, 68, 0.2)" }}
+                        whileHover={{ scale: 1.01, boxShadow: "0 0 20px var(--accent-glow)" }}
                         whileTap={{ scale: 0.99 }}
                         type="submit"
                         disabled={loading || googleLoading}
                         style={{
-                            width: "100%", height: "54px", background: "#CDFF44", borderRadius: "14px",
+                            width: "100%", height: "54px", background: "var(--accent-primary)", borderRadius: "14px",
                             border: "none", color: "#000", fontSize: "16px", fontWeight: 700,
                             cursor: "pointer", transition: "all 0.2s ease"
                         }}
@@ -263,7 +265,7 @@ export default function SignupClient() {
             <motion.div variants={itemVariants} style={{
                 marginTop: "32px", textAlign: "center", fontSize: "14px", color: "var(--text-secondary)"
             }}>
-                Already have an account? <Link href="/login" style={{ color: "#CDFF44", textDecoration: "none", fontWeight: 700 }}>Login</Link>
+                Already have an account? <Link href="/login" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 700 }}>Login</Link>
             </motion.div>
         </motion.div>
     );
