@@ -113,10 +113,12 @@ export default function IntelligenceDashboard() {
                             <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>Automated insights and anomaly detections.</p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                            {data?.alerts?.map((alert: any, i: number) => (
+                            {data?.alerts?.alerts?.map((alert: any, i: number) => (
                                 <div key={i} style={{ padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "10px", display: "flex", gap: "12px" }}>
-                                    <div style={{ color: alert.severity === "high" ? "var(--red)" : "var(--yellow)" }}>●</div>
-                                    <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{alert.message}</div>
+                                    <div style={{ color: alert.severity === "critical" ? "var(--red)" : "var(--yellow)" }}>●</div>
+                                    <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                                        <strong>{alert.title}</strong>: {alert.description || alert.action}
+                                    </div>
                                 </div>
                             )) || <div style={{ textAlign: "center", color: "var(--text-tertiary)", padding: "20px" }}>No anomalies detected at this time.</div>}
                         </div>
@@ -137,14 +139,14 @@ export default function IntelligenceDashboard() {
                             <div style={{ background: "rgba(0,0,0,0.2)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
                                 <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>Revenue Optimization</div>
                                 <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                                    Your occupancy is high ({stats?.occupancyRate}%). Consider a 5% rent adjustment on new contracts.
+                                    Your occupancy is high ({stats?.occupancyRate || 0}%). Consider a 5% rent adjustment on new contracts.
                                 </div>
                             </div>
 
                             <div style={{ background: "rgba(0,0,0,0.2)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
                                 <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>Retention Strategy</div>
                                 <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                                    Engage with the {churnRiskCount} flagged residents early to prevent vacancy next month.
+                                    Engage with the {churnRiskCount || 0} flagged residents early to prevent vacancy next month.
                                 </div>
                             </div>
                         </div>

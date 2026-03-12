@@ -394,182 +394,174 @@ export default function ResidentClient() {
                 </motion.div>
             )}
 
-            {/* Responsive Grid Layout */}
-            <div className="dashboard-grid">
+                {/* Top Row: Payment & Room */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", gap: "24px", marginBottom: "40px" }}>
+                    
+                    {/* 1. Payment Card - Large */}
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                        style={{
+                            background: "var(--bg-card)",
+                            border: "1px solid var(--border-default)",
+                            borderRadius: "32px",
+                            padding: "32px",
+                            position: "relative",
+                            overflow: "hidden",
+                            gridColumn: "span 2" // Higher weight if possible
+                        }}
+                    >
+                        <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "40%", height: "80%", background: "var(--accent-primary)", filter: "blur(120px)", opacity: 0.1, borderRadius: "50%" }} />
 
-                {/* 1. Payment Card - Large */}
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="card-large" 
-                    style={{
-                        background: "var(--bg-card)",
-                        border: "1px solid var(--border-default)",
-                        borderRadius: "32px",
-                        padding: "32px",
-                        position: "relative",
-                        overflow: "hidden"
-                    }}
-                >
-                    <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "40%", height: "80%", background: "var(--accent-primary)", filter: "blur(120px)", opacity: 0.1, borderRadius: "50%" }} />
+                        <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "24px" }}>
+                            <div>
+                                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "8px" }}>Current Balance</div>
+                                <div style={{ fontSize: "48px", fontWeight: 800, letterSpacing: "-0.04em" }}>
+                                    ₹{(data.currentPayment?.totalPayable || data.currentPayment?.amount || 0).toLocaleString()}
+                                </div>
+                                <div style={{ marginTop: "8px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{
+                                        padding: "4px 12px", borderRadius: "100px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
+                                        background: STATUS_COLOR[data.currentPayment?.status || "pending"].bg,
+                                        color: STATUS_COLOR[data.currentPayment?.status || "pending"].main,
+                                        border: `1px solid ${STATUS_COLOR[data.currentPayment?.status || "pending"].border}`
+                                    }}>
+                                        {data.currentPayment?.status || "No Dues"}
+                                    </span>
+                                    {data.currentPayment?.month && <span style={{ color: "var(--text-tertiary)" }}>for {data.currentPayment.month}</span>}
+                                </div>
+                            </div>
 
-                    <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "24px" }}>
+                            {data.currentPayment?.status !== "paid" && (
+                                <button
+                                    onClick={handlePayRent}
+                                    disabled={paying}
+                                    style={{
+                                        background: "var(--accent-primary)",
+                                        color: "#000",
+                                        border: "none",
+                                        padding: "16px 32px",
+                                        borderRadius: "16px",
+                                        fontWeight: 700,
+                                        fontSize: "15px",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        boxShadow: "0 8px 32px rgba(0, 212, 255, 0.25)"
+                                    }}
+                                >
+                                    {paying ? "Redirecting..." : "Pay Now"}
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="stats-inner-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                            <div style={{ background: "rgba(0,0,0,0.05)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border-subtle)" }}>
+                                <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Due Date</div>
+                                <div style={{ fontSize: "18px", fontWeight: 600, color: data.isOverdue ? "#ff5252" : "var(--text-primary)" }}>
+                                    {data.currentPayment?.dueDate ? new Date(data.currentPayment.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "long" }) : "N/A"}
+                                </div>
+                                <div style={{ fontSize: "12px", color: data.isOverdue ? "#ff5252" : "var(--green)", marginTop: "4px" }}>
+                                    {data.isOverdue ? "Overdue" : `Due in ${data.daysUntilDue} days`}
+                                </div>
+                            </div>
+                            <div style={{ background: "rgba(0,0,0,0.05)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border-subtle)" }}>
+                                <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Late Fee Potential</div>
+                                <div style={{ fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>₹{(data.currentPayment?.lateFee || 0).toLocaleString()}</div>
+                                <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>{data.currentPayment?.lateFee ? "Applied overdue" : "None pending"}</div>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* 2. Room Card - Small */}
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        style={{
+                            background: "rgba(255,255,255,0.03)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "32px",
+                            padding: "32px",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between"
+                        }}
+                    >
                         <div>
-                            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "8px" }}>Current Balance</div>
-                            <div style={{ fontSize: "48px", fontWeight: 800, letterSpacing: "-0.04em" }}>
-                                ₹{(data.currentPayment?.totalPayable || data.currentPayment?.amount || 0).toLocaleString()}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
+                                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Your Room & Bed</div>
+                                <div style={{ padding: "6px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", fontSize: "12px", fontWeight: 600 }}>#{data.room?.roomNumber || "000"}{data.bed?.bedNumber ? ` - ${data.bed.bedNumber}` : ""}</div>
                             </div>
-                            <div style={{ marginTop: "8px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={{
-                                    padding: "4px 12px", borderRadius: "100px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
-                                    background: STATUS_COLOR[data.currentPayment?.status || "pending"].bg,
-                                    color: STATUS_COLOR[data.currentPayment?.status || "pending"].main,
-                                    border: `1px solid ${STATUS_COLOR[data.currentPayment?.status || "pending"].border}`
-                                }}>
-                                    {data.currentPayment?.status || "No Dues"}
-                                </span>
-                                {data.currentPayment?.month && <span style={{ color: "var(--text-tertiary)" }}>for {data.currentPayment.month}</span>}
-                            </div>
+                            <div style={{ fontSize: "32px", fontWeight: 800, marginBottom: "8px" }}>₹{(data.room?.rent || 0).toLocaleString()}<span style={{ fontSize: "14px", color: "var(--text-tertiary)", fontWeight: 400 }}>/mo</span></div>
+                            <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Shared with {data.room ? (data.room.occupiedBeds - 1) : 0} others</p>
                         </div>
 
-                        {data.currentPayment?.status !== "paid" && (
-                            <button
-                                onClick={handlePayRent}
-                                disabled={paying}
-                                style={{
-                                    background: "var(--accent-primary)",
-                                    color: "#000",
-                                    border: "none",
-                                    padding: "16px 32px",
-                                    borderRadius: "16px",
-                                    fontWeight: 700,
-                                    fontSize: "15px",
-                                    cursor: "pointer",
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    boxShadow: "0 8px 32px rgba(0, 212, 255, 0.25)"
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
-                                    e.currentTarget.style.boxShadow = "0 12px 40px rgba(0, 212, 255, 0.4)";
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.transform = "none";
-                                    e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 212, 255, 0.25)";
-                                }}
-                            >
-                                {paying ? "Redirecting..." : "Pay Now"}
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="stats-grid">
-                        <div style={{ background: "rgba(0,0,0,0.05)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border-subtle)" }}>
-                            <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Due Date</div>
-                            <div style={{ fontSize: "18px", fontWeight: 600, color: data.isOverdue ? "#ff5252" : "var(--text-primary)" }}>
-                                {data.currentPayment?.dueDate ? new Date(data.currentPayment.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "long" }) : "N/A"}
-                            </div>
-                            <div style={{ fontSize: "12px", color: data.isOverdue ? "#ff5252" : "var(--green)", marginTop: "4px" }}>
-                                {data.isOverdue ? "Overdue" : `Due in ${data.daysUntilDue} days`}
-                            </div>
+                        <div style={{ display: "flex", gap: "8px", marginTop: "20px" }}>
+                            {Array.from({ length: data.room?.totalBeds || 2 }).map((_, i) => (
+                                <div key={i} style={{
+                                    height: "6px",
+                                    flex: 1,
+                                    borderRadius: "4px",
+                                    background: i < (data.room?.occupiedBeds || 0) ? "var(--accent-primary)" : "rgba(255,255,255,0.1)"
+                                }} />
+                            ))}
                         </div>
-                        <div style={{ background: "rgba(0,0,0,0.05)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border-subtle)" }}>
-                            <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Late Fee Potential</div>
-                            <div style={{ fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>₹{(data.currentPayment?.lateFee || 0).toLocaleString()}</div>
-                            <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>{data.currentPayment?.lateFee ? "Applied overdue" : "None pending"}</div>
+                    </motion.div>
+                </div>
+
+                {/* Secondary Row: Mini Stats */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px", marginBottom: "40px" }}>
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}
+                    >
+                        <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "8px" }}>Total Rent Paid</div>
+                        <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--green)" }}>₹{data.totalPaid.toLocaleString()}</div>
+                        <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>since you joined</div>
+                    </motion.div>
+                    
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}
+                    >
+                        <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "8px" }}>Late Fees Avoided</div>
+                        <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--accent-primary)" }}>₹{(data.paymentHistory.length * 500 - data.totalLateFeePaid).toLocaleString()}</div>
+                        <div style={{ fontSize: "12px", color: "var(--green)", marginTop: "4px" }}>Keep it up! ⚡</div>
+                    </motion.div>
+
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                        style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", gridColumn: "span 2" }}
+                    >
+                        <div>
+                            <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Need Help?</div>
+                            <div style={{ fontSize: "16px", fontWeight: 600 }}>Create Support Request</div>
                         </div>
-                    </div>
-                </motion.div>
-
-                {/* 2. Room Card - Small */}
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                    className="card-small" 
-                    style={{
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: "32px",
-                        padding: "32px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between"
-                    }}
-                >
-                    <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-                            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Your Room & Bed</div>
-                            <div style={{ padding: "6px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", fontSize: "12px", fontWeight: 600 }}>#{data.room?.roomNumber || "000"}{data.bed?.bedNumber ? ` - ${data.bed.bedNumber}` : ""}</div>
-                        </div>
-                        <div style={{ fontSize: "32px", fontWeight: 800, marginBottom: "8px" }}>₹{(data.room?.rent || 0).toLocaleString()}<span style={{ fontSize: "14px", color: "var(--text-tertiary)", fontWeight: 400 }}>/mo</span></div>
-                        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Shared with {data.room ? (data.room.occupiedBeds - 1) : 0} others</p>
-                    </div>
-
-                    <div style={{ display: "flex", gap: "8px" }}>
-                        {Array.from({ length: data.room?.totalBeds || 2 }).map((_, i) => (
-                            <div key={i} style={{
-                                height: "6px",
-                                flex: 1,
-                                borderRadius: "4px",
-                                background: i < (data.room?.occupiedBeds || 0) ? "var(--accent-primary)" : "rgba(255,255,255,0.1)"
-                            }} />
-                        ))}
-                    </div>
-                </motion.div>
-
-                {/* 3. Stats Row */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="stat-card" 
-                    style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}
-                >
-                    <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "8px" }}>Total Rent Paid</div>
-                    <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--green)" }}>₹{data.totalPaid.toLocaleString()}</div>
-                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>since you joined</div>
-                </motion.div>
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="stat-card" 
-                    style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}
-                >
-                    <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "8px" }}>Late Fees Avoided</div>
-                    <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--accent-primary)" }}>₹{(data.paymentHistory.length * 500 - data.totalLateFeePaid).toLocaleString()}</div>
-                    <div style={{ fontSize: "12px", color: "var(--green)", marginTop: "4px" }}>Keep it up! ⚡</div>
-                </motion.div>
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                    className="stat-card-wide" 
-                    style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}
-                >
-                    <div>
-                        <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Need Help?</div>
-                        <div style={{ fontSize: "16px", fontWeight: 600 }}>Create Support Request</div>
-                    </div>
-                    <Link href="/resident/requests" style={{
-                        background: "var(--bg-elevated)",
-                        color: "var(--text-primary)",
-                        textDecoration: "none",
-                        padding: "10px 20px",
-                        borderRadius: "12px",
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        border: "1px solid var(--border-default)"
-                    }}>New Request →</Link>
-                </motion.div>
+                        <Link href="/resident/requests" style={{
+                            background: "var(--bg-elevated)",
+                            color: "var(--text-primary)",
+                            textDecoration: "none",
+                            padding: "10px 20px",
+                            borderRadius: "12px",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            border: "1px solid var(--border-default)"
+                        }}>New Request →</Link>
+                    </motion.div>
+                </div>
 
                 {/* 4. Payment History Table */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.5 }}
-                    className="table-container" 
                     style={{ marginTop: "16px" }}
                 >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
@@ -626,41 +618,10 @@ export default function ResidentClient() {
                         </table>
                     </div>
                 </motion.div>
-            </div>
-
             <style jsx>{`
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(10px); }
                     to { opacity: 1; transform: translateY(0); }
-                }
-                
-                .dashboard-grid {
-                    display: grid;
-                    grid-template-columns: repeat(12, 1fr);
-                    gap: 24px;
-                }
-                
-                .card-large { grid-column: span 7; }
-                .card-small { grid-column: span 5; }
-                .stat-card { grid-column: span 3; }
-                .stat-card-wide { grid-column: span 6; }
-                .table-container { grid-column: span 12; }
-                .stats-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 24px;
-                }
-
-                @media (max-width: 1024px) {
-                    .card-large, .card-small { grid-column: span 12; }
-                    .stat-card { grid-column: span 6; }
-                    .stat-card-wide { grid-column: span 12; }
-                }
-
-                @media (max-width: 768px) {
-                    .dashboard-grid { display: flex; flex-direction: column; gap: 16px; }
-                    .stats-grid { grid-template-columns: 1fr; gap: 16px; }
-                    .stat-card, .stat-card-wide, .card-large, .card-small, .table-container { width: 100%; }
                 }
             `}</style>
         </div>
