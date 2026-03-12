@@ -1,7 +1,7 @@
-import { Bed } from "../../models/Bed.js";
-import { Property } from "../../models/Property.js";
-import { Payment } from "../../models/Payment.js";
-import { Resident } from "../../models/Resident.js";
+import Bed from "../../models/Bed.js";
+import Property from "../../models/Property.js";
+import Payment from "../../models/Payment.js";
+import User from "../../models/User.js";
 
 export const getPlatformStats = async (req, res) => {
     try {
@@ -13,7 +13,7 @@ export const getPlatformStats = async (req, res) => {
                 { $match: { status: "paid" } },
                 { $group: { _id: null, totalAmount: { $sum: "$amount" } } }
             ]),
-            Resident.countDocuments({ isDeleted: false, isActive: true })
+            User.countDocuments({ role: "resident", isDeleted: false, isActive: true })
         ]);
 
         const totalRent = rentProcessedStats.length > 0 ? rentProcessedStats[0].totalAmount : 0;
