@@ -40,7 +40,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
                 padding: "80px 24px 40px", position: "relative", zIndex: 1,
             }}>
-                <div style={{ width: "100%", maxWidth: "420px" }}>
+                <div style={{ width: "100%", maxWidth: "480px" }}>
                     {/* Card */}
                     <div className="animate-fade-up" style={{
                         background: "var(--bg-card)",
