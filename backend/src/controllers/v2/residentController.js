@@ -101,6 +101,25 @@ export const superAdminUpdateResident = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "Resident not found" });
         }
 
+        // ✅ If room was updated, also update the pending rent payment
+        if (roomId) {
+            const newRoom = await Room.findById(roomId);
+            if (newRoom) {
+                const currentMonth = new Date().toISOString().slice(0, 7);
+                const pendingPayment = await Payment.findOne({
+                    resident: resident._id,
+                    month: currentMonth,
+                    status: "pending",
+                    type: "rent"
+                });
+                if (pendingPayment) {
+                    pendingPayment.amount = newRoom.rent;
+                    pendingPayment.room = newRoom._id;
+                    await pendingPayment.save();
+                }
+            }
+        }
+
         return res.json({ success: true, data: resident });
     } catch (err) {
         if (err.code === 11000) {
@@ -204,6 +223,21 @@ export const moveResidentRoom = async (req, res, next) => {
 
         resident.roomId = newRoom._id;
         await resident.save({ session });
+
+        // ✅ Update current month's pending rent payment to reflect new room price
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const pendingPayment = await Payment.findOne({
+            resident: resident._id,
+            month: currentMonth,
+            status: "pending",
+            type: "rent"
+        }).session(session);
+
+        if (pendingPayment) {
+            pendingPayment.amount = newRoom.rent;
+            pendingPayment.room = newRoom._id;
+            await pendingPayment.save({ session });
+        }
 
         await session.commitTransaction();
         return res.json({ success: true, data: resident });
