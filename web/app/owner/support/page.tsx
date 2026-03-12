@@ -102,7 +102,7 @@ export default function OwnerSupportPage() {
                 <div style={{ background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.15)", borderRadius: 14, padding: "16px 20px", marginBottom: 24 }}>
                     <div style={{ fontWeight: 600, color: "#00d4ff", marginBottom: 10, fontSize: 14 }}>💡 Common Questions</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 13, color: "#aaa" }}>
-                        {["How to add a new resident", "How to create rooms and beds", "Setting up Stripe payments", "How to export reports"].map(q => (
+                        {["How to add a new resident", "How to create rooms and beds", "Setting up Razorpay payments", "How to export reports"].map(q => (
                             <div key={q} style={{ padding: "6px 0" }}>→ {q}</div>
                         ))}
                     </div>

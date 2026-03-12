@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function FAQClient() {
     const faqs = [
         { q: "Is TAGT really free?", a: "Yes! Our Starter plan is free forever for small portfolios (up to 10 rooms). No credit card required to start." },
-        { q: "How do automated payments work?", a: "We integrate with Stripe and popular local gateways to automate rent collection. Once a resident pays, the system automatically reconclies the ledger." },
+        { q: "How do automated payments work?", a: "We integrate with Razorpay and popular local gateways to automate rent collection. Once a resident pays, the system automatically reconciles the ledger." },
         { q: "Can I manage multiple properties?", a: "Absolutely. Our platform is designed for portfolio owners. You can switch between building sites with one click." },
         { q: "What is 'Intelligence Mode'?", a: "Our proprietary AI engine that predicts which residents might leave soon (churn risk) and forecasts your revenue for the next 12 months." },
         { q: "Is my data secure?", a: "We use bank-grade encryption and multi-tenant isolation at the database level to ensure your property data is yours and yours alone." }

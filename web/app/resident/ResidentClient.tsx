@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
 
 interface DashboardData {
     profile: {
@@ -219,26 +220,29 @@ export default function ResidentClient() {
 
     const firstName = data.profile.name.split(" ")[0];
     const property = data.profile.propertyId;
-
     return (
         <div style={{ padding: "32px", maxWidth: "1280px", margin: "0 auto", animation: "fadeIn 0.6s ease-out" }}>
 
             {/* Premium Hero Section */}
-            <div style={{
-                position: "relative",
-                borderRadius: "32px",
-                overflow: "hidden",
-                marginBottom: "40px",
-                minHeight: "320px",
-                display: "flex",
-                alignItems: "flex-end",
-                padding: "48px",
-                background: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.95)), url(${property?.heroImage || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80"})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                boxShadow: "0 24px 64px rgba(0,0,0,0.3)",
-                border: "1px solid var(--border-default)"
-            }}>
+            <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                    position: "relative",
+                    borderRadius: "32px",
+                    overflow: "hidden",
+                    marginBottom: "40px",
+                    minHeight: "320px",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    padding: "48px",
+                    background: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.95)), url(${property?.heroImage || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80"})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    boxShadow: "0 24px 64px rgba(0,0,0,0.3)",
+                    border: "1px solid var(--border-default)"
+                }}
+            >
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "100%", background: "linear-gradient(45deg, rgba(0,212,255,0.1), transparent)", pointerEvents: "none" }} />
 
                 <div style={{ position: "relative", zIndex: 1, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "24px" }}>
@@ -305,7 +309,7 @@ export default function ResidentClient() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Notifications Bar */}
             {(data.notifications || []).length > 0 && (
@@ -319,76 +323,98 @@ export default function ResidentClient() {
                         };
                         const config = styleMap[n.type] || styleMap.info;
                         return (
-                            <div key={i} style={{
-                                background: config.bg,
-                                border: `1px solid ${config.border}`,
-                                padding: "16px 24px",
-                                borderRadius: "16px",
-                                color: config.color,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "12px",
-                                fontSize: "14px",
-                                fontWeight: 500
-                            }}>
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                key={i} 
+                                style={{
+                                    background: config.bg,
+                                    border: `1px solid ${config.border}`,
+                                    padding: "16px 24px",
+                                    borderRadius: "16px",
+                                    color: config.color,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "12px",
+                                    fontSize: "14px",
+                                    fontWeight: 500
+                                }}
+                            >
                                 <span style={{ fontSize: "18px" }}>{config.icon}</span>
                                 {n.message}
-                            </div>
+                            </motion.div>
                         );
                     })}
                 </div>
             )}
 
-            {/* Broadcast Notices (from Owners) */}
+            {/* Broadcast Notices */}
             {(data.notices || []).length > 0 && (
-                <div style={{ marginBottom: "32px" }}>
-                    <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "12px" }}>
+                <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }}
+                    style={{ marginBottom: "40px" }}
+                >
+                    <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "16px" }}>
                         Recent Announcements
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        {data.notices!.map(notice => (
-                            <div key={notice._id} style={{
-                                background: "rgba(255,255,255,0.02)",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                                padding: "20px 24px",
-                                borderRadius: "16px",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "8px"
-                            }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        {data.notices!.map((notice, i) => (
+                            <motion.div 
+                                key={notice._id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.2 + i * 0.1 }}
+                                style={{
+                                    background: "rgba(255,255,255,0.02)",
+                                    border: "1px solid rgba(255,255,255,0.06)",
+                                    padding: "24px",
+                                    borderRadius: "20px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "10px"
+                                }}
+                            >
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                                         {notice.priority === "critical" ? <span style={{ color: "#ff5252" }}>🚨</span> : notice.priority === "warning" ? <span style={{ color: "#fbbf24" }}>⚠️</span> : <span style={{ color: "var(--accent-primary)" }}>📢</span>}
-                                        <span style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)" }}>{notice.title}</span>
+                                        <span style={{ fontSize: "17px", fontWeight: 700, color: "var(--text-primary)" }}>{notice.title}</span>
                                     </div>
                                     <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>
                                         {new Date(notice.createdAt).toLocaleString("en-IN", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                                     </span>
                                 </div>
-                                <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.5, whiteSpace: "pre-wrap", marginLeft: "30px" }}>
+                                <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap", marginLeft: "32px" }}>
                                     {notice.message}
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {/* Responsive Grid Layout */}
             <div className="dashboard-grid">
 
                 {/* 1. Payment Card - Large */}
-                <div className="card-large" style={{
-                    background: "var(--bg-card)",
-                    border: "1px solid var(--border-default)",
-                    borderRadius: "32px",
-                    padding: "32px",
-                    position: "relative",
-                    overflow: "hidden"
-                }}>
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="card-large" 
+                    style={{
+                        background: "var(--bg-card)",
+                        border: "1px solid var(--border-default)",
+                        borderRadius: "32px",
+                        padding: "32px",
+                        position: "relative",
+                        overflow: "hidden"
+                    }}
+                >
                     <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "40%", height: "80%", background: "var(--accent-primary)", filter: "blur(120px)", opacity: 0.1, borderRadius: "50%" }} />
 
-                    <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "24px" }}>
                         <div>
                             <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "8px" }}>Current Balance</div>
                             <div style={{ fontSize: "48px", fontWeight: 800, letterSpacing: "-0.04em" }}>
@@ -432,7 +458,7 @@ export default function ResidentClient() {
                                     e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 212, 255, 0.25)";
                                 }}
                             >
-                                {paying ? "Redirecting..." : "Pay Now with Stripe"}
+                                {paying ? "Redirecting..." : "Pay Now"}
                             </button>
                         )}
                     </div>
@@ -449,28 +475,34 @@ export default function ResidentClient() {
                         </div>
                         <div style={{ background: "rgba(0,0,0,0.05)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border-subtle)" }}>
                             <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Late Fee Potential</div>
-                            <div style={{ fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>₹{(data.currentPayment?.lateFee || 500).toLocaleString()}</div>
-                            <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>if paid after the 5th</div>
+                            <div style={{ fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>₹{(data.currentPayment?.lateFee || 0).toLocaleString()}</div>
+                            <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>{data.currentPayment?.lateFee ? "Applied overdue" : "None pending"}</div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* 2. Room Card - Small */}
-                <div className="card-small" style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: "32px",
-                    padding: "32px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between"
-                }}>
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="card-small" 
+                    style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "32px",
+                        padding: "32px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between"
+                    }}
+                >
                     <div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
                             <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Your Room & Bed</div>
                             <div style={{ padding: "6px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", fontSize: "12px", fontWeight: 600 }}>#{data.room?.roomNumber || "000"}{data.bed?.bedNumber ? ` - ${data.bed.bedNumber}` : ""}</div>
                         </div>
-                        <div style={{ fontSize: "32px", fontWeight: 800, marginBottom: "8px" }}>₹{data.room?.rent.toLocaleString()}<span style={{ fontSize: "14px", color: "var(--text-tertiary)", fontWeight: 400 }}>/mo</span></div>
+                        <div style={{ fontSize: "32px", fontWeight: 800, marginBottom: "8px" }}>₹{(data.room?.rent || 0).toLocaleString()}<span style={{ fontSize: "14px", color: "var(--text-tertiary)", fontWeight: 400 }}>/mo</span></div>
                         <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Shared with {data.room ? (data.room.occupiedBeds - 1) : 0} others</p>
                     </div>
 
@@ -484,20 +516,38 @@ export default function ResidentClient() {
                             }} />
                         ))}
                     </div>
-                </div>
+                </motion.div>
 
                 {/* 3. Stats Row */}
-                <div className="stat-card" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}>
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="stat-card" 
+                    style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}
+                >
                     <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "8px" }}>Total Rent Paid</div>
                     <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--green)" }}>₹{data.totalPaid.toLocaleString()}</div>
                     <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "4px" }}>since you joined</div>
-                </div>
-                <div className="stat-card" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}>
+                </motion.div>
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="stat-card" 
+                    style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px" }}
+                >
                     <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "8px" }}>Late Fees Avoided</div>
                     <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--accent-primary)" }}>₹{(data.paymentHistory.length * 500 - data.totalLateFeePaid).toLocaleString()}</div>
                     <div style={{ fontSize: "12px", color: "var(--green)", marginTop: "4px" }}>Keep it up! ⚡</div>
-                </div>
-                <div className="stat-card-wide" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+                </motion.div>
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    className="stat-card-wide" 
+                    style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}
+                >
                     <div>
                         <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginBottom: "4px" }}>Need Help?</div>
                         <div style={{ fontSize: "16px", fontWeight: 600 }}>Create Support Request</div>
@@ -512,10 +562,16 @@ export default function ResidentClient() {
                         fontWeight: 600,
                         border: "1px solid var(--border-default)"
                     }}>New Request →</Link>
-                </div>
+                </motion.div>
 
                 {/* 4. Payment History Table */}
-                <div className="table-container" style={{ marginTop: "16px" }}>
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                    className="table-container" 
+                    style={{ marginTop: "16px" }}
+                >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                         <h3 style={{ fontSize: "18px", fontWeight: 700, margin: 0 }}>Recent Payments</h3>
                         <Link href="/resident/payments" style={{ fontSize: "13px", color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Full History →</Link>
@@ -537,7 +593,7 @@ export default function ResidentClient() {
                             </thead>
                             <tbody>
                                 {data.paymentHistory.slice(0, 5).map((p, i) => {
-                                    const styles = STATUS_COLOR[p.status];
+                                    const styles = STATUS_COLOR[p.status] || STATUS_COLOR.pending;
                                     return (
                                         <tr key={p._id} style={{ borderBottom: i === 4 ? "none" : "1px solid var(--border-subtle)" }}>
                                             <td style={{ padding: "20px 24px", fontWeight: 600 }}>{p.month}</td>
@@ -569,7 +625,7 @@ export default function ResidentClient() {
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
             <style jsx>{`

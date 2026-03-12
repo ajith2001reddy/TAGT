@@ -87,7 +87,7 @@ export default function SubscriptionPage() {
         }
     }
 
-    // Check for return from Stripe
+    // Check for return from Razorpay
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get("success") === "1") {
@@ -202,7 +202,7 @@ export default function SubscriptionPage() {
             }
 
             <div style={{ marginTop: "28px", padding: "16px 20px", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", borderRadius: "12px", fontSize: "13px", color: "var(--text-secondary)" }}>
-                💳 Secure checkout powered by Stripe. Subscriptions can be cancelled at any time from this dashboard.
+                💳 Secure checkout powered by Razorpay. Subscriptions can be cancelled at any time from this dashboard.
             </div>
         </div>
     );

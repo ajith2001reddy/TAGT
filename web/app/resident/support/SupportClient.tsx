@@ -10,7 +10,7 @@ const CATEGORIES: TicketCategory[] = ["payment", "maintenance", "maintenance_esc
 const PRIORITIES: TicketPriority[] = ["low", "medium", "high", "urgent"];
 
 const FAQS = [
-    { q: "How do I pay rent?", a: "Go to Payments in the sidebar. You can pay via Stripe using your card or UPI." },
+    { q: "How do I pay rent?", a: "Go to Payments in the sidebar. You can pay via Razorpay using your card or UPI." },
     { q: "How do I submit a maintenance request?", a: "Go to Requests in the sidebar and click 'New Request'." },
     { q: "My payment shows overdue but I paid?", a: "Contact your owner first. If unresolved, escalate via a support ticket." },
     { q: "How do I contact my property owner?", a: "Owners are notified automatically about your maintenance requests and payments." },
