@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
+import { fetchJoinRequests, approveJoinRequest, rejectJoinRequest, JoinRequest } from "@/features/owner/owner.service";
+import { toast } from "react-hot-toast";
 
 interface Request {
     _id: string;
@@ -70,7 +72,9 @@ function StatusSelector({ requestId, current, onChanged }: { requestId: string; 
 }
 
 export default function OwnerRequestsPage() {
+    const [activeTab, setActiveTab] = useState<"maintenance" | "join">("maintenance");
     const [requests, setRequests] = useState<Request[]>([]);
+    const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<string>("");
     const [filterPriority, setFilterPriority] = useState<string>("");
@@ -83,7 +87,38 @@ export default function OwnerRequestsPage() {
         } catch { } finally { setLoading(false); }
     }, []);
 
-    useEffect(() => { fetchRequests(); }, [fetchRequests]);
+    const fetchJoin = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await fetchJoinRequests();
+            setJoinRequests(data);
+        } catch { } finally { setLoading(false); }
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === "maintenance") fetchRequests();
+        else fetchJoin();
+    }, [activeTab, fetchRequests, fetchJoin]);
+
+    const handleApproveJoin = async (id: string) => {
+        const success = await approveJoinRequest(id);
+        if (success) {
+            toast.success("Resident approved successfully");
+            fetchJoin();
+        } else {
+            toast.error("Failed to approve resident");
+        }
+    };
+
+    const handleRejectJoin = async (id: string) => {
+        const success = await rejectJoinRequest(id);
+        if (success) {
+            toast.success("Request rejected");
+            fetchJoin();
+        } else {
+            toast.error("Failed to reject request");
+        }
+    };
 
     const filtered = requests.filter(r => {
         if (filterStatus && r.status !== filterStatus) return false;
@@ -91,124 +126,140 @@ export default function OwnerRequestsPage() {
         return true;
     });
 
-    const pending = requests.filter(r => r.status === "pending").length;
-    const inProgress = requests.filter(r => r.status === "in-progress").length;
-    const resolved = requests.filter(r => r.status === "resolved").length;
+    const pendingCount = requests.filter(r => r.status === "pending").length;
+    const pendingJoin = joinRequests.filter(j => j.status === "pending").length;
 
     return (
         <div className="animate-fade-in">
             {/* Header */}
             <div style={{ marginBottom: "28px" }}>
-                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Maintenance</div>
+                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Management</div>
                 <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "4px" }}>Resident Requests</h1>
-                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{requests.length} total · {pending + inProgress} need attention</p>
+                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+                    {activeTab === "maintenance" ? `${requests.length} total · ${pendingCount} pending` : `${joinRequests.length} total · ${pendingJoin} pending`}
+                </p>
             </div>
 
-            {/* Summary cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "12px", marginBottom: "24px" }}>
-                {[
-                    { label: "Pending", count: pending, color: "#fbbf24" },
-                    { label: "Processing", count: inProgress, color: "var(--accent-primary)" },
-                    { label: "Resolved", count: resolved, color: "#34d399" },
-                    { label: "Total", count: requests.length, color: "var(--text-primary)" },
-                ].map(({ label, count, color }) => (
-                    <div key={label} style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "14px", padding: "16px" }}>
-                        <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "6px" }}>{label}</div>
-                        <div style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 700, color }}>{count}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Filters */}
-            <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
-                <select
-                    className="input-field"
-                    value={filterStatus}
-                    onChange={e => setFilterStatus(e.target.value)}
-                    style={{ width: "160px", fontSize: "13px", padding: "9px 12px" }}
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: "24px", borderBottom: "1px solid var(--border-subtle)", marginBottom: "24px" }}>
+                <button
+                    onClick={() => setActiveTab("maintenance")}
+                    style={{
+                        padding: "12px 4px", fontSize: "14px", fontWeight: 600, border: "none", background: "none", cursor: "pointer",
+                        color: activeTab === "maintenance" ? "var(--accent-primary)" : "var(--text-tertiary)",
+                        borderBottom: activeTab === "maintenance" ? "2px solid var(--accent-primary)" : "2px solid transparent",
+                        transition: "all 0.2s"
+                    }}
                 >
-                    <option value="">All statuses</option>
-                    {STATUS_OPTS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <select
-                    className="input-field"
-                    value={filterPriority}
-                    onChange={e => setFilterPriority(e.target.value)}
-                    style={{ width: "160px", fontSize: "13px", padding: "9px 12px" }}
+                    Maintenance {pendingCount > 0 && <span style={{ marginLeft: "6px", padding: "2px 6px", borderRadius: "10px", background: "var(--accent-primary)", color: "white", fontSize: "10px" }}>{pendingCount}</span>}
+                </button>
+                <button
+                    onClick={() => setActiveTab("join")}
+                    style={{
+                        padding: "12px 4px", fontSize: "14px", fontWeight: 600, border: "none", background: "none", cursor: "pointer",
+                        color: activeTab === "join" ? "var(--accent-primary)" : "var(--text-tertiary)",
+                        borderBottom: activeTab === "join" ? "2px solid var(--accent-primary)" : "2px solid transparent",
+                        transition: "all 0.2s"
+                    }}
                 >
-                    <option value="">All priorities</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-                {(filterStatus || filterPriority) && (
-                    <button className="btn-ghost" onClick={() => { setFilterStatus(""); setFilterPriority(""); }} style={{ fontSize: "12px", padding: "9px 14px" }}>
-                        Clear filters
-                    </button>
-                )}
+                    Join Requests {pendingJoin > 0 && <span style={{ marginLeft: "6px", padding: "2px 6px", borderRadius: "10px", background: "#f59e0b", color: "white", fontSize: "10px" }}>{pendingJoin}</span>}
+                </button>
             </div>
 
-            {/* Request cards */}
-            {loading ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="skeleton" style={{ height: "110px", borderRadius: "14px" }} />
-                    ))}
-                </div>
-            ) : filtered.length === 0 ? (
-                <div className="glass-card" style={{ padding: "60px", textAlign: "center" }}>
-                    <div style={{ fontSize: "40px", marginBottom: "12px" }}>🎉</div>
-                    <div style={{ fontSize: "16px", fontWeight: 600, marginBottom: "6px" }}>{requests.length === 0 ? "No requests yet" : "No matches"}</div>
-                    <div style={{ color: "var(--text-tertiary)", fontSize: "13px" }}>
-                        {requests.length === 0 ? "Residents haven't submitted any requests." : "Try clearing your filters."}
+            {activeTab === "maintenance" ? (
+                <>
+                    {/* Filters */}
+                    <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+                        <select
+                            className="input-field"
+                            value={filterStatus}
+                            onChange={e => setFilterStatus(e.target.value)}
+                            style={{ width: "160px", fontSize: "13px", padding: "9px 12px" }}
+                        >
+                            <option value="">All statuses</option>
+                            {STATUS_OPTS.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select
+                            className="input-field"
+                            value={filterPriority}
+                            onChange={e => setFilterPriority(e.target.value)}
+                            style={{ width: "160px", fontSize: "13px", padding: "9px 12px" }}
+                        >
+                            <option value="">All priorities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
                     </div>
-                </div>
-            ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {filtered.map((r, i) => {
-                        const text = r.description || r.message || "—";
-                        const pColor = PRIORITY_COLOR[r.priority] || PRIORITY_COLOR.medium;
-                        return (
-                            <div
-                                key={r._id}
-                                className="animate-fade-up glass-card"
-                                style={{ padding: "20px 24px", animationDelay: `${i * 0.03}s` }}
-                            >
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "10px", flexWrap: "wrap" }}>
-                                    {/* Resident + message */}
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "5px", flexWrap: "wrap" }}>
-                                            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "14px" }}>
-                                                {r.resident?.name || "Unknown resident"}
-                                            </span>
-                                            <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{r.resident?.email || ""}</span>
+
+                    {loading ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="skeleton" style={{ height: "110px", borderRadius: "14px" }} />
+                            ))}
+                        </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="glass-card" style={{ padding: "60px", textAlign: "center" }}>
+                            <div style={{ fontSize: "40px", marginBottom: "12px" }}>🎉</div>
+                            <div style={{ fontSize: "16px", fontWeight: 600 }}>No maintenance requests</div>
+                        </div>
+                    ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            {filtered.map((r, i) => (
+                                <div key={r._id} className="glass-card" style={{ padding: "20px 24px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+                                        <div>
+                                            <div style={{ fontWeight: 700, fontSize: "14px" }}>{r.resident?.name || "Resident"}</div>
+                                            <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" }}>{r.description || r.message}</div>
                                         </div>
-                                        <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                                            {text.length > 200 ? text.slice(0, 200) + "…" : text}
-                                        </div>
+                                        <span style={{ fontSize: "10px", fontWeight: 700, color: PRIORITY_COLOR[r.priority]?.text, background: PRIORITY_COLOR[r.priority]?.bg, padding: "4px 8px", borderRadius: "6px", height: "fit-content" }}>{r.priority.toUpperCase()}</span>
                                     </div>
-
-                                    {/* Priority badge */}
-                                    <span style={{
-                                        fontSize: "10px", fontFamily: "var(--font-mono)", fontWeight: 700,
-                                        letterSpacing: "0.08em", textTransform: "uppercase", padding: "4px 10px",
-                                        borderRadius: "6px", background: pColor.bg, color: pColor.text, flexShrink: 0,
-                                    }}>
-                                        {r.priority}
-                                    </span>
-                                </div>
-
-                                {/* Status controls + timestamp */}
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                                     <StatusSelector requestId={r._id} current={r.status} onChanged={fetchRequests} />
-                                    <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", whiteSpace: "nowrap" }}>
-                                        {new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                                    </span>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
+            ) : (
+                <>
+                    {loading ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <div key={i} className="skeleton" style={{ height: "110px", borderRadius: "14px" }} />
+                            ))}
+                        </div>
+                    ) : joinRequests.length === 0 ? (
+                        <div className="glass-card" style={{ padding: "60px", textAlign: "center" }}>
+                            <div style={{ fontSize: "40px", marginBottom: "12px" }}>👋</div>
+                            <div style={{ fontSize: "16px", fontWeight: 600 }}>No join requests</div>
+                        </div>
+                    ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            {joinRequests.map((j) => (
+                                <div key={j._id} className="glass-card" style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px" }}>
+                                            <span style={{ fontWeight: 700, fontSize: "15px" }}>{j.residentId.name}</span>
+                                            <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{j.residentId.email}</span>
+                                        </div>
+                                        <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{j.message}</div>
+                                        <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginTop: "6px" }}>Applied for: <strong>{j.propertyId.name}</strong></div>
+                                    </div>
+                                    <div style={{ display: "flex", gap: "8px" }}>
+                                        {j.status === "pending" ? (
+                                            <>
+                                                <button onClick={() => handleApproveJoin(j._id)} className="btn-primary" style={{ padding: "8px 16px", fontSize: "12px", borderRadius: "8px" }}>Approve</button>
+                                                <button onClick={() => handleRejectJoin(j._id)} className="btn-ghost" style={{ padding: "8px 16px", fontSize: "12px", borderRadius: "8px", color: "var(--red)" }}>Reject</button>
+                                            </>
+                                        ) : (
+                                            <span style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", color: j.status === "approved" ? "var(--green)" : "var(--red)" }}>{j.status}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

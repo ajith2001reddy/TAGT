@@ -83,17 +83,48 @@ class ResidentService extends BaseService {
             await roomDoc.save({ session });
 
             // 6️⃣ Create first rent bill
-            const now = new Date();
-            const currentMonth = now.toISOString().slice(0, 7);
-            const dueDay = 5;
-            const dueDate = new Date(now.getFullYear(), now.getMonth(), dueDay);
-            if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1);
+            await this.ensureMonthlyRentBill(resident._id, roomDoc._id, propertyId, session);
+        }
 
-            const rent = roomDoc.rent || 0;
+        return { resident, resetLink };
+    }
+
+    /**
+     * Ensures a resident has a rent bill for the current month.
+     * If one exists as "pending", it updates the amount/room.
+     * If none exists, it creates a new one.
+     */
+    async ensureMonthlyRentBill(residentId, roomId, propertyId, session) {
+        const room = await Room.findById(roomId).session(session);
+        if (!room) throw new Error("Room not found for billing");
+
+        const now = new Date();
+        const currentMonth = now.toISOString().slice(0, 7);
+        const dueDay = 5;
+        const dueDate = new Date(now.getFullYear(), now.getMonth(), dueDay);
+        if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1);
+
+        const rent = room.rent || 0;
+
+        const existingPayment = await Payment.findOne({
+            resident: residentId,
+            month: currentMonth,
+            type: "rent",
+            status: "pending"
+        }).session(session);
+
+        if (existingPayment) {
+            existingPayment.amount = rent;
+            existingPayment.totalPayable = rent; // Reset totalPayable if rent changed
+            existingPayment.room = roomId;
+            existingPayment.propertyId = propertyId;
+            await existingPayment.save({ session });
+            logger.info("Updated existing pending rent bill", { residentId, month: currentMonth });
+        } else {
             await Payment.create([{
                 propertyId,
-                resident: resident._id,
-                room: roomDoc._id,
+                resident: residentId,
+                room: roomId,
                 amount: rent,
                 totalPayable: rent,
                 month: currentMonth,
@@ -101,9 +132,8 @@ class ResidentService extends BaseService {
                 status: "pending",
                 dueDate,
             }], { session });
+            logger.info("Created new monthly rent bill", { residentId, month: currentMonth });
         }
-
-        return { resident, resetLink };
     }
 
     /**

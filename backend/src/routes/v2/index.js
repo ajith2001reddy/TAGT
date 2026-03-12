@@ -35,7 +35,9 @@ import { createTicket, listMyTickets, listAllTickets, getTicket, replyToTicket, 
 import { getNotifications, getUnreadCount, markRead, markAllRead } from "../../controllers/v2/notificationController.js";
 // Phase 6: Broadcast Notices
 import { createNotice, listNotices } from "../../controllers/v2/noticeController.js";
-// Phase 7: Profile & User Management
+// Phase 7: Join Requests
+import { createJoinRequest, getPropertyJoinRequests, approveJoinRequest, rejectJoinRequest } from "../../controllers/v2/joinRequestController.js";
+// Phase 8: Profile & User Management
 import { getProfile, updateProfile, changePassword, superAdminManageUser } from "../../controllers/v2/userController.js";
 
 // All API V2 routes are under /api/v2
@@ -133,11 +135,15 @@ router.get("/reports/resident-ledger.csv", auth, authorize("super_admin", "owner
 /* ── Requests ── */
 router.get("/requests", auth, authorize("super_admin", "owner", "resident"), listRequests);
 router.patch("/requests/:id", auth, authorize("super_admin", "owner"), validate(updateRequestSchema), updateRequest);
+router.get("/requests/join", auth, authorize("owner"), getPropertyJoinRequests);
+router.patch("/requests/join/:id/approve", auth, authorize("owner"), approveJoinRequest);
+router.patch("/requests/join/:id/reject", auth, authorize("owner"), rejectJoinRequest);
 
 /* ── Resident ── */
 router.get("/resident/dashboard", auth, authorize("resident"), getResidentDashboard);
 router.get("/resident/dashboard/v2", auth, authorize("resident"), getResidentDashboardV2);
 router.post("/resident/requests", auth, authorize("resident"), validate(createRequestSchema), residentCreateRequest);
+router.post("/join-requests", auth, authorize("resident"), createJoinRequest);
 
 /* ── Automation ── */
 router.post("/automation/monthly-rent", auth, authorize("super_admin", "owner"), runMonthlyRentGeneration);

@@ -5,6 +5,7 @@ import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
 import logger from "../../utils/logger.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
+import residentService from "../../services/residentService.js";
 
 /**
  * Assign a resident to a bed (Atomic update)
@@ -73,6 +74,9 @@ export const assignResidentToBed = async (req, res, next) => {
         user.bedId = bed._id;
         user.propertyId = bed.propertyId;
         await user.save({ session });
+
+        // 6. Ensure rent bill exists
+        await residentService.ensureMonthlyRentBill(residentId, bed.roomId, bed.propertyId, session);
 
         await session.commitTransaction();
 

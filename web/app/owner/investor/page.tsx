@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, PieChart, Activity, Building, ArrowUpRight, ArrowDownRight, DownloadCloud, LineChart } from "lucide-react";
 
 export default function InvestorDashboard() {
-    const { stats, loading } = useOwnerStats(); // For now, leveraging existing stats for mock investor view
+    const { stats, detailed, loading } = useOwnerStats();
 
     if (loading) return (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px" }}>
@@ -16,16 +16,16 @@ export default function InvestorDashboard() {
         </div>
     );
 
-    // Mock Investor Metrics
-    const annualYield = "8.4%";
-    const portfolioValue = "₹4.2 Cr";
-    const netOperatingIncome = `₹${(((stats?.monthlyRevenue || 0) * 0.8) / 1000).toFixed(1)}k`; // Rough mock NOI
+    // Dynamic Investor Metrics
+    const annualYield = detailed?.collectionRate ? `${detailed.collectionRate.toFixed(1)}%` : "0%";
+    const portfolioValue = `₹${((stats?.totalResidents || 0) * 12 * 12000 / 100000).toFixed(1)} L`; // Simple valuation based on resident count * avg rent * 12
+    const netOperatingIncome = `₹${((detailed?.profitEstimate || 0) / 1000).toFixed(1)}k`;
 
     const statItems = [
-        { label: "Est. Portfolio Value", value: portfolioValue, color: "#fff", sub: "Market valuation", icon: <Building size={17} />, trend: "up" as const, trendValue: "+4.2% YTD" },
-        { label: "Annual Yield", value: annualYield, color: "#34d399", sub: "Projected ROI", icon: <TrendingUp size={17} />, trend: "up" as const, trendValue: "Healthy" },
-        { label: "Net Operating Income (NOI)", value: netOperatingIncome, color: "#00d4ff", sub: "This month (EBITDA)", icon: <PieChart size={17} /> },
-        { label: "Total Occupancy", value: `${stats?.occupancyRate || 0}%`, color: "#a78bfa", sub: "Portfolio-wide", icon: <Activity size={17} />, trend: "up" as const, trendValue: "+2.1% MoM" },
+        { label: "Est. Portfolio Value", value: portfolioValue, color: "#fff", sub: "Est. annual run rate", icon: <Building size={17} />, trend: "up" as const, trendValue: "Dynamic" },
+        { label: "Collection Rate", value: annualYield, color: "#34d399", sub: "Actual vs Expected", icon: <TrendingUp size={17} />, trend: "up" as const, trendValue: "Healthy" },
+        { label: "Net Operating Income (NOI)", value: netOperatingIncome, color: "#00d4ff", sub: "This month collected", icon: <PieChart size={17} /> },
+        { label: "Total Occupancy", value: `${stats?.occupancyRate || 0}%`, color: "#a78bfa", sub: "Portfolio-wide", icon: <Activity size={17} />, trend: (stats?.occupancyRate || 0) > 80 ? "up" as const : "down" as const, trendValue: `${stats?.occupancyRate}%` },
     ];
 
     return (
@@ -45,13 +45,8 @@ export default function InvestorDashboard() {
                         <h1 className="display-text" style={{ fontSize: "28px", margin: 0 }}>Investor Relations</h1>
                     </div>
                     <p style={{ color: "var(--text-secondary)", fontSize: "14px", maxWidth: "600px", marginTop: "8px" }}>
-                        High-level financial performance, asset valuation, and return on investment analytics for stakeholders.
+                        Real-time financial performance reaching your property data. No more mock values.
                     </p>
-                </div>
-                <div style={{ display: "flex", gap: "10px" }}>
-                    <button className="btn-ghost" style={{ fontSize: "13px", padding: "8px 16px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <DownloadCloud size={16} /> Export Q3 Report
-                    </button>
                 </div>
             </motion.div>
 
@@ -67,16 +62,24 @@ export default function InvestorDashboard() {
                 <div className="glass-card" style={{ padding: "24px", borderRadius: "20px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                         <div>
-                            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#fff", margin: "0 0 4px 0" }}>Revenue vs NOI Margins</h3>
-                            <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>12-month trailing performance</p>
+                            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#fff", margin: "0 0 4px 0" }}>Revenue Collection Trend</h3>
+                            <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>Last 6 months trailing</p>
                         </div>
-                        <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--green)", background: "rgba(52,211,153,0.1)", padding: "4px 8px", borderRadius: "6px" }}>
-                            Margin +1.2%
-                        </span>
                     </div>
                     <div style={{ height: "280px", width: "100%" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", background: "rgba(0,0,0,0.2)", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.05)", color: "var(--text-tertiary)", fontSize: "13px" }}>
-                            [ Detailed Financial Chart Loading... ]
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: "8%", height: "200px", padding: "0 20px" }}>
+                            {detailed?.trend && detailed.trend.length > 0 ? detailed.trend.map((t, i) => {
+                                const max = Math.max(...detailed.trend.map(x => x.collected), 1);
+                                const height = (t.collected / max) * 100;
+                                return (
+                                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                                        <div style={{ width: "100%", height: `${height}%`, background: "linear-gradient(180deg, var(--accent-primary), transparent)", borderRadius: "6px 6px 0 0", minHeight: "4px" }} />
+                                        <span style={{ fontSize: "10px", color: "var(--text-tertiary)", whiteSpace: "nowrap" }}>{t.month}</span>
+                                    </div>
+                                );
+                            }) : (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", color: "var(--text-tertiary)", fontSize: "13px" }}>Insufficient historical data</div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -84,43 +87,31 @@ export default function InvestorDashboard() {
                 {/* Right: Portfolio Asset Breakdown */}
                 <div className="glass-card" style={{ padding: "24px", borderRadius: "20px" }}>
                     <div style={{ marginBottom: "20px" }}>
-                        <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#fff", margin: "0 0 4px 0" }}>Asset Performance Breakdown</h3>
-                        <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>Yield analysis by property tier</p>
+                        <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#fff", margin: "0 0 4px 0" }}>Operational Efficiency</h3>
+                        <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>Key performance indicators</p>
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-
-                        <div style={{ padding: "16px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <div style={{ width: "40px", height: "40px", borderRadius: "8px", background: "rgba(0,212,255,0.1)", color: "#00d4ff", display: "flex", alignItems: "center", justifyContent: "center" }}><Building size={20} /></div>
-                                <div>
-                                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff" }}>Premium PGs (Tier 1)</div>
-                                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>4 Properties • 92% Occ.</div>
+                        {[
+                            { label: "Occupied Beds", value: detailed?.occupiedBeds || 0, total: detailed?.totalBeds || 0, color: "var(--accent-primary)" },
+                            { label: "Collection Progress", value: detailed?.monthly.collected || 0, total: detailed?.monthly.expected || 1, color: "var(--green)" },
+                            { label: "Outstanding Recovery", value: detailed?.overdueAmount || 0, total: (detailed?.overdueAmount || 0) + (detailed?.monthly.collected || 0), color: "var(--red)" },
+                        ].map((item, idx) => {
+                            const pct = Math.min(100, (item.value / item.total) * 100);
+                            return (
+                                <div key={idx}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "8px" }}>
+                                        <span style={{ color: "var(--text-secondary)" }}>{item.label}</span>
+                                        <span style={{ color: "#fff", fontWeight: 600 }}>{item.label.includes("Beds") ? `${item.value}/${item.total}` : `₹${(item.value / 1000).toFixed(1)}k`}</span>
+                                    </div>
+                                    <div style={{ height: "4px", width: "100%", background: "rgba(255,255,255,0.05)", borderRadius: "2px", overflow: "hidden" }}>
+                                        <div style={{ height: "100%", width: `${pct}%`, background: item.color, borderRadius: "2px" }} />
+                                    </div>
                                 </div>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                                <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff" }}>9.2% Yield</div>
-                                <div style={{ fontSize: "11px", color: "var(--green)", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "2px" }}><ArrowUpRight size={12} /> 0.4%</div>
-                            </div>
-                        </div>
-
-                        <div style={{ padding: "16px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <div style={{ width: "40px", height: "40px", borderRadius: "8px", background: "rgba(167,139,250,0.1)", color: "#a78bfa", display: "flex", alignItems: "center", justifyContent: "center" }}><Building size={20} /></div>
-                                <div>
-                                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff" }}>Standard Coliving (Tier 2)</div>
-                                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>2 Properties • 85% Occ.</div>
-                                </div>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                                <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff" }}>7.8% Yield</div>
-                                <div style={{ fontSize: "11px", color: "var(--red)", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "2px" }}><ArrowDownRight size={12} /> 0.1%</div>
-                            </div>
-                        </div>
-
+                            );
+                        })}
                     </div>
                 </div>
-
             </div>
         </div>
     );

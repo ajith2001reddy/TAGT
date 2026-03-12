@@ -1,23 +1,31 @@
-"use client";
-
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useOwnerStats } from "@/features/owner/useOwnerStats";
+import { fetchIntelligenceSummary, IntelligenceSummary } from "@/features/owner/owner.service";
 import { RevenueTrendChart, OccupancyPieChart } from "@/components/owner/DashboardCharts";
 import { ChartCard } from "@/components/ui/PremiumUI";
-import { TrendingUp, Users, TrendingDown, Clock, Download, Filter } from "lucide-react";
-import { useState } from "react";
+import { TrendingUp, Users, TrendingDown, Clock, Download, Filter, Building } from "lucide-react";
 
 export default function OwnerAnalyticsPage() {
-    const { detailed, loading } = useOwnerStats();
+    const { detailed, stats, loading: statsLoading } = useOwnerStats();
+    const [intelligence, setIntelligence] = useState<IntelligenceSummary | null>(null);
+    const [aiLoading, setAiLoading] = useState(true);
     const [activeSection, setActiveSection] = useState("revenue");
+
+    useEffect(() => {
+        fetchIntelligenceSummary().then(data => {
+            setIntelligence(data);
+            setAiLoading(false);
+        });
+    }, []);
 
     const sections = [
         { id: "revenue", label: "Financials", icon: <TrendingUp size={16} /> },
         { id: "occupancy", label: "Occupancy", icon: <Users size={16} /> },
-        { id: "churn", label: "Churn Prediction", icon: <TrendingDown size={16} /> },
+        { id: "churn", label: "Intelligence", icon: <TrendingDown size={16} /> },
     ];
 
-    if (loading) return <div className="skeleton" style={{ height: "600px", borderRadius: "24px" }} />;
+    if (statsLoading || aiLoading) return <div className="skeleton" style={{ height: "600px", borderRadius: "24px" }} />;
 
     return (
         <div className="animate-fade-in">
@@ -25,14 +33,6 @@ export default function OwnerAnalyticsPage() {
                 <div>
                     <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "8px" }}>Analytics Intelligence</h1>
                     <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Deep insights into your property performance and financial growth.</p>
-                </div>
-                <div style={{ display: "flex", gap: "10px" }}>
-                    <button className="btn-ghost" style={{ fontSize: "12px", gap: "8px" }}>
-                        <Filter size={14} /> Last 6 Months
-                    </button>
-                    <button className="btn-primary" style={{ fontSize: "12px", gap: "8px" }}>
-                        <Download size={14} /> Export Report
-                    </button>
                 </div>
             </div>
 
@@ -58,17 +58,17 @@ export default function OwnerAnalyticsPage() {
 
             {activeSection === "revenue" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                    <ChartCard title="Revenue Growth" sub="Monthly collection comparison" delay={0.1}>
+                    <ChartCard title="Revenue Growth" sub="Monthly collection comparison (Last 6 Months)" delay={0.1}>
                         <RevenueTrendChart data={detailed?.trend || []} />
                     </ChartCard>
                     <div className="glass-card" style={{ padding: "32px", borderRadius: "24px" }}>
                         <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "24px" }}>Financial Breakdown</h3>
                         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                             {[
-                                { label: "Total Collected", val: "₹1,24,000", change: "+12%", color: "var(--green)" },
-                                { label: "Pending Dues", val: "₹18,500", change: "-5%", color: "var(--yellow)" },
-                                { label: "Late Fee Revenue", val: "₹2,400", change: "+20%", color: "var(--accent-primary)" },
-                                { label: "Projected Next Month", val: "₹1,45,000", change: "Forecast", color: "var(--text-tertiary)" }
+                                { label: "Total Collected", val: `₹${((detailed?.monthly.collected || 0) / 1000).toFixed(1)}k`, change: "Actual", color: "var(--green)" },
+                                { label: "Pending Dues", val: `₹${((detailed?.monthly.outstanding || 0) / 1000).toFixed(1)}k`, change: "Awaiting", color: "var(--yellow)" },
+                                { label: "Late Fee Revenue", val: `₹${((detailed?.lateFeesEarned || 0) / 1000).toFixed(1)}k`, change: "Collected", color: "var(--accent-primary)" },
+                                { label: "Est. Collection Rate", val: `${detailed?.collectionRate || 0}%`, change: "Efficiency", color: "var(--text-tertiary)" }
                             ].map(item => (
                                 <div key={item.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <div>
@@ -100,18 +100,19 @@ export default function OwnerAnalyticsPage() {
                         </div>
                     </div>
                     <div className="glass-card" style={{ padding: "32px", borderRadius: "24px" }}>
-                        <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "24px" }}>Room-wise Performance</h3>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                            {/* Mockup room performance list */}
-                            {[101, 102, 103, 201, 202].map(room => (
-                                <div key={room} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", borderBottom: "1px solid var(--border-subtle)" }}>
-                                    <span style={{ fontWeight: 600 }}>Room {room}</span>
-                                    <div style={{ display: "flex", gap: "4px" }}>
-                                        {[1, 2, 3].map(bed => (
-                                            <div key={bed} style={{ width: "12px", height: "12px", borderRadius: "3px", background: bed < 3 ? "var(--accent-primary)" : "rgba(255,255,255,0.05)" }} />
-                                        ))}
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "24px" }}>Asset Efficiency</h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                            {[
+                                { label: "Investment Yield (Est.)", value: `${(detailed?.collectionRate || 0).toFixed(1)}%`, desc: "Collection vs Potential" },
+                                { label: "Churn Velocity", value: intelligence?.churn?.totalAtRisk || 0, desc: "Residents at risk of move-out" },
+                                { label: "Property Count", value: stats?.totalRooms || 0, desc: "Active units managed" }
+                            ].map((item, idx) => (
+                                <div key={idx} style={{ padding: "16px", background: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                        <span style={{ fontSize: "14px", fontWeight: 600, color: "#fff" }}>{item.label}</span>
+                                        <span style={{ fontSize: "18px", fontWeight: 800, color: "var(--accent-primary)" }}>{item.value}</span>
                                     </div>
-                                    <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{room < 200 ? "Highly Profitable" : "Steady"}</span>
+                                    <p style={{ fontSize: "12px", color: "var(--text-tertiary)", margin: 0 }}>{item.desc}</p>
                                 </div>
                             ))}
                         </div>
@@ -125,25 +126,23 @@ export default function OwnerAnalyticsPage() {
                         <div style={{ width: "64px", height: "64px", borderRadius: "20px", background: "rgba(167,139,250,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#a78bfa", margin: "0 auto 24px" }}>
                             <TrendingDown size={32} />
                         </div>
-                        <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "12px" }}>Churn Prediction Engine</h2>
-                        <p style={{ color: "var(--text-secondary)", marginBottom: "32px" }}>Our AI analyzes payment patterns and maintenance requests to predict which residents are most likely to leave in the next 30 days.</p>
+                        <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "12px" }}>Risk Intelligence Engine</h2>
+                        <p style={{ color: "var(--text-secondary)", marginBottom: "32px" }}>Automated anomaly detection across your portfolio.</p>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "16px", textAlign: "left" }}>
-                            {[
-                                { name: "Aditi Sharma", risk: "HIGH", reason: "3 late payments in a row", prob: "82%" },
-                                { name: "Rahul Verma", risk: "MEDIUM", reason: "Multiple unresolved issues", prob: "45%" }
-                            ].map(resident => (
-                                <div key={resident.name} style={{ padding: "20px", borderRadius: "16px", background: "rgba(255,255,255,0.03)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <div>
-                                        <div style={{ fontWeight: 700 }}>{resident.name}</div>
-                                        <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{resident.reason}</div>
-                                    </div>
-                                    <div style={{ textAlign: "right" }}>
-                                        <div style={{ fontSize: "14px", fontWeight: 800, color: resident.risk === "HIGH" ? "var(--red)" : "var(--yellow)" }}>{resident.prob} Probability</div>
-                                        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em" }}>CHURN RISK</div>
+                            {intelligence && intelligence.alerts?.length > 0 ? intelligence.alerts.map((alert: any, i: number) => (
+                                <div key={i} style={{ padding: "20px", borderRadius: "16px", background: "rgba(255,255,255,0.03)", display: "flex", gap: "16px", alignItems: "center" }}>
+                                    <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: alert.severity === "high" ? "var(--red)" : "var(--yellow)" }} />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: "14px", color: "var(--text-primary)", fontWeight: 600 }}>{alert.source || "Intelligence Alert"}</div>
+                                        <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{alert.message}</div>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div style={{ padding: "40px", textAlign: "center", color: "var(--text-tertiary)" }}>
+                                    No critical risks detected by AI at this time.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -112,10 +112,8 @@ export const superAdminUpdateResident = async (req, res, next) => {
                     status: "pending",
                     type: "rent"
                 });
-                if (pendingPayment) {
-                    pendingPayment.amount = newRoom.rent;
-                    pendingPayment.room = newRoom._id;
-                    await pendingPayment.save();
+                if (updates.roomId && updates.propertyId) {
+                    await residentService.ensureMonthlyRentBill(resident._id, updates.roomId, updates.propertyId, session);
                 }
             }
         }
@@ -224,20 +222,8 @@ export const moveResidentRoom = async (req, res, next) => {
         resident.roomId = newRoom._id;
         await resident.save({ session });
 
-        // ✅ Update current month's pending rent payment to reflect new room price
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        const pendingPayment = await Payment.findOne({
-            resident: resident._id,
-            month: currentMonth,
-            status: "pending",
-            type: "rent"
-        }).session(session);
-
-        if (pendingPayment) {
-            pendingPayment.amount = newRoom.rent;
-            pendingPayment.room = newRoom._id;
-            await pendingPayment.save({ session });
-        }
+        // ✅ Ensure current month's rent bill exists and is updated
+        await residentService.ensureMonthlyRentBill(resident._id, newRoom._id, resident.propertyId, session);
 
         await session.commitTransaction();
         return res.json({ success: true, data: resident });

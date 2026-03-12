@@ -78,10 +78,13 @@ const STATUS_COLOR: Record<string, { main: string; bg: string; border: string }>
     failed: { main: "#ff1744", bg: "rgba(255, 23, 68, 0.1)", border: "rgba(255, 23, 68, 0.2)" },
 };
 
+import { useRazorpay } from "react-razorpay";
+
 export default function ResidentClient() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
+    const { Razorpay } = useRazorpay();
 
     useEffect(() => {
         fetchDashboardData();
@@ -110,15 +113,57 @@ export default function ResidentClient() {
         if (!data?.currentPayment) return;
         setPaying(true);
         try {
-            const res = await api.post("/v2/stripe/checkout-session", {
+            // 1. Get Payment Order from Backend
+            const { data: orderData } = await api.post("/v2/razorpay/checkout-session", {
                 paymentId: data.currentPayment._id
             });
-            if (res.data?.url) {
-                window.location.href = res.data.url;
+
+            // 2. Get Razorpay Key and other details
+            const { data: statusData } = await api.get("/v2/razorpay/status");
+
+            if (!orderData.success || !statusData.key) {
+                throw new Error("Failed to initialize payment");
             }
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            toast.error(error.response?.data?.message || "Stripe payment failed");
+
+            const options: any = {
+                key: statusData.key,
+                amount: orderData.amount,
+                currency: "INR",
+                name: "TAGT Rentals",
+                description: `Rent Payment - ${data.currentPayment.month}`,
+                order_id: orderData.order_id,
+                handler: async (response: any) => {
+                    try {
+                        const verifyRes = await api.post("/v2/razorpay/verify-payment", {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            paymentId: data.currentPayment!._id
+                        });
+
+                        if (verifyRes.data.success) {
+                            toast.success("Payment successful!");
+                            fetchDashboardData();
+                        } else {
+                            toast.error("Payment verification failed");
+                        }
+                    } catch (err) {
+                        toast.error("Verification error");
+                    }
+                },
+                prefill: {
+                    name: data.profile.name,
+                    email: data.profile.email,
+                },
+                theme: {
+                    color: "#00d4ff",
+                },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Razorpay initialization failed");
         } finally {
             setPaying(false);
         }
