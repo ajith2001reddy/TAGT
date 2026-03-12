@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useOwnerStats } from "@/features/owner/useOwnerStats";
 import { fetchIntelligenceSummary, IntelligenceSummary } from "@/features/owner/owner.service";

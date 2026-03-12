@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { fetchOwnerStats, fetchDetailedStats, OwnerStats, DetailedStats } from "./owner.service";
 import { useProperty } from "@/context/PropertyContext";
