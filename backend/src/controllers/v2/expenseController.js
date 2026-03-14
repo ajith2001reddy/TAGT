@@ -32,10 +32,10 @@ export const listExpenses = async (req, res, next) => {
  */
 export const createExpense = async (req, res, next) => {
     try {
-        const { category, amount, description, date, status, receiptUrl, propertyId } = req.body;
+        const { category, name, amount, description, date, status, receiptUrl, propertyId } = req.body;
 
-        // Ensure propertyId is provided if user is super_admin, otherwise use their propertyId
-        const finalPropertyId = req.user.role === 'super_admin' ? propertyId : (req.user.propertyId || propertyId);
+        // propertyId is guaranteed for owners/admins by verifyPropertyAccess middleware
+        const finalPropertyId = propertyId || req.user.propertyId;
 
         if (!finalPropertyId) {
             return res.status(400).json({ success: false, message: "Property ID is required" });
@@ -44,6 +44,7 @@ export const createExpense = async (req, res, next) => {
         const expense = await Expense.create({
             propertyId: finalPropertyId,
             category,
+            name,
             amount,
             description,
             date: date || new Date(),

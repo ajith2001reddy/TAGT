@@ -143,8 +143,8 @@ router.get("/payments/:id/invoice", auth, authorize("super_admin", "owner", "res
 /* ── Expenses ── */
 router.get("/expenses", auth, authorize("super_admin", "owner"), listExpenses);
 router.get("/expenses/summary", auth, authorize("super_admin", "owner"), getExpenseSummary);
-router.post("/expenses", auth, authorize("super_admin", "owner"), createExpense);
-router.put("/expenses/:id", auth, authorize("super_admin", "owner"), updateExpense);
+router.post("/expenses", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createExpense);
+router.put("/expenses/:id", auth, authorize("super_admin", "owner"), verifyPropertyAccess, updateExpense);
 router.delete("/expenses/:id", auth, authorize("super_admin", "owner"), deleteExpense);
 
 /* ── Reports ── */

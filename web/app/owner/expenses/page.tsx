@@ -71,8 +71,9 @@ export default function ExpensePage() {
             setShowModal(false);
             setFormData({ category: "ration", name: "", amount: "", description: "", date: new Date().toISOString().slice(0, 10), status: "paid" });
             fetchExpenses();
-        } catch (e) {
-            toast.error("Failed to save expense");
+        } catch (err: any) {
+            const msg = err.response?.data?.message || "Failed to save expense";
+            toast.error(msg);
         }
     };
 
