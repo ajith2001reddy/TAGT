@@ -106,8 +106,8 @@ export default function OwnerAnalyticsPage() {
                         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                             {[
                                 { label: "Investment Yield (Est.)", value: `${(detailed?.collectionRate || 0).toFixed(1)}%`, desc: "Collection vs Potential" },
-                                { label: "Churn Velocity", value: intelligence?.churn?.totalAtRisk || 0, desc: "Residents at risk of move-out" },
-                                { label: "Property Count", value: stats?.totalRooms || 0, desc: "Active units managed" }
+                                { label: "Churn Velocity", value: String(intelligence?.churn?.highRisk || 0), desc: "Residents at risk of move-out" },
+                                { label: "Property Count", value: String(stats?.totalRooms || 0), desc: "Active units managed" }
                             ].map((item, idx) => (
                                 <div key={idx} style={{ padding: "16px", background: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
@@ -132,12 +132,12 @@ export default function OwnerAnalyticsPage() {
                         <p style={{ color: "var(--text-secondary)", marginBottom: "32px" }}>Automated anomaly detection across your portfolio.</p>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "16px", textAlign: "left" }}>
-                            {intelligence && intelligence.alerts?.length > 0 ? intelligence.alerts.map((alert: any, i: number) => (
+                            {intelligence && intelligence.alerts && intelligence.alerts.alerts.length > 0 ? intelligence.alerts.alerts.map((alert, i) => (
                                 <div key={i} style={{ padding: "20px", borderRadius: "16px", background: "rgba(255,255,255,0.03)", display: "flex", gap: "16px", alignItems: "center" }}>
-                                    <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: alert.severity === "high" ? "var(--red)" : "var(--yellow)" }} />
+                                    <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: alert.severity === "critical" ? "var(--red)" : "var(--yellow)" }} />
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: "14px", color: "var(--text-primary)", fontWeight: 600 }}>{alert.source || "Intelligence Alert"}</div>
-                                        <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{alert.message}</div>
+                                        <div style={{ fontSize: "14px", color: "var(--text-primary)", fontWeight: 600 }}>{alert.title}</div>
+                                        <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{alert.description || alert.action}</div>
                                     </div>
                                 </div>
                             )) : (

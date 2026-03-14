@@ -48,10 +48,61 @@ export type JoinRequest = {
 };
 
 export type IntelligenceSummary = {
-    forecast: Record<string, unknown>;
-    trends: Record<string, unknown>;
-    alerts: Record<string, unknown>;
-    churn: Record<string, unknown>;
+    forecast: {
+        history: Array<{ month: string; collected: number; count: number }>;
+        forecast: Array<{ month: string; projected: number; isForecast: true }>;
+        trend: "up" | "down" | "stable";
+        avgMonthlyRevenue: number;
+    } | null;
+    trends: {
+        current: {
+            totalBeds: number;
+            occupiedBeds: number;
+            occupancyRate: number;
+        };
+        monthlyRevenueTrend: Array<{
+            month: string;
+            billed: number;
+            paid: number;
+            collectionRate: number;
+            newResidents: number;
+        }>;
+        roomBreakdown: Array<{
+            id: string;
+            roomNumber: string;
+            totalBeds: number;
+            occupiedBeds: number;
+            occupancyRate: number;
+            rent: number;
+        }>;
+    } | null;
+    alerts: {
+        alerts: Array<{
+            id: string;
+            severity: "critical" | "warning" | "info";
+            title: string;
+            description?: string;
+            action?: string;
+            source?: string; // Added because analytics/page refers to alert.source
+            message?: string; // Added because analytics/page refers to alert.message
+        }>;
+        totalAlerts: number;
+    } | null;
+    churn: {
+        generatedAt: string;
+        totalResidents: number;
+        highRisk: number;
+        mediumRisk: number;
+        lowRisk: number;
+        residents: Array<{
+            residentId: string;
+            name: string;
+            email: string;
+            score: number;
+            riskLevel: "HIGH" | "MEDIUM" | "LOW";
+            reasons: string[];
+        }>;
+    } | null;
 };
 
 export async function fetchOwnerStats(propertyId: string | null): Promise<OwnerStats | null> {
