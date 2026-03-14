@@ -20,6 +20,7 @@ const ownerNav: NavItem[] = [
     { href: "/owner/property", label: "Property", icon: <Building2 size={16} /> },
     { href: "/owner/rooms", label: "Rooms", icon: <BedDouble size={16} /> },
     { href: "/owner/residents", label: "Residents", icon: <Users size={16} /> },
+    { href: "/owner/lease", label: "Lease Management", icon: <FileText size={16} /> },
     { href: "/owner/invite", label: "Invite System", icon: <UserPlus size={16} /> },
     { href: "/owner/payments", label: "Payments", icon: <CreditCard size={16} /> },
     { href: "/owner/expenses", label: "Expenses", icon: <TrendingUp size={16} /> },
