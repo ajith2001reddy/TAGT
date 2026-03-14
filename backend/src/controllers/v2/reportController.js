@@ -295,22 +295,30 @@ export const exportExpensesExcel = async (req, res, next) => {
         const sheet = workbook.addWorksheet("Expenses & Ration");
 
         sheet.columns = [
+            { header: "Sr. No.", key: "srNo", width: 8 },
             { header: "Date", key: "date", width: 15 },
             { header: "Category", key: "category", width: 15 },
+            { header: "Name / Item", key: "name", width: 25 },
             { header: "Amount", key: "amount", width: 12 },
             { header: "Description", key: "description", width: 30 },
             { header: "Status", key: "status", width: 12 },
         ];
 
-        expenses.forEach(e => {
+        expenses.forEach((e, idx) => {
             sheet.addRow({
+                srNo: idx + 1,
                 date: new Date(e.date).toLocaleDateString(),
-                category: e.category.toUpperCase(),
+                category: e.category.toUpperCase().replace('_', ' '),
+                name: e.name || "",
                 amount: e.amount,
                 description: e.description || "",
                 status: e.status
             });
         });
+
+        // Style header
+        sheet.getRow(1).font = { bold: true };
+        sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC000' } };
 
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         res.setHeader("Content-Disposition", "attachment; filename=expenses-report.xlsx");

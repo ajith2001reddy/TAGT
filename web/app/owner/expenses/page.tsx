@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 type Expense = {
     _id: string;
     category: string;
+    name: string;
     amount: number;
     description: string;
     date: string;
@@ -36,6 +37,7 @@ export default function ExpensePage() {
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         category: "ration",
+        name: "",
         amount: "",
         description: "",
         date: new Date().toISOString().slice(0, 10),
@@ -67,7 +69,7 @@ export default function ExpensePage() {
             });
             toast.success("Expense recorded successfully");
             setShowModal(false);
-            setFormData({ category: "ration", amount: "", description: "", date: new Date().toISOString().slice(0, 10), status: "paid" });
+            setFormData({ category: "ration", name: "", amount: "", description: "", date: new Date().toISOString().slice(0, 10), status: "paid" });
             fetchExpenses();
         } catch (e) {
             toast.error("Failed to save expense");
@@ -105,6 +107,7 @@ export default function ExpensePage() {
                         <tr style={{ background: "var(--bg-subtle)", borderBottom: "1px solid var(--border-default)" }}>
                             <th style={{ padding: "16px", textAlign: "left", color: "var(--text-tertiary)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Date</th>
                             <th style={{ padding: "16px", textAlign: "left", color: "var(--text-tertiary)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Category</th>
+                            <th style={{ padding: "16px", textAlign: "left", color: "var(--text-tertiary)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Name</th>
                             <th style={{ padding: "16px", textAlign: "left", color: "var(--text-tertiary)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Amount</th>
                             <th style={{ padding: "16px", textAlign: "left", color: "var(--text-tertiary)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Description</th>
                             <th style={{ padding: "16px", textAlign: "right", color: "var(--text-tertiary)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Actions</th>
@@ -112,9 +115,9 @@ export default function ExpensePage() {
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={5} style={{ padding: "48px", textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto", width: "24px", height: "24px", border: "2px solid #ddd", borderTopColor: "#000" }}></div></td></tr>
+                            <tr><td colSpan={6} style={{ padding: "48px", textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto", width: "24px", height: "24px", border: "2px solid #ddd", borderTopColor: "#000" }}></div></td></tr>
                         ) : expenses.length === 0 ? (
-                            <tr><td colSpan={5} style={{ padding: "60px", textAlign: "center", color: "var(--text-secondary)" }}>No expenses recorded for this property yet.</td></tr>
+                            <tr><td colSpan={6} style={{ padding: "60px", textAlign: "center", color: "var(--text-secondary)" }}>No expenses recorded for this property yet.</td></tr>
                         ) : (
                             expenses.map((ex) => (
                                 <tr key={ex._id} className="hover-row" style={{ borderBottom: "1px solid var(--border-default)", transition: "background 0.2s" }}>
@@ -131,8 +134,9 @@ export default function ExpensePage() {
                                             {ex.category.replace('_', ' ')}
                                         </span>
                                     </td>
+                                    <td style={{ padding: "14px 16px", fontWeight: 600 }}>{ex.name || "-"}</td>
                                     <td style={{ padding: "14px 16px", fontWeight: 700, fontSize: "14px" }}>₹{ex.amount.toLocaleString('en-IN')}</td>
-                                    <td style={{ padding: "14px 16px", color: "var(--text-secondary)", maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.description || "-"}</td>
+                                    <td style={{ padding: "14px 16px", color: "var(--text-secondary)", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.description || "-"}</td>
                                     <td style={{ padding: "14px 16px", textAlign: "right" }}>
                                         <button 
                                             onClick={() => deleteExpense(ex._id)}
@@ -151,7 +155,7 @@ export default function ExpensePage() {
 
             {showModal && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(6px)" }}>
-                    <div className="animate-fade-up" style={{ background: "var(--bg-card)", width: "100%", maxWidth: "480px", borderRadius: "28px", padding: "32px", border: "1px solid var(--border-strong)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}>
+                    <div className="animate-fade-up" style={{ background: "var(--bg-card)", width: "100%", maxWidth: "500px", borderRadius: "28px", padding: "32px", border: "1px solid var(--border-strong)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
                             <h2 style={{ fontSize: "22px", fontWeight: 800, fontFamily: "var(--font-display)" }}>Record New Expense</h2>
                             <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", color: "var(--text-tertiary)", cursor: "pointer" }}>
@@ -189,6 +193,21 @@ export default function ExpensePage() {
                             </div>
 
                             <div style={{ marginBottom: "20px" }}>
+                                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "8px", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Name / Item / Staff</label>
+                                <input 
+                                    type="text"
+                                    className="input-field"
+                                    placeholder="e.g. Cook, Onion, Rice (Joker), PGE Rent"
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    required
+                                />
+                                <span style={{ fontSize: "10px", color: "var(--text-tertiary)", marginTop: "4px", display: "block" }}>
+                                    Following your Excel system headings (Salaries, Purchase, etc.)
+                                </span>
+                            </div>
+
+                            <div style={{ marginBottom: "20px" }}>
                                 <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "8px", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Transaction Date</label>
                                 <input 
                                     type="date"
@@ -203,8 +222,8 @@ export default function ExpensePage() {
                                 <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "8px", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Description / Remarks</label>
                                 <textarea 
                                     className="input-field"
-                                    style={{ height: "90px", resize: "none" }}
-                                    placeholder="e.g. Monthly salary for cook, or electricity bill invoice #123"
+                                    style={{ height: "70px", resize: "none" }}
+                                    placeholder="Any additional notes..."
                                     value={formData.description}
                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
                                 />

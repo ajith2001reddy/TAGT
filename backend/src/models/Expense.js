@@ -24,6 +24,10 @@ const expenseSchema = new mongoose.Schema(
             required: true,
             min: 0,
         },
+        name: {
+            type: String,
+            trim: true,
+        },
         description: {
             type: String,
             trim: true,
