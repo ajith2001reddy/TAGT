@@ -8,12 +8,7 @@ import { useProperty } from "@/context/PropertyContext";
 import { useAuth } from "@/context/AuthContext";
 import { 
     Plus, 
-    Home, 
-    Users, 
     MoreVertical, 
-    TrendingUp, 
-    Bed,
-    AlertCircle,
     LayoutGrid
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -48,8 +43,9 @@ export default function RoomsPage() {
             setShowAdd(false);
             reload();
             toast.success("Room added!");
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to add room");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? (err as any).response?.data?.message || err.message : "Failed to add room";
+            toast.error(message);
         } finally { setAdding(false); }
     }
 

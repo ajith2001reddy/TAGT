@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { createContext, useContext, useState, useEffect } from "react";
-import { CheckCircle2, ShieldCheck, Users, Home, Sparkles, Zap, TrendingUp, BarChart3 } from "lucide-react";
+import { CheckCircle2, Home, Sparkles, Zap, TrendingUp, BarChart3 } from "lucide-react";
 
 // Context for sharing role state between Layout and Client
 const AuthContext = createContext<{
@@ -102,7 +103,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                             display: "flex", alignItems: "center", justifyContent: "center",
                             boxShadow: "0 0 20px rgba(0, 212, 255, 0.3)"
                         }}>
-                            <img src="/logo.png" alt="" style={{ width: "24px" }} />
+                            <Image src="/logo.png" alt="TAGT Logo" width={24} height={24} />
                         </div>
                         <span style={{ 
                             fontFamily: "var(--font-display)", 

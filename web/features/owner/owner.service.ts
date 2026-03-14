@@ -48,10 +48,10 @@ export type JoinRequest = {
 };
 
 export type IntelligenceSummary = {
-    forecast: any;
-    trends: any;
-    alerts: any;
-    churn: any;
+    forecast: Record<string, unknown>;
+    trends: Record<string, unknown>;
+    alerts: Record<string, unknown>;
+    churn: Record<string, unknown>;
 };
 
 export async function fetchOwnerStats(propertyId: string | null): Promise<OwnerStats | null> {

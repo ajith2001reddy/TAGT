@@ -48,7 +48,7 @@ export function PropertyProvider({
             // 🛠️ Persistence: Load last selected from localStorage
             const savedId = localStorage.getItem("selected_property_id");
             if (savedId) {
-                const found = fetched.find((p: any) => p._id === savedId);
+                const found = fetched.find((p: Property) => p._id === savedId);
                 if (found) {
                     setProperty(found);
                     setLoading(false);
@@ -60,7 +60,7 @@ export function PropertyProvider({
             if (fetched.length > 0) {
                 setProperty(fetched[0]);
             }
-        } catch (err) {
+        } catch {
             console.error("Failed to fetch properties");
         } finally {
             setLoading(false);

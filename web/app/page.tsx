@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
@@ -52,12 +53,7 @@ const FEATURES = [
   }
 ];
 
-const STATS = [
-  { value: "2,400+", label: "Active Beds" },
-  { value: "98.2%", label: "Uptime SLA" },
-  { value: "₹4.2Cr", label: "Rent Processed" },
-  { value: "<340ms", label: "Avg Response" },
-];
+
 
 const TESTIMONIALS = [
   { name: "Ravi Kumar", role: "PG Owner · Bangalore", quote: "TAGT cut my rent collection time from 3 days to 3 minutes. It's a completely different game." },
@@ -78,7 +74,7 @@ export default function LandingPage() {
   const [suggestions, setSuggestions] = useState<Place[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [type, setType] = useState("");
+  const [type] = useState("");
   const [mounted, setMounted] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
@@ -203,10 +199,12 @@ export default function LandingPage() {
         transition: "all 0.4s ease",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <img
+          <Image
             src="/logo.png"
             alt="TAGT Logo"
-            style={{ width: "32px", height: "32px", borderRadius: "8px", objectFit: "cover", boxShadow: "0 0 16px rgba(0,212,255,0.25)" }}
+            width={32}
+            height={32}
+            style={{ borderRadius: "8px", objectFit: "cover", boxShadow: "0 0 16px rgba(0,212,255,0.25)" }}
           />
           <span style={{ fontWeight: 800, fontSize: "20px", letterSpacing: "-0.03em", background: "linear-gradient(135deg, #ffffff, #a0b4cc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             TAGT
@@ -445,7 +443,7 @@ export default function LandingPage() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
-          {FEATURES.map((category, i) => (
+          {FEATURES.map((category) => (
             <div
               key={category.category}
               style={{

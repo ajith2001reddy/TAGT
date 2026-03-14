@@ -49,8 +49,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const userData = data.data as DbUser;
             setRole(userData.role || null);
             setDbUser(userData || null);
-        } catch (err) {
-            console.error("Error refreshing user:", err);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Unknown error";
+            console.error("Error refreshing user:", message);
         }
     };
     useEffect(() => {
@@ -68,7 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setRole(userData.role || null);
                     setDbUser(userData || null);
                 } catch (err: unknown) {
-                    if (err instanceof Error && (err as any).response?.status !== 401) {
+                    const status = (err as { response?: { status: number } })?.response?.status;
+                    if (status !== 401) {
                         console.error("Auth sync error:", err);
                     }
                     setRole(null);

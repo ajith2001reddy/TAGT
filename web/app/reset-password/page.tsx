@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function ResetPasswordPage() {
     const [email, setEmail] = useState("");
@@ -23,7 +24,7 @@ export default function ResetPasswordPage() {
                 border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)",
                 backdropFilter: "blur(20px)", textAlign: "center"
             }}>
-                <img src="/logo.png" alt="Logo" style={{ width: "40px", height: "40px", marginBottom: "24px" }} />
+                <Image src="/logo.png" alt="Logo" width={40} height={40} style={{ marginBottom: "24px" }} />
 
                 {!sent ? (
                     <>

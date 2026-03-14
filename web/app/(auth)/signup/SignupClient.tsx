@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import Script from "next/script";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { User, Mail, Lock, Chrome, Eye, EyeOff } from "lucide-react";
 
 import { useAuthContext } from "../layout";
@@ -41,8 +41,9 @@ export default function SignupClient() {
                 role 
             });
             router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message || "Something went wrong.");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Something went wrong.";
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -59,8 +60,9 @@ export default function SignupClient() {
                 role
             });
             router.push("/dashboard");
-        } catch (err: any) {
-            if (err.code !== "auth/popup-closed-by-user") {
+        } catch (err: unknown) {
+            const errorObj = err as { code?: string };
+            if (errorObj.code !== "auth/popup-closed-by-user") {
                 setError("Google sign-up failed.");
             }
         } finally {
@@ -123,7 +125,7 @@ export default function SignupClient() {
                             <button
                                 key={r}
                                 type="button"
-                                onClick={() => setRole(r as any)}
+                                onClick={() => setRole(r as "resident" | "owner")}
                                 style={{
                                     flex: 1, padding: "8px", borderRadius: "8px", border: "none",
                                     background: role === r ? "rgba(255,255,255,0.07)" : "transparent",

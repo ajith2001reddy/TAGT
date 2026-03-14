@@ -4,12 +4,21 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "react-hot-toast";
+import Image from "next/image";
+
+interface Property {
+    _id: string;
+    name: string;
+    address: string;
+    city: string;
+    heroImage?: string;
+}
 
 export default function ResidentJoinPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [joinCode, setJoinCode] = useState("");
-    const [property, setProperty] = useState<any>(null);
+    const [property, setProperty] = useState<Property | null>(null);
     const [searching, setSearching] = useState(false);
     const [message, setMessage] = useState("");
 
@@ -25,7 +34,7 @@ export default function ResidentJoinPage() {
             } else {
                 toast.error("Invalid join code. Please check and try again.");
             }
-        } catch (err) {
+        } catch {
             toast.error("Failed to lookup property");
         } finally {
             setSearching(false);
@@ -91,7 +100,7 @@ export default function ResidentJoinPage() {
                             justifyContent: "center", fontSize: "32px", border: "1px solid var(--border-subtle)",
                             overflow: "hidden"
                         }}>
-                            {property.heroImage ? <img src={property.heroImage} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🏢"}
+                            {property.heroImage ? <Image src={property.heroImage} alt={property.name} width={80} height={80} unoptimized style={{ objectFit: "cover" }} /> : "🏢"}
                         </div>
                         <div>
                             <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "4px" }}>{property.name}</h3>
