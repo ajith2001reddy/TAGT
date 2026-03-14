@@ -2,6 +2,7 @@ import Payment from "../../models/Payment.js";
 import User from "../../models/User.js";
 import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
+import Expense from "../../models/Expense.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
@@ -232,6 +233,51 @@ export const exportRentReceiptPDF = async (req, res, next) => {
         doc.fontSize(8).text("This is a computer generated receipt.", { align: "center", color: "grey" });
 
         doc.end();
+    } catch (err) { next(err); }
+};
+
+/**
+ * 8. Export Expenses (Excel - Ration, Utilities, etc)
+ */
+export const exportExpensesExcel = async (req, res, next) => {
+    try {
+        const scope = buildPropertyFilter(req.user);
+        const { startDate, endDate } = req.query;
+
+        const filter = { ...scope };
+        if (startDate || endDate) {
+            filter.date = {};
+            if (startDate) filter.date.$gte = new Date(startDate);
+            if (endDate) filter.date.$lte = new Date(endDate);
+        }
+
+        const expenses = await Expense.find(filter).sort({ date: -1 }).lean();
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Expenses & Ration");
+
+        sheet.columns = [
+            { header: "Date", key: "date", width: 15 },
+            { header: "Category", key: "category", width: 15 },
+            { header: "Amount", key: "amount", width: 12 },
+            { header: "Description", key: "description", width: 30 },
+            { header: "Status", key: "status", width: 12 },
+        ];
+
+        expenses.forEach(e => {
+            sheet.addRow({
+                date: new Date(e.date).toLocaleDateString(),
+                category: e.category.toUpperCase(),
+                amount: e.amount,
+                description: e.description || "",
+                status: e.status
+            });
+        });
+
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", "attachment; filename=expenses-report.xlsx");
+        await workbook.xlsx.write(res);
+        res.end();
     } catch (err) { next(err); }
 };
 

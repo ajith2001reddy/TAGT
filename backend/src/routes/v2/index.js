@@ -28,9 +28,11 @@ import {
     getFinancialReport,
     exportResidentsExcel,
     exportPaymentsExcel,
-    exportRentReceiptPDF
+    exportRentReceiptPDF,
+    exportExpensesExcel
 } from "../../controllers/v2/reportController.js";
 import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner, getMyProperties, createProperty, getPropertyById } from "../../controllers/v2/propertiesController.js";
+import { listExpenses, createExpense, updateExpense, deleteExpense, getExpenseSummary } from "../../controllers/v2/expenseController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
 import { createPaymentSession, createSubscriptionSession, razorpayWebhook, razorpayStatus, verifyPayment } from "../../controllers/v2/razorpayController.js";
@@ -138,6 +140,13 @@ router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), vali
 router.post("/payments/:id/send-reminder", auth, authorize("super_admin", "owner"), sendPaymentReminder);
 router.get("/payments/:id/invoice", auth, authorize("super_admin", "owner", "resident"), downloadInvoice);
 
+/* ── Expenses ── */
+router.get("/expenses", auth, authorize("super_admin", "owner"), listExpenses);
+router.get("/expenses/summary", auth, authorize("super_admin", "owner"), getExpenseSummary);
+router.post("/expenses", auth, authorize("super_admin", "owner"), createExpense);
+router.put("/expenses/:id", auth, authorize("super_admin", "owner"), updateExpense);
+router.delete("/expenses/:id", auth, authorize("super_admin", "owner"), deleteExpense);
+
 /* ── Reports ── */
 // JSON APIs for Dashboards
 router.get("/reports/residents", auth, authorize("super_admin", "owner"), getResidentsReport);
@@ -148,6 +157,7 @@ router.get("/reports/financial", auth, authorize("super_admin", "owner"), getFin
 // Exports
 router.get("/reports/export/residents", auth, authorize("super_admin", "owner"), exportResidentsExcel);
 router.get("/reports/export/payments", auth, authorize("super_admin", "owner"), exportPaymentsExcel);
+router.get("/reports/export/expenses", auth, authorize("super_admin", "owner"), exportExpensesExcel);
 router.get("/reports/export/receipt/:id", auth, authorize("super_admin", "owner", "resident"), exportRentReceiptPDF);
 
 // Legacy CSV

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Building2, BedDouble, Users, CreditCard,
     MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
-    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building, ShieldAlert, UserPlus
+    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building, ShieldAlert, UserPlus, TrendingUp
 } from "lucide-react";
 import { PropertySelector } from "./PropertySelector";
 
@@ -22,6 +22,7 @@ const ownerNav: NavItem[] = [
     { href: "/owner/residents", label: "Residents", icon: <Users size={16} /> },
     { href: "/owner/invite", label: "Invite System", icon: <UserPlus size={16} /> },
     { href: "/owner/payments", label: "Payments", icon: <CreditCard size={16} /> },
+    { href: "/owner/expenses", label: "Expenses", icon: <TrendingUp size={16} /> },
     { href: "/owner/requests", label: "Requests", icon: <MessageSquare size={16} /> },
     { href: "/verify", label: "Identity Verification", icon: <UserCheck size={16} /> },
 ];

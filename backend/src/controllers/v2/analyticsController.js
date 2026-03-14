@@ -4,6 +4,7 @@ import Payment from "../../models/Payment.js";
 import Property from "../../models/Property.js";
 import Request from "../../models/Request.js";
 import JoinRequest from "../../models/JoinRequest.js";
+import Expense from "../../models/Expense.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
 
@@ -83,10 +84,11 @@ export const ownerFinancialDashboard = async (req, res, next) => {
         const scope = buildPropertyFilter(req.user);
         const currentMonth = new Date().toISOString().slice(0, 7);
 
-        const [rooms, allPayments, monthPayments] = await Promise.all([
+        const [rooms, allPayments, monthPayments, monthExpenses] = await Promise.all([
             Room.find(scope, "totalBeds occupiedBeds rent").lean(),
             Payment.find(scope, "amount status lateFee totalPayable paidAt dueDate").lean(),
             Payment.find({ ...scope, month: currentMonth }, "amount status lateFee").lean(),
+            Expense.find({ ...scope, date: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } }, "amount").lean(),
         ]);
 
         const totalBeds = rooms.reduce((s, r) => s + (r.totalBeds || 0), 0);
@@ -101,6 +103,7 @@ export const ownerFinancialDashboard = async (req, res, next) => {
         const lateFeesEarned = allPayments.filter(p => p.status === "paid").reduce((s, p) => s + (p.lateFee || 0), 0);
         const overdue = allPayments.filter(p => p.status !== "paid" && p.dueDate && new Date(p.dueDate) < new Date());
         const overdueAmount = overdue.reduce((s, p) => s + (p.amount || 0), 0);
+        const monthExpensesTotal = monthExpenses.reduce((s, e) => s + (e.amount || 0), 0);
 
         // 6-month revenue trend
         const trendAgg = await Payment.aggregate([
@@ -118,7 +121,8 @@ export const ownerFinancialDashboard = async (req, res, next) => {
                 lateFeesEarned,
                 overdueAmount,
                 overdueCount: overdue.length,
-                profitEstimate: monthCollected + lateFeesEarned,
+                monthExpenses: monthExpensesTotal,
+                profitEstimate: (monthCollected + lateFeesEarned) - monthExpensesTotal,
                 collectionRate: monthExpected ? Number(((monthCollected / monthExpected) * 100).toFixed(1)) : 0,
                 trend,
             }

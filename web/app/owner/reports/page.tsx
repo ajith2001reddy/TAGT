@@ -37,6 +37,15 @@ const reports: ReportType[] = [
         hasMonthPicker: true,
     },
     {
+        id: "expenses-excel",
+        title: "Expenses & Ration",
+        desc: "Track money going out: Food, Electricity, and Maintenance costs.",
+        icon: "📉",
+        color: "#f43f5e",
+        endpoint: "/v2/reports/export/expenses",
+        type: "excel",
+    },
+    {
         id: "monthly-revenue",
         title: "Monthly Revenue (CSV)",
         desc: "Simple CSV dump of all paid rent for quick imports.",
@@ -119,30 +128,34 @@ export default function ReportsPage() {
             {/* Top Stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px", marginBottom: "40px" }}>
                 <StatCard
-                    title="Total Revenue"
+                    label="Total Revenue"
                     value={`₹${stats?.totalRevenue?.toLocaleString() || "0"}`}
                     icon="💰"
-                    trend={{ value: "Live", isPositive: true }}
+                    delta="Live"
+                    deltaType="up"
                 />
                 <StatCard
-                    title="Occupancy"
+                    label="Occupancy"
                     value={`${stats?.occupancyRate || "0"}%`}
                     icon="🏠"
-                    trend={{ value: `${stats?.occupiedBeds || 0} / ${stats?.totalBeds || 0} Beds`, isPositive: (stats?.occupancyRate > 70) }}
+                    delta={`${stats?.occupiedBeds || 0} / ${stats?.totalBeds || 0} Beds`}
+                    deltaType={stats?.occupancyRate > 70 ? "up" : "neutral"}
                 />
                 <StatCard
-                    title="Outstanding"
+                    label="Outstanding"
                     value={`₹${stats?.outstanding?.toLocaleString() || "0"}`}
                     icon="⏳"
-                    trend={{ value: "Pending Collection", isPositive: false }}
-                    color="#f43f5e"
+                    delta="Pending Collection"
+                    deltaType="down"
+                    accent="#f43f5e"
                 />
                 <StatCard
-                    title="Under Maintenance"
+                    label="Under Maintenance"
                     value={stats?.maintenanceBeds || "0"}
                     icon="🛠️"
-                    trend={{ value: "Beds Offline", isPositive: false }}
-                    color="#8b5cf6"
+                    delta="Beds Offline"
+                    deltaType="down"
+                    accent="#8b5cf6"
                 />
             </div>
 
@@ -271,4 +284,3 @@ export default function ReportsPage() {
         </div>
     );
 }
-
