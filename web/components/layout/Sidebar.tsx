@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Building2, BedDouble, Users, CreditCard,
-    MessageSquare, FileText, Settings,
-    LogOut, Globe, UserCog, ChevronRight, LifeBuoy, X, User, ShieldAlert, TrendingUp
+    MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
+    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building, ShieldAlert, UserPlus, TrendingUp, Clock
 } from "lucide-react";
 import { PropertySelector } from "./PropertySelector";
 
@@ -19,6 +19,23 @@ const ownerNav: NavItem[] = [
     { href: "/owner/rooms", label: "Rooms", icon: <BedDouble size={16} /> },
     { href: "/owner/money", label: "Money & Ledger", icon: <TrendingUp size={16} /> },
     { href: "/owner/documents", label: "Documents", icon: <FileText size={16} /> },
+];
+
+const ownerInsightsNav: NavItem[] = [
+    { href: "/owner/analytics", label: "Analytics", icon: <BarChart2 size={16} /> },
+    { href: "/owner/activity", label: "Activity", icon: <Activity size={16} /> },
+    { href: "/owner/intelligence", label: "Strategy AI", icon: <Cpu size={16} /> },
+];
+
+const ownerManagementNav: NavItem[] = [
+    { href: "/owner/staff", label: "Team", icon: <UserCheck size={16} /> },
+    { href: "/owner/invite", label: "Invite Partner", icon: <UserPlus size={16} /> },
+    { href: "/owner/property", label: "Marketplace", icon: <Building size={16} /> },
+];
+
+const ownerSecondaryNav: NavItem[] = [
+    { href: "/owner/settings", label: "Settings", icon: <Settings size={16} /> },
+    { href: "/owner/support", label: "Support", icon: <LifeBuoy size={16} /> },
 ];
 
 
@@ -274,6 +291,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {role === "owner" && (
                     <>
                         <NavGroup items={ownerNav} pathname={pathname} onNavigate={onClose} />
+                        <NavGroup title="Insights" items={ownerInsightsNav} pathname={pathname} onNavigate={onClose} />
+                        <NavGroup title="Management" items={ownerManagementNav} pathname={pathname} onNavigate={onClose} />
+                        <NavGroup title="Resources" items={ownerSecondaryNav} pathname={pathname} onNavigate={onClose} />
                     </>
                 )}
                 {role === "super_admin" && (
