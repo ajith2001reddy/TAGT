@@ -15,20 +15,25 @@ export function initScheduler() {
         mainQueue.add("MonthlyRentGeneration", { scheduled: true });
     });
 
+    // Nightly Rent Reminders: Daily at 8:00 PM
+    cron.schedule("0 20 * * *", () => {
+        mainQueue.add("NightlyRentReminders", { scheduled: true });
+    });
+
+    // Lease Expiry Alerts: Daily at 9:00 AM
+    cron.schedule("0 9 * * *", () => {
+        mainQueue.add("LeaseExpiryAlerts", { scheduled: true });
+    });
+
+    // Occupancy Stats Caching: Every 15 minutes
+    cron.schedule("*/15 * * * *", () => {
+        mainQueue.add("CachePropertyStats", { scheduled: true });
+    });
+
     // Mark Overdue Payments: Daily at 2:00 AM
     cron.schedule("0 2 * * *", () => {
         mainQueue.add("MarkOverduePayments", { scheduled: true });
     });
 
-    // Upcoming Rent Reminders (3 days before due): Daily at 9:00 AM
-    cron.schedule("0 9 * * *", () => {
-        mainQueue.add("UpcomingRentReminders", { scheduled: true });
-    });
-
-    // Overdue Notices: Daily at 10:00 AM
-    cron.schedule("0 10 * * *", () => {
-        mainQueue.add("OverdueNotices", { scheduled: true });
-    });
-
-    logger.info("✅ BullMQ Scheduler started: 4 repeatable triggers registered.");
+    logger.info("✅ BullMQ Scheduler started: 5 repeatable triggers registered.");
 }

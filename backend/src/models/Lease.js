@@ -40,6 +40,9 @@ const leaseSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
+        startDate: { type: Date, default: null },
+        endDate: { type: Date, default: null },
+        documentHash: { type: String, default: null }, // SHA256 integrity check
     },
     { timestamps: true }
 );

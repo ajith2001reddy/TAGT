@@ -5,6 +5,9 @@ import logger from "./utils/logger.js";
 import { connectDB } from "./config/db.js";
 import { generateMonthlyRent } from "./jobs/rentGenerator.js";
 import { markOverduePayments } from "./jobs/overdueStatusJob.js";
+import { runNightlyRentReminders } from "./jobs/nightlyReminderJob.js";
+import { runLeaseExpiryAlerts } from "./jobs/leaseExpiryJob.js";
+import { cacheAllPropertyStats } from "./jobs/cacheStatsJob.js";
 import { sendUpcomingRentReminders, sendOverdueNotices } from "./jobs/emailReminderJob.js";
 import "./events/workers/residentWorker.js";
 import "./events/workers/billingWorker.js";
@@ -16,6 +19,9 @@ const QUEUE_NAME = "main-task-queue";
 const jobRegistry = {
     "MonthlyRentGeneration": generateMonthlyRent,
     "MarkOverduePayments": markOverduePayments,
+    "NightlyRentReminders": runNightlyRentReminders,
+    "LeaseExpiryAlerts": runLeaseExpiryAlerts,
+    "CachePropertyStats": cacheAllPropertyStats,
     "UpcomingRentReminders": sendUpcomingRentReminders,
     "OverdueNotices": sendOverdueNotices
 };

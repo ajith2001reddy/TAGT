@@ -22,7 +22,7 @@ export const listLeases = async (req, res, next) => {
  */
 export const uploadLease = async (req, res, next) => {
     try {
-        const { residentId, fileUrl, propertyId } = req.body;
+        const { residentId, fileUrl, propertyId, startDate, endDate, documentHash } = req.body;
         
         // Ensure resident belongs to this property
         const resident = await User.findOne({ _id: residentId, propertyId, role: "resident" });
@@ -32,6 +32,9 @@ export const uploadLease = async (req, res, next) => {
             propertyId,
             residentId,
             fileUrl,
+            startDate,
+            endDate,
+            documentHash,
             uploadedBy: req.user._id,
             status: "pending"
         });

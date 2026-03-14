@@ -52,6 +52,8 @@ import { createNotice, listNotices } from "../../controllers/v2/noticeController
 import { createJoinRequest, getPropertyJoinRequests, approveJoinRequest, rejectJoinRequest } from "../../controllers/v2/joinRequestController.js";
 // Phase 8: Profile & User Management
 import { getProfile, updateProfile, changePassword, superAdminManageUser } from "../../controllers/v2/userController.js";
+import { globalSearch } from "../../controllers/v2/searchController.js";
+import { getUnifiedLedger } from "../../controllers/v2/ledgerController.js";
 
 // All API V2 routes are under /api/v2
 // Currently dynamic limiters are applied individually or globally in app.js
@@ -102,6 +104,9 @@ router.get("/admin/verifications/pending", auth, authorize("super_admin"), getPe
 router.post("/admin/verifications/:id/approve", auth, authorize("super_admin"), approveVerification);
 router.post("/admin/verifications/:id/reject", auth, authorize("super_admin"), rejectVerification);
 
+/* ── Search ── */
+router.get("/search", auth, authorize("super_admin", "owner"), globalSearch);
+
 /* ── Analytics ── */
 router.get("/analytics/owner-dashboard", auth, authorize("super_admin", "owner"), ownerDashboardAnalytics);
 router.get("/analytics/financial-dashboard", auth, authorize("super_admin", "owner"), ownerFinancialDashboard);
@@ -134,6 +139,7 @@ router.patch("/residents/:id/assign-property", auth, authorize("super_admin"), l
 router.put("/residents/:id", auth, authorize("super_admin"), validate(updateResidentSchema), logActivity("RESIDENT_UPDATED_BY_ADMIN"), superAdminUpdateResident);
 
 /* ── Payments ── */
+router.get("/ledger", auth, authorize("super_admin", "owner"), getUnifiedLedger);
 router.get("/payments", auth, authorize("super_admin", "owner", "resident"), listPayments);
 router.post("/payments", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createPaymentSchema), logActivity("PAYMENT_CREATED"), createPayment);
 router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), validate(markPaymentPaidSchema), logActivity("PAYMENT_MANUAL_RECONCILIATION"), markPaymentPaid);
@@ -143,9 +149,9 @@ router.get("/payments/:id/invoice", auth, authorize("super_admin", "owner", "res
 /* ── Expenses ── */
 router.get("/expenses", auth, authorize("super_admin", "owner"), listExpenses);
 router.get("/expenses/summary", auth, authorize("super_admin", "owner"), getExpenseSummary);
-router.post("/expenses", auth, authorize("super_admin", "owner"), verifyPropertyAccess, createExpense);
-router.put("/expenses/:id", auth, authorize("super_admin", "owner"), verifyPropertyAccess, updateExpense);
-router.delete("/expenses/:id", auth, authorize("super_admin", "owner"), deleteExpense);
+router.post("/expenses", auth, authorize("super_admin", "owner"), verifyPropertyAccess, logActivity("EXPENSE_ADDED"), createExpense);
+router.put("/expenses/:id", auth, authorize("super_admin", "owner"), verifyPropertyAccess, logActivity("EXPENSE_UPDATED"), updateExpense);
+router.delete("/expenses/:id", auth, authorize("super_admin", "owner"), logActivity("EXPENSE_DELETED"), deleteExpense);
 
 /* ── Reports ── */
 // JSON APIs for Dashboards
@@ -244,8 +250,8 @@ import { listLeases, uploadLease, getMyLease, signLease } from "../../controller
 
 /* ── Leases ── */
 router.get("/leases", auth, authorize("owner"), listLeases);
-router.post("/leases", auth, authorize("owner"), uploadLease);
+router.post("/leases", auth, authorize("owner"), logActivity("LEASE_UPLOADED"), uploadLease);
 router.get("/resident/lease/active", auth, authorize("resident"), getMyLease);
-router.post("/resident/lease/sign", auth, authorize("resident"), signLease);
+router.post("/resident/lease/sign", auth, authorize("resident"), logActivity("LEASE_SIGNED"), signLease);
 
 export default router;
