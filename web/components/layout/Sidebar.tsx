@@ -14,27 +14,14 @@ import { PropertySelector } from "./PropertySelector";
 type NavItem = { href: string; label: string; icon: React.ReactNode; badge?: string };
 
 const ownerNav: NavItem[] = [
-    { href: "/owner", label: "Dashboard", icon: <LayoutDashboard size={16} /> },
-    { href: "/owner/operations", label: "Operations", icon: <Activity size={16} /> },
-    { href: "/owner/onboarding", label: "Onboarding", icon: <UserCheck size={16} /> },
-    { href: "/owner/property", label: "Property", icon: <Building2 size={16} /> },
-    { href: "/owner/rooms", label: "Rooms", icon: <BedDouble size={16} /> },
+    { href: "/owner", label: "Today", icon: <LayoutDashboard size={16} /> },
     { href: "/owner/residents", label: "Residents", icon: <Users size={16} /> },
-    { href: "/owner/lease", label: "Lease Management", icon: <FileText size={16} /> },
-    { href: "/owner/invite", label: "Invite System", icon: <UserPlus size={16} /> },
-    { href: "/owner/payments", label: "Payments", icon: <CreditCard size={16} /> },
-    { href: "/owner/expenses", label: "Expenses", icon: <TrendingUp size={16} /> },
-    { href: "/owner/requests", label: "Requests", icon: <MessageSquare size={16} /> },
-    { href: "/verify", label: "Identity Verification", icon: <UserCheck size={16} /> },
+    { href: "/owner/rooms", label: "Rooms", icon: <BedDouble size={16} /> },
+    { href: "/owner/money", label: "Money & Ledger", icon: <TrendingUp size={16} /> },
+    { href: "/owner/documents", label: "Documents", icon: <FileText size={16} /> },
 ];
 
 const ownerSecondaryNav: NavItem[] = [
-    { href: "/owner/analytics", label: "Analytics", icon: <BarChart2 size={16} /> },
-    { href: "/owner/intelligence", label: "Intelligence", icon: <Cpu size={16} /> },
-    { href: "/owner/investor", label: "Investor View", icon: <Building size={16} /> },
-    { href: "/owner/reports", label: "Reports", icon: <FileText size={16} /> },
-    { href: "/owner/announcements", label: "Announcements", icon: <Megaphone size={16} /> },
-    { href: "/owner/subscription", label: "Subscription", icon: <Star size={16} /> },
     { href: "/owner/settings", label: "Settings", icon: <Settings size={16} /> },
     { href: "/owner/support", label: "Support", icon: <LifeBuoy size={16} /> },
 ];
@@ -44,20 +31,14 @@ const adminNav: NavItem[] = [
     { href: "/provider/properties", label: "Properties", icon: <Building2 size={16} /> },
     { href: "/provider/owners", label: "Owners", icon: <UserCog size={16} /> },
     { href: "/provider/residents", label: "Residents", icon: <Users size={16} /> },
-    { href: "/provider/subscriptions", label: "Subscriptions", icon: <Star size={16} /> },
-    { href: "/provider/activity", label: "Activity Logs", icon: <Activity size={16} /> },
-    { href: "/provider/support", label: "Support Desk", icon: <LifeBuoy size={16} /> },
     { href: "/admin/verifications", label: "Verifications", icon: <ShieldAlert size={16} /> },
 ];
 
 const residentNav: NavItem[] = [
     { href: "/resident", label: "Dashboard", icon: <LayoutDashboard size={16} /> },
-    { href: "/resident/announcements", label: "Announcements", icon: <Megaphone size={16} /> },
     { href: "/resident/lease", label: "Lease & Docs", icon: <FileText size={16} /> },
     { href: "/resident/payments", label: "My Payments", icon: <CreditCard size={16} /> },
     { href: "/resident/requests", label: "My Requests", icon: <MessageSquare size={16} /> },
-    { href: "/resident/support", label: "Support", icon: <LifeBuoy size={16} /> },
-    { href: "/verify", label: "Identity Verification", icon: <UserCheck size={16} /> },
 ];
 
 const accountNav: NavItem[] = [

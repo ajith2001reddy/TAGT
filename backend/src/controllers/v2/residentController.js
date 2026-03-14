@@ -4,7 +4,6 @@ import User from "../../models/User.js";
 import Payment from "../../models/Payment.js";
 import Room from "../../models/Room.js";
 import Bed from "../../models/Bed.js";
-import Property from "../../models/Property.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import residentService from "../../services/residentService.js";
 import admin from "../../config/firebase.js";
@@ -109,15 +108,8 @@ export const superAdminUpdateResident = async (req, res, next) => {
         if (roomId) {
             const newRoom = await Room.findById(roomId);
             if (newRoom) {
-                const currentMonth = new Date().toISOString().slice(0, 7);
-                const pendingPayment = await Payment.findOne({
-                    resident: resident._id,
-                    month: currentMonth,
-                    status: "pending",
-                    type: "rent"
-                });
                 if (updates.roomId && updates.propertyId) {
-                    await residentService.ensureMonthlyRentBill(resident._id, updates.roomId, updates.propertyId, session);
+                    await residentService.ensureMonthlyRentBill(resident._id, updates.roomId, updates.propertyId);
                 }
             }
         }

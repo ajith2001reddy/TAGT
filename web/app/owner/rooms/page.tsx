@@ -6,27 +6,18 @@ import { createRoom, deleteRoom, updateRoom } from "@/features/owner/rooms.servi
 import { BedGrid } from "@/features/owner/BedGrid";
 import { useProperty } from "@/context/PropertyContext";
 import { useAuth } from "@/context/AuthContext";
-
-function OccupancyBar({ occupied, total }: { occupied: number; total: number }) {
-    const pct = total > 0 ? Math.round((occupied / total) * 100) : 0;
-    const color = pct >= 90 ? "#34d399" : pct >= 60 ? "var(--accent-primary)" : pct >= 30 ? "#fbbf24" : "var(--red)";
-    return (
-        <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.06em" }}>OCCUPANCY</span>
-                <span style={{ fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: 600, color }}>{occupied}/{total}</span>
-            </div>
-            <div style={{ height: "3px", background: "var(--border-subtle)", borderRadius: "2px", overflow: "hidden" }}>
-                <div style={{
-                    height: "100%", width: `${pct}%`,
-                    background: `linear-gradient(90deg, ${color}, ${color}99)`,
-                    borderRadius: "2px", transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)",
-                    boxShadow: `0 0 8px ${color}60`,
-                }} />
-            </div>
-        </div>
-    );
-}
+import { 
+    Plus, 
+    Home, 
+    Users, 
+    MoreVertical, 
+    TrendingUp, 
+    Bed,
+    AlertCircle,
+    LayoutGrid
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { toast } from "react-hot-toast";
 
 interface Room {
     _id: string;
@@ -35,282 +26,143 @@ interface Room {
     totalBeds: number;
     occupiedBeds: number;
     maintenanceMode?: boolean;
-    propertyId: {
-        _id: string;
-        name: string;
-    } | string;
 }
 
 export default function RoomsPage() {
     const { dbUser } = useAuth();
-    const { rooms, stats, loading, reload } = useRooms() as {
-        rooms: Room[],
-        stats: { totalBeds: number; occupiedBeds: number; avgRent: number } | null,
-        loading: boolean,
-        reload: () => void
-    };
+    const { rooms, stats, loading, reload } = useRooms();
     const { property } = useProperty();
-    const [roomNumber, setRoomNumber] = useState("");
-    const [rent, setRent] = useState("");
-    const [beds, setBeds] = useState("");
+    const [showAdd, setShowAdd] = useState(false);
     const [adding, setAdding] = useState(false);
-    const [showForm, setShowForm] = useState(false);
-    const [deleting, setDeleting] = useState<string | null>(null);
-    const [editingRent, setEditingRent] = useState<string | null>(null);
-    const [tempRent, setTempRent] = useState("");
-    const [updatingRent, setUpdatingRent] = useState<string | null>(null);
-    const [error, setError] = useState("");
-
-    async function handleUpdateRent(id: string) {
-        if (!tempRent || isNaN(Number(tempRent))) return;
-        setUpdatingRent(id);
-        try {
-            await updateRoom(id, { rent: Number(tempRent) });
-            setEditingRent(null);
-            reload();
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setError(error?.response?.data?.message || "Failed to update rent");
-        } finally { setUpdatingRent(null); }
-    }
+    
+    // Form State
+    const [form, setForm] = useState({ roomNumber: "", rent: "", totalBeds: "" });
 
     async function handleCreate(e: React.FormEvent) {
         e.preventDefault();
         setAdding(true);
-        setError("");
         try {
-            if (!property?._id) {
-                setError("Please select a property first");
-                return;
-            }
-            await createRoom({ roomNumber, rent: Number(rent), totalBeds: Number(beds), propertyId: property._id });
-            setRoomNumber(""); setRent(""); setBeds("");
-            setShowForm(false);
+            if (!property?._id) return toast.error("Select a property first");
+            await createRoom({ ...form, rent: Number(form.rent), totalBeds: Number(form.totalBeds), propertyId: property._id });
+            setForm({ roomNumber: "", rent: "", totalBeds: "" });
+            setShowAdd(false);
             reload();
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setError(error?.response?.data?.message || "Failed to create room");
+            toast.success("Room added!");
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to add room");
         } finally { setAdding(false); }
-    }
-
-    async function handleDelete(id: string) {
-        setDeleting(id);
-        try { await deleteRoom(id); reload(); }
-        catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setError(error?.response?.data?.message || "Failed to delete room");
-        }
-        finally { setDeleting(null); }
     }
 
     return (
         <div className="animate-fade-in">
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px", flexWrap: "wrap", gap: "16px" }}>
+            {/* HEADER */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
                 <div>
-                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Property Management</div>
-                    <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Rooms</h1>
-                    <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{rooms.length} unit{rooms.length !== 1 ? "s" : ""} configured</p>
+                    <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "4px" }}>Inventory & Rooms</h1>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+                        Managing {rooms.length} Units · {stats?.occupiedBeds || 0}/{stats?.totalBeds || 0} Beds Occupied
+                    </p>
                 </div>
-                <button className="btn-primary" onClick={() => (dbUser?.verification?.status === 'approved' ? setShowForm(!showForm) : alert("Your account is pending verification. You cannot add rooms until your documents are approved."))} style={{ gap: "8px", fontSize: "13.5px", opacity: dbUser?.verification?.status === 'approved' ? 1 : 0.6 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                    Add Room
+                <button className="btn-primary" onClick={() => setShowAdd(true)} style={{ gap: "10px" }}>
+                    <Plus size={18} /> Add New Room
                 </button>
             </div>
 
-            {/* Summary Strip */}
-            <div style={{
-                display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "28px"
-            }}>
-                {[
-                    { label: "Total Beds", value: stats?.totalBeds || 0, color: "var(--accent-primary)" },
-                    { label: "Occupied Beds", value: stats?.occupiedBeds || 0, color: "#a78bfa" },
-                    { label: "Avg Rent / Room", value: stats?.avgRent ? `₹${stats.avgRent.toLocaleString()}` : "—", color: "#34d399" },
-                ].map(({ label, value, color }) => (
-                    <div key={label} style={{
-                        background: "var(--bg-card)", border: "1px solid var(--border-subtle)",
-                        borderRadius: "12px", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center"
-                    }}>
-                        <span style={{ fontSize: "12px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
-                        <span style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 700, color }}>{value}</span>
+            {/* VISUAL ROOM GRID */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" }}>
+                {loading ? (
+                    [1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: "200px", borderRadius: "24px" }} />)
+                ) : rooms.length === 0 ? (
+                    <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "100px", color: "var(--text-tertiary)" }}>
+                        <LayoutGrid size={48} style={{ margin: "0 auto 16px", opacity: 0.2 }} />
+                        <p>Your property inventory is empty. Start by adding a room.</p>
                     </div>
+                ) : rooms.map((room: Room) => (
+                    <motion.div 
+                        key={room._id}
+                        whileHover={{ y: -4 }}
+                        className="glass-card" 
+                        style={{ 
+                            padding: "24px", 
+                            borderRadius: "28px", 
+                            border: "1px solid var(--border-subtle)",
+                            background: "rgba(255,255,255,0.02)"
+                        }}
+                    >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div style={{ 
+                                    width: "48px", height: "48px", borderRadius: "14px", 
+                                    background: "var(--accent-primary)15", color: "var(--accent-primary)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: "18px", fontWeight: 800
+                                }}>
+                                    {room.roomNumber}
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 800, fontSize: "16px" }}>Room {room.roomNumber}</div>
+                                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>₹{room.rent.toLocaleString()}/month</div>
+                                </div>
+                            </div>
+                            <button className="btn-ghost" style={{ padding: "8px" }}><MoreVertical size={16} /></button>
+                        </div>
+
+                        {/* OCCUPANCY BAR */}
+                        <div style={{ marginBottom: "24px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: 700, marginBottom: "8px", textTransform: "uppercase", color: "var(--text-tertiary)" }}>
+                                <span>Occupancy</span>
+                                <span style={{ color: (room.occupiedBeds / room.totalBeds) >= 1 ? "var(--red)" : "var(--accent-primary)" }}>
+                                    {room.occupiedBeds}/{room.totalBeds} Beds Full
+                                </span>
+                            </div>
+                            <div style={{ height: "6px", background: "rgba(255,255,255,0.05)", borderRadius: "100px", overflow: "hidden" }}>
+                                <div style={{ 
+                                    height: "100%", 
+                                    width: `${(room.occupiedBeds / room.totalBeds) * 100}%`,
+                                    background: (room.occupiedBeds / room.totalBeds) >= 1 ? "var(--red)" : "var(--accent-primary)",
+                                    borderRadius: "100px"
+                                }} />
+                            </div>
+                        </div>
+
+                        {/* BED GRID OVERVIEW */}
+                        <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "16px" }}>
+                            <BedGrid roomId={room._id} />
+                        </div>
+                    </motion.div>
                 ))}
             </div>
 
-            {/* Error */}
-            {error && (
-                <div style={{ background: "var(--red-bg)", border: "1px solid rgba(255,82,82,0.2)", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px", color: "var(--red)", fontSize: "13px", display: "flex", gap: "10px", alignItems: "center" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                    {error}
-                    <button onClick={() => setError("")} style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--red)", cursor: "pointer", fontSize: "16px" }}>×</button>
-                </div>
-            )}
-
-            {/* Add Form */}
-            {showForm && (
-                <div className="glass-card animate-fade-up" style={{ padding: "24px", marginBottom: "24px" }}>
-                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontWeight: 600, marginBottom: "20px" }}>New Room</h3>
-                    <form onSubmit={handleCreate} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "12px", alignItems: "end" }}>
-                        {[
-                            { label: "Room No.", placeholder: "101", value: roomNumber, set: setRoomNumber, type: "text" },
-                            { label: "Rent (₹)", placeholder: "8000", value: rent, set: setRent, type: "number" },
-                            { label: "Total Beds", placeholder: "3", value: beds, set: setBeds, type: "number" },
-                        ].map(({ label, placeholder, value, set, type }) => (
-                            <div key={label}>
-                                <label style={{ display: "block", fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "7px" }}>{label}</label>
-                                <input className="input-field" type={type} placeholder={placeholder} value={value}
-                                    onChange={e => set(e.target.value)} required style={{ padding: "11px 14px" }} />
+            {/* ADD ROOM MODAL */}
+            {showAdd && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+                    <div className="glass-card animate-fade-up" style={{ padding: "32px", width: "420px" }}>
+                        <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "24px" }}>Add New Room</h2>
+                        <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                            <div>
+                                <label style={labelStyle}>Room Number</label>
+                                <input className="input-field" placeholder="e.g. 101" value={form.roomNumber} onChange={v => setForm({...form, roomNumber: v.target.value})} required />
                             </div>
-                        ))}
-                        <button type="submit" className="btn-primary" disabled={adding} style={{ padding: "11px 20px" }}>
-                            {adding ? "Adding…" : "Create"}
-                        </button>
-                    </form>
-                </div>
-            )}
-
-            {/* Rooms Grid */}
-            {loading ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
-                    {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton" style={{ height: "170px", borderRadius: "18px" }} />)}
-                </div>
-            ) : !property ? (
-                <div style={{ textAlign: "center", padding: "80px 40px", border: "1px dashed var(--border-default)", borderRadius: "20px", color: "var(--text-tertiary)" }}>
-                    <div style={{ fontSize: "48px", marginBottom: "16px" }}>🏢</div>
-                    <p style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>No Property Selected</p>
-                    <p style={{ fontSize: "13px" }}>Please select a property from the sidebar to manage its rooms.</p>
-                </div>
-            ) : rooms.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "80px 40px", border: "1px dashed var(--border-default)", borderRadius: "20px", color: "var(--text-tertiary)" }}>
-                    <div style={{ fontSize: "48px", marginBottom: "16px" }}>🏠</div>
-                    <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "6px" }}>No rooms in {property?.name}</p>
-                    <p style={{ fontSize: "13px" }}>Click &quot;Add Room&quot; to get started</p>
-                </div>
-            ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
-                    {rooms.map((room: Room, i) => (
-                        <div key={room._id} className="animate-fade-up" style={{ animationDelay: `${i * 0.05}s` }}>
-                            <div style={{
-                                background: "var(--bg-card)", border: "1px solid var(--border-default)",
-                                borderRadius: "18px", padding: "22px", position: "relative", overflow: "hidden",
-                                transition: "all 0.25s ease",
-                            }}
-                                onMouseEnter={e => {
-                                    (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)";
-                                    (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-                                    (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(0,0,0,0.4)";
-                                }}
-                                onMouseLeave={e => {
-                                    (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)";
-                                    (e.currentTarget as HTMLElement).style.transform = "";
-                                    (e.currentTarget as HTMLElement).style.boxShadow = "";
-                                }}
-                            >
-                                {/* Maintenance badge */}
-                                {room.maintenanceMode && (
-                                    <div style={{
-                                        position: "absolute", top: "12px", right: "12px",
-                                        background: "var(--yellow-bg)", color: "var(--yellow)",
-                                        border: "1px solid rgba(255,215,64,0.2)", borderRadius: "6px",
-                                        fontSize: "9px", fontFamily: "var(--font-mono)", fontWeight: 700,
-                                        padding: "3px 8px", letterSpacing: "0.1em", textTransform: "uppercase",
-                                    }}>Maintenance</div>
-                                )}
-
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
-                                    <div>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                                            <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.1em" }}>ROOM</div>
-                                            {typeof room.propertyId !== "string" && (
-                                                <span style={{
-                                                    fontSize: "9px",
-                                                    fontWeight: 700,
-                                                    background: "rgba(255,255,255,0.05)",
-                                                    padding: "2px 6px",
-                                                    borderRadius: "4px",
-                                                    color: "var(--accent-primary)",
-                                                    border: "1px solid rgba(255,255,255,0.08)"
-                                                }}>
-                                                    {room.propertyId.name}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 700, letterSpacing: "-0.03em" }}>{room.roomNumber}</div>
-                                    </div>
-                                    <button
-                                        onClick={() => handleDelete(room._id)}
-                                        disabled={deleting === room._id}
-                                        style={{
-                                            width: "32px", height: "32px", borderRadius: "9px",
-                                            background: "transparent", border: "1px solid var(--border-subtle)",
-                                            cursor: "pointer", color: "var(--text-tertiary)",
-                                            display: "flex", alignItems: "center", justifyContent: "center",
-                                            transition: "all 0.15s ease", flexShrink: 0,
-                                        }}
-                                        onMouseEnter={e => {
-                                            (e.currentTarget as HTMLElement).style.background = "var(--red-bg)";
-                                            (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,82,82,0.3)";
-                                            (e.currentTarget as HTMLElement).style.color = "var(--red)";
-                                        }}
-                                        onMouseLeave={e => {
-                                            (e.currentTarget as HTMLElement).style.background = "transparent";
-                                            (e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)";
-                                            (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
-                                        }}
-                                    >
-                                        {deleting === room._id
-                                            ? <div style={{ width: "12px", height: "12px", border: "2px solid var(--red)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
-                                            : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>
-                                        }
-                                    </button>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                <div>
+                                    <label style={labelStyle}>Monthly Rent (₹)</label>
+                                    <input type="number" className="input-field" placeholder="8500" value={form.rent} onChange={v => setForm({...form, rent: v.target.value})} required />
                                 </div>
-
-                                <div style={{ marginBottom: "18px" }}>
-                                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--text-tertiary)", letterSpacing: "0.1em", marginBottom: "4px" }}>RENT / MONTH</div>
-                                    {editingRent === room._id ? (
-                                        <div style={{ display: "flex", gap: "8px" }}>
-                                            <input
-                                                type="number"
-                                                className="input-field"
-                                                value={tempRent}
-                                                onChange={e => setTempRent(e.target.value)}
-                                                autoFocus
-                                                style={{ padding: "4px 8px", fontSize: "16px", fontWeight: 700, width: "100px" }}
-                                            />
-                                            <button onClick={() => handleUpdateRent(room._id)} disabled={updatingRent === room._id} style={{ background: "var(--accent-primary)", border: "none", borderRadius: "6px", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                                {updatingRent === room._id ? <div className="spinner" style={{ width: "12px", height: "12px" }} /> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
-                                            </button>
-                                            <button onClick={() => setEditingRent(null)} style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "6px", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div
-                                            onClick={() => { setEditingRent(room._id); setTempRent(room.rent.toString()); }}
-                                            style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 700, letterSpacing: "-0.02em", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
-                                            onMouseEnter={e => (e.currentTarget.style.color = "var(--accent-primary)")}
-                                            onMouseLeave={e => (e.currentTarget.style.color = "")}
-                                        >
-                                            ₹{room.rent.toLocaleString()}
-                                            <span style={{ fontSize: "12px", fontWeight: 400, fontFamily: "var(--font-body)", color: "var(--text-tertiary)" }}>/mo</span>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.4 }}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                                        </div>
-                                    )}
+                                <div>
+                                    <label style={labelStyle}>Total Beds</label>
+                                    <input type="number" className="input-field" placeholder="2" value={form.totalBeds} onChange={v => setForm({...form, totalBeds: v.target.value})} required />
                                 </div>
-
-                                <OccupancyBar occupied={room.occupiedBeds} total={room.totalBeds} />
-
-                                <BedGrid roomId={room._id} />
                             </div>
-                        </div>
-                    ))}
+                            <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
+                                <button type="button" className="btn-secondary" onClick={() => setShowAdd(false)} style={{ flex: 1 }}>Discard</button>
+                                <button type="submit" className="btn-primary" disabled={adding} style={{ flex: 1 }}>{adding ? "Creating..." : "Create Room"}</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
-
-            <style>{`
-                @keyframes spin { to { transform: rotate(360deg); } }
-                .spinner { border: 2px solid rgba(0,0,0,0.1); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; }
-            `}</style>
         </div>
     );
 }
+
+const labelStyle = { display: "block", fontSize: "11px", fontWeight: 800, color: "var(--text-tertiary)", marginBottom: "6px", textTransform: "uppercase" as const };

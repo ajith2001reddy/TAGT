@@ -1,387 +1,291 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Resident, fetchResidents, createResident, deactivateResident, moveResidentRoom, addResidentNote, fetchResidentHistory, ResidentHistory, sendNotification as sendResidentNotification } from "@/features/owner/residents.service";
+import { Resident, fetchResidents, createResident, deactivateResident, moveResidentRoom } from "@/features/owner/residents.service";
 import { fetchRooms } from "@/features/owner/rooms.service";
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 import { toast } from "react-hot-toast";
+import { 
+    Users, 
+    Search, 
+    Plus, 
+    Filter, 
+    MoreVertical, 
+    Phone, 
+    CheckCircle2,
+    AlertCircle,
+    Home,
+    FileText
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Room { _id: string; roomNumber: string; totalBeds: number; occupiedBeds: number; }
-
-function Avatar({ name }: { name: string }) {
-    const initials = name.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
-    const hue = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
-    return (
-        <div style={{ width: "38px", height: "38px", borderRadius: "10px", flexShrink: 0, background: `hsl(${hue},45%,22%)`, border: `1px solid hsl(${hue},55%,32%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, fontFamily: "var(--font-display)", color: `hsl(${hue},75%,72%)` }}>{initials}</div>
-    );
-}
-
-function StatusBadge({ active }: { active: boolean }) {
-    return <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.08em", padding: "3px 9px", borderRadius: "5px", textTransform: "uppercase", background: active ? "rgba(52,211,153,0.1)" : "rgba(244,63,94,0.1)", color: active ? "#10b981" : "#f43f5e", border: `1px solid ${active ? "rgba(52,211,153,0.2)" : "rgba(244,63,94,0.2)"}` }}>{active ? "Active" : "Inactive"}</span>;
-}
-
-function PaymentHistoryPanel({ residentId }: { residentId: string }) {
-    const [data, setData] = useState<ResidentHistory | null>(null);
-    useEffect(() => {
-        fetchResidentHistory(residentId).then(setData).catch(() => { });
-    }, [residentId]);
-    if (!data) return <div className="skeleton" style={{ height: "60px", borderRadius: "8px" }} />;
-    const STATUS_COLOR: Record<string, string> = { paid: "#34d399", pending: "#fbbf24", overdue: "#f43f5e" };
-    return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "260px", overflowY: "auto" }}>
-            {data.payments.length === 0 ? <div style={{ color: "var(--text-tertiary)", fontSize: "13px" }}>No payment history</div> : data.payments.map(p => (
-                <div key={p._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "var(--bg-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
-                    <div>
-                        <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: 600 }}>{p.month}</div>
-                        {p.lateFee ? <div style={{ fontSize: "10px", color: "#f43f5e" }}>+₹{p.lateFee}</div> : null}
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "var(--font-display)" }}>₹{p.amount.toLocaleString()}</div>
-                        <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", fontWeight: 700, color: STATUS_COLOR[p.status] || "var(--text-tertiary)", textTransform: "uppercase" }}>{p.status}</div>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
 
 export default function ResidentsPage() {
     const { dbUser } = useAuth();
     const [residents, setResidents] = useState<Resident[]>([]);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [error, setError] = useState("");
+    const [showAdd, setShowAdd] = useState(false);
+    const [showPayModal, setShowPayModal] = useState(false);
+    const [payAmount, setPayAmount] = useState("");
     const [search, setSearch] = useState("");
-    
-    const initialForm = { 
+    const [selected, setSelected] = useState<Resident | null>(null);
+
+    // 1-Step Form
+    const [form, setForm] = useState({ 
         name: "", 
-        email: "", 
         phoneNumber: "", 
-        alternateNumber: "", 
-        gender: "male", 
-        aadhaarNumber: "", 
-        companyName: "", 
-        relation: "", 
-        roomId: "" 
-    };
-    const [form, setForm] = useState(initialForm);
+        roomId: "",
+        rent: "" 
+    });
     
     const [creating, setCreating] = useState(false);
-    const [selected, setSelected] = useState<Resident | null>(null);
-    const [drawerTab, setDrawerTab] = useState<"details" | "history" | "notes" | "notify" | "actions">("details");
-    const [newNote, setNewNote] = useState("");
-    const [addingNote, setAddingNote] = useState(false);
-    const [moveRoomId, setMoveRoomId] = useState("");
-    const [moving, setMoving] = useState(false);
-    const [notifyMessage, setNotifyMessage] = useState("");
-    const [notifyType, setNotifyType] = useState("info");
-    const [sendingNotify, setSendingNotify] = useState(false);
 
     async function fetchData() {
         try {
             const [resData, roomData] = await Promise.all([fetchResidents(), fetchRooms()]);
             setResidents(resData);
             setRooms(roomData as unknown as Room[]);
-        } catch { setError("Failed to load data."); } finally { setLoading(false); }
+        } catch { toast.error("Failed to load residents"); } finally { setLoading(false); }
     }
+    
     useEffect(() => { fetchData(); }, []);
 
-    async function handleCreate(e: React.FormEvent) {
-        e.preventDefault(); setError(""); setCreating(true);
+    async function handleQuickAdd(e: React.FormEvent) {
+        e.preventDefault();
+        setCreating(true);
         try {
-            await createResident(form);
-            setShowForm(false); 
-            setForm(initialForm); 
-            toast.success("Resident added successfully");
-            setLoading(true); await fetchData();
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to create resident.");
-        }
-        finally { setCreating(false); }
-    }
-
-    async function handleDeactivate(id: string) {
-        if (!confirm("Deactivate this resident? They will lose access to the portal.")) return;
-        try { await deactivateResident(id); await fetchData(); setSelected(null); toast.success("Resident deactivated"); }
-        catch (err: any) {
-            setError(err.response?.data?.message || "Failed deactivate.");
-        }
-    }
-
-    async function handleMoveRoom() {
-        if (!selected || !moveRoomId) return;
-        setMoving(true);
-        try { await moveResidentRoom(selected._id, moveRoomId); await fetchData(); setMoveRoomId(""); toast.success("Room updated"); }
-        catch (err: any) {
-            setError(err.response?.data?.message || "Move failed.");
-        }
-        finally { setMoving(false); }
-    }
-
-    async function handleAddNote() {
-        if (!selected || !newNote.trim()) return;
-        setAddingNote(true);
-        try {
-            const res = await addResidentNote(selected._id, newNote);
-            setSelected(s => s ? { ...s, notes: res.data.data } : s);
-            setNewNote("");
-            toast.success("Note added");
+            await createResident({
+                ...form,
+                email: `${form.name.toLowerCase().replace(/\s+/g, '')}@noemail.com`, 
+            });
+            setShowAdd(false); 
+            setForm({ name: "", phoneNumber: "", roomId: "", rent: "" }); 
+            toast.success("Resident added!");
             await fetchData();
-        } catch { setError("Failed to add note."); }
-        finally { setAddingNote(false); }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to add resident");
+        } finally { setCreating(false); }
     }
 
-    async function handleNotify() {
-        if (!selected || !notifyMessage.trim()) return;
-        setSendingNotify(true);
+    async function handleRecordPayment(e: React.FormEvent) {
+        e.preventDefault();
+        if (!selected) return;
         try {
-            await sendResidentNotification(selected._id, notifyType, notifyMessage);
-            setNotifyMessage("");
-            toast.success("Notification sent!");
-        } catch { setError("Failed to send notification."); }
-        finally { setSendingNotify(false); }
+            await api.post("/v2/payments", {
+                residentId: selected._id,
+                amount: Number(payAmount),
+                type: "Rent",
+                month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+            });
+            toast.success(`Rent collected for ${selected.name}`);
+            setShowPayModal(false);
+            setPayAmount("");
+            fetchData();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Payment record failed");
+        }
     }
 
     const filtered = residents.filter(r => 
-        !search || 
         r.name.toLowerCase().includes(search.toLowerCase()) || 
-        r.email.toLowerCase().includes(search.toLowerCase()) ||
-        r.aadhaarNumber?.includes(search)
-    );
-    const active = residents.filter(r => r.isActive !== false).length;
-
-    const DrawerTabBtn = ({ tab, label }: { tab: typeof drawerTab; label: string }) => (
-        <button onClick={() => setDrawerTab(tab)} style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "none", cursor: "pointer", background: drawerTab === tab ? "var(--accent-primary)" : "transparent", color: drawerTab === tab ? "#000" : "var(--text-secondary)", fontSize: "11px", fontWeight: drawerTab === tab ? 700 : 400, transition: "all 0.15s" }}>{label}</button>
+        r.phoneNumber?.includes(search)
     );
 
     return (
-        <div className="animate-fade-in" style={{ display: "flex", gap: "20px" }}>
-            {/* Main content */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "28px", flexWrap: "wrap", gap: "12px" }}>
-                    <div>
-                        <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Management</div>
-                        <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "4px" }}>Residents</h1>
-                        <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{residents.length} total residents · <span style={{ color: "#10b981" }}>{active} active</span></p>
-                    </div>
-                    <button className="btn-primary" onClick={() => (dbUser?.verification?.status === 'approved' ? setShowForm(true) : alert("Your account is pending verification."))}>
-                        Add New Resident
-                    </button>
+        <div className="animate-fade-in">
+            {/* TOP BAR */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
+                <div>
+                    <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "4px" }}>Residents</h1>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+                        {residents.length} People · <span style={{ color: "#34d399" }}>{residents.filter(r => r.roomId).length} Housed</span>
+                    </p>
                 </div>
-
-                {error && <div style={{ background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "10px", padding: "12px 16px", marginBottom: "16px", color: "#f43f5e", fontSize: "13px" }}>{error}</div>}
-
-                {showForm && (
-                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, backdropFilter: "blur(4px)" }}>
-                        <div className="glass-card animate-fade-up" style={{ padding: "32px", width: "540px", maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 800 }}>Add New Resident</h3>
-                                <button onClick={() => setShowForm(false)} style={{ background: "none", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "24px" }}>×</button>
-                            </div>
-                            
-                            <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                                    <FormGroup label="Full Name" value={form.name} onChange={(v: string) => setForm({...form, name: v})} required placeholder="John Doe" />
-                                    <FormGroup label="Email Address" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required type="email" placeholder="john@example.com" />
-                                </div>
-                                
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                                    <FormGroup label="Mobile Number" value={form.phoneNumber} onChange={(v: string) => setForm({...form, phoneNumber: v})} required placeholder="+91..." />
-                                    <FormGroup label="Alternate Number" value={form.alternateNumber} onChange={(v: string) => setForm({...form, alternateNumber: v})} placeholder="Emergency contact" />
-                                </div>
-
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                                    <div>
-                                        <label style={labelStyle}>Gender</label>
-                                        <select className="input-field" value={form.gender} onChange={e => setForm({...form, gender: e.target.value})}>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                    </div>
-                                    <FormGroup label="Aadhaar Number" value={form.aadhaarNumber} onChange={(v: string) => setForm({...form, aadhaarNumber: v})} placeholder="12 digit number" />
-                                </div>
-
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                                    <FormGroup label="Company Name" value={form.companyName} onChange={(v: string) => setForm({...form, companyName: v})} placeholder="Workplace" />
-                                    <FormGroup label="Relation" value={form.relation} onChange={(v: string) => setForm({...form, relation: v})} placeholder="Self, Employee, etc." />
-                                </div>
-
-                                <div>
-                                    <label style={labelStyle}>Initial Room Assignment</label>
-                                    <select className="input-field" value={form.roomId} onChange={e => setForm({ ...form, roomId: e.target.value })}>
-                                        <option value="">— Unassigned —</option>
-                                        {rooms.filter(r => r.occupiedBeds < r.totalBeds).map(r => <option key={r._id} value={r._id}>Room {r.roomNumber} ({r.occupiedBeds}/{r.totalBeds} occupied)</option>)}
-                                    </select>
-                                </div>
-
-                                <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-                                    <button type="button" className="btn-secondary" onClick={() => setShowForm(false)} style={{ flex: 1 }}>Cancel</button>
-                                    <button type="submit" className="btn-primary" disabled={creating} style={{ flex: 1 }}>{creating ? "Adding..." : "Add Resident"}</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* Search */}
-                <div style={{ position: "relative", marginBottom: "16px" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                    <input className="input-field" placeholder="Search by name, email, or Aadhaar…" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: "40px" }} />
-                </div>
-
-                {/* Table */}
-                <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "20px", overflow: "hidden" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                        <thead>
-                            <tr style={{ background: "var(--bg-subtle)", borderBottom: "1px solid var(--border-default)" }}>
-                                {["Resident Info", "Room", "Aadhaar / KYC", "Status", ""].map(h => (
-                                    <th key={h} style={{ padding: "14px 18px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-tertiary)", fontWeight: 700 }}>{h}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? <tr><td colSpan={5} style={{ padding: "40px", textAlign: "center" }}>Fetching resident directory...</td></tr>
-                                : filtered.length === 0 ? <tr><td colSpan={5} style={{ padding: "60px", textAlign: "center", color: "var(--text-tertiary)" }}>{search ? `No results for "${search}"` : "Add your first resident to get started."}</td></tr>
-                                    : filtered.map(r => (
-                                        <tr key={r._id} style={{ borderBottom: "1px solid var(--border-default)", transition: "all 0.2s", cursor: "pointer", background: selected?._id === r._id ? "rgba(0,184,212,0.05)" : "" }}
-                                            onClick={() => { setSelected(r); setDrawerTab("details"); }}>
-                                            <td style={{ padding: "14px 18px" }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                                    <Avatar name={r.name} />
-                                                    <div>
-                                                        <div style={{ fontSize: "14px", fontWeight: 700 }}>{r.name}</div>
-                                                        <div style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{r.email}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: "14px 18px" }}>
-                                                {r.roomId ? <span style={{ fontSize: "12px", background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "6px", padding: "3px 9px", fontWeight: 600 }}>Room {r.roomId.roomNumber}</span>
-                                                    : <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>Unassigned</span>}
-                                            </td>
-                                            <td style={{ padding: "14px 18px" }}>
-                                                <div style={{ fontSize: "12px", fontWeight: 500 }}>{r.aadhaarNumber || "None"}</div>
-                                                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>{r.gender || "—"}</div>
-                                            </td>
-                                            <td style={{ padding: "14px 18px" }}><StatusBadge active={r.isActive !== false} /></td>
-                                            <td style={{ padding: "14px 18px", textAlign: "right" }}>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
-                                            </td>
-                                        </tr>
-                                    ))}
-                        </tbody>
-                    </table>
-                </div>
+                <button className="btn-primary" onClick={() => setShowAdd(true)} style={{ gap: "10px" }}>
+                    <Plus size={18} /> Add Resident
+                </button>
             </div>
 
-            {/* Sidebar Drawer */}
-            {selected && (
-                <div className="animate-fade-in" style={{ width: "340px", minWidth: "340px", background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "24px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px", alignSelf: "flex-start", position: "sticky", top: "20px", boxShadow: "var(--shadow-xl)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                            <Avatar name={selected.name} />
-                            <div>
-                                <div style={{ fontWeight: 800, fontSize: "16px" }}>{selected.name}</div>
-                                <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{selected.email}</div>
-                            </div>
-                        </div>
-                        <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "24px" }}>×</button>
-                    </div>
+            {/* SEACH & FILTER */}
+            <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+                <div style={{ flex: 1, position: "relative" }}>
+                    <Search size={18} style={{ position: "absolute", left: "16px", top: "12px", color: "var(--text-tertiary)" }} />
+                    <input 
+                        className="input-field" 
+                        placeholder="Search by name or phone..." 
+                        value={search} 
+                        onChange={e => setSearch(e.target.value)} 
+                        style={{ paddingLeft: "44px" }} 
+                    />
+                </div>
+                <button className="btn-secondary" style={{ padding: "0 16px" }}><Filter size={18} /></button>
+            </div>
 
-                    <div style={{ display: "flex", background: "var(--bg-subtle)", borderRadius: "10px", padding: "4px", gap: "2px" }}>
-                        <DrawerTabBtn tab="details" label="Profile" />
-                        <DrawerTabBtn tab="history" label="Billing" />
-                        <DrawerTabBtn tab="notes" label="Notes" />
-                        <DrawerTabBtn tab="actions" label="More" />
-                    </div>
-
-                    {drawerTab === "details" && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                            <DetailItem label="Mobile" value={selected.phoneNumber || "N/A"} />
-                            <DetailItem label="Emergency" value={selected.alternateNumber || "N/A"} />
-                            <DetailItem label="Gender" value={selected.gender || "N/A"} />
-                            <DetailItem label="Aadhaar" value={selected.aadhaarNumber || "N/A"} />
-                            <DetailItem label="Company" value={selected.companyName || "N/A"} />
-                            <DetailItem label="Relation" value={selected.relation || "Self"} />
-                            <div style={{ marginTop: "10px", padding: "12px", background: "var(--bg-subtle)", borderRadius: "12px", border: "1px solid var(--border-default)" }}>
-                                <div style={{ fontSize: "10px", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "4px" }}>Verification Status</div>
-                                <div style={{ fontSize: "13px", fontWeight: 600 }}>Resident Portal Active</div>
+            {/* MAIN CONTENT AREA */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "32px", alignItems: "start" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {loading ? (
+                        [1,2,3].map(i => <div key={i} className="skeleton" style={{ height: "80px", borderRadius: "16px" }} />)
+                    ) : filtered.length === 0 ? (
+                        <div style={{ padding: "80px", textAlign: "center", color: "var(--text-tertiary)" }}>No residents found.</div>
+                    ) : filtered.map(r => (
+                        <motion.div 
+                            key={r._id}
+                            onClick={() => setSelected(r)}
+                            layoutId={r._id}
+                            style={{ 
+                                background: selected?._id === r._id ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)",
+                                border: selected?._id === r._id ? "1px solid var(--accent-primary)" : "1px solid var(--border-subtle)",
+                                padding: "16px 20px",
+                                borderRadius: "16px",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between"
+                            }}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                                <div style={{ 
+                                    width: "44px", height: "44px", borderRadius: "12px", 
+                                    background: "var(--bg-elevated)", display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: "14px", fontWeight: 700, color: "var(--accent-primary)"
+                                }}>
+                                    {r.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 700, fontSize: "15px" }}>{r.name}</div>
+                                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)", display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <Home size={12} /> {r.roomId ? `Room ${r.roomId.roomNumber}` : "Unassigned"}
+                                    </div>
+                                </div>
                             </div>
+
+                            <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+                                <div style={{ textAlign: "right" }}>
+                                    <div style={{ 
+                                        display: "flex", alignItems: "center", gap: "6px", 
+                                        fontSize: "12px", fontWeight: 700,
+                                        color: r.isActive !== false ? "#34d399" : "#ff5252"
+                                    }}>
+                                        {r.isActive !== false ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                        {r.isActive !== false ? "PAID" : "DUE"}
+                                    </div>
+                                    <div style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>April 2026</div>
+                                </div>
+                                <MoreVertical size={18} color="var(--text-tertiary)" />
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* SIDEBAR DETAIL */}
+                <AnimatePresence mode="wait">
+                    {selected ? (
+                        <motion.div 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="glass-card" 
+                            style={{ padding: "32px", borderRadius: "32px", position: "sticky", top: "20px" }}
+                        >
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "24px" }}>
+                                <h3 style={{ fontSize: "20px", fontWeight: 800 }}>Resident Profile</h3>
+                                <button onClick={() => setSelected(null)} className="btn-ghost" style={{ padding: "4px" }}>×</button>
+                            </div>
+
+                            <div style={{ textAlign: "center", marginBottom: "32px" }}>
+                                <div style={{ 
+                                    width: "80px", height: "80px", borderRadius: "24px", 
+                                    background: "var(--accent-primary)20", color: "var(--accent-primary)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: "28px", fontWeight: 800, margin: "0 auto 16px"
+                                }}>
+                                    {selected.name.charAt(0)}
+                                </div>
+                                <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "4px" }}>{selected.name}</h2>
+                            </div>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginBottom: "32px" }}>
+                                <DetailItem icon={<Phone size={16} />} label="Phone" value={selected.phoneNumber} />
+                                <DetailItem icon={<Home size={16} />} label="Room" value={selected.roomId ? `Room ${selected.roomId.roomNumber}` : "Not Assigned"} />
+                                <DetailItem icon={<FileText size={16} />} label="Lease Status" value="Digital Signed" />
+                            </div>
+
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                                <button className="btn-primary" onClick={() => { setPayAmount("0"); setShowPayModal(true); }} style={{ justifyContent: "center" }}>Mark Paid</button>
+                                <button className="btn-secondary" style={{ justifyContent: "center" }}>Edit</button>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <div style={{ padding: "60px 40px", textAlign: "center", border: "2px dashed var(--border-subtle)", borderRadius: "32px", color: "var(--text-tertiary)" }}>
+                            <Users size={40} style={{ marginBottom: "16px", opacity: 0.3, margin: "0 auto" }} />
+                            <p>Select a resident to view details.</p>
                         </div>
                     )}
+                </AnimatePresence>
+            </div>
 
-                    {drawerTab === "history" && <PaymentHistoryPanel residentId={selected._id} />}
-
-                    {drawerTab === "notes" && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <div style={{ maxHeight: "240px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-                                {(selected.notes || []).length === 0
-                                    ? <div style={{ color: "var(--text-tertiary)", fontSize: "13px", padding: "20px", textAlign: "center" }}>No internal notes saved.</div>
-                                    : (selected.notes || []).map((n, i) => (
-                                        <div key={i} style={{ background: "var(--bg-subtle)", padding: "12px", borderRadius: "12px", border: "1px solid var(--border-default)" }}>
-                                            <div style={{ fontSize: "13px", lineHeight: 1.4 }}>{n.text}</div>
-                                            <div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginTop: "6px" }}>{new Date(n.addedAt).toLocaleDateString()}</div>
-                                        </div>
-                                    ))
-                                }
-                            </div>
-                            <textarea className="input-field" placeholder="Write a note..." value={newNote} onChange={e => setNewNote(e.target.value)} style={{ minHeight: "80px", fontSize: "13px" }} />
-                            <button className="btn-primary" onClick={handleAddNote} disabled={addingNote || !newNote.trim()}>{addingNote ? "Adding..." : "Save Note"}</button>
-                        </div>
-                    )}
-
-                    {drawerTab === "actions" && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* PAYMENT MODAL */}
+            {showPayModal && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 110 }}>
+                    <div className="glass-card animate-fade-up" style={{ padding: "32px", width: "380px" }}>
+                        <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "8px" }}>Collect Rent</h2>
+                        <p style={{ fontSize: "14px", color: "var(--text-tertiary)", marginBottom: "24px" }}>Recording payment for {selected?.name}.</p>
+                        <form onSubmit={handleRecordPayment} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                             <div>
-                                <label style={labelStyle}>Transfer to Room</label>
-                                <select className="input-field" value={moveRoomId} onChange={e => setMoveRoomId(e.target.value)} style={{ marginBottom: "8px" }}>
-                                    <option value="">Choose new room...</option>
-                                    {rooms.filter(r => r._id !== selected.roomId?._id && r.occupiedBeds < r.totalBeds).map(r => (
-                                        <option key={r._id} value={r._id}>Room {r.roomNumber} ({r.occupiedBeds}/{r.totalBeds})</option>
-                                    ))}
+                                <label style={labelStyle}>Amount Received (₹)</label>
+                                <input type="number" className="input-field" value={payAmount} onChange={v => setPayAmount(v.target.value)} required />
+                            </div>
+                            <div style={{ display: "flex", gap: "12px" }}>
+                                <button type="button" className="btn-secondary" onClick={() => setShowPayModal(false)} style={{ flex: 1 }}>Cancel</button>
+                                <button type="submit" className="btn-primary" style={{ flex: 1 }}>Confirm</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ADD MODAL */}
+            {showAdd && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+                    <div className="glass-card animate-fade-up" style={{ padding: "32px", width: "420px" }}>
+                        <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "24px" }}>Quick Add</h2>
+                        <form onSubmit={handleQuickAdd} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <input className="input-field" placeholder="Name" value={form.name} onChange={v => setForm({...form, name: v.target.value})} required />
+                            <input className="input-field" placeholder="Phone" value={form.phoneNumber} onChange={v => setForm({...form, phoneNumber: v.target.value})} required />
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                <select className="input-field" value={form.roomId} onChange={v => setForm({...form, roomId: v.target.value})} required>
+                                    <option value="">Room</option>
+                                    {rooms.map(r => <option key={r._id} value={r._id}>Room {r.roomNumber}</option>)}
                                 </select>
-                                <button className="btn-ghost" onClick={handleMoveRoom} disabled={!moveRoomId || moving} style={{ width: "100%" }}>{moving ? "Moving..." : "Execute Transfer"}</button>
+                                <input className="input-field" placeholder="Rent (₹)" value={form.rent} onChange={v => setForm({...form, rent: v.target.value})} />
                             </div>
-
-                            <div style={{ height: "1px", background: "var(--border-default)" }} />
-
-                            <div>
-                                <label style={labelStyle}>Communicate</label>
-                                <button className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start", gap: "8px" }} onClick={() => setDrawerTab("notify")}>
-                                    Send Portal Notification
-                                </button>
+                            <div style={{ display: "flex", gap: "12px" }}>
+                                <button type="button" className="btn-secondary" onClick={() => setShowAdd(false)} style={{ flex: 1 }}>Cancel</button>
+                                <button type="submit" className="btn-primary" disabled={creating} style={{ flex: 1 }}>Add</button>
                             </div>
-
-                            {selected.isActive !== false && (
-                                <button onClick={() => handleDeactivate(selected._id)} style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid #fee2e2", background: "#fef2f2", color: "#f43f5e", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>
-                                    Deactivate Resident
-                                </button>
-                            )}
-                        </div>
-                    )}
+                        </form>
+                    </div>
                 </div>
             )}
         </div>
     );
 }
 
-function FormGroup({ label, value, onChange, type = "text", placeholder, required = false }: any) {
+interface DetailItemProps { icon: React.ReactNode; label: string; value: string | undefined | null; }
+function DetailItem({ icon, label, value }: DetailItemProps) {
     return (
-        <div>
-            <label style={labelStyle}>{label} {required && "*"}</label>
-            <input className="input-field" type={type} placeholder={placeholder} required={required} value={value} onChange={e => onChange(e.target.value)} />
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ color: "var(--accent-primary)" }}>{icon}</div>
+            <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", fontWeight: 700 }}>{label}</div>
+                <div style={{ fontSize: "14px", fontWeight: 600 }}>{value || "—"}</div>
+            </div>
         </div>
     );
 }
 
-function DetailItem({ label, value }: { label: string; value: string }) {
-    return (
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", paddingBottom: "8px", borderBottom: "1px solid var(--border-subtle)" }}>
-            <span style={{ color: "var(--text-tertiary)" }}>{label}</span>
-            <span style={{ fontWeight: 600 }}>{value}</span>
-        </div>
-    );
-}
-
-const labelStyle = { display: "block", fontSize: "10px", fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "var(--text-tertiary)", marginBottom: "6px" };
+const labelStyle = { display: "block", fontSize: "11px", fontWeight: 800, color: "var(--text-tertiary)", marginBottom: "6px", textTransform: "uppercase" as const };

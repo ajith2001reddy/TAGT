@@ -1,7 +1,6 @@
 import Payment from "../../models/Payment.js";
 import User from "../../models/User.js";
 import Room from "../../models/Room.js";
-import Bed from "../../models/Bed.js";
 import Expense from "../../models/Expense.js";
 import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import ExcelJS from "exceljs";
