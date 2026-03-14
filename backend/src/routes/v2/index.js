@@ -240,4 +240,12 @@ router.get("/profile", auth, getProfile);
 router.put("/profile", auth, validate(updateProfileSchema), updateProfile);
 router.post("/profile/change-password", auth, validate(changePasswordSchema), changePassword);
 
+import { listLeases, uploadLease, getMyLease, signLease } from "../../controllers/v2/leaseController.js";
+
+/* ── Leases ── */
+router.get("/leases", auth, authorize("owner"), listLeases);
+router.post("/leases", auth, authorize("owner"), uploadLease);
+router.get("/resident/lease/active", auth, authorize("resident"), getMyLease);
+router.post("/resident/lease/sign", auth, authorize("resident"), signLease);
+
 export default router;

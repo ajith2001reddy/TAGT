@@ -11,6 +11,10 @@ export interface Resident {
     companyName?: string;
     relation?: string;
     isActive?: boolean;
+    propertyId?: {
+        _id: string;
+        name: string;
+    } | string;
     roomId?: {
         _id: string;
         roomNumber: string;
