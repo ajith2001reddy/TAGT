@@ -14,6 +14,9 @@ export const login = async (req, res) => {
             const user = await User.findOne({ firebaseUid });
 
             if (user) {
+                user.lastLogin = new Date();
+                await user.save();
+
                 await ActivityLog.create({
                     action: "LOGIN_SUCCESS",
                     performedBy: user._id,
@@ -72,7 +75,12 @@ export const register = async (req, res) => {
             phoneNumber: phoneNumber || null,
             password: password || null,
             role: role,
-            isActive: true
+            isActive: true,
+            emailVerified: false,
+            verification: {
+                setupToken: null,
+                setupTokenExpires: null
+            }
         });
 
         await ActivityLog.create({

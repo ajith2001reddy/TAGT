@@ -18,7 +18,7 @@ class ResidentService extends BaseService {
      * Core logic for creating a resident, assigning them to a room,
      * and generating their first bill.
      */
-    async createResidentWorkflow({ name, email, password, roomId, propertyId, phoneNumber }, session) {
+    async createResidentWorkflow({ name, email, password, roomId, propertyId, phoneNumber, creatorId }, session) {
         const normalizedEmail = email.toLowerCase().trim();
 
         // 1️⃣ Validate room
@@ -52,6 +52,7 @@ class ResidentService extends BaseService {
             email: normalizedEmail,
             displayName: name,
             ...(password && password.length >= 6 ? { password } : {}),
+            emailVerified: true // ✅ Mark as verified in Firebase as well
         });
 
         // 4️⃣ Create Mongo user
@@ -65,7 +66,14 @@ class ResidentService extends BaseService {
                 ownerId: property.ownerId, // 👈 Link to owner
                 roomId: roomDoc?._id || null,
                 phoneNumber: phoneNumber || null,
-                isActive: true
+                isActive: true,
+                emailVerified: true, // ✅ Recommended
+                createdBy: creatorId || property.ownerId,
+                updatedBy: creatorId || property.ownerId,
+                verification: {
+                    setupToken: null,
+                    setupTokenExpires: null
+                }
             }],
             { session }
         );

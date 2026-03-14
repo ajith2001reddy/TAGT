@@ -44,7 +44,8 @@ export const updateProfile = async (req, res, next) => {
             req.user._id,
             {
                 ...(name ? { name } : {}),
-                ...(phoneNumber !== undefined ? { phoneNumber } : {})
+                ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+                updatedBy: req.user._id
             },
             { new: true }
         );
@@ -144,7 +145,8 @@ export const superAdminManageUser = async (req, res, next) => {
             ...(email ? { email: email.toLowerCase() } : {}),
             ...(phoneNumber !== undefined ? { phoneNumber } : {}),
             ...(role ? { role } : {}),
-            ...(isActive !== undefined ? { isActive } : {})
+            ...(isActive !== undefined ? { isActive } : {}),
+            updatedBy: req.user._id
         };
 
         const updated = await User.findByIdAndUpdate(id, updateData, { new: true });

@@ -49,6 +49,7 @@ export const assignResidentToProperty = async (req, res, next) => {
             propertyId,
             status: "active",
             ...(roomId ? { roomId } : {}),
+            updatedBy: req.user._id,
         };
 
         const resident = await User.findOneAndUpdate(
@@ -80,8 +81,9 @@ export const superAdminUpdateResident = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { name, email, phone, status, propertyId, roomId, bedId, isActive } = req.body;
-
-        const updates = {};
+        const updates = {
+            updatedBy: req.user._id
+        };
         if (name !== undefined) updates.name = name;
         if (email !== undefined) updates.email = email.toLowerCase().trim();
         if (phone !== undefined) updates.phone = phone;
@@ -162,7 +164,8 @@ export const createResident = async (req, res) => {
 
         const { resident, resetLink } = await residentService.createResidentWorkflow({
             ...req.body,
-            propertyId
+            propertyId,
+            creatorId: req.user._id
         }, session);
 
         await session.commitTransaction();

@@ -61,7 +61,16 @@ const userSchema = new mongoose.Schema(
                 type: String,
                 enum: ["low", "medium", "high", "unknown"],
                 default: "unknown"
-            }
+            },
+            setupToken: {
+                type: String,
+                default: null,
+                index: true,
+            },
+            setupTokenExpires: {
+                type: Date,
+                default: null,
+            },
         },
 
         password: {
@@ -69,15 +78,17 @@ const userSchema = new mongoose.Schema(
             minlength: 6,
             select: false,
         },
-        setupToken: {
-            type: String,
-            default: null,
-            index: true,
-        },
-
-        setupTokenExpires: {
+        lastLogin: {
             type: Date,
             default: null,
+        },
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+        updatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
         },
 
         role: {
