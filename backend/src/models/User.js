@@ -140,6 +140,38 @@ const userSchema = new mongoose.Schema(
             index: true,
         },
 
+        // 🏢 Excel Mapping & Resident Extensions
+        companyName: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        aadhaarNumber: {
+            type: String,
+            trim: true,
+            default: "",
+            index: true,
+        },
+        relation: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        leaseStart: {
+            type: Date,
+            default: null,
+            index: true,
+        },
+        leaseEnd: {
+            type: Date,
+            default: null,
+            index: true,
+        },
+        securityDeposit: {
+            type: Number,
+            default: 0,
+        },
+
         notes: [{
             text: { type: String, trim: true, maxlength: 1000 },
             addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

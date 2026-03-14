@@ -18,7 +18,18 @@ import { listResidents, createResident, moveResidentRoom, deactivateResident, ap
 import { listPayments, createPayment, markPaymentPaid, sendPaymentReminder, downloadInvoice } from "../../controllers/v2/paymentController.js";
 import { listRequests, updateRequest, residentCreateRequest } from "../../controllers/v2/requestController.js";
 import { ownerDashboardAnalytics, ownerFinancialDashboard, revenueLeakReport, providerOverview as getProviderOverview, platformStats as getPlatformStats, residentDashboard as getResidentDashboard, residentDashboardV2 as getResidentDashboardV2, ownerDashboardSummary } from "../../controllers/v2/analyticsController.js";
-import { reportMonthlyRevenue, reportOutstanding, reportResidentLedger } from "../../controllers/v2/reportController.js";
+import { 
+    reportMonthlyRevenue, 
+    reportOutstanding, 
+    reportResidentLedger,
+    getResidentsReport,
+    getRentReport,
+    getOccupancyReport,
+    getFinancialReport,
+    exportResidentsExcel,
+    exportPaymentsExcel,
+    exportRentReceiptPDF
+} from "../../controllers/v2/reportController.js";
 import { listProperties as listAllProperties, updatePropertyStatus as patchPropertyStatus, updateProperty, discoverProperties, superAdminUpdateOwner, getMyProperties, createProperty, getPropertyById } from "../../controllers/v2/propertiesController.js";
 import { runAutomationTickNow, runLateFeeUpdate, runMonthlyRentGeneration } from "../../controllers/v2/automationController.js";
 // Phase 2
@@ -127,7 +138,19 @@ router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), vali
 router.post("/payments/:id/send-reminder", auth, authorize("super_admin", "owner"), sendPaymentReminder);
 router.get("/payments/:id/invoice", auth, authorize("super_admin", "owner", "resident"), downloadInvoice);
 
-/* ── Reports (CSV) ── */
+/* ── Reports ── */
+// JSON APIs for Dashboards
+router.get("/reports/residents", auth, authorize("super_admin", "owner"), getResidentsReport);
+router.get("/reports/rent", auth, authorize("super_admin", "owner"), getRentReport);
+router.get("/reports/occupancy", auth, authorize("super_admin", "owner"), getOccupancyReport);
+router.get("/reports/financial", auth, authorize("super_admin", "owner"), getFinancialReport);
+
+// Exports
+router.get("/reports/export/residents", auth, authorize("super_admin", "owner"), exportResidentsExcel);
+router.get("/reports/export/payments", auth, authorize("super_admin", "owner"), exportPaymentsExcel);
+router.get("/reports/export/receipt/:id", auth, authorize("super_admin", "owner", "resident"), exportRentReceiptPDF);
+
+// Legacy CSV
 router.get("/reports/monthly-revenue.csv", auth, authorize("super_admin", "owner"), reportMonthlyRevenue);
 router.get("/reports/outstanding.csv", auth, authorize("super_admin", "owner"), reportOutstanding);
 router.get("/reports/resident-ledger.csv", auth, authorize("super_admin", "owner"), reportResidentLedger);
