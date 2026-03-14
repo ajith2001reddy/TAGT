@@ -277,8 +277,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {role === "owner" && (
                     <>
                         <NavGroup items={ownerNav} pathname={pathname} onNavigate={onClose} />
-                        <div style={{ height: "1px", background: "var(--border-subtle)", margin: "8px 2px" }} />
-                        <NavGroup title="Insights" items={ownerSecondaryNav} pathname={pathname} onNavigate={onClose} />
                     </>
                 )}
                 {role === "super_admin" && (
