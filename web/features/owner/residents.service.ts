@@ -39,12 +39,24 @@ export interface ResidentHistory {
     }>;
 }
 
+export interface ResidentCreatePayload {
+    name: string;
+    email: string;
+    phoneNumber?: string;
+    alternateNumber?: string;
+    gender?: string;
+    aadhaarNumber?: string;
+    companyName?: string;
+    relation?: string;
+    roomId: string | null;
+}
+
 export async function fetchResidents(): Promise<Resident[]> {
     const response = await api.get("/v2/residents");
     return response.data?.data || [];
 }
 
-export async function createResident(payload: Partial<Resident> & { roomId: string | null }) {
+export async function createResident(payload: ResidentCreatePayload) {
     return api.post("/v2/residents", payload);
 }
 

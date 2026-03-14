@@ -90,7 +90,6 @@ export default function ResidentsPage() {
     async function handleCreate(e: React.FormEvent) {
         e.preventDefault(); setError(""); setCreating(true);
         try {
-            // @ts-ignore -roomId is string in form but object in Resident interface
             await createResident(form);
             setShowForm(false); 
             setForm(initialForm); 
