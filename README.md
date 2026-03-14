@@ -262,6 +262,11 @@ cd web
 npm run dev
 ```
 
+## Testing
+
+* Backend: `cd backend && npm test`
+* If you are on Windows and see `mongodb-memory-server` spawn/EPERM errors, start a local MongoDB instance and set `USE_EXTERNAL_MONGO=true` (and `MONGO_URI=mongodb://127.0.0.1:27017/tagt-test`) before running tests. This bypasses the embedded binary when execution is blocked by AV or group policy.
+
 ---
 
 ## 📈 Future Improvements

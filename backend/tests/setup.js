@@ -5,23 +5,45 @@ import mongoose from "mongoose";
 globalThis.jest = jest;
 
 let mongod;
+let usedExternalMongo = false;
 
-// 🟢 GLOBAL SETUP
+// GLOBAL SETUP
 beforeAll(async () => {
-    // 1. Setup Mongo Memory Server (ReplSet for transaction support)
-    mongod = await MongoMemoryReplSet.create({
-        replSet: { storageEngine: "wiredTiger", count: 1 }
-    });
-    const uri = mongod.getUri();
+    // Prefer in-memory Mongo for hermetic tests, but fall back to external Mongo
+    // when the binary cannot be spawned (EPERM/AV blocks) or when explicitly
+    // requested via USE_EXTERNAL_MONGO=true.
+    const shouldUseExternal = process.env.USE_EXTERNAL_MONGO === "true";
+    let uri;
+
+    if (!shouldUseExternal) {
+        try {
+            mongod = await MongoMemoryReplSet.create({
+                replSet: { storageEngine: "wiredTiger", count: 1 }
+            });
+            uri = mongod.getUri();
+        } catch (err) {
+            console.warn("mongodb-memory-server failed; falling back to external Mongo URI", err);
+        }
+    }
+
+    if (!uri) {
+        usedExternalMongo = true;
+        uri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/tagt-test";
+    }
 
     if (mongoose.connection.readyState !== 0) {
         await mongoose.disconnect();
     }
-    await mongoose.connect(uri);
+    try {
+        await mongoose.connect(uri);
+    } catch (err) {
+        console.error(`Failed to connect to test Mongo at ${uri}. Start MongoDB locally or set USE_EXTERNAL_MONGO=true with a reachable URI.`, err);
+        throw err;
+    }
 
-    // 2. Set Test Environment Variables
+    // Test Environment Variables
     process.env.NODE_ENV = "test";
-    process.env.MONGO_URI = uri; // Use the memory server URI
+    process.env.MONGO_URI = uri; // Use the chosen URI
     process.env.REDIS_URL = "redis://localhost:6379";
     process.env.FIREBASE_PROJECT_ID = "test-project";
     process.env.FIREBASE_CLIENT_EMAIL = "test@example.com";
@@ -31,18 +53,18 @@ beforeAll(async () => {
     process.env.STRIPE_SECRET_KEY = "sk_test_mock";
 });
 
-// 🔴 GLOBAL TEARDOWN
+// GLOBAL TEARDOWN
 afterAll(async () => {
     if (mongoose.connection.readyState !== 0) {
         await mongoose.connection.dropDatabase();
         await mongoose.connection.close();
     }
-    if (mongod) {
+    if (mongod && !usedExternalMongo) {
         await mongod.stop();
     }
 });
 
-// ─────────────── MODULE MOCKS ───────────────
+// --- MODULE MOCKS ---
 
 jest.unstable_mockModule("ioredis", () => ({
     default: class Redis {

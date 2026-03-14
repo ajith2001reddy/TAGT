@@ -9,9 +9,10 @@ import { connectDB } from "./config/db.js";
 import { validateEnv } from "./config/env.js";
 import { initScheduler } from "./jobs/scheduler.js";
 import { initSocket } from "./socket.js";
+import redis from "./config/redis.js";
 import logger from "./utils/logger.js";
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 let server;
 
@@ -20,6 +21,10 @@ async function startServer() {
         validateEnv();
         await connectDB();
         logger.info("✅ Database connected");
+
+        // Ensure Redis is ready before accepting requests
+        await redis.connect();
+        logger.info("✅ Redis connected");
 
         server = http.createServer(app);
 
@@ -49,10 +54,21 @@ const gracefulShutdown = async (signal, exitCode = 0) => {
             logger.info("HTTP server closed.");
             await mongoose.connection.close();
             logger.info("Database connection closed.");
+            try {
+                await redis.quit();
+                logger.info("Redis connection closed.");
+            } catch (err) {
+                logger.warn("Redis quit failed", { error: err.message });
+            }
             process.exit(exitCode);
         });
     } else {
         await mongoose.connection.close();
+        try {
+            await redis.quit();
+        } catch (err) {
+            logger.warn("Redis quit failed", { error: err.message });
+        }
         process.exit(exitCode);
     }
     

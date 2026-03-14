@@ -40,6 +40,9 @@ async function startWorker() {
         await connectDB();
         logger.info("[WORKER] ✅ Database connected");
 
+        await redis.connect();
+        logger.info("[WORKER] ✅ Redis connected");
+
         const worker = new Worker(QUEUE_NAME, async (job) => {
             const { name, data } = job;
             logger.info(`[WORKER] Starting job: ${name}`, { jobId: job.id });
@@ -91,12 +94,22 @@ async function startWorker() {
         process.on("SIGINT", async () => {
             logger.info("🛑 SIGINT received. Shutting down worker gracefully...");
             await worker.close();
+            try {
+                await redis.quit();
+            } catch (err) {
+                logger.warn("Redis quit failed during SIGINT", { error: err.message });
+            }
             process.exit(0);
         });
 
         process.on("SIGTERM", async () => {
             logger.info("🛑 SIGTERM received. Shutting down worker gracefully...");
             await worker.close();
+            try {
+                await redis.quit();
+            } catch (err) {
+                logger.warn("Redis quit failed during SIGTERM", { error: err.message });
+            }
             process.exit(0);
         });
 
