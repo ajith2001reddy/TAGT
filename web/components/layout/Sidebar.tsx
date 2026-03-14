@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Building2, BedDouble, Users, CreditCard,
-    MessageSquare, BarChart2, Cpu, FileText, Star, Settings,
-    LogOut, Globe, UserCog, Activity, ChevronRight, UserCheck, LifeBuoy, X, Megaphone, User, Building, ShieldAlert, UserPlus, TrendingUp
+    MessageSquare, FileText, Settings,
+    LogOut, Globe, UserCog, ChevronRight, LifeBuoy, X, User, ShieldAlert, TrendingUp
 } from "lucide-react";
 import { PropertySelector } from "./PropertySelector";
 
@@ -21,10 +21,7 @@ const ownerNav: NavItem[] = [
     { href: "/owner/documents", label: "Documents", icon: <FileText size={16} /> },
 ];
 
-const ownerSecondaryNav: NavItem[] = [
-    { href: "/owner/settings", label: "Settings", icon: <Settings size={16} /> },
-    { href: "/owner/support", label: "Support", icon: <LifeBuoy size={16} /> },
-];
+
 
 const adminNav: NavItem[] = [
     { href: "/provider", label: "Overview", icon: <Globe size={16} /> },

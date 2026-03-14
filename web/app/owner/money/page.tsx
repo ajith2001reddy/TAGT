@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { TrendingUp, TrendingDown, Download, Plus, Search, Filter, Loader2, CreditCard, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, Search, Loader2, DollarSign } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface Transaction {
@@ -67,7 +67,7 @@ export default function MoneyLedgerPage() {
             );
 
             setTransactions(combined);
-        } catch (err) {
+        } catch {
             toast.error("Failed to load ledger");
         } finally {
             setLoading(false);
@@ -92,8 +92,9 @@ export default function MoneyLedgerPage() {
             toast.success(`${addType === 'income' ? 'Sale' : 'Expense'} recorded`);
             setShowAdd(false);
             fetchLedger();
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Record failed");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? (err as Record<string, unknown> & Error).message : "Record failed";
+            toast.error(message);
         }
     };
 

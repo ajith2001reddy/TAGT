@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { fetchLeases, Lease, uploadLease } from "@/features/owner/lease.service";
 import { fetchResidents, Resident } from "@/features/owner/residents.service";
-import { FileText, Upload, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { FileText, Upload, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function OwnerLeasePage() {
@@ -163,7 +163,7 @@ export default function OwnerLeasePage() {
     );
 }
 
-function StatsCard({ title, value, icon, color }: { title: string, value: string, icon: any, color: string }) {
+function StatsCard({ title, value, icon, color }: { title: string, value: string, icon: React.ReactNode, color: string }) {
     return (
         <div className="glass-card" style={{ padding: "24px", display: "flex", alignItems: "center", gap: "20px", borderRadius: "20px" }}>
             <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center", color }}>

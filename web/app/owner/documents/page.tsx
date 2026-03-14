@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { fetchLeases, Lease, uploadLease } from "@/features/owner/lease.service";
 import { fetchResidents, Resident } from "@/features/owner/residents.service";
-import { FileText, Upload, CheckCircle2, Clock, ShieldCheck, Search, Filter } from "lucide-react";
+import { FileText, Upload, Clock, ShieldCheck, Search } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function DocumentVaultPage() {

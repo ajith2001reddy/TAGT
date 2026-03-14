@@ -7,13 +7,10 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { 
     Users, 
-    Home, 
     AlertCircle, 
-    TrendingUp, 
     CreditCard, 
     FileText, 
     Plus, 
-    ChevronRight,
     Search
 } from "lucide-react";
 
