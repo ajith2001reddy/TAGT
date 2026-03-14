@@ -1,4 +1,4 @@
-﻿import mongoose from "mongoose";
+import mongoose from "mongoose";
 import { tenantIsolationPlugin } from "../middleware/tenantIsolation.js";
 
 
@@ -44,7 +44,7 @@ const PaymentSchema = new mongoose.Schema(
         // 🧾 Payment type (FIXED ENUM — your bug was here)
         type: {
             type: String,
-            enum: ["rent", "deposit", "late_fee", "other"],
+            enum: ["rent", "deposit", "late_fee", "daily_basis", "food_collection", "other"],
             default: "rent",
             required: true,
             index: true,

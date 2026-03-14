@@ -67,27 +67,36 @@ const reports: ReportType[] = [
 ];
 
 export default function ReportsPage() {
+    const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
     const [months, setMonths] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState<Record<string, boolean>>({});
     const [stats, setStats] = useState<any>(null);
+    const [occStats, setOccStats] = useState<any>(null);
     const [insights, setInsights] = useState<any>(null);
+    const [fetching, setFetching] = useState(false);
+
+    const fetchStats = async (month: string) => {
+        try {
+            setFetching(true);
+            const [finRes, occRes, intRes] = await Promise.all([
+                api.get(`/v2/reports/financial?month=${month}`),
+                api.get("/v2/reports/occupancy"),
+                api.get("/v2/intelligence/summary")
+            ]);
+            setStats(finRes.data.data);
+            setOccStats(occRes.data.data);
+            setInsights(intRes.data.data);
+        } catch (e) {
+            console.error("Failed to fetch report stats", e);
+            toast.error("Failed to load dashboard statistics");
+        } finally {
+            setFetching(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const [finRes, occRes, intRes] = await Promise.all([
-                    api.get("/v2/reports/financial"),
-                    api.get("/v2/reports/occupancy"),
-                    api.get("/v2/intelligence/summary")
-                ]);
-                setStats({ ...finRes.data.data, ...occRes.data.data });
-                setInsights(intRes.data.data);
-            } catch (e) {
-                console.error("Failed to fetch report stats", e);
-            }
-        };
-        fetchStats();
-    }, []);
+        fetchStats(selectedMonth);
+    }, [selectedMonth]);
 
     async function download(report: ReportType) {
         setLoading(l => ({ ...l, [report.id]: true }));
@@ -119,44 +128,108 @@ export default function ReportsPage() {
 
     return (
         <div className="animate-fade-in p-6">
-            <div style={{ marginBottom: "36px" }}>
-                <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Analytics & Exports</div>
-                <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Reports Dashboard</h1>
-                <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Monitor your property's health and export records for accounting</p>
+            <div style={{ marginBottom: "36px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                <div>
+                    <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)", marginBottom: "8px" }}>Analytics & Exports</div>
+                    <h1 className="display-text" style={{ fontSize: "30px", marginBottom: "4px" }}>Reports Dashboard</h1>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Monitor your property's health and export records for accounting</p>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Selected Month</label>
+                    <input 
+                        type="month" 
+                        value={selectedMonth} 
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className="input-field"
+                        style={{ padding: "8px 12px", width: "160px" }}
+                    />
+                </div>
             </div>
 
             {/* Top Stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px", marginBottom: "40px" }}>
                 <StatCard
-                    label="Total Revenue"
-                    value={`₹${stats?.totalRevenue?.toLocaleString() || "0"}`}
-                    icon="💰"
-                    delta="Live"
+                    label="Rental Income"
+                    value={`₹${stats?.income?.rental?.toLocaleString() || "0"}`}
+                    icon="🏠"
+                    delta={fetching ? "Updating..." : `Total Income: ₹${stats?.income?.total?.toLocaleString() || "0"}`}
                     deltaType="up"
                 />
                 <StatCard
-                    label="Occupancy"
-                    value={`${stats?.occupancyRate || "0"}%`}
-                    icon="🏠"
-                    delta={`${stats?.occupiedBeds || 0} / ${stats?.totalBeds || 0} Beds`}
-                    deltaType={stats?.occupancyRate > 70 ? "up" : "neutral"}
+                    label="Current Occupancy"
+                    value={`${occStats?.occupancyRate || "0"}%`}
+                    icon="📊"
+                    delta={`${occStats?.occupiedBeds || 0} / ${occStats?.totalBeds || 0} Beds occupied`}
+                    deltaType={occStats?.occupancyRate > 70 ? "up" : "neutral"}
                 />
                 <StatCard
-                    label="Outstanding"
-                    value={`₹${stats?.outstanding?.toLocaleString() || "0"}`}
-                    icon="⏳"
-                    delta="Pending Collection"
+                    label="Total Expenses"
+                    value={`₹${stats?.expenses?.total?.toLocaleString() || "0"}`}
+                    icon="📉"
+                    delta={`Fixed: ₹${stats?.expenses?.fixedTotal?.toLocaleString() || "0"}`}
                     deltaType="down"
                     accent="#f43f5e"
                 />
                 <StatCard
-                    label="Under Maintenance"
-                    value={stats?.maintenanceBeds || "0"}
-                    icon="🛠️"
-                    delta="Beds Offline"
-                    deltaType="down"
-                    accent="#8b5cf6"
+                    label="Estimated Profit"
+                    value={`₹${stats?.profit?.toLocaleString() || "0"}`}
+                    icon="💰"
+                    delta={stats?.profit > 0 ? "Positive Cashflow" : "Loss / Pre-collection"}
+                    deltaType={stats?.profit > 0 ? "up" : "down"}
+                    accent={stats?.profit > 0 ? "var(--accent-primary)" : "#f43f5e"}
                 />
+            </div>
+
+            {/* Income & Expense Detailed Table - Sync with Excel Screenshot */}
+            <div className="animate-fade-up" style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "24px", marginBottom: "40px" }}>
+                {/* Income breakdown */}
+                <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
+                    <h2 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "20px", fontFamily: "var(--font-display)", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ color: "#10b981" }}>●</span> Income Breakdown
+                    </h2>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <DetailRow label="Rental Income" value={stats?.income?.rental} />
+                        <DetailRow label="Daily Basis" value={stats?.income?.daily_basis} />
+                        <DetailRow label="Security Deposits" value={stats?.income?.deposit} />
+                        <DetailRow label="Food Collection" value={stats?.income?.food_collection} />
+                        <div style={{ height: "1px", background: "var(--border-default)", margin: "8px 0" }} />
+                        <DetailRow label="Total Revenue" value={stats?.income?.total} isBold color="#10b981" />
+                    </div>
+                </div>
+
+                {/* Expense breakdown */}
+                <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "18px", padding: "24px" }}>
+                    <h2 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "20px", fontFamily: "var(--font-display)", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ color: "#f43f5e" }}>●</span> Expense Breakdown
+                    </h2>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px" }}>
+                        <div>
+                            <div style={{ fontSize: "10px", fontWeight: 800, color: "var(--text-tertiary)", textTransform: "uppercase", marginBottom: "12px", letterSpacing: "0.05em" }}>Fixed Expenses</div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                <DetailRow label="Salaries" value={stats?.expenses?.salaries} />
+                                <DetailRow label="PG Rent" value={stats?.expenses?.pg_rent} />
+                                <DetailRow label="WiFi" value={stats?.expenses?.wifi} />
+                                <DetailRow label="Others" value={stats?.expenses?.others} />
+                            </div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: "10px", fontWeight: 800, color: "var(--text-tertiary)", textTransform: "uppercase", marginBottom: "12px", letterSpacing: "0.05em" }}>Variable Expenses</div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                <DetailRow label="Ration" value={stats?.expenses?.ration} />
+                                <DetailRow label="Vegetables" value={stats?.expenses?.vegetables} />
+                                <DetailRow label="Dairy" value={stats?.expenses?.dairy} />
+                                <DetailRow label="Electricity" value={stats?.expenses?.electricity} />
+                                <DetailRow label="Water" value={stats?.expenses?.water} />
+                                <DetailRow label="Maintenance" value={stats?.expenses?.maintenance} />
+                            </div>
+                        </div>
+                    </div>
+                    <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border-default)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "14px", fontWeight: 700 }}>Total Period Expenses</span>
+                        <span style={{ fontSize: "18px", fontWeight: 800, color: "#f43f5e" }}>₹{stats?.expenses?.total?.toLocaleString() || "0"}</span>
+                    </div>
+                </div>
             </div>
 
             {/* AI Insights Section */}
@@ -178,17 +251,6 @@ export default function ReportsPage() {
                                 </div>
                             </div>
                         ))}
-                        {insights.churn?.highRiskCount > 0 && (
-                            <div style={{ background: "rgba(244,63,94,0.05)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(244,63,94,0.1)", display: "flex", gap: "12px" }}>
-                                <div style={{ fontSize: "16px", marginTop: "2px" }}>📉</div>
-                                <div>
-                                    <h4 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px", color: "#f43f5e" }}>Churn Alert</h4>
-                                    <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
-                                        {insights.churn.highRiskCount} residents at high risk of leaving soon.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             )}
@@ -281,6 +343,17 @@ export default function ReportsPage() {
                 }
                 @keyframes spin { to { transform: rotate(360deg); } }
             `}</style>
+        </div>
+    );
+}
+
+function DetailRow({ label, value, isBold = false, color }: { label: string; value?: number; isBold?: boolean; color?: string }) {
+    return (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px" }}>
+            <span style={{ color: "var(--text-secondary)", fontWeight: isBold ? 700 : 400 }}>{label}</span>
+            <span style={{ fontWeight: isBold ? 800 : 600, color: color || "var(--text-primary)" }}>
+                ₹{value?.toLocaleString() || "0"}
+            </span>
         </div>
     );
 }

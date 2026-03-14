@@ -18,7 +18,8 @@ class ResidentService extends BaseService {
      * Core logic for creating a resident, assigning them to a room,
      * and generating their first bill.
      */
-    async createResidentWorkflow({ name, email, password, roomId, propertyId, phoneNumber, creatorId }, session) {
+    async createResidentWorkflow(payload, session) {
+        const { name, email, password, roomId, propertyId, creatorId } = payload;
         const normalizedEmail = email.toLowerCase().trim();
 
         // 1️⃣ Validate room
@@ -56,27 +57,25 @@ class ResidentService extends BaseService {
         });
 
         // 4️⃣ Create Mongo user
-        const [resident] = await User.create(
-            [{
-                name,
-                email: normalizedEmail,
-                firebaseUid: firebaseUser.uid,
-                role: "resident",
-                propertyId,
-                ownerId: property.ownerId, // 👈 Link to owner
-                roomId: roomDoc?._id || null,
-                phoneNumber: phoneNumber || null,
-                isActive: true,
-                emailVerified: true, // ✅ Recommended
-                createdBy: creatorId || property.ownerId,
-                updatedBy: creatorId || property.ownerId,
-                verification: {
-                    setupToken: null,
-                    setupTokenExpires: null
-                }
-            }],
-            { session }
-        );
+        const residentData = {
+            ...payload,
+            email: normalizedEmail,
+            firebaseUid: firebaseUser.uid,
+            role: "resident",
+            propertyId,
+            ownerId: property.ownerId, 
+            roomId: roomDoc?._id || null,
+            isActive: true,
+            emailVerified: true, 
+            createdBy: creatorId || property.ownerId,
+            updatedBy: creatorId || property.ownerId,
+            verification: {
+                setupToken: null,
+                setupTokenExpires: null
+            }
+        };
+
+        const [resident] = await User.create([residentData], { session });
 
         // 4️⃣ Generate password setup link
         let resetLink = null;

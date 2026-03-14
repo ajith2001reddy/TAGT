@@ -11,8 +11,12 @@ const expenseSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            enum: ["ration", "electricity", "water", "maintenance", "salary", "internet", "other"],
-            default: "other",
+            enum: [
+                "ration", "vegetables", "dairy", "maintenance", 
+                "deposit_returned", "electricity", "water", "fuel", 
+                "bonus", "housekeeping", "salaries", "pg_rent", "wifi", "others"
+            ],
+            default: "others",
             index: true,
         },
         amount: {

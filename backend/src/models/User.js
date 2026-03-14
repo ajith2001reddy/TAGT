@@ -152,6 +152,16 @@ const userSchema = new mongoose.Schema(
             default: "",
             index: true,
         },
+        alternateNumber: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        gender: {
+            type: String,
+            enum: ["male", "female", "other", ""],
+            default: "",
+        },
         relation: {
             type: String,
             trim: true,

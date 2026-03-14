@@ -4,6 +4,12 @@ export interface Resident {
     _id: string;
     name: string;
     email: string;
+    phoneNumber?: string;
+    alternateNumber?: string;
+    gender?: string;
+    aadhaarNumber?: string;
+    companyName?: string;
+    relation?: string;
     isActive?: boolean;
     roomId?: {
         _id: string;
@@ -38,7 +44,7 @@ export async function fetchResidents(): Promise<Resident[]> {
     return response.data?.data || [];
 }
 
-export async function createResident(payload: { name: string; email: string; roomId: string | null }) {
+export async function createResident(payload: Partial<Resident> & { roomId: string | null }) {
     return api.post("/v2/residents", payload);
 }
 

@@ -83,16 +83,50 @@ export const getOccupancyReport = async (req, res, next) => {
 export const getFinancialReport = async (req, res, next) => {
     try {
         const scope = buildPropertyFilter(req.user);
-        const payments = await Payment.find(scope).lean();
+        const { month } = req.query;
+        const currentMonth = month || new Date().toISOString().slice(0, 7);
 
-        const summary = payments.reduce((acc, p) => {
-            acc.totalRevenue += (p.status === "paid" ? p.amount : 0);
-            acc.outstanding += (p.status === "pending" || p.status === "overdue" ? p.amount : 0);
-            acc.lateFees += (p.lateFee || 0);
+        const [payments, expenses] = await Promise.all([
+            Payment.find({ ...scope, month: currentMonth }).lean(),
+            Expense.find({ ...scope, date: { 
+                $gte: new Date(currentMonth + "-01"), 
+                $lt: new Date(new Date(currentMonth + "-01").setMonth(new Date(currentMonth + "-01").getMonth() + 1)) 
+            }}).lean()
+        ]);
+
+        const income = payments.reduce((acc, p) => {
+            if (p.status !== "paid") return acc;
+            const type = p.type === 'rent' ? 'rental' : p.type;
+            acc[type] = (acc[type] || 0) + p.amount;
+            acc.total += p.amount;
             return acc;
-        }, { totalRevenue: 0, outstanding: 0, lateFees: 0 });
+        }, { total: 0 });
 
-        return res.json({ success: true, data: summary });
+        const expenseCategories = {
+            fixed: ["salaries", "others", "pg_rent", "wifi"],
+            variable: ["ration", "vegetables", "dairy", "maintenance", "deposit_returned", "electricity", "water", "fuel", "bonus", "housekeeping"]
+        };
+
+        const expenseBreakdown = expenses.reduce((acc, e) => {
+            const cat = e.category || 'others';
+            acc[cat] = (acc[cat] || 0) + e.amount;
+            acc.total += e.amount;
+            
+            if (expenseCategories.fixed.includes(cat)) acc.fixedTotal += e.amount;
+            else acc.variableTotal += e.amount;
+            
+            return acc;
+        }, { total: 0, fixedTotal: 0, variableTotal: 0 });
+
+        return res.json({ 
+            success: true, 
+            data: {
+                month: currentMonth,
+                income,
+                expenses: expenseBreakdown,
+                profit: income.total - expenseBreakdown.total
+            } 
+        });
     } catch (err) { next(err); }
 };
 
@@ -108,36 +142,40 @@ export const exportResidentsExcel = async (req, res, next) => {
             .lean();
 
         const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet("Residents");
+        const sheet = workbook.addWorksheet("Master List");
 
         sheet.columns = [
-            { header: "Name", key: "name", width: 25 },
-            { header: "Email", key: "email", width: 30 },
-            { header: "Phone", key: "phone", width: 15 },
-            { header: "Room", key: "room", width: 10 },
-            { header: "Bed", key: "bed", width: 10 },
-            { header: "Company", key: "company", width: 20 },
-            { header: "Aadhaar", key: "aadhaar", width: 20 },
-            { header: "Join Date", key: "joinDate", width: 15 },
-            { header: "Status", key: "status", width: 12 },
+            { header: "Sr. No.", key: "srNo", width: 8 },
+            { header: "Full Name", key: "name", width: 25 },
+            { header: "Room No.", key: "room", width: 12 },
+            { header: "Gender", key: "gender", width: 10 },
+            { header: "Mobile Number", key: "phone", width: 18 },
+            { header: "Alternate Number", key: "altPhone", width: 18 },
+            { header: "Relation", key: "relation", width: 15 },
+            { header: "Company Name", key: "company", width: 20 },
+            { header: "Adhaar Card Number", key: "aadhaar", width: 22 },
         ];
 
-        residents.forEach(r => {
+        residents.forEach((r, idx) => {
             sheet.addRow({
+                srNo: idx + 1,
                 name: r.name,
-                email: r.email,
-                phone: r.phoneNumber,
                 room: r.roomId?.roomNumber || "N/A",
-                bed: r.bedId?.bedNumber || "N/A",
+                gender: r.gender || "",
+                phone: r.phoneNumber || "",
+                altPhone: r.alternateNumber || "",
+                relation: r.relation || "",
                 company: r.companyName || "",
                 aadhaar: r.aadhaarNumber || "",
-                joinDate: r.leaseStart ? new Date(r.leaseStart).toLocaleDateString() : "",
-                status: r.status
             });
         });
 
+        // Style header
+        sheet.getRow(1).font = { bold: true };
+        sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC000' } };
+
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        res.setHeader("Content-Disposition", "attachment; filename=residents-report.xlsx");
+        res.setHeader("Content-Disposition", "attachment; filename=master-residents.xlsx");
         await workbook.xlsx.write(res);
         res.end();
     } catch (err) { next(err); }
