@@ -13,8 +13,7 @@ export const globalSearch = async (req, res) => {
         const { q } = req.query;
         if (!q) return res.status(400).json({ success: false, message: "Search query is required" });
 
-        const propertyId = req.user.propertyId; // Assuming user is scoped to a property
-        const ownerId = req.user.id;
+        const propertyId = req.user.propertyId;
 
         // Search scope: if owner, search their properties. if resident, limited scope.
         // For simplicity, let's assume owner/staff searching their property.

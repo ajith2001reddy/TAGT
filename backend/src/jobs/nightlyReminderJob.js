@@ -8,8 +8,6 @@ import logger from "../utils/logger.js";
  */
 export async function runNightlyRentReminders() {
     try {
-        const now = new Date();
-        
         // Find all unpaid payments (pending or overdue)
         // We typically only want to remind for "rent" types
         const unpaid = await Payment.find({
