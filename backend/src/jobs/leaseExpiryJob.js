@@ -1,6 +1,5 @@
 import User from "../models/User.js";
 import logger from "../utils/logger.js";
-import { api } from "../lib/api.js"; // This might not be right for background services
 // Assuming there is a service to send alerts to owners
 
 /**
