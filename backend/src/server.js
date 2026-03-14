@@ -16,6 +16,23 @@ const PORT = process.env.PORT || 5001;
 
 let server;
 
+const waitForRedisReady = () => new Promise((resolve, reject) => {
+    if (redis.status === "ready") return resolve();
+    const onReady = () => { cleanup(); resolve(); };
+    const onError = (err) => { cleanup(); reject(err); };
+    const onTimeout = setTimeout(() => {
+        cleanup();
+        reject(new Error("Redis not ready within 10s"));
+    }, 10000);
+    const cleanup = () => {
+        clearTimeout(onTimeout);
+        redis.off("ready", onReady);
+        redis.off("error", onError);
+    };
+    redis.once("ready", onReady);
+    redis.once("error", onError);
+});
+
 async function startServer() {
     try {
         validateEnv();
@@ -23,8 +40,8 @@ async function startServer() {
         logger.info("✅ Database connected");
 
         // Ensure Redis is ready before accepting requests
-        await redis.connect();
-        logger.info("✅ Redis connected");
+        await waitForRedisReady();
+        logger.info("✅ Redis ready");
 
         server = http.createServer(app);
 

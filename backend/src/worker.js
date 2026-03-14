@@ -26,6 +26,23 @@ const jobRegistry = {
     "OverdueNotices": sendOverdueNotices
 };
 
+const waitForRedisReady = () => new Promise((resolve, reject) => {
+    if (redis.status === "ready") return resolve();
+    const onReady = () => { cleanup(); resolve(); };
+    const onError = (err) => { cleanup(); reject(err); };
+    const onTimeout = setTimeout(() => {
+        cleanup();
+        reject(new Error("Redis not ready within 10s"));
+    }, 10000);
+    const cleanup = () => {
+        clearTimeout(onTimeout);
+        redis.off("ready", onReady);
+        redis.off("error", onError);
+    };
+    redis.once("ready", onReady);
+    redis.once("error", onError);
+});
+
 async function startWorker() {
     try {
         if (process.env.SENTRY_DSN) {
@@ -40,8 +57,8 @@ async function startWorker() {
         await connectDB();
         logger.info("[WORKER] ✅ Database connected");
 
-        await redis.connect();
-        logger.info("[WORKER] ✅ Redis connected");
+        await waitForRedisReady();
+        logger.info("[WORKER] ✅ Redis ready");
 
         const worker = new Worker(QUEUE_NAME, async (job) => {
             const { name, data } = job;
