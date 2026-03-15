@@ -1,0 +1,18 @@
+# Exclude from Docker builds
+node_modules
+.git
+.next
+out
+build
+dist
+scripts
+tools
+*.log
+*.txt
+*.md
+.env*
+!.env.example
+.bundle_state.json
+ts_project_part_*.txt
+.vscode
+.idea

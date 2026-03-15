@@ -197,9 +197,16 @@ export const deleteRoom = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Cannot delete a room with occupied beds. Move residents first." });
         }
 
-        // Delete all beds belonging to this room
-        await Bed.deleteMany({ roomId: room._id }).session(session);
-        await Room.findByIdAndDelete(room._id).session(session);
+        // Soft delete all beds belonging to this room
+        await Bed.updateMany(
+            { roomId: room._id },
+            { isDeleted: true, deletedAt: new Date() }
+        ).session(session);
+
+        // Soft delete the room itself
+        room.isDeleted = true;
+        room.deletedAt = new Date();
+        await room.save({ session });
 
         await session.commitTransaction();
         logger.info(`Room deleted: ${room.roomNumber} (${room._id})`);

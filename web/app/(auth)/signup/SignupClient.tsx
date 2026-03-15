@@ -117,8 +117,7 @@ export default function SignupClient() {
                 <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.05)" }} />
             </motion.div>
 
-            <form onSubmit={handleSignup}>
-                <motion.div variants={containerVariants} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             {/* Role Switcher - Subtle */}
             <motion.div variants={itemVariants} style={{ display: "flex", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", marginBottom: "32px" }}>
                 {["resident", "owner"].map((r) => (
@@ -289,8 +288,7 @@ export default function SignupClient() {
                     <motion.p variants={itemVariants} style={{ fontSize: "12px", color: "var(--text-tertiary)", textAlign: "center", lineHeight: 1.6 }}>
                         By creating an account, you agree to the <Link href="/terms" style={{ color: "#fff", textDecoration: "underline" }}>Terms of Service</Link>. We&apos;ll occasionally send you account-related emails.
                     </motion.p>
-                </motion.div>
-            </form>
+                </div>
 
             <motion.div variants={itemVariants} style={{
                 marginTop: "32px", textAlign: "center", fontSize: "14px", color: "var(--text-secondary)"

@@ -1,5 +1,6 @@
-import { Router, raw } from "express";
+import { Router } from "express";
 import auth from "../../middleware/auth.js";
+import { dynamicTenantRateLimiter } from "../../middleware/tenantLimiter.js";
 import authorize from "../../middleware/authorize.js";
 import verifyPropertyAccess from "../../middleware/verifyPropertyAccess.js";
 import validate from "../../middleware/validate.js";
@@ -60,24 +61,24 @@ import { getUnifiedLedger } from "../../controllers/v2/ledgerController.js";
 
 const router = Router();
 
-// Rate limit applies naturally AFTER auth is successful on any protected route.
-// We'll slip it into standard chains.
-
-/* ── Auth ── */
+/* ── Public ── */
 router.post("/auth/login", validate(loginSchema), login);
 router.post("/auth/register", register);
-
-/* ── Public ── */
 router.get("/public/platform-stats", getPublicPlatformStats);
+router.get("/subscription/plans", listPlans);
+
+/* ── Protected (Session & Rate Limited) ── */
+router.use(auth);
+router.use(dynamicTenantRateLimiter);
 
 /* ── Super Admin ── */
-router.get("/provider/overview", auth, authorize("super_admin"), getProviderOverview);
-router.get("/provider/properties", auth, authorize("super_admin"), listAllProperties);
-router.put("/provider/properties/:id", auth, authorize("super_admin"), validate(updatePropertySchema), logActivity("PROPERTY_UPDATED"), updateProperty);
-router.put("/provider/owners/:id", auth, authorize("super_admin"), logActivity("OWNER_UPDATED_BY_ADMIN"), superAdminUpdateOwner);
-router.patch("/provider/properties/:id/status", auth, authorize("super_admin"), validate(updatePropertyStatusSchema), logActivity("PROPERTY_STATUS_CHANGED"), patchPropertyStatus);
-router.get("/admin/platform-stats", auth, authorize("super_admin"), getPlatformStats);
-router.put("/admin/users/:id", auth, authorize("super_admin"), logActivity("USER_MANAGED_BY_ADMIN"), superAdminManageUser);
+router.get("/provider/overview", authorize("super_admin"), getProviderOverview);
+router.get("/provider/properties", authorize("super_admin"), listAllProperties);
+router.put("/provider/properties/:id", authorize("super_admin"), validate(updatePropertySchema), logActivity("PROPERTY_UPDATED"), updateProperty);
+router.put("/provider/owners/:id", authorize("super_admin"), logActivity("OWNER_UPDATED_BY_ADMIN"), superAdminUpdateOwner);
+router.patch("/provider/properties/:id/status", authorize("super_admin"), validate(updatePropertyStatusSchema), logActivity("PROPERTY_STATUS_CHANGED"), patchPropertyStatus);
+router.get("/admin/platform-stats", authorize("super_admin"), getPlatformStats);
+router.put("/admin/users/:id", authorize("super_admin"), logActivity("USER_MANAGED_BY_ADMIN"), superAdminManageUser);
 
 // Consolidated from legacy admin.js
 import {
@@ -93,32 +94,32 @@ import {
     rejectVerification
 } from "../../controllers/adminController.js";
 
-router.get("/admin/owners", auth, authorize("super_admin"), listOwners);
-router.post("/admin/owners", auth, authorize("super_admin"), createOwner);
-router.post("/admin/properties/:id/assign-owner", auth, authorize("super_admin"), assignOwnerToProperty);
-router.delete("/admin/owners/:ownerId/properties/:propertyId", auth, authorize("super_admin"), removePropertyFromOwner);
-router.delete("/admin/owners/:id", auth, authorize("super_admin"), deleteOwner);
-router.delete("/admin/residents/:id", auth, authorize("super_admin"), deleteResident);
-router.delete("/admin/properties/:id", auth, authorize("super_admin"), deleteProperty);
-router.get("/admin/verifications/pending", auth, authorize("super_admin"), getPendingVerifications);
-router.post("/admin/verifications/:id/approve", auth, authorize("super_admin"), approveVerification);
-router.post("/admin/verifications/:id/reject", auth, authorize("super_admin"), rejectVerification);
+router.get("/admin/owners", authorize("super_admin"), listOwners);
+router.post("/admin/owners", authorize("super_admin"), createOwner);
+router.post("/admin/properties/:id/assign-owner", authorize("super_admin"), assignOwnerToProperty);
+router.delete("/admin/owners/:ownerId/properties/:propertyId", authorize("super_admin"), removePropertyFromOwner);
+router.delete("/admin/owners/:id", authorize("super_admin"), deleteOwner);
+router.delete("/admin/residents/:id", authorize("super_admin"), deleteResident);
+router.delete("/admin/properties/:id", authorize("super_admin"), deleteProperty);
+router.get("/admin/verifications/pending", authorize("super_admin"), getPendingVerifications);
+router.post("/admin/verifications/:id/approve", authorize("super_admin"), approveVerification);
+router.post("/admin/verifications/:id/reject", authorize("super_admin"), rejectVerification);
 
 /* ── Search ── */
 router.get("/search", auth, authorize("super_admin", "owner"), globalSearch);
 
 /* ── Analytics ── */
-router.get("/analytics/owner-dashboard", auth, authorize("super_admin", "owner"), ownerDashboardAnalytics);
-router.get("/analytics/financial-dashboard", auth, authorize("super_admin", "owner"), ownerFinancialDashboard);
-router.get("/analytics/revenue-leak", auth, authorize("super_admin", "owner"), revenueLeakReport);
-router.get("/analytics/dashboard-summary", auth, authorize("super_admin", "owner"), ownerDashboardSummary);
+router.get("/analytics/owner-dashboard", authorize("super_admin", "owner"), ownerDashboardAnalytics);
+router.get("/analytics/financial-dashboard", authorize("super_admin", "owner"), ownerFinancialDashboard);
+router.get("/analytics/revenue-leak", authorize("super_admin", "owner"), revenueLeakReport);
+router.get("/analytics/dashboard-summary", authorize("super_admin", "owner"), ownerDashboardSummary);
 
 /* ── Rooms ── */
-router.get("/rooms", auth, authorize("super_admin", "owner"), listRooms);
-router.get("/rooms/stats", auth, authorize("super_admin", "owner"), getRoomStats);
-router.post("/rooms", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createRoomSchema), logActivity("ROOM_CREATED"), createRoom);
-router.put("/rooms/:id", auth, authorize("super_admin", "owner"), validate(updateRoomSchema), logActivity("ROOM_UPDATED"), updateRoom);
-router.delete("/rooms/:id", auth, authorize("super_admin", "owner"), logActivity("ROOM_DELETED"), deleteRoom);
+router.get("/rooms", authorize("super_admin", "owner"), listRooms);
+router.get("/rooms/stats", authorize("super_admin", "owner"), getRoomStats);
+router.post("/rooms", authorize("super_admin", "owner"), verifyPropertyAccess, validate(createRoomSchema), logActivity("ROOM_CREATED"), createRoom);
+router.put("/rooms/:id", authorize("super_admin", "owner"), validate(updateRoomSchema), logActivity("ROOM_UPDATED"), updateRoom);
+router.delete("/rooms/:id", authorize("super_admin", "owner"), logActivity("ROOM_DELETED"), deleteRoom);
 
 /* ── Beds ── */
 router.get("/beds", auth, authorize("super_admin", "owner"), listBeds);
@@ -195,11 +196,6 @@ router.get("/razorpay/status", auth, razorpayStatus);
 router.post("/razorpay/checkout-session", auth, authorize("resident"), createPaymentSession);
 router.post("/razorpay/verify-payment", auth, authorize("resident"), verifyPayment);
 router.post("/razorpay/checkout-subscription", auth, authorize("owner"), createSubscriptionSession);
-// Webhook: must use raw body (registered separately in app.js — see below)
-router.post("/razorpay/webhook", raw({ type: "application/json" }), razorpayWebhook);
-
-/* ── Phase 2: Subscriptions ── */
-router.get("/subscription/plans", listPlans);
 router.get("/subscription/my-plan", auth, authorize("owner"), getMyPlan);
 router.post("/subscription/upgrade", auth, authorize("owner"), upgradePlan);
 router.get("/admin/subscriptions", auth, authorize("super_admin"), listAllSubscriptions);

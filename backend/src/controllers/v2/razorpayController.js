@@ -133,12 +133,12 @@ export const razorpayWebhook = async (req, res) => {
         const signature = req.headers["x-razorpay-signature"];
         if (!signature) return res.status(400).send("Missing signature header");
 
-        const rawBody = JSON.stringify(req.body);
+        const rawBody = req.body; 
         const isValid = verifyWebhookSignature(rawBody, signature);
         
         if (!isValid) return res.status(400).send("Invalid signature");
 
-        const event = req.body;
+        const event = JSON.parse(rawBody.toString());
 
         if (event.event === "subscription.charged") {
             const subData = event.payload.subscription.entity;
