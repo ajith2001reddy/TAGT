@@ -1,7 +1,7 @@
 import Property from "../models/Property.js";
 import User from "../models/User.js";
 import Room from "../models/Room.js";
-import Payment from "../models/Payment.js";
+import Bed from "../models/Bed.js";
 import admin from "../config/firebase.js";
 import mongoose from "mongoose";
 import { sendOwnerInvite } from "../services/emailService.js";
