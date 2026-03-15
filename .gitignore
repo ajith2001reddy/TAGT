@@ -72,3 +72,14 @@ temp/
 # ==================================================
 
 ts_project_part_*
+*.txt
+*.results
+*.raw
+.results.txt
+.raw.txt
+.outputclean.txt
+*.log
+bin/
+obj/
+.vs/
+*.user

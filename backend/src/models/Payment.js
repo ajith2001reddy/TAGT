@@ -131,8 +131,6 @@ PaymentSchema.pre("save", function (next) {
 PaymentSchema.index({ propertyId: 1, resident: 1, month: 1 }, { unique: true });
 PaymentSchema.index({ propertyId: 1, status: 1, dueDate: 1 });
 PaymentSchema.index({ propertyId: 1, month: 1, status: 1 });
-PaymentSchema.index({ resident: 1, month: 1 }, { unique: true }); // prevent duplicate bills
-
 // 📊 Optimized compound indexes for dashboard/list analytics
 PaymentSchema.index({ propertyId: 1, status: 1, createdAt: -1 });
 PaymentSchema.index({ propertyId: 1, type: 1, status: 1 });

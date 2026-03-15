@@ -267,7 +267,7 @@ export const deleteOwner = async (req, res, next) => {
 };
 
 /* ===========================
-   DELETE RESIDENT (MongoDB + Firebase)
+   DELETE RESIDENT (Soft Delete + Firebase Cleanup)
 =========================== */
 export const deleteResident = async (req, res, next) => {
     const session = await mongoose.startSession();
@@ -281,33 +281,40 @@ export const deleteResident = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "Resident not found" });
         }
 
-        // Free up the bed/room occupancy
-        if (resident.roomId) {
-            await Room.findByIdAndUpdate(
-                resident.roomId,
-                { $inc: { occupiedBeds: -1 } },
-                { session }
-            );
+        const oldRoomId = resident.roomId;
+        const oldBedId = resident.bedId;
+
+        // Perform Soft Delete
+        resident.isDeleted = true;
+        resident.deletedAt = new Date();
+        resident.status = "inactive";
+        resident.isActive = false;
+        resident.roomId = null;
+        resident.bedId = null;
+        await resident.save({ session });
+
+        // Cleanup Room occupancy
+        if (oldRoomId) {
+            await Room.findByIdAndUpdate(oldRoomId, { $inc: { occupiedBeds: -1 } }).session(session);
         }
 
-        // Delete all payments for this resident
-        await Payment.deleteMany({ resident: id }, { session });
-
-        // Hard delete from MongoDB
-        await User.deleteOne({ _id: id }, { session });
+        // Cleanup Bed assignment
+        if (oldBedId) {
+            await Bed.findByIdAndUpdate(oldBedId, { status: "available", residentId: null }).session(session);
+        }
 
         await session.commitTransaction();
 
-        // Delete from Firebase Auth (fire-and-forget)
+        // Delete from Firebase Auth (fire-and-forget, non-blocking)
         if (resident.firebaseUid) {
             admin.auth().deleteUser(resident.firebaseUid)
-                .then(() => logger.info(`Firebase user deleted: ${resident.firebaseUid}`))
+                .then(() => logger.info(`Firebase user deleted for soft-deleted resident: ${resident.firebaseUid}`))
                 .catch(err => logger.warn(`Firebase delete failed for resident ${id}: ${err.message}`));
         }
 
-        res.json({ success: true, message: "Resident deleted from system" });
+        return res.json({ success: true, message: "Resident soft-deleted successfully (financial records preserved)" });
     } catch (err) {
-        await session.abortTransaction();
+        if (session.inTransaction()) await session.abortTransaction();
         next(err);
     } finally {
         session.endSession();

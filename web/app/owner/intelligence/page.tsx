@@ -32,9 +32,14 @@ export default function IntelligenceDashboard() {
         </div>
     );
 
-    // AI Generated Predictions based on real stats
-    const projectedRevenue = (stats?.monthlyRevenue || 0) * 1.05; // Base prediction
-    const churnRiskCount = Math.floor((stats?.totalResidents || 0) * 0.05); // 5% avg churn risk
+    // Dynamic data from AI Engine
+    const forecast = data?.forecast;
+    const trends = data?.trends;
+    const churn = data?.churn;
+    
+    const nextMonthForecast = forecast?.forecast?.[0]?.projected || (stats?.monthlyRevenue || 0);
+    const churnRiskCount = churn?.highRisk || 0;
+    const occupancyRate = trends?.current?.occupancyRate || stats?.occupancyRate || 0;
 
     return (
         <div className="animate-fade-in" style={{ paddingBottom: "40px" }}>
@@ -66,10 +71,10 @@ export default function IntelligenceDashboard() {
                         <h3 style={{ fontSize: "14px", fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>Next Month Projection</h3>
                     </div>
                     <div style={{ fontSize: "36px", fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", marginBottom: "8px" }}>
-                        ₹{(projectedRevenue / 1000).toFixed(1)}k
+                        ₹{(nextMonthForecast / 1000).toFixed(1)}k
                     </div>
                     <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>
-                        Expected +5.0% increase based on your current occupancy of {stats?.occupancyRate}%.
+                        {forecast?.trend === "up" ? "Projected increase" : forecast?.trend === "down" ? "Potential decline" : "Stable revenue"} based on historic collection and current occupancy.
                     </p>
                 </div>
 
@@ -81,10 +86,10 @@ export default function IntelligenceDashboard() {
                         <h3 style={{ fontSize: "14px", fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>Churn Risk Detected</h3>
                     </div>
                     <div style={{ fontSize: "36px", fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", marginBottom: "8px" }}>
-                        {churnRiskCount} <span style={{ fontSize: "16px", color: "var(--text-tertiary)", fontWeight: 500 }}>Residents</span>
+                        {churnRiskCount} <span style={{ fontSize: "16px", color: "var(--text-tertiary)", fontWeight: 500 }}>High Risk</span>
                     </div>
                     <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>
-                        Identified as high-risk based on payment patterns and property tenure.
+                        Residents identified with a risk score &gt;60% based on payment delays and tenure.
                     </p>
                 </div>
 
@@ -96,10 +101,10 @@ export default function IntelligenceDashboard() {
                         <h3 style={{ fontSize: "14px", fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>Efficiency Forecast</h3>
                     </div>
                     <div style={{ fontSize: "36px", fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", marginBottom: "8px" }}>
-                        Stable <span style={{ fontSize: "16px", color: "var(--text-tertiary)", fontWeight: 500 }}>Predicted</span>
+                        {occupancyRate >= 90 ? "Peak" : "Optimal"} <span style={{ fontSize: "16px", color: "var(--text-tertiary)", fontWeight: 500 }}>Load</span>
                     </div>
                     <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>
-                        Operational load is predicted to remain stable for the next 14 days.
+                        Currently at {occupancyRate}% occupancy. Resource utilization is {occupancyRate > 85 ? "high" : "nominal"}.
                     </p>
                 </div>
             </div>
@@ -136,17 +141,28 @@ export default function IntelligenceDashboard() {
                         </div>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                            <div style={{ background: "rgba(0,0,0,0.2)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                                <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>Revenue Optimization</div>
-                                <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                                    Your occupancy is high ({stats?.occupancyRate || 0}%). Consider a 5% rent adjustment on new contracts.
+                            {occupancyRate >= 90 && (
+                                <div style={{ background: "rgba(0,0,0,0.2)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>Revenue Optimization</div>
+                                    <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                                        High demand detected ({occupancyRate}%). Consider a 5-8% base rent increase for new move-ins.
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {churnRiskCount > 0 && (
+                                <div style={{ background: "rgba(0,0,0,0.2)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>Retention Strategy</div>
+                                    <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                                        Immediate outreach recommended for {churnRiskCount} residents flagged as high risk to prevent vacancy.
+                                    </div>
+                                </div>
+                            )}
 
                             <div style={{ background: "rgba(0,0,0,0.2)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                                <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>Retention Strategy</div>
+                                <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>Operation Health</div>
                                 <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                                    Engage with the {churnRiskCount || 0} flagged residents early to prevent vacancy next month.
+                                    Systems indicate stable operations. No emergency maintenance clusters detected.
                                 </div>
                             </div>
                         </div>
@@ -159,13 +175,15 @@ export default function IntelligenceDashboard() {
                             <h3 style={{ fontSize: "14px", fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>Smart Alerts</h3>
                         </div>
                         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <li style={{ display: "flex", gap: "12px", fontSize: "13px", alignItems: "flex-start", paddingBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                                <span style={{ color: "var(--yellow)", marginTop: "2px" }}>⚠</span>
-                                <div><strong style={{ color: "#fff" }}>Occupancy Alert:</strong> High turnover predicted in upcoming property vacancies.</div>
-                            </li>
+                            {occupancyRate < 60 && (
+                                <li style={{ display: "flex", gap: "12px", fontSize: "13px", alignItems: "flex-start", paddingBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <span style={{ color: "var(--yellow)", marginTop: "2px" }}>⚠</span>
+                                    <div><strong style={{ color: "#fff" }}>Low Occupancy:</strong> Ad campaign recommended to fill vacant units.</div>
+                                </li>
+                            )}
                             <li style={{ display: "flex", gap: "12px", fontSize: "13px", alignItems: "flex-start" }}>
                                 <span style={{ color: "var(--green)", marginTop: "2px" }}>✓</span>
-                                <div><strong style={{ color: "#fff" }}>Operation Health:</strong> All critical maintenance within SLAs.</div>
+                                <div><strong style={{ color: "#fff" }}>Payment Health:</strong> Collection cycle is proceeding as per benchmark.</div>
                             </li>
                         </ul>
                     </div>

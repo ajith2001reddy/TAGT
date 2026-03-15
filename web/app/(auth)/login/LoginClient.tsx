@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useAuthContext } from "../layout";
 import Script from "next/script";
 
 declare global {
@@ -41,6 +42,9 @@ function GoogleIcon() {
 
 export default function LoginClient() {
     const { user, role, loading: authLoading } = useAuth();
+    const { activeRole: roleTab, setActiveRole: setRoleTab } = useAuthContext();
+    const isOwner = roleTab === "owner";
+    
     const router = useRouter();
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
@@ -217,8 +221,28 @@ export default function LoginClient() {
                     {showOtp ? "Verify Phone" : "Welcome back"}
                 </h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-                    {showOtp ? `Enter the code sent to ${identifier}` : "Sign in with Email or Phone"}
+                    {showOtp ? `Enter the code sent to ${identifier}` : (isOwner ? "Owner authentication required" : "Sign in to manage your stay")}
                 </p>
+            </div>
+
+            {/* Role Switcher */}
+            <div style={{ display: "flex", background: "rgba(255,255,255,0.03)", padding: "4px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", marginBottom: "24px" }}>
+                {["resident", "owner"].map((r) => (
+                    <button
+                        key={r}
+                        type="button"
+                        onClick={() => { setRoleTab(r as "resident" | "owner"); setShowOtp(false); setError(""); }}
+                        style={{
+                            flex: 1, padding: "10px", borderRadius: "10px", border: "none",
+                            background: roleTab === r ? "rgba(255,255,255,0.07)" : "transparent",
+                            color: roleTab === r ? "#fff" : "var(--text-tertiary)",
+                            fontSize: "12px", fontWeight: 700, cursor: "pointer",
+                            textTransform: "uppercase", letterSpacing: "0.05em", transition: "all 0.2s ease"
+                        }}
+                    >
+                        {r}
+                    </button>
+                ))}
             </div>
 
             {!showOtp && (
@@ -230,14 +254,15 @@ export default function LoginClient() {
                         style={{
                             width: "100%",
                             display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-                            padding: "12px 20px",
-                            background: "rgba(255,255,255,0.05)",
-                            border: "1px solid var(--border-strong)",
+                            padding: "14px 20px",
+                            background: isOwner ? "var(--accent-primary)" : "rgba(255,255,255,0.05)",
+                            border: isOwner ? "none" : "1px solid var(--border-strong)",
                             borderRadius: "12px",
-                            color: "var(--text-primary)",
-                            fontSize: "14px", fontWeight: 500,
+                            color: isOwner ? "#000" : "var(--text-primary)",
+                            fontSize: "14px", fontWeight: 600,
                             cursor: "pointer",
-                            marginBottom: "20px",
+                            marginBottom: isOwner ? "0px" : "20px",
+                            boxShadow: isOwner ? "0 0 20px var(--accent-glow)" : "none"
                         }}
                     >
                         {googleLoading ? (
@@ -245,96 +270,106 @@ export default function LoginClient() {
                                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                             </svg>
                         ) : <GoogleIcon />}
-                        {googleLoading ? "Connecting..." : "Continue with Google"}
+                        {googleLoading ? "Connecting..." : isOwner ? "Sign in as Owner with Google" : "Continue with Google"}
                     </button>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
-                        <div style={{ flex: 1, height: "1px", background: "var(--border-subtle)" }} />
-                        <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>OR</span>
-                        <div style={{ flex: 1, height: "1px", background: "var(--border-subtle)" }} />
-                    </div>
+                    {!isOwner && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px", marginTop: "20px" }}>
+                            <div style={{ flex: 1, height: "1px", background: "var(--border-subtle)" }} />
+                            <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>OR</span>
+                            <div style={{ flex: 1, height: "1px", background: "var(--border-subtle)" }} />
+                        </div>
+                    )}
                 </>
             )}
 
-            <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {!showOtp ? (
-                    <>
+            {isOwner && !showOtp ? (
+                <div style={{ marginTop: "20px", padding: "16px", borderRadius: "12px", background: "rgba(0,212,255,0.03)", border: "1px solid rgba(0,212,255,0.1)" }}>
+                    <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.5, textAlign: "center" }}>
+                        Security Policy: Property owners must use Google Single Sign-On for enhanced security and identity verification.
+                    </p>
+                </div>
+            ) : (
+                <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {!showOtp ? (
+                        <>
+                            <div>
+                                <label className="label-text" style={{ display: "block", marginBottom: "8px" }}>Email or Phone Number</label>
+                                <input
+                                    className="input-field"
+                                    placeholder="you@email.com or 9876543210"
+                                    value={identifier}
+                                    onChange={(e) => setIdentifier(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            {(isEmail(identifier) || isPhone(identifier) || identifier.length > 3) && (
+                                <div className="animate-fade-down">
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                                        <label className="label-text">Password</label>
+                                        <Link href="/forgot-password" style={{ fontSize: "12px", color: "var(--accent-primary)", textDecoration: "none" }}>Forgot?</Link>
+                                    </div>
+                                    <input
+                                        type="password"
+                                        className="input-field"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required={isEmail(identifier)}
+                                    />
+                                    {isPhone(identifier) && !password && (
+                                        <p style={{ fontSize: "11px", color: "var(--text-tertiary)", marginTop: "6px" }}>
+                                            Leave empty to sign in with SMS OTP instead.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    ) : (
                         <div>
-                            <label className="label-text" style={{ display: "block", marginBottom: "8px" }}>Email or Phone Number</label>
+                            <label className="label-text" style={{ display: "block", marginBottom: "8px" }}>6-Digit OTP Code</label>
                             <input
                                 className="input-field"
-                                placeholder="you@email.com or 9876543210"
-                                value={identifier}
-                                onChange={(e) => setIdentifier(e.target.value)}
+                                placeholder="000000"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                maxLength={6}
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowOtp(false)}
+                                style={{ background: "none", border: "none", color: "var(--accent-primary)", fontSize: "12px", marginTop: "8px", cursor: "pointer" }}
+                            >
+                                Change Email/Phone
+                            </button>
                         </div>
+                    )}
 
-                        {(isEmail(identifier) || isPhone(identifier) || identifier.length > 3) && (
-                            <div className="animate-fade-down">
-                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                                    <label className="label-text">Password</label>
-                                    <Link href="/forgot-password" style={{ fontSize: "12px", color: "var(--accent-primary)", textDecoration: "none" }}>Forgot?</Link>
-                                </div>
-                                <input
-                                    type="password"
-                                    className="input-field"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required={isEmail(identifier)}
-                                />
-                                {isPhone(identifier) && !password && (
-                                    <p style={{ fontSize: "11px", color: "var(--text-tertiary)", marginTop: "6px" }}>
-                                        Leave empty to sign in with SMS OTP instead.
-                                    </p>
-                                )}
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <div>
-                        <label className="label-text" style={{ display: "block", marginBottom: "8px" }}>6-Digit OTP Code</label>
-                        <input
-                            className="input-field"
-                            placeholder="000000"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            maxLength={6}
-                            required
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowOtp(false)}
-                            style={{ background: "none", border: "none", color: "var(--accent-primary)", fontSize: "12px", marginTop: "8px", cursor: "pointer" }}
-                        >
-                            Change Email/Phone
-                        </button>
-                    </div>
-                )}
+                    {error && (
+                        <div className="animate-fade-in" style={{ padding: "12px", borderRadius: "10px", background: "var(--red-bg)", border: "1px solid rgba(255,82,82,0.2)", color: "var(--red)", fontSize: "13px" }}>
+                            {error}
+                        </div>
+                    )}
 
-                {error && (
-                    <div className="animate-fade-in" style={{ padding: "12px", borderRadius: "10px", background: "var(--red-bg)", border: "1px solid rgba(255,82,82,0.2)", color: "var(--red)", fontSize: "13px" }}>
-                        {error}
-                    </div>
-                )}
-
-                <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={loading || googleLoading}
-                    style={{ width: "100%", padding: "14px", fontSize: "14px", marginTop: "4px" }}
-                >
-                    {loading ? (
-                        <span style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 0.8s linear infinite" }}>
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                            </svg>
-                            {showOtp ? "Verifying..." : "Processing..."}
-                        </span>
-                    ) : showOtp ? "Verify OTP" : (isPhone(identifier) && !password) ? "Send OTP Code" : "Sign In →"}
-                </button>
-            </form>
+                    <button
+                        type="submit"
+                        className="btn-primary"
+                        disabled={loading || googleLoading}
+                        style={{ width: "100%", padding: "14px", fontSize: "14px", marginTop: "4px" }}
+                    >
+                        {loading ? (
+                            <span style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 0.8s linear infinite" }}>
+                                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                </svg>
+                                {showOtp ? "Verifying..." : "Processing..."}
+                            </span>
+                        ) : showOtp ? "Verify OTP" : (isPhone(identifier) && !password) ? "Send OTP Code" : "Sign In →"}
+                    </button>
+                </form>
+            )}
 
             <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)", textAlign: "center", fontSize: "14px", color: "var(--text-secondary)" }}>
                 Don&apos;t have an account? <Link href="/signup" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Create one</Link>

@@ -50,23 +50,37 @@ export const register = async (req, res) => {
 
         const { error, value } = schema.validate(req.body);
         if (error) {
-            return res.status(400).json({
-                success: false,
-                message: error.details[0].message
-            });
+            return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
-        const { name, email, role, phoneNumber, password } = value;
+        const { name, role, phoneNumber, password } = value;
+        let { email } = value;
+        const sanitizedEmail = String(email).toLowerCase().trim();
 
-        const sanitizedEmail = String(email || "").toLowerCase().trim();
+        // Security: Verify Firebase Token if provided (Mandatory for Owners)
+        const token = req.headers.authorization?.split("Bearer ")[1];
+        if (token) {
+            const decoded = await admin.auth().verifyIdToken(token);
+            
+            // Enforce Email Match
+            if (decoded.email.toLowerCase() !== sanitizedEmail) {
+                return res.status(403).json({ success: false, message: "Email mismatch with authentication token" });
+            }
+
+            // Enforce Google-only for Owners
+            if (role === "owner" && decoded.firebase.sign_in_provider !== "google.com") {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Security Policy: Owners must register using Google authentication." 
+                });
+            }
+        } else if (role === "owner") {
+            return res.status(401).json({ success: false, message: "Authentication required for owner registration" });
+        }
+
         const existing = await User.findOne({ email: sanitizedEmail });
-
         if (existing) {
-            return res.json({
-                success: true,
-                message: "User already registered",
-                data: existing
-            });
+            return res.json({ success: true, message: "User already registered", data: existing });
         }
 
         const newUser = await User.create({
@@ -76,8 +90,9 @@ export const register = async (req, res) => {
             password: password || null,
             role: role,
             isActive: true,
-            emailVerified: false,
+            emailVerified: !!token, // Mark verified if token was provided
             verification: {
+                status: role === "owner" ? "approved" : "pending", // Owners are pre-approved if using Google
                 setupToken: null,
                 setupTokenExpires: null
             }
@@ -92,15 +107,9 @@ export const register = async (req, res) => {
             route: "POST /api/v2/auth/register"
         });
 
-        res.status(201).json({
-            success: true,
-            data: newUser
-        });
+        res.status(201).json({ success: true, data: newUser });
 
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
+        res.status(500).json({ success: false, message: err.message });
     }
-};
+};

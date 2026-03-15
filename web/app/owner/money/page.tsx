@@ -10,10 +10,10 @@ interface Transaction {
     type: "income" | "expense";
     category: string;
     amount: number;
-    name?: string;
+    title: string;
     description?: string;
     date: string;
-    residentName?: string;
+    status?: string;
 }
 
 export default function MoneyLedgerPage() {
@@ -37,36 +37,8 @@ export default function MoneyLedgerPage() {
 
     const fetchLedger = async () => {
         try {
-            const [payments, expenses] = await Promise.all([
-                api.get("/v2/payments"),
-                api.get("/v2/expenses")
-            ]);
-
-            const mappedPayments = (payments.data?.data || []).map((p: Transaction & { residentId?: { name: string }, type: string, paidAt: string, createdAt: string, month: string }) => ({
-                _id: p._id,
-                type: "income",
-                category: p.type || "Rent",
-                amount: p.amount,
-                name: p.residentId?.name || "Resident",
-                description: p.month || "",
-                date: p.paidAt || p.createdAt,
-            }));
-
-            const mappedExpenses = (expenses.data?.data || []).map((e: Transaction) => ({
-                _id: e._id,
-                type: "expense",
-                category: e.category,
-                amount: e.amount,
-                name: e.name || e.category,
-                description: e.description || "",
-                date: e.date,
-            }));
-
-            const combined = [...mappedPayments, ...mappedExpenses].sort((a, b) => 
-                new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-
-            setTransactions(combined);
+            const { data } = await api.get("/v2/ledger");
+            setTransactions(data.data || []);
         } catch {
             toast.error("Failed to load ledger");
         } finally {
@@ -81,7 +53,7 @@ export default function MoneyLedgerPage() {
             amount: Number(form.amount),
             type: form.category,
             month: form.description || new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
-            residentId: form.name // In a real app we'd have a dropdown here
+            resident: form.name // For manual income, we just store name
         } : {
             ...form,
             amount: Number(form.amount)
@@ -91,9 +63,10 @@ export default function MoneyLedgerPage() {
             await api.post(endpoint, payload);
             toast.success(`${addType === 'income' ? 'Sale' : 'Expense'} recorded`);
             setShowAdd(false);
+            setForm({ ...form, name: "", amount: "", description: "" });
             fetchLedger();
         } catch (err: unknown) {
-            const message = err instanceof Error ? (err as Record<string, unknown> & Error).message : "Record failed";
+            const message = err instanceof Error ? (err as any).response?.data?.message || err.message : "Record failed";
             toast.error(message);
         }
     };
@@ -101,7 +74,7 @@ export default function MoneyLedgerPage() {
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
     const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
     const filtered = transactions.filter(t => 
-        t.name?.toLowerCase().includes(search.toLowerCase()) || 
+        t.title?.toLowerCase().includes(search.toLowerCase()) || 
         t.category?.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -110,13 +83,23 @@ export default function MoneyLedgerPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
                 <div>
                     <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "8px" }}>Money & Ledger</h1>
-                    <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Simplified financial stream of your income and expenses.</p>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Unified financial timeline of your income and properties.</p>
+                    </div>
                 </div>
                 <div style={{ display: "flex", gap: "12px" }}>
-                    <button className="btn-secondary" onClick={() => { setAddType("expense"); setShowAdd(true); }} style={{ gap: "8px" }}>
+                    <button 
+                        className="btn-secondary" 
+                        onClick={() => { setAddType("expense"); setShowAdd(true); }}
+                        style={{ gap: "8px" }}
+                    >
                         <TrendingDown size={18} /> Record Expense
                     </button>
-                    <button className="btn-primary" onClick={() => { setAddType("income"); setShowAdd(true); }} style={{ gap: "8px" }}>
+                    <button 
+                        className="btn-primary" 
+                        onClick={() => { setAddType("income"); setShowAdd(true); }}
+                        style={{ gap: "8px" }}
+                    >
                         <TrendingUp size={18} /> Record Payment
                     </button>
                 </div>
@@ -161,7 +144,7 @@ export default function MoneyLedgerPage() {
                                     {new Date(t.date).toLocaleDateString()}
                                 </td>
                                 <td style={{ padding: "16px 24px" }}>
-                                    <div style={{ fontWeight: 600 }}>{t.name}</div>
+                                    <div style={{ fontWeight: 600 }}>{t.title}</div>
                                     <div style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{t.description}</div>
                                 </td>
                                 <td style={{ padding: "16px 24px", fontSize: "13px" }}>

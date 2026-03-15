@@ -1,5 +1,6 @@
 import Payment from "../../models/Payment.js";
 import Expense from "../../models/Expense.js";
+import { buildPropertyFilter } from "../../utils/tenantScope.js";
 import logger from "../../utils/logger.js";
 
 /**
@@ -8,16 +9,15 @@ import logger from "../../utils/logger.js";
  */
 export const getUnifiedLedger = async (req, res) => {
     try {
-        const propertyId = req.user.propertyId;
-        const scope = req.user.role === 'super_admin' ? {} : { propertyId };
+        const scope = buildPropertyFilter(req.user);
 
         const [payments, expenses] = await Promise.all([
-            Payment.find({ ...scope, isDeleted: false })
+            Payment.find({ ...scope, isDeleted: { $ne: true } })
                 .populate("resident", "name")
-                .sort({ createdAt: -1 })
+                .sort({ month: -1, createdAt: -1 })
                 .lean(),
-            Expense.find({ ...scope, isDeleted: false })
-                .sort({ date: -1 })
+            Expense.find({ ...scope, isDeleted: { $ne: true } })
+                .sort({ date: -1, createdAt: -1 })
                 .lean()
         ]);
 

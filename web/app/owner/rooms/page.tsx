@@ -11,6 +11,7 @@ import {
     MoreVertical, 
     LayoutGrid
 } from "lucide-react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 
@@ -49,9 +50,30 @@ export default function RoomsPage() {
         } finally { setAdding(false); }
     }
 
+    async function handleDelete(roomId: string, occupiedBeds: number) {
+        if (occupiedBeds > 0) {
+            return toast((t) => (
+                <span>
+                    <b>Cannot delete occupied room.</b><br/>
+                    Please <Link href="/owner/residents" onClick={() => toast.dismiss(t.id)} style={{ color: "var(--accent-primary)", fontWeight: 700 }}>Move Residents</Link> first.
+                </span>
+            ), { icon: '⚠️', duration: 4000 });
+        }
+
+        if (!confirm("Are you sure you want to delete this room and all its beds? This cannot be undone.")) return;
+
+        try {
+            await deleteRoom(roomId);
+            toast.success("Room deleted successfully");
+            reload();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to delete room");
+        }
+    }
+
     return (
         <div className="animate-fade-in">
-            {/* HEADER */}
+            {/* ... header ... */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
                 <div>
                     <h1 className="display-text" style={{ fontSize: "28px", marginBottom: "4px" }}>Inventory & Rooms</h1>
@@ -82,7 +104,8 @@ export default function RoomsPage() {
                             padding: "24px", 
                             borderRadius: "28px", 
                             border: "1px solid var(--border-subtle)",
-                            background: "rgba(255,255,255,0.02)"
+                            background: "rgba(255,255,255,0.02)",
+                            position: "relative"
                         }}
                     >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
@@ -100,10 +123,28 @@ export default function RoomsPage() {
                                     <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>₹{room.rent.toLocaleString()}/month</div>
                                 </div>
                             </div>
-                            <button className="btn-ghost" style={{ padding: "8px" }}><MoreVertical size={16} /></button>
+                            
+                            {/* Actions */}
+                            <div style={{ display: "flex", gap: "8px" }}>
+                                <button 
+                                    onClick={() => handleDelete(room._id, room.occupiedBeds)}
+                                    className="btn-ghost" 
+                                    style={{ 
+                                        padding: "8px", 
+                                        color: "var(--text-tertiary)",
+                                        borderRadius: "10px"
+                                    }}
+                                    title="Delete Room"
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                    </svg>
+                                </button>
+                                <button className="btn-ghost" style={{ padding: "8px" }}><MoreVertical size={16} /></button>
+                            </div>
                         </div>
 
-                        {/* OCCUPANCY BAR */}
+                        {/* ... occupancy bar ... */}
                         <div style={{ marginBottom: "24px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: 700, marginBottom: "8px", textTransform: "uppercase", color: "var(--text-tertiary)" }}>
                                 <span>Occupancy</span>
