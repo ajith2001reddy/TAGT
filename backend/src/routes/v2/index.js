@@ -106,7 +106,7 @@ router.post("/admin/verifications/:id/approve", authorize("super_admin"), approv
 router.post("/admin/verifications/:id/reject", authorize("super_admin"), rejectVerification);
 
 /* ── Search ── */
-router.get("/search", auth, authorize("super_admin", "owner"), globalSearch);
+router.get("/search", authorize("super_admin", "owner"), globalSearch);
 
 /* ── Analytics ── */
 router.get("/analytics/owner-dashboard", authorize("super_admin", "owner"), ownerDashboardAnalytics);
@@ -122,132 +122,132 @@ router.put("/rooms/:id", authorize("super_admin", "owner"), validate(updateRoomS
 router.delete("/rooms/:id", authorize("super_admin", "owner"), logActivity("ROOM_DELETED"), deleteRoom);
 
 /* ── Beds ── */
-router.get("/beds", auth, authorize("super_admin", "owner"), listBeds);
-router.post("/beds", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createBedSchema), createBeds);
-router.patch("/beds/:id/status", auth, authorize("super_admin", "owner"), validate(updateBedStatusSchema), updateBedStatus);
-router.post("/beds/:id/assign", auth, authorize("super_admin", "owner"), validate(assignBedSchema), assignResidentToBed);
+router.get("/beds", authorize("super_admin", "owner"), listBeds);
+router.post("/beds", authorize("super_admin", "owner"), verifyPropertyAccess, validate(createBedSchema), createBeds);
+router.patch("/beds/:id/status", authorize("super_admin", "owner"), validate(updateBedStatusSchema), updateBedStatus);
+router.post("/beds/:id/assign", authorize("super_admin", "owner"), validate(assignBedSchema), assignResidentToBed);
 
 /* ── Residents ── */
-router.get("/residents", auth, authorize("super_admin", "owner", "resident"), listResidents);
-router.post("/residents", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createResidentSchema), logActivity("RESIDENT_CREATED"), createResident);
-router.patch("/residents/:id/move-room", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_RELOCATED"), moveResidentRoom);
-router.patch("/residents/:id/deactivate", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_DEACTIVATED"), deactivateResident);
-router.patch("/residents/:id/approve", auth, authorize("super_admin", "owner"), logActivity("RESIDENT_APPROVED"), approveResident);
-router.post("/residents/:id/notes", auth, authorize("super_admin", "owner"), addResidentNote);
-router.post("/residents/:id/notification", auth, authorize("super_admin", "owner"), sendNotification);
-router.get("/residents/:id/history", auth, authorize("super_admin", "owner"), getResidentHistory);
-router.patch("/residents/:id/assign-property", auth, authorize("super_admin"), logActivity("RESIDENT_PROPERTY_ASSIGNED"), assignResidentToProperty);
-router.put("/residents/:id", auth, authorize("super_admin"), validate(updateResidentSchema), logActivity("RESIDENT_UPDATED_BY_ADMIN"), superAdminUpdateResident);
+router.get("/residents", authorize("super_admin", "owner", "resident"), listResidents);
+router.post("/residents", authorize("super_admin", "owner"), verifyPropertyAccess, validate(createResidentSchema), logActivity("RESIDENT_CREATED"), createResident);
+router.patch("/residents/:id/move-room", authorize("super_admin", "owner"), logActivity("RESIDENT_RELOCATED"), moveResidentRoom);
+router.patch("/residents/:id/deactivate", authorize("super_admin", "owner"), logActivity("RESIDENT_DEACTIVATED"), deactivateResident);
+router.patch("/residents/:id/approve", authorize("super_admin", "owner"), logActivity("RESIDENT_APPROVED"), approveResident);
+router.post("/residents/:id/notes", authorize("super_admin", "owner"), addResidentNote);
+router.post("/residents/:id/notification", authorize("super_admin", "owner"), sendNotification);
+router.get("/residents/:id/history", authorize("super_admin", "owner"), getResidentHistory);
+router.patch("/residents/:id/assign-property", authorize("super_admin"), logActivity("RESIDENT_PROPERTY_ASSIGNED"), assignResidentToProperty);
+router.put("/residents/:id", authorize("super_admin"), validate(updateResidentSchema), logActivity("RESIDENT_UPDATED_BY_ADMIN"), superAdminUpdateResident);
 
 /* ── Payments ── */
-router.get("/ledger", auth, authorize("super_admin", "owner"), getUnifiedLedger);
-router.get("/payments", auth, authorize("super_admin", "owner", "resident"), listPayments);
-router.post("/payments", auth, authorize("super_admin", "owner"), verifyPropertyAccess, validate(createPaymentSchema), logActivity("PAYMENT_CREATED"), createPayment);
-router.patch("/payments/:id/paid", auth, authorize("super_admin", "owner"), validate(markPaymentPaidSchema), logActivity("PAYMENT_MANUAL_RECONCILIATION"), markPaymentPaid);
-router.post("/payments/:id/send-reminder", auth, authorize("super_admin", "owner"), sendPaymentReminder);
-router.get("/payments/:id/invoice", auth, authorize("super_admin", "owner", "resident"), downloadInvoice);
+router.get("/ledger", authorize("super_admin", "owner"), getUnifiedLedger);
+router.get("/payments", authorize("super_admin", "owner", "resident"), listPayments);
+router.post("/payments", authorize("super_admin", "owner"), verifyPropertyAccess, validate(createPaymentSchema), logActivity("PAYMENT_CREATED"), createPayment);
+router.patch("/payments/:id/paid", authorize("super_admin", "owner"), validate(markPaymentPaidSchema), logActivity("PAYMENT_MANUAL_RECONCILIATION"), markPaymentPaid);
+router.post("/payments/:id/send-reminder", authorize("super_admin", "owner"), sendPaymentReminder);
+router.get("/payments/:id/invoice", authorize("super_admin", "owner", "resident"), downloadInvoice);
 
 /* ── Expenses ── */
-router.get("/expenses", auth, authorize("super_admin", "owner"), listExpenses);
-router.get("/expenses/summary", auth, authorize("super_admin", "owner"), getExpenseSummary);
-router.post("/expenses", auth, authorize("super_admin", "owner"), verifyPropertyAccess, logActivity("EXPENSE_ADDED"), createExpense);
-router.put("/expenses/:id", auth, authorize("super_admin", "owner"), verifyPropertyAccess, logActivity("EXPENSE_UPDATED"), updateExpense);
-router.delete("/expenses/:id", auth, authorize("super_admin", "owner"), logActivity("EXPENSE_DELETED"), deleteExpense);
+router.get("/expenses", authorize("super_admin", "owner"), listExpenses);
+router.get("/expenses/summary", authorize("super_admin", "owner"), getExpenseSummary);
+router.post("/expenses", authorize("super_admin", "owner"), verifyPropertyAccess, logActivity("EXPENSE_ADDED"), createExpense);
+router.put("/expenses/:id", authorize("super_admin", "owner"), verifyPropertyAccess, logActivity("EXPENSE_UPDATED"), updateExpense);
+router.delete("/expenses/:id", authorize("super_admin", "owner"), logActivity("EXPENSE_DELETED"), deleteExpense);
 
 /* ── Reports ── */
 // JSON APIs for Dashboards
-router.get("/reports/residents", auth, authorize("super_admin", "owner"), getResidentsReport);
-router.get("/reports/rent", auth, authorize("super_admin", "owner"), getRentReport);
-router.get("/reports/occupancy", auth, authorize("super_admin", "owner"), getOccupancyReport);
-router.get("/reports/financial", auth, authorize("super_admin", "owner"), getFinancialReport);
+router.get("/reports/residents", authorize("super_admin", "owner"), getResidentsReport);
+router.get("/reports/rent", authorize("super_admin", "owner"), getRentReport);
+router.get("/reports/occupancy", authorize("super_admin", "owner"), getOccupancyReport);
+router.get("/reports/financial", authorize("super_admin", "owner"), getFinancialReport);
 
 // Exports
-router.get("/reports/export/residents", auth, authorize("super_admin", "owner"), exportResidentsExcel);
-router.get("/reports/export/payments", auth, authorize("super_admin", "owner"), exportPaymentsExcel);
-router.get("/reports/export/expenses", auth, authorize("super_admin", "owner"), exportExpensesExcel);
-router.get("/reports/export/receipt/:id", auth, authorize("super_admin", "owner", "resident"), exportRentReceiptPDF);
+router.get("/reports/export/residents", authorize("super_admin", "owner"), exportResidentsExcel);
+router.get("/reports/export/payments", authorize("super_admin", "owner"), exportPaymentsExcel);
+router.get("/reports/export/expenses", authorize("super_admin", "owner"), exportExpensesExcel);
+router.get("/reports/export/receipt/:id", authorize("super_admin", "owner", "resident"), exportRentReceiptPDF);
 
 // Legacy CSV
-router.get("/reports/monthly-revenue.csv", auth, authorize("super_admin", "owner"), reportMonthlyRevenue);
-router.get("/reports/outstanding.csv", auth, authorize("super_admin", "owner"), reportOutstanding);
-router.get("/reports/resident-ledger.csv", auth, authorize("super_admin", "owner"), reportResidentLedger);
+router.get("/reports/monthly-revenue.csv", authorize("super_admin", "owner"), reportMonthlyRevenue);
+router.get("/reports/outstanding.csv", authorize("super_admin", "owner"), reportOutstanding);
+router.get("/reports/resident-ledger.csv", authorize("super_admin", "owner"), reportResidentLedger);
 
 /* ── Requests ── */
-router.get("/requests", auth, authorize("super_admin", "owner", "resident"), listRequests);
-router.patch("/requests/:id", auth, authorize("super_admin", "owner"), validate(updateRequestSchema), updateRequest);
-router.get("/requests/join", auth, authorize("owner"), getPropertyJoinRequests);
-router.patch("/requests/join/:id/approve", auth, authorize("owner"), approveJoinRequest);
-router.patch("/requests/join/:id/reject", auth, authorize("owner"), rejectJoinRequest);
+router.get("/requests", authorize("super_admin", "owner", "resident"), listRequests);
+router.patch("/requests/:id", authorize("super_admin", "owner"), validate(updateRequestSchema), updateRequest);
+router.get("/requests/join", authorize("owner"), getPropertyJoinRequests);
+router.patch("/requests/join/:id/approve", authorize("owner"), approveJoinRequest);
+router.patch("/requests/join/:id/reject", authorize("owner"), rejectJoinRequest);
 
 /* ── Resident ── */
-router.get("/resident/dashboard", auth, authorize("resident"), getResidentDashboard);
-router.get("/resident/dashboard/v2", auth, authorize("resident"), getResidentDashboardV2);
-router.post("/resident/requests", auth, authorize("resident"), validate(createRequestSchema), residentCreateRequest);
-router.get("/resident/lease", auth, authorize("resident"), downloadLease);
-router.post("/join-requests", auth, authorize("resident"), createJoinRequest);
+router.get("/resident/dashboard", authorize("resident"), getResidentDashboard);
+router.get("/resident/dashboard/v2", authorize("resident"), getResidentDashboardV2);
+router.post("/resident/requests", authorize("resident"), validate(createRequestSchema), residentCreateRequest);
+router.get("/resident/lease", authorize("resident"), downloadLease);
+router.post("/join-requests", authorize("resident"), createJoinRequest);
 
 /* ── Automation ── */
-router.post("/automation/monthly-rent", auth, authorize("super_admin", "owner"), runMonthlyRentGeneration);
-router.post("/automation/late-fees", auth, authorize("super_admin", "owner"), runLateFeeUpdate);
-router.post("/automation/tick", auth, authorize("super_admin"), runAutomationTickNow);
+router.post("/automation/monthly-rent", authorize("super_admin", "owner"), runMonthlyRentGeneration);
+router.post("/automation/late-fees", authorize("super_admin", "owner"), runLateFeeUpdate);
+router.post("/automation/tick", authorize("super_admin"), runAutomationTickNow);
 
 /* ── Phase 2: Razorpay ── */
-router.get("/razorpay/status", auth, razorpayStatus);
-router.post("/razorpay/checkout-session", auth, authorize("resident"), createPaymentSession);
-router.post("/razorpay/verify-payment", auth, authorize("resident"), verifyPayment);
-router.post("/razorpay/checkout-subscription", auth, authorize("owner"), createSubscriptionSession);
-router.get("/subscription/my-plan", auth, authorize("owner"), getMyPlan);
-router.post("/subscription/upgrade", auth, authorize("owner"), upgradePlan);
-router.get("/admin/subscriptions", auth, authorize("super_admin"), listAllSubscriptions);
-router.patch("/admin/subscriptions/:ownerId", auth, authorize("super_admin"), logActivity("SUBSCRIPTION_OVERRIDE"), adminSetPlan);
+router.get("/razorpay/status", razorpayStatus);
+router.post("/razorpay/checkout-session", authorize("resident"), createPaymentSession);
+router.post("/razorpay/verify-payment", authorize("resident"), verifyPayment);
+router.post("/razorpay/checkout-subscription", authorize("owner"), createSubscriptionSession);
+router.get("/subscription/my-plan", authorize("owner"), getMyPlan);
+router.post("/subscription/upgrade", authorize("owner"), upgradePlan);
+router.get("/admin/subscriptions", authorize("super_admin"), listAllSubscriptions);
+router.patch("/admin/subscriptions/:ownerId", authorize("super_admin"), logActivity("SUBSCRIPTION_OVERRIDE"), adminSetPlan);
 
 /* ── Phase 2: Activity Logs ── */
-router.get("/admin/activity-logs", auth, authorize("super_admin"), listActivityLogs);
-router.get("/owner/activity-logs", auth, authorize("owner"), myActivityLogs);
+router.get("/admin/activity-logs", authorize("super_admin"), listActivityLogs);
+router.get("/owner/activity-logs", authorize("owner"), myActivityLogs);
 
 /* ── Properties ── */
-router.get("/properties", auth, getMyProperties);
-router.post("/properties", auth, authorize("owner", "super_admin"), createProperty);
-router.get("/properties/discover", auth, authorize("resident"), discoverProperties);
-router.get("/properties/:id", auth, getPropertyById);
+router.get("/properties", getMyProperties);
+router.post("/properties", authorize("owner", "super_admin"), createProperty);
+router.get("/properties/discover", authorize("resident"), discoverProperties);
+router.get("/properties/:id", getPropertyById);
 
 /* ── Phase 3: Intelligence ── */
-router.get("/intelligence/summary", auth, authorize("owner"), getIntelligenceSummary);
-router.get("/intelligence/revenue-forecast", auth, authorize("owner"), getRevenueForecast);
-router.get("/intelligence/occupancy-trends", auth, authorize("owner"), getOccupancyTrends);
-router.get("/intelligence/smart-alerts", auth, authorize("owner"), getSmartAlerts);
-router.get("/intelligence/churn-analysis", auth, authorize("owner"), getChurnAnalysis);
+router.get("/intelligence/summary", authorize("owner"), getIntelligenceSummary);
+router.get("/intelligence/revenue-forecast", authorize("owner"), getRevenueForecast);
+router.get("/intelligence/occupancy-trends", authorize("owner"), getOccupancyTrends);
+router.get("/intelligence/smart-alerts", authorize("owner"), getSmartAlerts);
+router.get("/intelligence/churn-analysis", authorize("owner"), getChurnAnalysis);
 
 /* ── Phase 4: Support Tickets ── */
-router.post("/support/tickets", auth, authorize("resident", "owner"), validate(createTicketSchema), createTicket);
-router.get("/support/tickets", auth, authorize("resident", "owner"), listMyTickets);
-router.get("/support/tickets/all", auth, authorize("super_admin"), listAllTickets);
-router.get("/support/tickets/:id", auth, getTicket);
-router.post("/support/tickets/:id/reply", auth, validate(replyToTicketSchema), replyToTicket);
-router.patch("/support/tickets/:id/status", auth, authorize("super_admin"), validate(updateTicketStatusSchema), updateTicketStatus);
-router.post("/support/tickets/:id/note", auth, authorize("super_admin"), validate(addInternalNoteSchema), addInternalNote);
+router.post("/support/tickets", authorize("resident", "owner"), validate(createTicketSchema), createTicket);
+router.get("/support/tickets", authorize("resident", "owner"), listMyTickets);
+router.get("/support/tickets/all", authorize("super_admin"), listAllTickets);
+router.get("/support/tickets/:id", getTicket);
+router.post("/support/tickets/:id/reply", validate(replyToTicketSchema), replyToTicket);
+router.patch("/support/tickets/:id/status", authorize("super_admin"), validate(updateTicketStatusSchema), updateTicketStatus);
+router.post("/support/tickets/:id/note", authorize("super_admin"), validate(addInternalNoteSchema), addInternalNote);
 
 /* ── Phase 5: Notifications ── */
-router.get("/notifications", auth, getNotifications);
-router.get("/notifications/unread-count", auth, getUnreadCount);
-router.patch("/notifications/read-all", auth, markAllRead);
-router.patch("/notifications/:id/read", auth, markRead);
+router.get("/notifications", getNotifications);
+router.get("/notifications/unread-count", getUnreadCount);
+router.patch("/notifications/read-all", markAllRead);
+router.patch("/notifications/:id/read", markRead);
 
 /* ── Phase 6: Broadcast Notices ── */
-router.post("/notices", auth, authorize("super_admin", "owner"), logActivity("NOTICE_BROADCASTED"), createNotice);
-router.get("/notices", auth, authorize("super_admin", "owner", "resident"), listNotices);
+router.post("/notices", authorize("super_admin", "owner"), logActivity("NOTICE_BROADCASTED"), createNotice);
+router.get("/notices", authorize("super_admin", "owner", "resident"), listNotices);
 
 /* ── Profile & User Management ── */
-router.get("/profile", auth, getProfile);
-router.put("/profile", auth, validate(updateProfileSchema), updateProfile);
-router.post("/profile/change-password", auth, validate(changePasswordSchema), changePassword);
+router.get("/profile", getProfile);
+router.put("/profile", validate(updateProfileSchema), updateProfile);
+router.post("/profile/change-password", validate(changePasswordSchema), changePassword);
 
 import { listLeases, uploadLease, getMyLease, signLease } from "../../controllers/v2/leaseController.js";
 
 /* ── Leases ── */
-router.get("/leases", auth, authorize("owner"), listLeases);
-router.post("/leases", auth, authorize("owner"), logActivity("LEASE_UPLOADED"), uploadLease);
-router.get("/resident/lease/active", auth, authorize("resident"), getMyLease);
-router.post("/resident/lease/sign", auth, authorize("resident"), logActivity("LEASE_SIGNED"), signLease);
+router.get("/leases", authorize("owner"), listLeases);
+router.post("/leases", authorize("owner"), logActivity("LEASE_UPLOADED"), uploadLease);
+router.get("/resident/lease/active", authorize("resident"), getMyLease);
+router.post("/resident/lease/sign", authorize("resident"), logActivity("LEASE_SIGNED"), signLease);
 
 export default router;

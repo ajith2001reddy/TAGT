@@ -5,8 +5,10 @@ import logger from "../utils/logger.js";
 import { enforceTenantIsolation } from "./tenantIsolation.js";
 
 const firebaseAuth = async (req, res, next) => {
-    let token;
+    // If user is already authenticated by a previous step in the chain, move on.
+    if (req.user) return next();
 
+    let token;
     try {
         const header = req.headers.authorization;
 
