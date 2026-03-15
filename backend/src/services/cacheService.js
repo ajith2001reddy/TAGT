@@ -14,38 +14,28 @@ class CacheService {
     async get(key) {
         try {
             const data = await redis.get(key);
-            return data ? JSON.parse(data) : null;
+            if (!data) return null;
+            return JSON.parse(data);
         } catch (err) {
-            logger.error(`Cache Get Error [${key}]:`, { error: err.message });
+            logger.error(`[CACHE] Get Error for ${key}:`, { error: err.message });
             return null;
         }
     }
 
-    /**
-     * Set data in cache with an expiration time.
-     * @param {string} key 
-     * @param {any} data 
-     * @param {number} ttl - Time to live in seconds (default: 300s / 5m)
-     */
     async set(key, data, ttl = 300) {
         try {
-            await redis.set(key, JSON.stringify(data), "EX", ttl);
-            logger.debug(`Cache Set [${key}] with TTL ${ttl}s`);
+            const stringData = JSON.stringify(data);
+            await redis.set(key, stringData, "EX", ttl);
         } catch (err) {
-            logger.error(`Cache Set Error [${key}]:`, { error: err.message });
+            logger.error(`[CACHE] Set Error for ${key}:`, { error: err.message });
         }
     }
 
-    /**
-     * Delete a specific cache key.
-     * @param {string} key 
-     */
     async del(key) {
         try {
             await redis.del(key);
-            logger.debug(`Cache Deleted [${key}]`);
         } catch (err) {
-            logger.error(`Cache Delete Error [${key}]:`, { error: err.message });
+            logger.error(`[CACHE] Delete Error for ${key}:`, { error: err.message });
         }
     }
 

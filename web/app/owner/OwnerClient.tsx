@@ -98,9 +98,9 @@ export default function OwnerClient() {
                             <Link href="/owner/money" style={{ fontSize: "13px", color: "var(--accent-primary)", fontWeight: 700, textDecoration: "none" }}>View Full Ledger →</Link>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "24px" }}>
-                            <StatItem label="Collected Today" value={`₹${stats?.monthlyRevenue ? (stats.monthlyRevenue / 30).toFixed(0) : '0'}`} color="#34d399" />
-                            <StatItem label="Expenses Today" value="₹1,200" color="#ff5252" />
-                            <StatItem label="Estimated Profit" value={`₹${stats?.monthlyRevenue ? (stats.monthlyRevenue / 30 - 1200).toFixed(0) : '0'}`} color="var(--accent-primary)" />
+                            <StatItem label="Collected Month" value={`₹${detailed?.monthly?.collected?.toLocaleString() || '0'}`} color="#34d399" />
+                            <StatItem label="Expenses Month" value={`₹${detailed?.monthExpenses?.toLocaleString() || '0'}`} color="#ff5252" />
+                            <StatItem label="Profit Estimate" value={`₹${detailed?.profitEstimate?.toLocaleString() || '0'}`} color="var(--accent-primary)" />
                         </div>
                     </div>
 

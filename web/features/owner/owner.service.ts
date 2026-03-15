@@ -20,11 +20,12 @@ export type DetailedStats = {
     totalBeds: number;
     occupiedBeds: number;
     monthly: { expected: number; collected: number; outstanding: number };
+    monthExpenses: number; // Added
     lateFeesEarned: number;
     overdueAmount: number;
     overdueCount: number;
     collectionRate: number;
-    profitEstimate: number; // Added
+    profitEstimate: number;
     trend: Array<{ month: string; collected: number }>;
 };
 

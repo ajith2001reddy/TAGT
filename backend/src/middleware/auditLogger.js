@@ -5,6 +5,13 @@ import logger from "../utils/logger.js";
  * Middleware to capture and log all mutating requests (POST, PUT, PATCH, DELETE)
  * for enterprise audit compliance.
  */
+const skipRoutes = ["/auth/login", "/auth/signup", "/auth/forgot-password"];
+const sensitiveFields = ["password", "token", "secret", "cvv", "cardNumber"];
+
+/**
+ * Middleware to capture and log all mutating requests (POST, PUT, PATCH, DELETE)
+ * for enterprise audit compliance.
+ */
 export const auditLogger = async (req, res, next) => {
     // Only log mutations
     const mutatingMethods = ["POST", "PUT", "PATCH", "DELETE"];
@@ -13,7 +20,6 @@ export const auditLogger = async (req, res, next) => {
     }
 
     // Skip sensitive routes like login
-    const skipRoutes = ["/auth/login", "/auth/signup", "/auth/forgot-password"];
     if (skipRoutes.some(route => req.originalUrl.includes(route))) {
         return next();
     }
@@ -58,7 +64,6 @@ export const auditLogger = async (req, res, next) => {
 function maskSensitiveData(data) {
     if (!data) return data;
     const masked = { ...data };
-    const sensitiveFields = ["password", "token", "secret", "cvv", "cardNumber"];
 
     for (const field of sensitiveFields) {
         if (masked[field]) masked[field] = "********";

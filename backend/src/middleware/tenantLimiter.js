@@ -32,23 +32,7 @@ export const dynamicTenantRateLimiter = async (req, res, next) => {
         const sub = await Subscription.findOne({ ownerId: targetOwnerId }).lean();
         const tier = sub?.plan || "free";
 
-        let maxRequests;
-        if (tier === "pro") {
-            maxRequests = 500; // 500 requests per 15 minutes
-        } else if (tier === "enterprise") {
-            maxRequests = 5000; // High limit
-        } else {
-            maxRequests = 100; // Strict free limit
-        }
-
-        // We create an ephemeral limiter scoped to this specific tenant
-        // Notice we do this inside the middleware pipeline.
-        // Doing this per-request isn't perfectly optimized.
-        // A better approach for massive scale is using Redis for custom stateful counting,
-        // but `express-rate-limit` requires static instances.
-
-        // We can use a factory pattern to cache the limiters per ownerId
-        let limiter = getLimiterForOwner(targetOwnerId, maxRequests);
+        let limiter = getLimiterForTier(tier);
 
         return limiter(req, res, next);
     } catch (err) {
@@ -58,26 +42,36 @@ export const dynamicTenantRateLimiter = async (req, res, next) => {
     }
 };
 
-// Simple memory cache for rate limiter instances per tenant
-const tenantLimiters = new Map();
+// Memory cache for rate limiter instances per TIER (not per owner, to prevent leaks)
+const tierLimiters = new Map();
 
-function getLimiterForOwner(ownerId, limit) {
-    if (tenantLimiters.has(ownerId)) {
-        return tenantLimiters.get(ownerId);
+function getLimiterForTier(tier) {
+    if (tierLimiters.has(tier)) {
+        return tierLimiters.get(tier);
     }
+
+    let maxRequests;
+    if (tier === "pro") maxRequests = 1000;
+    else if (tier === "enterprise") maxRequests = 10000;
+    else maxRequests = 100;
 
     const limiter = rateLimit({
         windowMs: 15 * 60 * 1000,
-        max: limit,
+        max: maxRequests,
         standardHeaders: true,
         legacyHeaders: false,
-        keyGenerator: () => ownerId, // Scope limit by tenant, not IP
+        keyGenerator: (req) => {
+            // Use the ownerId/tenant ID as the key for the rate limit store
+            // This ensures each tenant has their own bucket within the same limiter instance
+            return req.user?.ownerId || req.user?._id || req.ip;
+        },
+        skip: (req) => req.user?.role === "super_admin",
         message: {
             success: false,
-            message: `API rate limit exceeded for your subscription tier. Please upgrade.`
+            message: `API rate limit exceeded for your ${tier} plan. Please upgrade for higher limits.`
         },
     });
 
-    tenantLimiters.set(ownerId, limiter);
+    tierLimiters.set(tier, limiter);
     return limiter;
 }

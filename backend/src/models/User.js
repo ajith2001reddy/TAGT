@@ -211,9 +211,12 @@ const userSchema = new mongoose.Schema(
 // 🔐 Hash password before saving (only when modified)
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password") || !this.password) return next();
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
+    try {
+        this.password = await bcrypt.hash(this.password, 10);
+        next();
+    } catch (err) {
+        next(err);
+    }
 });
 
 // 🗑️ Soft-delete: automatically exclude deleted users from all find queries

@@ -79,8 +79,8 @@ export const verifyPaymentSignature = ({ orderId, paymentId, signature }) => {
  * Verifies a Razorpay Webhook signature
  */
 export const verifyWebhookSignature = (rawBody, signature) => {
-    if (!razorpayEnabled) return false;
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!secret || !signature) return false;
     
     const expectedSignature = crypto
         .createHmac("sha256", secret)
